@@ -1,0 +1,14 @@
+{
+  "name": "tts-comparacao",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Comparador cego de vozes (TTS) PT-BR para o SaaS de concursos (decisao D14)",
+  "scripts": {
+    "start": "node compare.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7"
+  },
+  "comment": "Para testar Amazon Polly tambem: npm install @aws-sdk/client-polly"
+}

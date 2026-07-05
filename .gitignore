@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Secrets / environment (NEVER commit real keys)
+.env
+.env.*
+!.env.example
+
+# Generated TTS comparison artifacts (regenerable, large binaries)
+experiments/tts-comparacao/out/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & temp
+*.log
+*.tmp

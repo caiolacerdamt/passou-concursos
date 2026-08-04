@@ -634,5 +634,13 @@
   - AD-011 (modelos), AD-031 (preço), AD-028 (retenção), AD-020 (pesos do Raio-X), AD-014 (áudio) e AD-025 (anti-trapaça) foram **refinados/substituídos parcialmente** por AD-049, AD-053, AD-045, AD-056/057, AD-062/063/065 e AD-060 — nenhum foi descartado.
 - **Next step**: entrar em **Design**. Recomendação de ordem: **M4** primeiro (a fundação `tentativas`/AD-015/AD-042 é a peça mais crítica e a que mais módulos herdam), depois **M1 → M2 → M8 → M7 → M5 → M6 → M3**. **M3 SHALL NOT entrar em Design enquanto a flag do áudio não estiver perto de ser ligada** (AD-064) — a spec está escrita e congelada. **Caminho crítico de produto: a ingestão do acervo (M1)** — o Raio-X é a primeira tela e sua qualidade vem do acervo, não da fórmula (AD-066). Contratos de schema a respeitar no Design: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), **AD-056/057** (fórmula do Raio-X), **AD-060** (anel por bloco), **AD-063** (áudio × versão de questão *e* de explicação).
 - **Blockers**: none para Design. Pendências abertas que **não travam**: (a) *due diligence* — advogado (base legal das questões AD-003; janela de 24m AD-045; LIA antes de ligar o flywheel AD-026) e contador (CNPJ/regime para NF, hipótese ME no Simples); (b) confirmar no contrato do Asaas o que volta num estorno e o D+ do parcelado; (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3, ferramenta pronta em `experiments/tts-comparacao/`, incluir Inworld e Hume na rodada (AD-062/065); (e) reconfirmar preços de TTS em fonte oficial antes de contratar (AD-065 usou fontes secundárias); (f) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de recuperação).
-- **Uncommitted files**: `.specs/STATE.md` + as 9 specs em `.specs/features/*/spec.md` (m9-infra, m1-banco-questoes, m4-coluna-vertebral, m7-lgpd-flywheel, m2-camada-ia, m8-negocio-pagamentos, **m5-raiox-banca**, **m6-gamificacao**, **m3-audio**)
-- **Branch**: `main` (repositório git; nada commitado ainda nestas três rodadas)
+- **Uncommitted files**: none. As 4 rodadas de Specify foram commitadas e empurradas em
+  `docs(specs): specs M1-M9 + reconciliacao AD-036..AD-072` (2026-08-04).
+- **Branch**: `main`. O repositório passou a seguir `docs/GITFLOW.md` — trunk-based com branch curta,
+  todo trabalho por PR. Proteção de branch do GitHub **não está ligada** (plano Free não permite em
+  repositório privado); a trava é o hook `.githooks/pre-push`, ativado com
+  `git config core.hooksPath .githooks`.
+- **Estrutura do repositório (2026-08-04)**: `AGENTS.md` (regras, invariantes, convenções) +
+  `CLAUDE.md` (importa o AGENTS) + `README.md` + `docs/GITFLOW.md`. Registro congelado movido para
+  `docs/historico/`. CI em `.github/workflows/ci.yml` (segredos, integridade dos documentos, e
+  typecheck/teste/build que liga sozinho quando existir `package.json`).

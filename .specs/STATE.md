@@ -288,13 +288,351 @@
 - **Date**: 2026-07-04
 - **Status**: active
 
+### AD-036
+- **Decision**: A fábrica pesada (extração PDF, explicações, embeddings, áudio, inéditas) roda em **scripts standalone disparados por GitHub Actions** (workflows agendados/manuais) + Batch API — nunca em função da Vercel. Jobs da fábrica são retomáveis por chave de dedup (submeter+poll).
+- **Reason**: 3 devs sem ops; sem servidor pra manter; segredos geridos (GitHub Secrets); reproduzível e registrado; Batch é submeter+aguardar, encaixa.
+- **Trade-off**: Latência de agendamento do Actions; disciplina de idempotência.
+- **Scope**: M9 (contrato p/ M1/M2/M3 — todo pipeline pesado tem esse lar).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-037
+- **Decision**: Observabilidade da aplicação = **Sentry** (erros de front/servidor Next.js, com contexto e alerta) + **logs nativos** Vercel/Supabase + **advisors** Supabase (segurança/performance). Falha de pg_cron ou de workflow GitHub Actions SHALL ser visível/alertada, nunca silenciosa. Distinta da trilha de auditoria LGPD (D30/AD-030, M7).
+- **Reason**: Produção sem ops precisa de erro visível e alertável; Sentry tem free tier e é padrão da stack.
+- **Trade-off**: Mais uma integração; custo do Sentry acima do free tier no futuro.
+- **Scope**: M9 (transversal — todas as features reportam erro por aqui).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-038
+- **Decision**: Retenção de backup = **7 dias** (backup diário padrão do Supabase Pro), sem PITR. O DELETE-por-esquecimento (D29/AD-029) some dos backups por **expiração natural em ≤7 dias**, cumprindo o prazo "~15–30 dias" com folga. RPO ≈ até 24h; sem recuperação a ponto arbitrário. **Refina o "~30 dias" do AD-035** (AD-035 permanece; este ajusta o número após Discuss).
+- **Reason**: Mais barato (sem add-on PITR) e retenção menor cumpre o DELETE-dos-backups mais rápido (melhor p/ LGPD).
+- **Trade-off**: Janela de recuperação de desastre menor (7d, RPO ~24h) do que 30d/PITR.
+- **Scope**: M9/M7 (contrato de retenção que a spec de LGPD herda).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-039
+- **Decision**: Contrato de identidade/versionamento de `questoes` que M4/M2 herdam: `id` estável (uuid) + `questao_versao` (int, começa 1). Correção de questão publicada (inclusive retificação/mudança de gabarito, decisão humana D30) = **nova versão**, nunca reescreve a anterior; `tentativas` (M4) referencia `questao_id`+`questao_versao` e segue apontando p/ a versão respondida. Enums fixos: `tipo_questao ∈ {multipla_escolha, certo_errado}`, `origem ∈ {real, gerada_ia}`, `status ∈ {rascunho, em_revisao, publicada, rejeitada, precisa_ocr}`.
+- **Reason**: O log imutável do M4 exige que o fato respondido nunca mude sob os pés; enums estáveis são o snapshot congelado.
+- **Trade-off**: Guardar múltiplas versões da mesma questão; projeções recalculam em cima.
+- **Scope**: M1 (contrato p/ M4 snapshot + M2 explicação + M7 flywheel).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-040
+- **Decision**: Formato de dados da questão: `alternativas` jsonb = array `[{ "letra": "A|B|C|D|E", "texto": "..." }]` p/ `multipla_escolha`, `null` p/ `certo_errado`; `resposta_correta` = letra (A–E) p/ múltipla ou `C`/`E` p/ certo-errado; `imagens` jsonb = array `[{ "storage_path", "posicao": "enunciado|alternativa_X", "alt_text" }]` (Supabase Storage); `fonte_citacao` (banca/ano/órgão/cargo/número) obrigatório quando `origem='real'`; `dificuldade` = `smallint` 1–5 estimada pela IA no MVP, calibra pelo uso (grupo 2, M7); `embedding` (Cohere embed-v4, HNSW) + `fts` (tsvector PT) = busca híbrida.
+- **Reason**: Contrato único de leitura p/ M2 (grounding/explicação), M4 (renderizar questão) e M5 (Raio-X).
+- **Trade-off**: Escala de dificuldade 1–5 é grosseira no cold-start.
+- **Scope**: M1 (formato herdado por M2/M4/M5).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-041
+- **Decision**: Escopo M1-MVP fechado no Discuss: (1) questões com **imagem** → extrair a imagem pro **Supabase Storage** e servir desde o dia 1 (`imagens` populado); (2) provas **escaneadas** (sem texto nativo) → **adiadas**, entram em `status='precisa_ocr'` (fast-follow), MVP ingere só texto nativo; (3) **inéditas** (`gerada_ia`) fora da leva de lançamento (§4.1 = só reais), permanecem P2.
+- **Reason**: Acervo real nativo limpo primeiro, com imagens completas; OCR e inéditas adicionam erro/curadoria e ficam p/ depois.
+- **Trade-off**: Provas antigas escaneadas ficam de fora no lançamento; acervo inicial menor.
+- **Scope**: M1.
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-042
+- **Decision**: Contrato do log `tentativas` (fundação de todo o produto): **só-INSERT**, nunca UPDATE nem DELETE-por-edição (DELETE por `user_id` permitido — LGPD). Colunas: quem/o quê (`user_id`, `questao_id`, `questao_versao`); **snapshot congelado** no insert (`materia_id`+rótulo, `topico_id`+rótulo, `banca`, `tipo_questao`, `dificuldade`, `origem`); contexto (`sessao_id`, `contexto ∈ {diagnostico, plano, treino, simulado, revisao}`); resultado (`resposta_dada`, `correta`); sinais crus (`tempo_ms`, `marcou_chute`); causa no treino (`causa_erro`, `causa_origem` — no próprio insert); tempo (`respondida_em`). Particionada por mês (INFRA-04). Snapshot guarda id **e** rótulo congelado p/ reclassificação futura não deslocar o histórico. Todo "estado atual" = projeção recalculável do zero.
+- **Reason**: Event sourcing = auditoria + reprocessamento + várias projeções da mesma base (AD-015).
+- **Trade-off**: Camada calculada desde o dia 1; placar com atraso; disciplina de nunca dar UPDATE.
+- **Scope**: M4 (contrato herdado por M5 Raio-X, M6 hábito, M7 flywheel/grupos de dado).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-043
+- **Decision**: Taxonomia de causa do erro = auto-relato do aluno (`causa_origem='aluno'` no MVP; dedução IA rebaixada a 'sistema' futuro). Enum das **6 causas + "não sei"**: `nao_sabia_conteudo`, `errei_a_conta`, `entendi_errado_enunciado`, `confundi_conceitos`, `fiquei_na_duvida`, `chutei`, `nao_sei_dizer`; causa extra `faltou_tempo` **só** em `contexto='simulado'`. **Momento/gravação (respeita só-INSERT AD-042)**: no **treino** a causa entra no próprio INSERT da tentativa (obrigatória ao errar, antes de avançar); no **simulado** a causa é coletada na revisão pós-prova e gravada em **linha/tabela vizinha** ligada à tentativa — nunca UPDATE no fato. Cada causa amarra um remédio distinto no plano.
+- **Reason**: Só o aluno sabe o porquê; cada causa dispara ação diferente; só registra causa que muda o plano (D16).
+- **Trade-off**: Dado inicial incompleto/enviesado; encorpa com o uso.
+- **Scope**: M4 (herdado por caderno de erros, motor do plano, M7).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-044
+- **Decision**: Projeções do M4 (read models recalculáveis, NÃO fonte da verdade): `dominio_topico` (user↔tópico↔score↔n), `caderno_erros` (projeção sobre `correta=false`+`causa_erro`), agenda de revisão espaçada. Revisão espaçada opera **por assunto/tópico** — régua fixa 1/3/7/14/30 como piso, migra p/ **FSRS por aluno e por assunto** quando o log encher. Motor de prioridade = quanto cai (Raio-X/M5) × fraqueza (log) × devendo-revisão. Plano diário roda por job pg_cron 1×/dia, escolha em regra/SQL (IA só a frase, 1 chamada Sonnet), e **emite dois níveis: `piso` e `meta_cheia`** (contrato que M6 consome). Placar atualizado por job (pequeno atraso), nunca ao vivo. Chute correto (`marcou_chute`) descontado do domínio; anulada não conta.
+- **Reason**: Orquestrar as 2 técnicas com mais evidência; pré-computa primeiro (invariantes #6/#7).
+- **Trade-off**: Cold-start do FSRS; "revisar em vez de avançar" precisa ser explicado ao aluno.
+- **Scope**: M4 (piso/meta herdados por M6; nota Raio-X vem de M5; projeções por M7).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-045
+- **Decision**: Retenção do dado com-nome = **comportamento fixo, número parametrizado**: conta inativa por `retencao_meses` (default **24**, em configuração) contados da última atividade **ou** do fim da matrícula (o que for mais recente) → consolida no grupo 2 e apaga o grupo 1. Aviso ao titular **30 dias antes**; login dentro da janela reinicia o relógio. A política de privacidade lê o número da **mesma** configuração (política e código nunca divergem). **Refina AD-028** (que permanece; este parametriza o número pendente de validação jurídica).
+- **Reason**: Discuss 2026-07-23 — o advogado ainda não validou 24m; travar o número em código obrigaria mudar código depois.
+- **Trade-off**: Um parâmetro a mais para governar; a política vira conteúdo dinâmico.
+- **Scope**: M7 (herdado por M8 — fim da matrícula alimenta o relógio).
+- **Date**: 2026-07-23
+- **Status**: active (número **[provisório]** — confirmar advogado)
+
+### AD-046
+- **Decision**: Grupo 2 (estatística somada anônima) = **acumulador materializado** (contadores por questão/tópico incrementados por job idempotente com marca d'água), **NÃO** projeção recalculável do zero — porque precisa preservar a contribuição de quem já exerceu o DELETE (art. 12). **Exceção deliberada ao AD-015/AD-044**. `piso_anonimato` (default **20**, em configuração) é regra dura: abaixo do piso, o agregado é indisponível — não exibe, não usa como sinal. DELETE **não decrementa** o acumulador.
+- **Reason**: Sem isso o "apaga tudo meu" destruiria o aprendizado coletivo e o art. 12 não se cumpriria; forçado por lei, não é escolha de arquitetura.
+- **Trade-off**: Após DELETEs, um rebuild total do log daria números menores que o acumulador — o acumulador é a autoridade do grupo 2.
+- **Scope**: M7 (contrato p/ M5 Raio-X e M4 calibração de dificuldade, que consomem o grupo 2).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-047
+- **Decision**: Menores de idade = **declaração afirmativa de 18+ no checkout** (registrada com data/hora) + termos declarando serviço para maiores + canal do titular para o responsável pedir exclusão. **SHALL NOT** coletar data de nascimento para essa finalidade (minimização). Resolve a questão aberta nº10 do PRD.
+- **Reason**: Discuss 2026-07-23 — cobre a obrigação sem atrito no checkout de e-mail-só (AD-034) e sem criar mais um dado pessoal.
+- **Trade-off**: Não impede tecnicamente um menor de comprar; depende da declaração.
+- **Scope**: M7 (requisito que **M8 implementa no checkout**).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-048
+- **Decision**: Auto-aplicação de correção pela IA (deferido do D30) = permitida **só** numa **lista fechada, explícita, versionada em config**, com toda ação **reversível em um passo** e **auditada**. Lista inicial = **apenas** "aposentar distrator com 0 marcações em ≥N respostas" (N configurável e alto), exigindo também `n_respondentes >= piso_anonimato`. Ampliar a lista = decisão humana registrada (novo AD), nunca inferência da IA. Gabarito/enunciado/explicação continuam 100% humanos (invariantes 4 e 10).
+- **Reason**: Discuss 2026-07-23 — ganha velocidade de curadoria sem abrir a porta para automação mexer no que se ensina.
+- **Trade-off**: Cold-start: com poucos alunos o sinal "ninguém marcou" é fraco — por isso N alto + piso.
+- **Scope**: M7 (esteira 2; consome contrato de versionamento AD-039 do M1).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-049
+- **Decision**: Matriz de modelos por tarefa **pesquisada em 2026-07-23** (OpenRouter, preços USD/M tokens entrada/saída) e fixada em **configuração** — nenhum requisito/teste depende do nome:
+  · extração de PDF → `anthropic/claude-sonnet-5` (SDK direto, $2/$10, Batch −50%) — único com PDF nativo + citações + execução de código; text-only (DeepSeek/GLM/Qwen-max) é **desqualificado** aqui
+  · explicação → `anthropic/claude-sonnet-5` (Batch)
+  · reprocessamento do "refaz 1×" → `anthropic/claude-opus-4.8` ($5/$25)
+  · classificação no tópico → `deepseek/deepseek-v4-pro` ($0,435/$0,87); fallback `minimax/minimax-m3` ($0,30/$1,20)
+  · frase do plano diário → `minimax/minimax-m3`
+  · tutor → `minimax/minimax-m3` (ver AD-051)
+  · rascunho de inéditas (P2) → `z-ai/glm-5.2` ($0,78/$2,45)
+  · embeddings → **Cohere embed-v4, chamada direta — NÃO passa pelo gateway** (confirmado 2026-07-23: OpenRouter não serve embeddings)
+  Acrescenta ao AD-011: **rotina periódica** (default trimestral) de revisar a matriz — puxar preços/opções, rodar o eval cego, trocar se houver ganho; data da última revisão registrada. Eval cego PT-BR continua porteiro obrigatório em tarefa sensível. Custo estimado da fábrica: **< US$100 uma vez** p/ ~10 mil questões.
+- **Reason**: Discuss 2026-07-23 — o usuário pediu pesquisa de modelos/custos atuais antes de decidir; AD-011 estava [provisível] sem números.
+- **Trade-off**: Nomes envelhecem em semanas; a rotina de revisão é a mitigação. Preço do Cohere embed-v4 **não confirmado** (página de pricing só mostra Model Vault).
+- **Scope**: M2 (herdado por M1 extração e M4 frase do plano).
+- **Date**: 2026-07-23
+- **Status**: active (nomes **[provisível]** — tabela válida em 2026-07-23)
+
+### AD-050
+- **Decision**: Tópico **sem documento de referência** montado → a fábrica **publica** a explicação usando **prova + gabarito oficial** como fonte mínima (ambos são ato oficial, AD-003); a IA pode explicar o raciocínio da questão mas **SHALL NOT** afirmar norma, prazo, percentual ou regra externa que não esteja no material entregue; o tópico entra na fila de construção da base, priorizada por **frequência real**.
+- **Reason**: Discuss 2026-07-23 — a base de referência é construída por frequência (PRD §10.8) e não cobre tudo no dia 1; travar a publicação encolheria demais o acervo de lançamento.
+- **Trade-off**: Explicação de tópico sem base é mais rasa (raciocínio sem citação de norma).
+- **Scope**: M2 (afeta o volume publicável do M1).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-051
+- **Decision**: **Tutor ao vivo ENTRA no MVP (P1)** — muda o `PRD.md` §4.2, que o listava como fast-follow. Configuração: modelo `minimax/minimax-m3`; **teto de 3 perguntas/aluno/dia** (config); **cache de pergunta repetida** na mesma questão (não reaproveita entre questões diferentes); contexto injetado = explicação+fontes já aprovadas, **zero busca ao vivo**; streaming (AD-035). Custo: pior caso absoluto ~US$100/mês com 1.000 alunos; realista ~US$10–17. **Alerta** de gasto mensal ao ultrapassar o limite configurado, **sem desligamento automático** (escolha explícita do usuário). Perguntas do tutor vivem em tabela própria (grupo 1 LGPD), **nunca** em `tentativas`.
+- **Reason**: Discuss 2026-07-23 — o usuário optou por lançar com o tutor; a análise de custo mostrou que o teto diário, não o modelo, é a trava que importa (baixar 10→5→3 corta o custo proporcionalmente).
+- **Trade-off**: Única peça com custo variável por aluno e única que degrada se a API cair; sem freio automático, o pior caso não tem teto em dinheiro (só teto de perguntas).
+- **Scope**: M2 (consome contrato de M4/M7; entra no escopo do MVP §4.1).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-052
+- **Decision**: Explicação amarrada a `questao_id` + `questao_versao` (AD-039), com versão e `status` próprios. Nova versão da questão por mudança de **gabarito, enunciado ou alternativas** → explicação **invalidada imediatamente** (sai do ar), regerada e só volta após **revisão humana**; o áudio é descartado e refeito (AD-014). Mudança **cosmética** (typo/formatação/acento) → explicação segue válida, sem regerar. A classificação cosmética×substantiva é **registrada por quem cria a versão** (campo do M1), nunca inferida depois pela IA. Tentativas já gravadas seguem apontando para a versão respondida.
+- **Reason**: Discuss 2026-07-23 — sem isso, uma retificação de gabarito deixaria explicação errada no ar; refazer tudo queimaria revisão humana e TTS à toa.
+- **Trade-off**: Exige um campo de classificação da mudança no fluxo de edição do M1.
+- **Scope**: M2 (contrato herdado por M1 — campo na criação de versão — e por M3 — refazer áudio).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-053
+- **Decision**: Preço = **comportamento fixo, valor parametrizado**. Fixo: um plano único anual, 12x no cartão, Pix/boleto à vista, garantia 7 dias. Parametrizado: **R$197/ano** como âncora no cartão parcelado + **desconto de ~10% à vista** (ex.: **R$177** no Pix/boleto), ambos em configuração e exibidos lado a lado no checkout. Taxas Asaas pesquisadas em 2026-07-23: Pix R$1,99 · boleto R$1,99 · cartão à vista R$0,49+2,99% · **7–12x R$0,49+3,99%** · antecipação 1,25%/mês à vista e **1,70%/mês parcelado** · NF R$0,49 · sem mensalidade/adesão · cartão à vista D+32. Líquido: Pix ≈ R$174,52 · cartão 12x sem antecipar ≈ R$188,16 · cartão 12x antecipando tudo ≈ ~R$167. **Refina AD-031** (que permanece; este parametriza e acrescenta o desconto à vista). Mudança de preço **não** afeta matrículas já vendidas.
+- **Reason**: Discuss 2026-07-23 — AD-031 estava [provisório]; o desconto à vista rende mais líquido **e** antecipa o caixa (Pix entra na hora, cartão 12x pinga por 12 meses).
+- **Trade-off**: Duas tabelas de preço na página de vendas; margem menor em quem migra pro Pix (compensada pelo caixa).
+- **Scope**: M8 (número herdado pela página de vendas e pelo checkout).
+- **Date**: 2026-07-23
+- **Status**: active (número **[provisório]** — estrutura confirmada)
+
+### AD-054
+- **Decision**: Venda dentro da **janela de garantia de 7 dias** SHALL ficar marcada **não-antecipável** e SHALL NOT entrar em nenhuma solicitação de antecipação de recebíveis. Passada a janela sem reembolso, a venda vira antecipável e antecipar é **decisão manual** do time (nunca automática), apoiada por relatório do que está antecipável com líquido estimado. **Resolve a questão aberta nº9 do PRD.**
+- **Reason**: Discuss 2026-07-23 — antecipar custa ~11% da venda (1,70%/mês × ~6,5 meses de espera média das 12 parcelas) e esse custo **não volta** num reembolso; esperar 7 dias elimina o buraco sem abrir mão da antecipação.
+- **Trade-off**: Caixa das vendas fica retido 7 dias antes de poder ser antecipado.
+- **Scope**: M8.
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-055
+- **Decision**: Fim dos 12 meses de matrícula = **avisos em 30 e 7 dias** antes com oferta de renovação; no vencimento o **acesso ao conteúdo encerra**; **SHALL NOT** haver cobrança automática de renovação (venda única, AD-031/AD-032). O **histórico do aluno é preservado** (log, projeções, caderno) e o relógio de retenção do M7 passa a contar **a partir do fim da matrícula** (AD-045); renovar dentro da janela traz tudo de volta e reinicia o relógio. Avisos de vencimento são **transacionais** — não dependem do consentimento de marketing (DADOS-01). **Resolve a questão aberta nº5 do PRD.**
+- **Reason**: Discuss 2026-07-23 — concurso é anual e o aluno volta; cobrança automática contradiz o modelo de venda única e gera chargeback.
+- **Trade-off**: Receita de renovação não é automática — depende da oferta converter.
+- **Scope**: M8 (amarra com M7/AD-045 e com as projeções do M4).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-056
+- **Decision**: Fórmula da frequência real do Raio-X: (a) **decaimento gradual por ano** — cada questão entra na taxa com peso decrescente conforme o ano fica mais antigo (fator/meia-vida em configuração), **sem janela de corte** e sem nenhum ano virando zero; (b) **amortecimento por amostra pequena** — quando `n_questoes` é baixo, a taxa usada na ordenação é puxada em direção à média geral dos tópicos daquela banca, com força inversamente proporcional à amostra (constante em config), e a linha recebe `amostra_baixa=true` + rótulo na tela. Tópico no edital com `n_questoes=0` recebe a média amortecida, **nunca zero** (zerar é exclusividade do porteiro). **Refina AD-019/AD-020**, que estavam `[provisório]`.
+- **Reason**: Discuss 2026-07-23 — banca muda devagar (corte brusco descarta acervo curado) e taxa de 3 aparições em 10 anos pode ser coincidência; sem amortecimento o motor do plano manda o aluno gastar semanas em assunto raro.
+- **Trade-off**: Dois parâmetros a calibrar (fator de decaimento, constante do amortecimento); nota amortecida é menos intuitiva de explicar que contagem crua.
+- **Scope**: M5 (fator "quanto cai" herdado pelo motor de prioridade do M4).
+- **Date**: 2026-07-23
+- **Status**: active (números **[provisório]** — comportamento fixo, valores em configuração)
+
+### AD-057
+- **Decision**: Os dois cortes do Raio-X são **por posição**, não por valor absoluto: (a) **teto do empurrão de atualidade** — o empurrão SHALL NOT levar o tópico acima do percentil-teto configurado da lista; a **única** via que ultrapassa é a faixa especial "novo no edital **E** sinalizado"; todo empurrão tem autor, motivo, **validade** e é reversível em um passo, expirando sozinho se não for renovado; (b) **corte núcleo × condicional** — tópico é "forte" numa banca quando está acima do corte de posição **dentro daquela mesma banca** (percentil em config), e não por um % absoluto igual para as três; forte nas 3 = `nucleo`, forte em 1–2 = `condicional` com rótulo visível. **Refina AD-020**.
+- **Reason**: Discuss 2026-07-23 — teto por posição é auditável na tela e independe da escala da nota; corte por posição se auto-ajusta a banca com acervo grande ou pequeno (limite absoluto penalizaria banca de prova curta).
+- **Trade-off**: Percentis mudam quando a lista muda de tamanho; exige recalcular o corte a cada execução.
+- **Scope**: M5.
+- **Date**: 2026-07-23
+- **Status**: active (percentis **[provisório]** — estrutura confirmada)
+
+### AD-058
+- **Decision**: Escudos da sequência são ganhos **por constância** — 1 escudo a cada N dias de agenda cumpridos (default 7) — com **teto de 2** guardados; gasto **automático** e informado ao aluno quando um dia da agenda é perdido. Escudos SHALL NOT ser compráveis, transferíveis nem obtidos por assistir anúncio.
+- **Reason**: Discuss 2026-07-23 — prende a proteção ao esforço; quem está falhando para de ganhar escudo justamente quando mais usaria, o que impede virar licença para sumir.
+- **Trade-off**: Aluno de rotina muito irregular acumula pouca proteção, que é o caso em que ele mais precisaria.
+- **Scope**: M6.
+- **Date**: 2026-07-23
+- **Status**: active (números em configuração)
+
+### AD-059
+- **Decision**: Reset suave = **congela + janela**. Sem escudo disponível, a sequência **congela** no valor atual, é marcada como **tropeçada** e abre uma **janela de recuperação** (default 3 dias); cumprir a **`meta_cheia`** dentro da janela faz a contagem **retomar de onde parou**; a janela vencer faz a sequência cair, com **piso de queda em config — nunca a zero**. O consumo de escudo e o tropeço SHALL ser reproduzíveis de forma determinística no recálculo da projeção.
+- **Reason**: Discuss 2026-07-23 — segunda chance com prazo claro e reconquistável; corrige o abandono nº1 do streak "tudo ou nada" sem apagar o construído.
+- **Trade-off**: Mais estado a reconstruir na projeção (escudo, tropeço, janela) do que um contador simples.
+- **Scope**: M6 (consome `meta_cheia` de AD-044/ALUNO-11).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-060
+- **Decision**: Anti-"clique automático" **sem trava de tempo**. O anel do dia conta **bloco do plano concluído** (Revisar/Avançar/Treinar), **não** questão respondida, e um bloco só fecha quando **cada erro teve a causa declarada** (obrigação que o M4 já impõe, AD-043 — "não sei dizer" conta como causa válida). Nenhuma resposta SHALL ser descartada por ter sido rápida. `tempo_ms` continua **gravado** no log (AD-042) e disponível para relatório interno, mas **SHALL NOT** ser porteiro do anel nem da sequência. **Substitui** a cláusula "resposta rápida demais não conta" do **AD-025** (o resto do AD-025 — teto no plano, notificação leve, sem ranking — permanece).
+- **Reason**: Discuss 2026-07-23 — o usuário recusou a trava por tempo: ela invalida em silêncio resposta possivelmente legítima e o aluno não descobre por quê. O freio já existe de graça: quem clica no automático erra quase tudo e é interrompido a cada erro para escolher uma causa.
+- **Trade-off**: Um aluno disposto a declarar causa falsa em cada erro consegue fechar blocos sem estudar; aceito porque os dois sinais honestos (progresso e "no prazo") leem acerto real e denunciam.
+- **Scope**: M6 (consome AD-043 do M4; altera o critério de aceite do `PRD.md` §M6).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-061
+- **Decision**: O sinal "no prazo" tem **dois modos**: com `data_prova` no perfil de concurso, compara ritmo de cobertura do edital × tempo restante; **sem** `data_prova` (situação atual do BB), vira **ritmo de avanço** — mede se o aluno abriu conteúdo novo (bloco Avançar) dentro da janela configurada ou está só revisando, **sem afirmar nada** sobre cobrir o edital a tempo. A troca de modo é **automática** quando a data entra no perfil. O sinal **SHALL NOT** ser congelável por escudo, folga ou perdão (o perdão vale só para a sequência) nem usar estimativa apresentada como fato para criar urgência.
+- **Reason**: Discuss 2026-07-23 — o BB está sem edital e o D25 proíbe fabricar urgência; desligar o sinal removeria a trava anti-acomodamento justamente nos meses em que o aluno mais tende a só revisar.
+- **Trade-off**: No modo sem data, o sinal é mais fraco (fala de ritmo, não de suficiência).
+- **Scope**: M6 (lê `data_prova` de M5/AD-022).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-062
+- **Decision**: A voz do TTS vive em **configuração** (provedor + voz) e **nenhum requisito, teste ou código cita qual é**; o **teste cego de escuta é porteiro do primeiro lote** — com a configuração de voz vazia ou não travada, o job de geração em massa **SHALL recusar-se a rodar** com mensagem explícita e **SHALL NOT** escolher voz padrão sozinho. A escolha é registrada com **data, critério e responsável**; o critério é a leitura correta de número/valor/percentual/sigla em **português**, nunca ranking geral de qualidade. Trocar a voz depois coloca todo o acervo de áudio na fila de refazer, com o custo apresentado antes da confirmação. **Refina AD-014**.
+- **Reason**: Discuss 2026-07-23 — gerar milhares de arquivos com uma voz provisória e trocar depois obriga refazer tudo; travar o lote transforma uma pendência humana em porteiro explícito em vez de risco silencioso.
+- **Trade-off**: O lote fica bloqueado por uma tarefa humana de escuta (ferramenta já pronta em `experiments/tts-comparacao/`).
+- **Scope**: M3.
+- **Date**: 2026-07-23
+- **Status**: active (voz específica **pendente** — 8 candidatas ElevenLabs do D14)
+
+### AD-063
+- **Decision**: O áudio narra **a questão inteira e a explicação num arquivo contínuo** — enunciado, alternativas (ou a formulação Certo/Errado quando `alternativas` é null) e explicação, com transição audível entre questão e resposta. O áudio **narra, não interpreta**: SHALL NOT reescrever, resumir ou acrescentar conteúdo. **Questão com `imagens` não vazio (gráfico/tabela/figura) SHALL NOT receber áudio** no MVP; fica marcada com o motivo e a interface informa que é só de leitura. Amarração de versão passa a ser `questao_id` + `questao_versao` + `explicacao_versao` (mudança em **qualquer** um invalida o áudio).
+- **Reason**: Discuss 2026-07-23 — áudio que começa na explicação só serve para quem já leu a questão, ou seja, para quem está em frente à tela, o que anula a razão de existir do módulo.
+- **Trade-off**: ~2,5× mais caracteres por item (ver AD-065) e um ciclo de vida a mais para controlar; questões com figura ficam sem áudio.
+- **Scope**: M3 (consome AD-040 do M1 e AD-052 do M2).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-064
+- **Decision**: **M3 é fast-follow** — pipeline completo construído e mantido **atrás de feature flag**; a geração em lote roda **depois do lançamento**, quando o acervo de explicações estabilizar. Com a flag desligada, nenhuma tela promete áudio e o produto funciona integralmente. A fila é ordenada pela **frequência real** (M5/RAIOX-15) e cada execução em lote declara um **teto de gasto** que, ao ser atingido, **interrompe o lote** de forma limpa e retomável (diferente do tutor/AD-051, onde parar não era aceitável). Confirma o risco nº4 do `PRD.md` §10 e resolve a ambiguidade entre "P1 do módulo" e "fast-follow".
+- **Reason**: Discuss 2026-07-23 — nas primeiras semanas a taxa de correção de explicação é máxima e cada correção descarta e refaz o áudio (AD-052); gerar cedo é pagar duas vezes, além de colocar a escuta das vozes no caminho crítico do lançamento e adiantar milhares de dólares antes de haver receita.
+- **Trade-off**: O argumento de venda "estude no trânsito" não existe no dia do lançamento.
+- **Scope**: M3.
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-065
+- **Decision**: Provedor de voz — **ElevenLabs `eleven_v3` permanece principal** (única evidência real em pt-BR: teste de 19 vozes do D14) e o **slot de reserva fica deliberadamente vazio (standby)**: a camada trocável é construída, mas nenhum segundo provedor é fixado agora; com o slot vazio e o principal falhando, o lote **para de forma visível** em vez de improvisar. Entram registrados como candidatos à próxima rodada de teste cego dois entrantes que **não existiam** na rodada do D14 e **não têm qualidade em pt-BR verificada**: **Inworld TTS-1.5 Max** (~US$10/1M chars) e **Hume Octave 2** (~US$7,60/1M). **Custo do lote de lançamento revisado** (pesquisa 2026-07-23): com AD-063 (questão+explicação, ~1.800 chars/item) e ~10 mil questões ≈ **18M caracteres** → ElevenLabs **~US$1.800–3.700**, faixa de US$30/1M (Deepgram Aura-2 / Google Chirp 3 HD / Polly Generative) ~US$540, faixa de US$15/1M (Fish via Novita, OpenAI gpt-4o-mini-tts) ~US$270, Inworld ~US$180, Hume ~US$137. **Contraria a estimativa "centenas de USD" do AD-014/D14**, que assumia só a explicação e um acervo menor.
+- **Reason**: Discuss 2026-07-23 — o usuário pediu pesquisa antes de escolher a reserva; a pesquisa mostrou que a decisão de escopo (AD-063) e o mercado mudaram a ordem de grandeza do custo, e que escolher reserva por tabela de preço sem escuta em português contraria o critério do D14.
+- **Trade-off**: Sem reserva configurada, indisponibilidade do ElevenLabs atrasa o lote (aceitável: é lote, não superfície ao vivo). Preços são de **fontes secundárias**, não das páginas oficiais; cobertura de pt-BR dos entrantes **não confirmada** (Fish Audio lista 10 idiomas sem português explícito na fonte lida).
+- **Scope**: M3 (refina AD-014).
+- **Date**: 2026-07-23
+- **Status**: active (preços **[provisório]** — reconfirmar em fonte oficial antes de contratar)
+
+### AD-066
+- **Decision**: **Tutor e Raio-X completo entram no MVP**, e os documentos que discordavam foram alinhados. (a) O tutor é P1 (AD-051): o `PRD.md` §4.2 o listava como fast-follow e o M9 marcava a infra de streaming como P3 — ambos corrigidos; INFRA-05 vira **P1** e o **plano Vercel Pro passa a ser requisito do lançamento**, não custo derivado opcional. (b) O Raio-X entra **completo** (RAIOX-01…08, 11…14), contra o `PRD.md` §4.1 que dizia "pode ser só frequência real, sem multi-sinal completo": é a primeira tela e o argumento de venda, e a matemática é barata (consulta + parâmetros em config). Seguem fast-follow **RAIOX-07** (tela de curadoria do empurrão) e **RAIOX-09/10** (formato e diff de edital), que são caros e não bloqueiam. Registrado como consequência: **a qualidade do Raio-X vem do acervo, não da fórmula** — a ingestão do M1 é o caminho crítico.
+- **Reason**: Revisão de consistência de 2026-07-23 encontrou os dois pontos como contradição real entre PRD, M2/M5 e M9. O usuário decidiu: tutor é MVP (M2 estava certo) e Raio-X é o produto principal, robusto desde o dia 1.
+- **Trade-off**: O MVP cresce. O tutor traz junto streaming, teto diário, cache, alerta de gasto e uma tabela do grupo 1 da LGPD; o Raio-X completo traz a fórmula inteira. Aceito conscientemente.
+- **Scope**: PRD §4.1/§4.2, M2, M5, M9.
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-067
+- **Decision**: Na retenção por inatividade (24m), as linhas do aluno em `tentativas` são **APAGADAS**, não "anonimizadas in-place". O M9 dizia anonimizar mantendo a linha; o M7 (DADOS-03) dizia apagar. **Vence o M7**; o M9 foi corrigido. Partições continuam **nunca dropadas**.
+- **Reason**: Linha sem `user_id` mas com `sessao_id` continua sendo a sequência de uma pessoa só — é **pseudonimização**, não anonimização, e portanto continua sendo dado pessoal sob a LGPD. Manter teria custo e nenhum ganho legal. Além disso a contribuição estatística já está preservada no acumulador anônimo do grupo 2 (AD-046), que não depende dessas linhas.
+- **Trade-off**: Um rebuild total do log depois de retenções produz números menores que o acumulador — consequência já aceita e registrada em AD-046.
+- **Scope**: M9 (alinhado a M7/DADOS-03).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-068
+- **Decision**: A regra do IA-02 passa a ser: **nenhum trecho de código nem teste automatizado** pode depender do nome de um modelo — o nome vive só na configuração. **Specs, ADs e comentários PODEM citar o modelo default vigente.**
+- **Reason**: A redação anterior ("nenhum requisito, teste ou trecho de código") era violada pela própria spec em três lugares (`anthropic/claude-opus-4.8` em IA-06, `minimax/minimax-m3` no tutor, "Sonnet" em ALUNO-12). O objetivo real é impedir **acoplamento**, não impedir documentação.
+- **Trade-off**: Nome citado em spec envelhece. Aceito: envelhecer é o comportamento esperado de documentação, e o teste que garante o desacoplamento continua existindo.
+- **Scope**: M2 (afeta a leitura de M4/ALUNO-12).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-069
+- **Decision**: A verificação de conta deixa de ser **execução de código gerado pela IA em sandbox** e passa a ser **catálogo fechado de fórmulas + função própria testada**: a IA devolve, em saída estruturada, apenas **qual fórmula** e **quais parâmetros**; o cálculo é feito por código nosso, coberto por teste unitário. Catálogo mínimo: juros simples e compostos, taxa proporcional × equivalente, desconto simples e composto, séries uniformes, SAC e Price, VP e VF. Quantitativa que **não encaixa** em nenhuma fórmula vai direto à **fila humana**, e a taxa de não-cobertura é medida. O cruzamento duplo (resultado × gabarito × número no texto) permanece, com tolerância de arredondamento em config. **Substitui o sandbox do AD-012.3.**
+- **Reason**: Matemática financeira de concurso bancário é um conjunto fechado de fórmulas. Trocar execução de código por catálogo elimina a superfície de segurança (nada gerado por IA é executado), torna o resultado determinístico e testável de uma vez só, e barateia a chamada. O usuário confirmou que conferir centenas de contas à mão não é viável, então a verificação automática **permanece** — muda só o mecanismo.
+- **Trade-off**: Risco de cobertura. RLM e pegadinhas de enunciado não têm fórmula e caem na fila humana. **Se a taxa de não-cobertura na primeira leva for alta, a decisão de executar código é reaberta** — está registrado como assumption a medir.
+- **Scope**: M2 (IA-06, novo IA-15).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-070
+- **Decision**: A palavra **"frequência" fica reservada ao Raio-X** (M5: quanto o assunto cai na prova). O contador por questão do grupo 2 (M7) passa a se chamar **`n_respostas`** (quantas vezes a questão foi respondida).
+- **Reason**: O mesmo termo significava duas coisas incompatíveis em dois módulos, em tabelas diferentes. Colisão de nome que produziria bug de leitura no Design.
+- **Trade-off**: Nenhum.
+- **Scope**: M7 (esteira 1 e definição do grupo 2).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-071
+- **Decision**: O placar do aluno tem **duas velocidades**. **Na hora (abertura da tela)**: `anel do dia` e `sequência` — consulta de 1 aluno × 1 dia sobre o plano do dia + tentativas de hoje. **Por job**: progresso, domínio por tópico, caderno de erros, Raio-X e histórico da sequência.
+- **Reason**: A spec do M6 mandava tudo por job "com pequeno atraso", e o job do plano roda 1×/dia — o aluno fecharia um bloco e não veria o anel mexer até o dia seguinte, o que anula a função do módulo. O invariante nº7 proíbe **IA ao vivo** e conta pesada ao vivo; uma consulta de um aluno num dia não é nenhum dos dois.
+- **Trade-off**: Duas rotas de cálculo para os mesmos sinais; o Design tem de garantir que a conta ao vivo e a do job dão o mesmo número.
+- **Scope**: M6 (GAM-01, novo GAM-14), M4 (ALUNO-02, AC2).
+- **Date**: 2026-07-23
+- **Status**: active
+
+### AD-072
+- **Decision**: A revisão espaçada usa **FSRS com os parâmetros padrão da biblioteca desde o dia 1**, por aluno e por assunto. A régua fixa 1/3/7/14/30 permanece implementada como **plano B selecionável por configuração**. A **otimização** dos parâmetros por aluno (`computeParameters`) é que é fast-follow. Como o FSRS espera nota de 1 a 4 por revisão e aqui a unidade é o tópico, a nota é derivada do desempenho do bloco Revisar por uma tabela de faixas em configuração.
+- **Reason**: Documentação do `ts-fsrs` conferida em 2026-07-23 (Context7): `default_w` traz 21 pesos **já treinados** e o agendador funciona sem nenhum histórico; só `computeParameters` exige histórico de revisões. A leitura anterior (AD-018 e a análise inicial desta revisão) de que "FSRS precisa de volume para funcionar" estava **errada**. Lançar com régua fixa e migrar depois obrigaria a deslocar os intervalos de todos os alunos de uma vez, sem ganho.
+- **Trade-off**: O FSRS foi desenhado para revisão **item a item** com nota dada pelo próprio aluno; aqui a unidade é o **tópico** e a nota é derivada. **É adaptação, não uso padrão** — validar no Design, e é por isso que a régua fixa continua como plano B.
+- **Scope**: M4 (ALUNO-09 sobe de P2 para P1), PRD §4.1/§4.2.
+- **Date**: 2026-07-23
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: — (nenhuma feature iniciada; STATE.md recém-inicializado a partir do PRD)
-- **Phase / Task**: Bootstrap do `.specs/` concluído — Decisions AD-001…AD-035 importados do PRD §11
-- **Completed**: STATE.md (Decisions log)
+- **Feature**: Specify **CONCLUÍDO PARA AS 9 FEATURES**. Rodada 1: M9, M1, M4. Rodada 2 (2026-07-23): M7, M2, M8. Rodada 3 (2026-07-23): **M5, M6, M3**. **Rodada 4 (2026-07-23): revisão de consistência cruzada das 9 specs + PRD — 6 contradições encontradas e resolvidas (AD-066…AD-072).**
+- **Phase / Task**: Fase **Specify encerrada e reconciliada**. Design/Tasks/Execute **ainda não iniciados em nenhum módulo**.
+- **Completed**:
+  - Rodada 1: `m9-infra/spec.md` (INFRA-01…10, AD-036/037/038) · `m1-banco-questoes/spec.md` (BANCO-01…13, AD-039/040/041) · `m4-coluna-vertebral/spec.md` (ALUNO-01…12, AD-042/043/044).
+  - Rodada 2: `m7-lgpd-flywheel/spec.md` (DADOS-01…13, AD-045/046/047/048) · `m2-camada-ia/spec.md` (IA-01…14, AD-049/050/051/052) · `m8-negocio-pagamentos/spec.md` (PAG-01…16, AD-053/054/055).
+  - **`.specs/features/m5-raiox-banca/spec.md`** (RAIOX-01…15) — Discuss fechou os 4 números que o AD-020 deixara `[provisório]`: decaimento gradual por ano + amortecimento por amostra pequena (**AD-056**), teto do empurrão **por posição** + corte núcleo/condicional **por posição dentro da banca** (**AD-057**). Novo invariante explícito: o Raio-X **não lê `tentativas`** (RAIOX-14).
+  - **`.specs/features/m6-gamificacao/spec.md`** (GAM-01…13) — Discuss: escudos por constância com teto 2 (**AD-058**), reset suave = congela + janela de recuperação (**AD-059**), **anti-clique sem trava de tempo** — anel por bloco concluído + causa declarada (**AD-060**, *substitui* cláusula do AD-025), "no prazo" sem `data_prova` vira ritmo de avanço (**AD-061**).
+  - **`.specs/features/m3-audio/spec.md`** (TTS-01…11) — Discuss + **pesquisa de provedores de TTS em 2026-07-23**: teste cego é **porteiro do primeiro lote** (**AD-062**), áudio narra **questão + explicação** num arquivo contínuo e questão com imagem não recebe áudio (**AD-063**), M3 é **fast-follow atrás de flag** com teto de gasto por lote (**AD-064**), ElevenLabs principal com **reserva em standby** + custo do lote revisado para ~US$1.800–3.700 (**AD-065**).
+  - Decisions estendido AD-056…AD-065 (append-only).
 - **In-progress** (file:line): none
-- **Next step**: Rodar Specify no MVP começando pelo loop central — M1 (banco) → M4 (log imutável/coluna vertebral, com o maior cuidado na fundação AD-015) → M2 (IA) → M8 (negócio/auth/pagamentos). Primeira feature sugerida: M4 / fundação de `tentativas` como event sourcing.
-- **Blockers**: none
-- **Uncommitted files**: `.specs/STATE.md`
-- **Branch**: — (projeto não é repositório git)
+- **Rodada 4 — revisão de consistência (2026-07-23)**. Contradições encontradas entre documentos e como
+  foram resolvidas (**todas já aplicadas nos arquivos**):
+  1. **Tutor MVP × fast-follow × infra P3** — M2 dizia P1, PRD §4.2 dizia fast-follow, M9 dizia P3.
+     → **AD-066**: tutor é MVP; INFRA-05 sobe para P1; Vercel Pro vira requisito de lançamento.
+  2. **Raio-X: PRD §4.1 mandava "só frequência real" × M5 marcava multi-sinal como P1.**
+     → **AD-066**: Raio-X completo no MVP; PRD corrigido; RAIOX-07/09/10 seguem fast-follow.
+  3. **Nome de modelo citado em requisito, contra a regra do próprio IA-02.**
+     → **AD-068**: a proibição passa a valer só para código e teste automatizado.
+  4. **Retenção 24m: M7 mandava apagar × M9 mandava anonimizar in-place.**
+     → **AD-067**: apagar (M7 vence); pseudonimizado ainda é dado pessoal.
+  5. **"Frequência" com dois sentidos (M5 = quanto cai na prova; M7 = quantas vezes foi respondida).**
+     → **AD-070**: M5 fica com o termo; M7 passa a usar `n_respostas`.
+  6. **Anel do dia atualizando só por job diário, o que anula a função do M6.**
+     → **AD-071**: anel e sequência calculados na abertura da tela; o resto por job.
+  - **Correção de fato:** a análise inicial afirmou que o FSRS não funcionaria no dia 1 por falta de
+    histórico. **Errado** — conferido na documentação do `ts-fsrs`: os parâmetros padrão vêm treinados.
+    Ver **AD-072**; ALUNO-09 subiu de P2 para P1.
+  - **Não reescritos de propósito:** `DECISOES-TECNICAS.md` e `HANDOFF.md` continuam sendo registro
+    histórico das conversas. As ADs novas dizem o que substituem; o histórico não é reescrito.
+- **Mudanças que alteram documentos anteriores** (aplicar quando tocar neles):
+  - ~~`PRD.md` §4.2 listava o **tutor como fast-follow**~~ — **APLICADO** na rodada 4 (AD-066): §4.1 item 7.
+  - `PRD.md` §M6, critério "**resposta rápida demais SHALL NOT contar**" — **revogado** por AD-060 (não há trava por tempo; o anel conta bloco concluído + causa declarada). O resto do §M6 permanece.
+  - `PRD.md` §M3 — o áudio agora narra **questão + explicação** (AD-063), não só a explicação; e o M3 é **confirmado fast-follow** (AD-064), resolvendo a ambiguidade entre a história "P1" do módulo e o risco nº4.
+  - `DECISOES-TECNICAS.md` D14 — estimativa de custo "centenas de USD, uma vez" está **desatualizada**; ver AD-065 (~18M caracteres, US$1.800–3.700 no ElevenLabs).
+  - `PRD.md` §10 abertas: **nº5** (renovação) e **nº9** (reembolso × antecipação) resolvidas (AD-055, AD-054); **nº10** (menores) por AD-047; **nº12** (auto-aplicação da IA) por AD-048; **nº11** (números exatos) **resolvida na parte do Raio-X** (AD-056/057) e **na parte do anti-trapaça** (AD-060 elimina o piso de tempo) — segue aberta só para params FSRS e tamanho de bloco (M4, calibração).
+  - `PRD.md` §10 risco **nº4** (voz do ElevenLabs) continua **pendente**, mas deixou de ser risco solto: virou porteiro especificado (TTS-06/AD-062).
+  - AD-011 (modelos), AD-031 (preço), AD-028 (retenção), AD-020 (pesos do Raio-X), AD-014 (áudio) e AD-025 (anti-trapaça) foram **refinados/substituídos parcialmente** por AD-049, AD-053, AD-045, AD-056/057, AD-062/063/065 e AD-060 — nenhum foi descartado.
+- **Next step**: entrar em **Design**. Recomendação de ordem: **M4** primeiro (a fundação `tentativas`/AD-015/AD-042 é a peça mais crítica e a que mais módulos herdam), depois **M1 → M2 → M8 → M7 → M5 → M6 → M3**. **M3 SHALL NOT entrar em Design enquanto a flag do áudio não estiver perto de ser ligada** (AD-064) — a spec está escrita e congelada. **Caminho crítico de produto: a ingestão do acervo (M1)** — o Raio-X é a primeira tela e sua qualidade vem do acervo, não da fórmula (AD-066). Contratos de schema a respeitar no Design: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), **AD-056/057** (fórmula do Raio-X), **AD-060** (anel por bloco), **AD-063** (áudio × versão de questão *e* de explicação).
+- **Blockers**: none para Design. Pendências abertas que **não travam**: (a) *due diligence* — advogado (base legal das questões AD-003; janela de 24m AD-045; LIA antes de ligar o flywheel AD-026) e contador (CNPJ/regime para NF, hipótese ME no Simples); (b) confirmar no contrato do Asaas o que volta num estorno e o D+ do parcelado; (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3, ferramenta pronta em `experiments/tts-comparacao/`, incluir Inworld e Hume na rodada (AD-062/065); (e) reconfirmar preços de TTS em fonte oficial antes de contratar (AD-065 usou fontes secundárias); (f) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de recuperação).
+- **Uncommitted files**: `.specs/STATE.md` + as 9 specs em `.specs/features/*/spec.md` (m9-infra, m1-banco-questoes, m4-coluna-vertebral, m7-lgpd-flywheel, m2-camada-ia, m8-negocio-pagamentos, **m5-raiox-banca**, **m6-gamificacao**, **m3-audio**)
+- **Branch**: `main` (repositório git; nada commitado ainda nestas três rodadas)

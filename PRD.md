@@ -148,23 +148,36 @@ O ciclo mínimo que já entrega valor e já é vendável:
    + explicações pré-computadas com grounding (M1/M2).
 2. **Estudar por questões** — responder questão, ver **explicação conferida**, marcar **causa do erro**
    (M4).
-3. **Plano simples** — plano diário por **regra/SQL** com **revisão espaçada de régua fixa** (1/3/7/14/30)
-   e blocos Revisar/Avançar/Treinar; o motor de prioridade usa **Raio-X só por frequência real** (M4/M5).
+3. **Plano simples** — plano diário por **regra/SQL** com **revisão espaçada em FSRS de parâmetros padrão**
+   (régua fixa 1/3/7/14/30 fica como plano B em configuração — AD-072) e blocos Revisar/Avançar/Treinar;
+   o motor de prioridade consome o Raio-X (M4/M5).
 4. **Paywall + onboarding** — página de vendas → checkout Asaas → conta automática → onboarding (meta +
    **diagnóstico pulável**) → plano do 1º dia (M8).
 5. **Gamificação básica** — sequência de barra baixa (piso do plano) + meta/anel do dia (M6).
 6. **Aposta fundacional (tem de ser bem-feita):** **log imutável `tentativas` + projeções (D15)** — é a
    base de tudo; se essa peça for mal-feita, o resto rui.
+7. **Tutor de dúvidas** — com teto diário, cache de pergunta repetida e contexto injetado (AD-051/AD-066).
+   Era fast-follow neste PRD; **subiu para o MVP**, e a infra de streaming (INFRA-05) subiu junto.
 
-**Raio-X no MVP:** pode ser **só frequência real** (semeado à mão se o acervo ainda for fino) + **visão
-combinada** (núcleo que cai nas 3 bancas + condicional rotulado), sem multi-sinal completo.
+**Raio-X no MVP (revisado — AD-066):** entra **completo** (M5/RAIOX-01…08, 11…14): frequência real como
+taxa com decaimento por ano, amortecimento por amostra pequena, visão combinada núcleo × condicional e
+perfil de concurso. Motivo: é a primeira tela e o argumento de venda, e a matemática é barata (consulta +
+parâmetros em configuração). O que **continua fast-follow** é o que é caro e não bloqueia: a **tela de
+curadoria do empurrão de atualidade** (RAIOX-07) e o **diff de edital** (RAIOX-10).
+
+> **A prioridade real do Raio-X é o acervo, não a fórmula.** Com 10 anos das 3 bancas ingeridos, até a
+> conta simples entrega um Raio-X forte; com acervo fino, toda linha sai marcada `amostra_baixa=true` e
+> nenhuma fórmula salva. Ingestão (M1) é o caminho crítico.
 
 ### 4.2 Fast-follow (entra em cima do loop central, não no dia 1)
-- **Tutor de dúvidas ao vivo** (Claude Haiku, com rate limit + cache semântico + contexto injetado, D10).
-- **Áudio/TTS das explicações** (D14) — voz por teste cego + normalização de número/sigla.
-- **FSRS real** (revisão espaçada personalizada por aluno/assunto, D18) — substitui a régua fixa quando o
-  log enche.
-- **Raio-X multi-sinal** (edital como porteiro + atualidade com teto + faixa "novo no edital", D19–D21).
+- ~~**Tutor de dúvidas ao vivo**~~ → **movido para o MVP** (§4.1 item 7) por AD-051/AD-066.
+- **Áudio/TTS das explicações** (D14) — voz por teste cego + normalização de número/sigla. Confirmado
+  fast-follow atrás de flag por AD-064; a geração roda em lotes, por ordem de frequência, depois do
+  lançamento.
+- **Otimização dos parâmetros do FSRS por aluno** (`computeParameters`, D18) — o **FSRS em si entra no
+  MVP** com os parâmetros padrão da biblioteca (AD-072); o que depende de volume é só a personalização.
+- **Tela de curadoria do empurrão de atualidade** (RAIOX-07, D21) — o restante do Raio-X multi-sinal
+  (edital como porteiro + frequência real + teto do empurrão) entra no MVP por AD-066.
 - **Pivot automático do edital** (extrair + diff por embeddings + humano confere só o diff, D22).
 - **Flywheel grupo 3 / knowledge tracing** (sequência pseudonimizada, D27) — o mais avançado do motor
   adaptativo.
@@ -349,8 +362,11 @@ diagnóstico inicial é **curto, adaptativo-simplificado e pulável** (só semen
 - **P1 (aluno) —** *Quero um plano diário que me diga o que estudar hoje (Revisar/Avançar/Treinar),
   cabendo no tempo que declarei.*
 - **P2 (aluno) —** *Quero um caderno de erros que junte o que errei e por quê, para revisar direcionado.*
-- **P2 (sistema) —** *Quero migrar a revisão espaçada da régua fixa para FSRS personalizado conforme o
-  log enche, para revisar menos e reter igual.*
+- **P1 (aluno) —** *Quero a revisão espaçada calculada por FSRS desde o primeiro dia, para revisar menos
+  e lembrar igual.* (AD-072 — os parâmetros padrão da biblioteca funcionam sem histórico; a régua fixa
+  1/3/7/14/30 fica como plano B em configuração.)
+- **P2 (sistema) —** *Quero otimizar os parâmetros do FSRS por aluno conforme o log enche* — só a
+  personalização depende de volume.
 - **P3 (aluno) —** *Quero um simulado 1×/semana no formato da prova, para treinar sob pressão.*
 
 **Critérios de aceite (principais).**
@@ -377,9 +393,12 @@ diagnóstico inicial é **curto, adaptativo-simplificado e pulável** (só semen
   `piso` (mantém a sequência) e `meta cheia` (enche o anel) — necessário para M6.
 - O projetor de estado (domínio, caderno, Raio-X, hábito) **SHALL** ser recalculável do zero a partir do
   log; o número mostrado ao aluno **SHALL** ser atualizado por job (placar com pequeno atraso), não ao
-  vivo.
-- **WHEN** há histórico de revisões suficiente, **THEN** o sistema **SHALL** migrar da régua fixa
-  (1/3/7/14/30) para **FSRS** personalizado.
+  vivo. **Exceção (AD-071):** `anel do dia` e `sequência` **SHALL** ser calculados na abertura da tela —
+  são consulta de 1 aluno × 1 dia, e o anel precisa mexer quando o aluno fecha um bloco.
+- A agenda de revisão **SHALL** usar **FSRS com os parâmetros padrão da biblioteca desde o dia 1**, por
+  aluno e por assunto; a régua fixa (1/3/7/14/30) **SHALL** permanecer como plano B em configuração
+  (AD-072). **WHEN** há histórico de revisões suficiente, **THEN** o sistema **SHALL** otimizar os
+  parâmetros por aluno.
 
 **Out of Scope.** Peso/fórmula do Raio-X (M5); gamificação/sequência (M6); knowledge tracing avançado
 (M7, grupo 3). Parâmetros finos (FSRS default, tamanho de bloco) ficam na spec.
@@ -389,7 +408,8 @@ recalculáveis por cima do log (D15) · ALUNO-03 causa do erro por auto-relato o
 (D16) · ALUNO-04 taxonomia enxuta (6 causas + faltou-tempo no simulado) (D16) · ALUNO-05 diagnóstico
 curto adaptativo pulável (D17) · ALUNO-06 calibração da dificuldade real pelo uso (D17) · ALUNO-07 motor
 de prioridade (D18) · ALUNO-08 blocos Revisar/Avançar/Treinar/Simulado + intercalação (D18) · ALUNO-09
-revisão espaçada régua→FSRS (D18) · ALUNO-10 caderno de erros como projeção (D15/D16).
+revisão espaçada em FSRS de parâmetros padrão, régua fixa como plano B (D18/AD-072) · ALUNO-10 caderno de
+erros como projeção (D15/D16).
 
 ---
 
@@ -658,7 +678,8 @@ INFRA-07 staging por branch (D35) · INFRA-08 n8n adiado (D35/D2).
   com-nome inclusive de backups em ~15–30 dias, agregado anônimo sobrevive (D29); política em português
   claro, sem letra miúda.
 - **Performance & custo.** **Pré-computa primeiro** (D10): quase tudo é gerado 1× e servido do banco;
-  projeções recalculáveis por job (placar com **pequeno atraso**, não ao vivo); tabela de eventos
+  projeções recalculáveis por job (placar com **pequeno atraso**, não ao vivo — exceto `anel do dia` e
+  `sequência`, que são leitura pequena do próprio aluno e saem na hora, AD-071); tabela de eventos
   **particionada por mês**; custo de IA concentrado no tutor com trava (Batch −50%, cache semântico, eval
   cego PT-BR como porteiro). O core funciona mesmo se a API de IA cair.
 - **Segurança.** **RLS** (segurança por linha) com **acesso mínimo por sensibilidade** (anônimo = time
@@ -785,9 +806,12 @@ INFRA-07 staging por branch (D35) · INFRA-08 n8n adiado (D35/D2).
    (notícias de abr/2026 e da última semana: BB ainda escolhendo/contratando banca; edital de escriturário
    previsto p/ 2026, sem definição). Mitigado por desenho (M5: conteúdo-primeiro + perfil de concurso +
    pivot por diff). **Não bloqueia o MVP.**
-2. **Cold-start (partida a frio).** IRT/FSRS/índice de discriminação/dificuldade real só calibram com
-   **volume** de alunos. Mitigação já decidida: lançar com **régua fixa 1/3/7/14/30**, **dificuldade
-   estimada** pela IA e **revisão por amostra** (D6); os motores "ligam sozinhos" com o uso (D17/D18/D30).
+2. **Cold-start (partida a frio).** IRT / índice de discriminação / dificuldade real só calibram com
+   **volume** de alunos. Mitigação já decidida: **dificuldade estimada** pela IA e **revisão por amostra**
+   (D6); os motores "ligam sozinhos" com o uso (D17/D30). **Correção (AD-072):** o **FSRS não é um caso de
+   cold-start** — os parâmetros padrão da biblioteca vêm treinados e agendam desde a primeira revisão; só
+   a **otimização por aluno** depende de volume. A régua fixa 1/3/7/14/30 deixa de ser o padrão de
+   lançamento e passa a ser plano B em configuração.
 3. **CNPJ / regime tributário para emitir NF.** MEI provavelmente não cobre → **ME no Simples**.
    Confirmar com contador **antes** de emitir nota fiscal (liga D33/D28). **Due diligence, não trava.**
 4. **Voz do ElevenLabs pendente.** Falta o **teste cego de escuta** entre as **8 vozes candidatas** +

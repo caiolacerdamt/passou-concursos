@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  segredos:
+    name: Varredura de segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Varre os arquivos versionados por prefixos de credencial conhecidos.
+      # Sem ação externa de propósito: nada de licença nem de versão pra quebrar.
+      # Quando houver build, dá pra trocar por `gitleaks git` (v8.19+ depreciou `detect`).
+      - name: Procurar credencial em arquivo versionado
+        run: |
+          set -uo pipefail
+          PADROES='sbp_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|sk_live_[A-Za-z0-9]{20,}|rk_live_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{50,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AIza[0-9A-Za-z_-]{35}'
+          ACHOU=0
+          # .env.example documenta variáveis sem valor; é o único arquivo .env versionado.
+          for f in $(git ls-files); do
+            if grep -HnEI "$PADROES" "$f" >/dev/null 2>&1; then
+              echo "::error file=$f::credencial encontrada em arquivo versionado"
+              grep -HnEI "$PADROES" "$f" | sed 's/\(.\{80\}\).*/\1…/'
+              ACHOU=1
+            fi
+          done
+          if [ "$ACHOU" -eq 1 ]; then
+            echo ""
+            echo "Segredo no repositório. Rotacione a chave — remover o commit não basta,"
+            echo "ela já esteve no histórico. Depois mova o valor para o .env (ignorado)."
+            exit 1
+          fi
+          echo "Nenhuma credencial encontrada."
+
+      - name: Garantir que .env não foi versionado
+        run: |
+          set -uo pipefail
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "::error::.env está versionado. Ele deve ficar apenas na máquina local."
+            exit 1
+          fi
+          echo ".env não está versionado."
+
+  documentos:
+    name: Integridade dos documentos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Arquivos de contrato precisam existir
+        run: |
+          set -uo pipefail
+          FALTOU=0
+          for f in AGENTS.md CLAUDE.md PRD.md .specs/STATE.md docs/GITFLOW.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error::$f não existe"
+              FALTOU=1
+            fi
+          done
+          for m in m1-banco-questoes m2-camada-ia m3-audio m4-coluna-vertebral \
+                   m5-raiox-banca m6-gamificacao m7-lgpd-flywheel \
+                   m8-negocio-pagamentos m9-infra; do
+            if [ ! -f ".specs/features/$m/spec.md" ]; then
+              echo "::error::spec do módulo $m não existe"
+              FALTOU=1
+            fi
+          done
+          [ "$FALTOU" -eq 0 ] || exit 1
+          echo "Contratos presentes."
+
+      # O STATE.md é append-only: AD existente não se edita, cria-se uma AD nova
+      # que diz o que substitui. Um PR que REMOVE linhas de "## Decisions" é sinal
+      # de edição retroativa. Só avisa — há reformatação legítima.
+      - name: Avisar sobre remoção no log de decisões
+        if: github.event_name == 'pull_request'
+        run: |
+          set -uo pipefail
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          REMOVIDAS=$(git diff "origin/${{ github.base_ref }}...HEAD" -- .specs/STATE.md \
+            | grep -c '^-[^-]' || true)
+          if [ "${REMOVIDAS:-0}" -gt 0 ]; then
+            echo "::warning file=.specs/STATE.md::$REMOVIDAS linha(s) removida(s) do STATE.md. \
+          O log é append-only: confirme que nenhuma AD foi reescrita retroativamente."
+          fi
+          echo "Verificação concluída."
+
+  app:
+    name: Typecheck, teste e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Existe aplicação?
+        id: existe
+        run: |
+          if [ -f package.json ]; then echo "sim=true" >> "$GITHUB_OUTPUT";
+          else echo "sim=false" >> "$GITHUB_OUTPUT"; fi
+
+      # Ainda não há código de aplicação (fase Specify). Os passos abaixo ligam
+      # sozinhos assim que o package.json existir, no Design do M9/M4.
+      - uses: actions/setup-node@v4
+        if: steps.existe.outputs.sim == 'true'
+        with:
+          node-version: 22
+          cache: npm
+
+      - if: steps.existe.outputs.sim == 'true'
+        run: npm ci
+
+      - if: steps.existe.outputs.sim == 'true'
+        run: npm run typecheck --if-present
+
+      - if: steps.existe.outputs.sim == 'true'
+        run: npm test --if-present
+
+      - if: steps.existe.outputs.sim == 'true'
+        run: npm run build --if-present
+
+      - if: steps.existe.outputs.sim == 'false'
+        run: echo "Sem package.json ainda — fase Specify. Nada a construir."

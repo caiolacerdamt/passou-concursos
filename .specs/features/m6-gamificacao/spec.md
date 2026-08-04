@@ -1,7 +1,7 @@
-# M6 — Gamificação de Hábito · Especificação
+﻿# M6 — Gamificação de Hábito · Especificação
 
 > Fonte: `PRD.md` §M6, §4.2, §9 (invariantes de honestidade), §10 (risco 11);
-> `DECISOES-TECNICAS.md` D23–D25. Decisões: AD-023, AD-024, AD-025.
+> `docs/historico/DECISOES-TECNICAS.md` D23–D25. Decisões: AD-023, AD-024, AD-025.
 > Herda contratos: **AD-042** (log `tentativas` — o hábito é **projeção** sobre ele, o M6
 > **nunca escreve** no log), **AD-043** (causa do erro obrigatória ao errar no treino),
 > **AD-044** (plano diário emite **`piso` e `meta_cheia`** — ALUNO-11 — e as projeções rodam

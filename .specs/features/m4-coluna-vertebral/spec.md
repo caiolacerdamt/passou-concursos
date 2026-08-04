@@ -1,6 +1,6 @@
-# M4 — Coluna Vertebral do Aluno · Especificação
+﻿# M4 — Coluna Vertebral do Aluno · Especificação
 
-> Fonte: `PRD.md` §M4, §4.1, §7.2, §9; `DECISOES-TECNICAS.md` D15–D18. Decisões: AD-015,
+> Fonte: `PRD.md` §M4, §4.1, §7.2, §9; `docs/historico/DECISOES-TECNICAS.md` D15–D18. Decisões: AD-015,
 > AD-016, AD-017, AD-018. Herda contratos: AD-039/AD-040 (questão: id+versão, enums,
 > dificuldade), AD-035/AD-036 (pg_cron/partição, fábrica). Contratos fixados nesta rodada:
 > AD-042 (log `tentativas`), AD-043 (taxonomia de causa), AD-044 (projeções + plano).

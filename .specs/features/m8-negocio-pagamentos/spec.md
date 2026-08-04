@@ -1,4 +1,4 @@
-# M8 — Negócio, Pagamentos & Onboarding · Especificação
+﻿# M8 — Negócio, Pagamentos & Onboarding · Especificação
 
 > Fonte: `PRD.md` §M8, §4.1 (item 4), §7.4, §9, §10 (abertas 3, 5, 9). Decisões: AD-031, AD-032,
 > AD-033, AD-034. Herda contratos: **AD-017/AD-044** (diagnóstico pulável → plano do 1º dia; a IA que
@@ -241,7 +241,7 @@ consigo experimentar o produto.
 **Acceptance Criteria**:
 
 1. A página SHALL apresentar: o **método** (questões + revisão espaçada + plano diário), as **evidências
-   científicas** (`EVIDENCIAS-CIENTIFICAS.md`), a **garantia de 7 dias** e o preço nos dois formatos
+   científicas** (`docs/EVIDENCIAS-CIENTIFICAS.md`), a **garantia de 7 dias** e o preço nos dois formatos
    (12x e à vista com desconto).
 2. A página SHALL declarar honestamente o que existe hoje e o que não existe — SHALL NOT prometer
    funcionalidade não entregue (invariante de notificação honesta, nº14, vale também para a venda).

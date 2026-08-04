@@ -1,0 +1,111 @@
+# Passou Concursos — regras do projeto
+
+SaaS de preparação para concursos da carreira bancária (foco Banco do Brasil). O produto é
+**método + IA**: banco de questões reais com proveniência, explicação conferida, plano diário
+adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a interface.
+
+## Estado
+
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-072`). Design/Tasks/Execute não
+começaram. **Não existe código de aplicação ainda.**
+
+Ordem de Design definida no handoff do `.specs/STATE.md`: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
+M3 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não estiver perto de ligar (AD-064).
+
+## Hierarquia da verdade
+
+Quando dois documentos discordam, **o de cima vence**:
+
+1. **`.specs/STATE.md`** — log append-only de decisões `AD-NNN`. AD mais alto vence AD mais baixo.
+2. **`.specs/features/<modulo>/spec.md`** — requisitos numerados e critérios de aceite.
+3. **`PRD.md`** — contrato de produto.
+4. **`docs/historico/`** — congelado. Registro de como se chegou aqui. **Pode conter ponto já
+   revogado.** Nunca é fonte para decidir; nunca é reescrito.
+
+Decidiu algo novo? Vira uma `AD-NNN` nova no `STATE.md`. **Nunca edite uma AD existente** — AD nova
+que diz o que substitui.
+
+## Stack e onde cada coisa roda
+
+| Camada | Escolha | AD |
+|---|---|---|
+| App | Next.js (App Router), TypeScript, monólito modular | AD-002 |
+| Dados | Supabase — Postgres + Auth + Storage + RLS + pgvector, região SP | AD-002, AD-035 |
+| IA | SDK TS por gateway trocável, modelo por tarefa, versão fixada | AD-011, AD-049 |
+| Hospedagem | Vercel (Pro — requisito de lançamento por causa do tutor) | AD-035, AD-066 |
+| Trabalho longo | **GitHub Actions + Batch API. Nunca serverless.** | AD-035, AD-036 |
+| Bastidor | n8n | AD-002 |
+| Pagamento | Asaas, checkout próprio | AD-033 |
+
+## Invariantes — quebrar qualquer um destes é bug, não escolha
+
+1. **`tentativas` só recebe INSERT.** Nunca UPDATE, nunca DELETE-por-edição. Correção = linha nova.
+   (DELETE por `user_id` para esquecimento é outra coisa e é permitido.)
+2. **Snapshot congelado.** Cada tentativa carrega a etiqueta do assunto no momento da resposta.
+   Reclassificar assunto não desloca histórico.
+3. **Raio-X só conta `origem='real'`.** Questão inédita nunca entra na taxa de frequência.
+4. **A IA não decide a alternativa correta.** Verdade = gabarito oficial + verificação por código +
+   base revisada. Feedback de aluno nunca altera explicação sozinho — só abre fila humana.
+5. **Diagnóstico é sempre pulável.** É semente, não porteiro.
+6. **Plano é regra/SQL.** A IA só escreve a frase, nunca escolhe o que estudar.
+7. **Pré-computa primeiro.** Única superfície de IA ao vivo é o tutor com trava. Áudio nunca ao vivo.
+   Projeção pesada roda por job. Exceção autorizada: anel do dia e sequência, calculados na abertura
+   da tela (1 aluno × 1 dia) — AD-071.
+8. **DELETE seletivo.** Esquecimento apaga grupo 1 (com nome) e grupo 3 (pseudonimizado), inclusive
+   backups. Agregado anônimo do grupo 2 sobrevive (art. 12 LGPD).
+9. **Núcleo sem checkbox.** Produto não fica atrás de consentimento. Consentimento só para marketing.
+10. **Automação só no seguro.** Automação ajusta número que afina o plano. Mudar o que se ensina ou
+    gabarito = decisão humana.
+11. **Quantitativa conferida.** Questão de conta só publica se o número calculado por código bate com
+    o gabarito **e** com o texto. Falhou → refaz 1×, senão fila humana.
+12. **Extração e explicação são chamadas separadas** ao modelo. Nunca a mesma chamada.
+13. **Retenção.** Dado com nome vive conta ativa + 24 meses, depois apaga (não anonimiza in-place).
+14. **Notificação honesta.** Teto ~1 lembrete/dia + 1 aviso de sequência. Nunca mentir para criar urgência.
+15. **Sem ranking** entre alunos no lançamento.
+
+## Proibições absolutas
+
+- **Nunca raspar concorrente.** Fonte de questão é PDF oficial da banca (ato oficial, Lei 9.610/1998
+  art. 8º IV). Qualquer outra origem é ilegal aqui.
+- **Nunca executar código gerado por IA.** Verificação de conta usa catálogo fechado de fórmulas +
+  função nossa testada; a IA só devolve qual fórmula e quais parâmetros (AD-069).
+- **Nunca hardcodar nome de modelo** em código ou teste automatizado. Vai em configuração. Em
+  documento pode (AD-068).
+- **Nunca commitar segredo.** `.env` é ignorado; `.env.example` documenta sem valor.
+- **Nunca publicar questão sem proveniência** (banca/ano/órgão/cargo/número) e gabarito conferido.
+
+## Convenções
+
+**IDs.** Decisão = `AD-NNN`. Requisito = prefixo do módulo + número:
+`BANCO-` (M1) · `IA-` (M2) · `TTS-` (M3) · `ALUNO-` (M4) · `RAIOX-` (M5) · `GAM-` (M6) ·
+`DADOS-` (M7) · `PAG-` (M8) · `INFRA-` (M9).
+
+**Idioma.** Domínio em **PT-BR** — tabelas, colunas, tipos e funções de domínio seguem o vocabulário
+já travado nas specs (`questoes`, `tentativas`, `n_respostas`, `gabarito_versao`, `origem`, `anulada`,
+`precisa_ocr`, `confianca_ia`). Infra, utilitários, testes e nomes técnicos em **inglês**
+(`RateLimiter`, `chunk`, `retry`). Documentos, specs e UI em PT-BR. Sem camada de tradução entre
+banco e código.
+
+**Feature flags.** Todo módulo entra atrás de flag (AD-001). Merge com a flag desligada é o normal —
+é o que permite trunk-based sem branch longa.
+
+**Git.** Ver `docs/GITFLOW.md`. Resumo: `main` protegida, branch curta por fase, Conventional Commits
+com o requisito e a AD no corpo, um commit atômico por task, merge `--no-ff` via PR.
+
+## Mapa
+
+```
+PRD.md                     contrato de produto
+.specs/STATE.md            log de decisões AD-NNN  ← fonte da verdade
+.specs/features/m*/spec.md requisitos por módulo
+docs/GITFLOW.md            como trabalhar no git
+docs/EVIDENCIAS-*.md       estudos que embasam o método (oferta/marketing)
+docs/historico/            congelado — como se chegou aqui
+experiments/tts-comparacao ferramenta do teste cego de voz (trava o 1º lote do M3)
+```
+
+## Pendências que não travam o Design
+
+Advogado (base legal das questões, janela de 24m, LIA antes do flywheel) · contador (CNPJ/regime) ·
+contrato do Asaas (o que volta num estorno, D+ do parcelado) · preço do Cohere embed-v4 ·
+**teste cego da voz** (trava o 1º lote do M3) · calibrações registradas como assumptions nas specs.

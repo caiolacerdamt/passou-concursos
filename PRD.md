@@ -1,8 +1,12 @@
 # PRD — SaaS de Preparação para Concursos (carreira bancária, foco Banco do Brasil)
 
 > **Documento de Requisitos de Produto.** Consolida as **35 decisões técnicas (D1–D35)** fechadas em
-> 5 sessões de `/grill-me`. Fonte da verdade das decisões = `DECISOES-TECNICAS.md`; contexto de
-> continuidade = `HANDOFF.md`; munição de oferta = `EVIDENCIAS-CIENTIFICAS.md`.
+> 5 sessões de `/grill-me`. Registro histórico das decisões = `docs/historico/DECISOES-TECNICAS.md`;
+> contexto de continuidade = `docs/historico/HANDOFF.md`; munição de oferta =
+> `docs/EVIDENCIAS-CIENTIFICAS.md`.
+>
+> **A fonte da verdade viva das decisões é `.specs/STATE.md` (AD-001…AD-072)** — os documentos em
+> `docs/historico/` são registro congelado e podem conter pontos já revogados por ADs posteriores.
 >
 > **Objetivo deste PRD:** ser insumo direto para a skill `/tlc-spec-driven`, que trabalha com dois
 > artefatos — (1) `.specs/STATE.md` = log de decisões `AD-NNN` (ver **§11**, mapeia D1–D35 um-para-um);

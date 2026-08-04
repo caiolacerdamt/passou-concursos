@@ -1,6 +1,6 @@
-# M5 — Raio-X da Banca · Especificação
+﻿# M5 — Raio-X da Banca · Especificação
 
-> Fonte: `PRD.md` §M5, §4.1, §7.3, §9, §10 (riscos 1 e 11); `DECISOES-TECNICAS.md` D19–D22.
+> Fonte: `PRD.md` §M5, §4.1, §7.3, §9, §10 (riscos 1 e 11); `docs/historico/DECISOES-TECNICAS.md` D19–D22.
 > Decisões: AD-019, AD-020, AD-021, AD-022. Herda contratos: **AD-039/AD-040** (questão:
 > `origem`, `status`, `anulada`, `materia_id`/`topico_id`, `fonte_citacao` com banca/ano —
 > o Raio-X é projeção **sobre o schema de `questoes` do M1**), **AD-035/AD-036** (job em

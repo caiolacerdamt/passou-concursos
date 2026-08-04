@@ -1,0 +1,40 @@
+#!/bin/sh
+#
+# Recusa push direto na main.
+#
+# Existe porque proteção de branch do GitHub não funciona em repositório
+# privado no plano Free (a API responde 403). Enquanto for assim, a trava
+# mora aqui, na máquina. Se o repositório virar GitHub Pro, a proteção do
+# servidor passa a valer e este hook vira só uma segunda camada.
+#
+# Ativar (uma vez por clone):
+#   git config core.hooksPath .githooks
+#
+# Escapar num caso legítimo:
+#   git push --no-verify
+
+PROTEGIDA="refs/heads/main"
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+	if [ "$remote_ref" = "$PROTEGIDA" ]; then
+		echo ""
+		echo "  Push direto na main recusado."
+		echo ""
+		echo "  Todo trabalho entra por PR — é onde o CI roda, onde o Preview"
+		echo "  existe e onde você lê o diff inteiro. Ver docs/GITFLOW.md."
+		echo ""
+		echo "  Mova o que você fez para uma branch:"
+		echo ""
+		echo "    git branch feat/meu-trabalho"
+		echo "    git reset --hard origin/main"
+		echo "    git checkout feat/meu-trabalho"
+		echo "    git push -u origin feat/meu-trabalho"
+		echo "    gh pr create --fill"
+		echo ""
+		echo "  Se este push é mesmo intencional: git push --no-verify"
+		echo ""
+		exit 1
+	fi
+done
+
+exit 0

@@ -99,12 +99,38 @@ apontando pro vazio.
 
 ## Proteção da `main`
 
-- exige PR (bloqueia push direto)
-- exige CI verde
-- bloqueia force-push e deleção
-- sem exigência de aprovação por enquanto (você é o único humano commitando; o GitHub não deixa o
-  autor aprovar o próprio PR, e isso travaria tudo). Quando entrar a segunda pessoa, ligue
-  `--required-approving-review-count 1`.
+> **Hoje a proteção do servidor não está ligada.** Proteção de branch e rulesets do GitHub não
+> funcionam em repositório **privado** no plano **Free** — a API responde `403 Upgrade to GitHub Pro`.
+> Enquanto for assim, a trava é local (abaixo).
+
+**Trava local — ative uma vez por clone:**
+
+```bash
+git config core.hooksPath .githooks
+```
+
+O hook `.githooks/pre-push` recusa push direto na `main` e mostra como mover o trabalho para uma
+branch. Escape consciente: `git push --no-verify`.
+
+**Quando o repositório virar GitHub Pro** (~US$ 4/mês), ligue a proteção de verdade:
+
+```bash
+gh api -X PUT repos/caiolacerdamt/passou-concursos/branches/main/protection \
+  -H "Accept: application/vnd.github+json" \
+  -F "required_status_checks[strict]=true" \
+  -f "required_status_checks[contexts][]=Varredura de segredos" \
+  -f "required_status_checks[contexts][]=Integridade dos documentos" \
+  -f "required_status_checks[contexts][]=Typecheck, teste e build" \
+  -F "enforce_admins=false" \
+  -F "required_pull_request_reviews[required_approving_review_count]=0" \
+  -F "restrictions=null" \
+  -F "allow_force_pushes=false" \
+  -F "allow_deletions=false"
+```
+
+Isso exige PR, exige CI verde, bloqueia force-push e deleção. **Zero aprovações exigidas** de
+propósito: o GitHub não deixa o autor aprovar o próprio PR, e com um humano só isso travaria tudo.
+Quando entrar a segunda pessoa, troque para `required_approving_review_count=1`.
 
 ## Banco de dados
 

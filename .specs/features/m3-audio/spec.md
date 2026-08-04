@@ -1,6 +1,6 @@
-# M3 — Áudio / TTS das Explicações · Especificação
+﻿# M3 — Áudio / TTS das Explicações · Especificação
 
-> Fonte: `PRD.md` §M3, §4.2, §7.1, §10 (risco 4); `DECISOES-TECNICAS.md` D14 (partes A e B).
+> Fonte: `PRD.md` §M3, §4.2, §7.1, §10 (risco 4); `docs/historico/DECISOES-TECNICAS.md` D14 (partes A e B).
 > Decisões: AD-014. Herda contratos: **AD-052/IA-09** (explicação amarrada a `questao_versao`,
 > com versão e `status` próprios; mudança **substantiva** invalida, **cosmética** não),
 > **AD-039/AD-040** (questão: `id` + `questao_versao`, `alternativas`, `tipo_questao`,

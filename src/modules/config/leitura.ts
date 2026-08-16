@@ -46,6 +46,14 @@ export function restaurarReportePadrao(): void {
   reportar = REPORTE_PADRAO;
 }
 
+/** Unico caminho de reporte do modulo. O Sentry entra aqui no INFRA-09. */
+export function reportarFalhaDeConfig(
+  erro: unknown,
+  contexto: Record<string, unknown>,
+): void {
+  reportar(erro, contexto);
+}
+
 // ── Leitura ─────────────────────────────────────────────────────────────────
 
 /** Devolve o valor bruto (jsonb) de cada chave pedida que tem linha no banco. */

@@ -25,3 +25,5 @@ export {
   getParams,
   isFlagOn,
 } from "./leitura";
+
+export { ConfiguracaoRecusada, setConfig } from "./escrita";

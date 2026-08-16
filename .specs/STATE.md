@@ -660,87 +660,143 @@
 - **Date**: 2026-08-16
 - **Status**: active
 
+### AD-080
+- **Decision**: A **frase de abertura do plano diário** (ALUNO-12) sai da **Batch API** e passa a ser
+  chamada **síncrona** no job que roda logo depois do `gera_plano_do_dia()`. Todas as outras tarefas
+  da matriz do AD-073 permanecem em Batch. **Substitui apenas a linha "frase do plano diário" do
+  AD-073**; o resto do AD-073 (modelo, esforço, cache, fallback, escalonamento do refaz 1×) segue
+  íntegro.
+- **Reason**: A Batch API não promete prazo — a janela publicada é de até 24h. Toda tarefa da matriz
+  tolera isso porque roda de madrugada sem ninguém esperando; a frase do plano é a única com **hora
+  marcada**: ela precisa existir quando o aluno abre o app de manhã. Com Batch, um atraso da fila do
+  fornecedor entrega o plano sem a frase (o que o ALUNO-05 AC4 já permite, mas como degradação, não
+  como rotina). Custo da troca, com os preços do próprio AD-073 (Luna US$0,20/M entrada e US$1,20/M
+  saída), 1.000 alunos, ~500 tokens de entrada e ~80 de saída por frase: cerca de **US$6/mês** contra
+  **US$3/mês** em Batch. Três dólares por mês para a frase existir todo dia.
+- **Trade-off**: Perde-se o desconto de 50% nesta tarefa e some a folga de retomada que o Batch dá de
+  graça — o script precisa do próprio tratamento de erro por aluno. Se a base crescer muito além de
+  1.000 alunos, o número volta à mesa: a decisão é sobre a ordem de grandeza atual, não sobre
+  qualquer escala.
+- **Scope**: M4 (ALUNO-12), M2 (matriz do gateway, IA-02).
+- **Date**: 2026-08-16
+- **Status**: active
+
+### AD-081
+- **Decision**: A tabela de configuração e feature flags do AD-078 é **append-only**: trocar um valor
+  é **inserir uma linha nova**, e o valor vigente de uma chave é a **última linha** dela. Não há
+  UPDATE nem tabela de histórico paralela. Toda chave existente é declarada num **catálogo em
+  código** (tipo, default, módulo dono, descrição); o banco guarda apenas o override. Chave sem linha
+  no banco vale o default do catálogo — é assim que o sistema sobe em banco vazio. Chave presente no
+  banco e ausente do catálogo é **erro**, não configuração. A **janela de cache** é constante em
+  código (30s), única exceção declarada ao "todo parâmetro em configuração", porque um TTL guardado
+  na própria tabela que ele cacheia não teria como ser corrigido se entrasse errado. **Detalha o
+  AD-078**, que permanece.
+- **Reason**: O AC7 do INFRA-11 exige registrar quem, quando, valor anterior e valor novo. Com UPDATE
+  isso obriga uma tabela de histórico mantida por gatilho — duas peças que podem divergir em silêncio,
+  e o histórico é justamente o que não pode. Com INSERT, o valor anterior **é** a penúltima linha: o
+  registro não diverge do fato porque é o mesmo dado. É também o padrão que o AD-015 já escolheu para
+  `tentativas`, então o projeto passa a ter uma regra só sobre dado que muda, e não duas.
+- **Trade-off**: Ler o valor vigente exige `distinct on (chave)` em vez de um `select` direto — custo
+  irrisório nesta escala (dezenas de chaves), resolvido por índice e encapsulado numa view. A tabela
+  cresce para sempre, o que é irrelevante no volume de mudanças de configuração de um produto.
+- **Scope**: M9 (INFRA-11), consumido por M1…M8.
+- **Date**: 2026-08-16
+- **Status**: active
+
+### AD-082
+- **Decision**: O só-INSERT de `tentativas` (AD-015/AD-042) é garantido por **duas camadas**:
+  (1) `REVOKE UPDATE, DELETE` dos papéis da aplicação + RLS sem policy de UPDATE/DELETE; (2) um
+  **gatilho** que recusa qualquer UPDATE e recusa DELETE **exceto** quando a sessão declara de quem é
+  o dado a apagar (`set local app.esquecimento_user_id`). O DELETE-por-esquecimento do M7 (AD-029)
+  passa por essa porta nomeada, o que torna a exceção **auditável e nominal** em vez de um privilégio
+  genérico de administrador.
+- **Reason**: RLS não se aplica ao `service_role`, e a chave de serviço vai existir em scripts de job
+  e de fábrica (AD-036). Com uma camada só, qualquer script com essa chave poderia dar UPDATE na
+  fundação do produto por engano — e o invariante nº1 do AGENTS.md diz que isso é bug, não escolha. A
+  segunda camada custa um gatilho e fecha o buraco.
+- **Trade-off**: Todo DELETE legítimo passa a exigir um passo explícito antes; um gatilho por linha
+  tem custo em DELETE de volume alto (a rotina de esquecimento apaga por aluno, não em massa, então o
+  custo é aceitável).
+- **Scope**: M4 (ALUNO-01), contrato consumido por M7 (DADOS-04, rotina de esquecimento).
+- **Date**: 2026-08-16
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Specify **concluído nas 9 features** (AD-001…AD-079). Design/Tasks/Execute **não
-  iniciados em nenhum módulo**. Não existe código de aplicação.
-- **Phase / Task**: Fase **Specify**. Última rodada: **8 — analytics e feature flags (2026-08-16)**.
-- **Rodada 8 — analytics e feature flags (2026-08-16)**. Motivo: a pergunta "onde entraria o PostHog"
-  expôs um buraco maior. O AD-001 escolheu feature flag como mecanismo, o AD-076 pôs 5 superfícies
-  atrás de flag desligada, o AD-064 pôs o M3 inteiro atrás de flag e o `docs/GITFLOW.md` construiu o
-  trunk-based em cima disso ("deploy ≠ release") — mas **nenhuma das 9 specs dizia onde o valor da
-  flag mora**, nem onde moram as dezenas de parâmetros que as specs mandaram para "configuração"
-  (`retencao_meses`, `piso_anonimato`, preço, teto do tutor, matriz de modelos, decaimento do
-  Raio-X, escudos, faixas do FSRS, voz do TTS). Duas ADs novas:
-  1. **AD-078** — config e feature flag em **tabela versionada no Postgres**, cache curto, troca de
-     valor **sem deploy**, alteração registrada com autor. Flag é **booleana global**; sem rollout
-     percentual, sem A/B. Env var só para o que precede o banco. Serviço externo de flag fora do
-     lançamento. → **INFRA-11** novo.
-  2. **AD-079** — analytics de produto = **PostHog Cloud região Estados Unidos**, em **duas etapas**. Lançamento
-     mede **só o funil pré-login** (página de vendas → checkout → pagamento confirmado), em modo
-     anônimo, por **proxy reverso** no domínio próprio. Superfície logada nasce **atrás de flag
-     desligada**, com 3 condições escritas. **Session replay proibido** (contraria DADOS-07 AC6).
-     Não substitui o Sentry (INFRA-09) e **não** é fonte de flag. → **INFRA-12**, **PAG-17**,
-     **DADOS-14/15** novos.
-  - **Por que o PostHog e não só o Sentry:** respondem perguntas diferentes. Sentry vê defeito;
-    um funil que converte 2% **sem nenhum erro** é silêncio total para ele. Com o produto inteiro
-    atrás do paywall (AD-031), a página de vendas é a única superfície de conversão (PAG-08).
-  - **Região = Estados Unidos.** O PostHog não tem região BR e self-host já estava excluído pelo M9
-    ("3 devs sem ops"), então sobravam EUA e UE. A análise recomendou UE; **a organização foi criada
-    nos EUA** pelo sócio em 2026-08-16 e a AD registra o que existe. Isso cria o **primeiro
-    subprocessador fora do Brasil** do projeto — daí a transferência internacional entrar na política
-    (DADOS-01 AC8) e o DELETE passar a ter que alcançar operador externo com confirmação (DADOS-15).
-  - **Dois fatos que valem para a decisão de região, verificados em 2026-08-16:** (1) migrar US→UE
-    **só existe** nos planos Scale/Enterprise, por ticket e com engenheiro do fornecedor movendo os
-    dados — no plano gratuito, trocar significa **org nova e histórico perdido**. Reverter é barato
-    **agora** (zero evento gravado) e caro depois. (2) Os EUA **não têm decisão de adequação da
-    ANPD**, então a transferência precisa de outro instrumento do **art. 33** da LGPD (cláusulas-padrão
-    é o caminho usual). Isso **não inviabiliza** o escopo pré-login, mas transforma o item do advogado
-    em dois: base legal **e** instrumento da transferência.
-  - **Arquivos tocados**: `.specs/STATE.md` (AD-078/079) · `m9-infra` (2 stories, INFRA-11/12,
-    4 edge cases, success criteria) · `m7-lgpd-flywheel` (DADOS-01 AC8, DADOS-04 AC10/11,
-    DADOS-14/15, 4 assumptions) · `m8-negocio-pagamentos` (PAG-08 AC5/6, PAG-17, 1 assumption).
-  - **Cobertura atualizada**: M9 10→**12** requisitos · M7 13→**15** · M8 16→**17**.
+- **Feature**: Fase **Design**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
+  (coluna vertebral do aluno). Specify segue concluído nas 9 features (AD-001…AD-082).
+- **Rodada 9 — Design de INFRA-11 + M4 (2026-08-16)**. Primeira rodada de Design do projeto. Dois
+  documentos escritos: `.specs/features/m9-infra/design.md` (só INFRA-11 + a parte do INFRA-04 que o
+  M4 consome — as outras histórias do M9 entram junto do módulo que as usa) e
+  `.specs/features/m4-coluna-vertebral/design.md` (12 requisitos ALUNO-01…12 mapeados a componentes).
+  Três ADs novas:
+  1. **AD-080** — a frase de abertura do plano diário sai da Batch API e vira chamada síncrona; é a
+     única tarefa da matriz com hora marcada (precisa existir quando o aluno acorda). ~US$3/mês de
+     diferença em 1.000 alunos. Substitui só essa linha do AD-073.
+  2. **AD-081** — a tabela de configuração é **append-only**, valor vigente = última linha, catálogo
+     de chaves em código. O registro de alteração do INFRA-11 AC7 deixa de ser tabela paralela e
+     passa a ser o próprio dado. Detalha o AD-078.
+  3. **AD-082** — só-INSERT de `tentativas` garantido em duas camadas (REVOKE+RLS e gatilho), com
+     porta nomeada para o DELETE-por-esquecimento do M7.
+  - **O impasse do FSRS, resolvido sem exceção à infra**: `ts-fsrs` é TypeScript e o INFRA-03 manda
+    job em pg_cron. O ALUNO-09 AC3 já reduzia o contrato a "este tópico está devendo revisão ou não",
+    então o FSRS roda **na requisição** quando o aluno fecha um bloco (1 aluno × 1 tópico) e grava a
+    data; o job SQL só compara datas. Trocar para a régua fixa (plano B) troca quem calcula a data e
+    mais nada.
+  - **Verificado em fonte primária (2026-08-16)**: `pg_partman`, `pg_cron` e `pg_net` disponíveis no
+    Supabase; `fsrs()` do `ts-fsrs` agenda sem histórico nenhum com os pesos padrão (confirma
+    AD-072) e `computeParameters` vive em pacote separado (`@open-spaced-repetition/binding`);
+    `unstable_cache` é o mecanismo de cache curto do Next.js para leitura de banco (INFRA-11 AC5).
+  - **Arquivos tocados**: `.specs/STATE.md` (AD-080/081/082 + este handoff) ·
+    `m9-infra/design.md` (novo) · `m4-coluna-vertebral/design.md` (novo) · traceability das duas
+    specs movida de `Design` para `Tasks`.
 - **In-progress** (file:line): none
-- **Next step**: entrar em **Design** sob o recorte do **AD-076** (construir tudo, ligar 4
-  superfícies) e do **AD-077** (web puro). Ordem: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3**. O M4 é
-  a fundação (`tentativas`/AD-015/AD-042) e o que mais módulos herdam. **M3 SHALL NOT entrar em
-  Design enquanto a flag do áudio não estiver perto de ligar** (AD-064). **Caminho crítico de
-  produto: a ingestão do acervo (M1)** — é a única parte que a IA não acelera e que não depende de
-  código existir; começa **em paralelo ao Design do M4**. **Novo:** o **INFRA-11** (config/flags) é
-  pré-requisito prático do Design do M4, que consome config já na primeira história — desenhar a
-  tabela de configuração antes ou junto do M4, não depois.
-- **Contratos de schema a respeitar no Design**: AD-039/040 (questão), AD-042/043/044 (log e
-  projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do
-  Raio-X), AD-060 (anel por bloco), AD-063 (áudio × versão de questão *e* de explicação),
-  **AD-078** (config/flags).
-- **Blockers**: none para Design. Pendências que **não travam**: (a) *due diligence* — advogado
-  (base legal das questões AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; **base legal do
-  evento pré-login E o instrumento da transferência internacional para os EUA — art. 33 LGPD, sem
-  decisão de adequação da ANPD — AD-079**) e contador (CNPJ/regime para NF,
-  hipótese ME no Simples); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado;
+- **Next step**: **Tasks** de INFRA-11 + M4, nessa ordem — a configuração precisa existir antes,
+  porque o M4 lê 10 chaves dela. A primeira migração do projeto sai dessa leva: não existe
+  `package.json` nem schema ainda, então a task 1 é o esqueleto do Next.js + Supabase CLI ligado ao
+  projeto `kfpmetkmhjtmgwgaaerl` (São Paulo). Depois do M4: **M1** (Design), que é o caminho crítico
+  de produto — e o Design do M1 pede **2–3 PDFs de prova de amostra** na mão, porque o formato real
+  do arquivo decide o desenho da extração e do `precisa_ocr`.
+- **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
+  AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
+  (anel por bloco), AD-063 (áudio × versão), AD-078/**081** (config), **AD-082** (trava do log).
+- **Decisões do Design que outros módulos herdam**: `raiox_peso_topico` nasce como **view stub
+  devolvendo 1.0** — o M5 a substitui mantendo a assinatura, sem tocar no M4. O M4 cria uma tabela
+  `questoes` **mínima** (contrato AD-039/040) para poder ser testado antes do M1 existir; o M1 a
+  completa. `tentativa_causa_simulado` é a tabela vizinha que recebe a causa do simulado sem UPDATE
+  no fato (AD-043).
+- **Blockers**: none para Tasks. Pendências que **não travam**: (a) *due diligence* — advogado (base
+  legal das questões AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base legal do evento
+  pré-login **e** o instrumento da transferência internacional para os EUA, art. 33 LGPD, AD-079) e
+  contador (CNPJ/regime); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado;
   (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do
-  M3, ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065);
-  (e) reconfirmar preços de TTS em fonte oficial (AD-065 usou fonte secundária); (f) **confirmar o
-  free tier do PostHog em fonte primária** antes de ligar (AD-079); (g) duas chamadas de IA fora da
-  lista fechada do IA-02 — pré-diagnóstico de questão suspeita (M7, esteira 2) e extração do
-  programa do edital (M5, RAIOX-09): entram na matriz ou viram exceção em AD; (h) **critério de
-  morte do produto** (nº de compras aprovadas + prazo a partir do 1º pagante) — decisão de sócios;
-  (i) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do
-  eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de
-  recuperação).
+  M3, ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065); (e)
+  reconfirmar preços de TTS em fonte oficial; (f) **free tier do PostHog em fonte primária** antes de
+  ligar (AD-079); (g) duas chamadas de IA fora da lista fechada do IA-02 — pré-diagnóstico de questão
+  suspeita (M7) e extração do programa do edital (M5, RAIOX-09); (h) **critério de morte do produto**
+  — decisão de sócios; (i) calibrações registradas como assumptions, agora com default em config
+  (ver a tabela de chaves no design do M4).
+- **Riscos registrados no Design que precisam de decisão futura**: o **peso do Raio-X fica em 1.0**
+  até o M5 entrar — como o AD-076 exige a conta do Raio-X ligada desde o dia 1, **o M5 precisa entrar
+  antes do lançamento**, não só antes da tela. E a conversão "percentual do bloco → nota 1–4 do FSRS"
+  é adaptação registrada (AD-072): `revisao_evento` guarda percentual **e** nota justamente para
+  permitir recalibrar depois olhando o histórico.
 - **Documentos anteriores que ficaram desatualizados** (aplicar quando tocar neles):
-  - `AGENTS.md` — diz "AD-001…AD-077"; passou a ser **AD-001…AD-079**, e a seção de estado não cita
-    o mecanismo de config/flag do AD-078.
+  - `AGENTS.md` — diz "AD-001…AD-079"; passou a ser **AD-001…AD-082**; a seção de estado ainda diz
+    "Design/Tasks/Execute não começaram", o que deixou de ser verdade.
   - `PRD.md` **§4.1** substituído por AD-076 · **§4.2** tutor e Raio-X saem de "no MVP" para
     "construídos, ligados depois" · **§4.3** app nativo vira decisão registrada (AD-077) · **§M6**
     critério "resposta rápida demais não conta" revogado por AD-060 · **§M3** áudio narra questão +
-    explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073).
+    explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073/080).
   - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
-  - `docs/historico/` — **congelado de propósito**. `DECISOES-TECNICAS.md` D14 tem estimativa de
-    custo de áudio desatualizada (ver AD-065). Registro histórico não é reescrito; as ADs novas
-    dizem o que substituem.
-- **Branch**: trabalho da rodada 8 em `spec/analytics-e-flags`, por PR. `main` protegida só pelo
-  hook local `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano
-  Free) — ativar por clone com `git config core.hooksPath .githooks`.
-- **Uncommitted files**: none após o merge da rodada 8.
+  - `docs/historico/` — **congelado de propósito**. Nunca é reescrito.
+- **Branch**: rodada 9 em `spec/infra11-m4-design`, por PR. Aberto e **não mergeado**:
+  `chore/mcp-supabase-passou` (PR #5) — isola o MCP do Supabase por projeto e corrige o
+  `.env.example`. `main` protegida só pelo hook local `.githooks/pre-push` (proteção do GitHub não
+  funciona em repositório privado no plano Free) — ativar por clone com
+  `git config core.hooksPath .githooks`.
+- **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
+  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free. Um projeto anterior criado
+  em `us-east-2` foi descartado antes de receber qualquer dado. Vercel, OpenAI, Cohere e Sentry ainda
+  **não** provisionados — nenhum deles trava as Tasks de INFRA-11/M4.
+- **Uncommitted files**: none.

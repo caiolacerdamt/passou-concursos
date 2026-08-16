@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "supabase-mcp-server": {
+    "supabase-passou": {
       "type": "stdio",
       "command": "npx",
       "args": [

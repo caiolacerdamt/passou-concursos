@@ -56,7 +56,8 @@ ninguém (art. 12).
 | Auto-aplicação pela IA | Permitida **só** numa lista fechada, explícita, reversível e auditada (AD-048); lista inicial = **aposentar distrator com 0 marcações em ≥N respostas**, N configurável e alto | Discuss 2026-07-23; ganha velocidade sem abrir a porta toda | y (regra) / n (N) |
 | LIA (teste de balanceamento) | Documento escrito **antes** de ligar o flywheel; é um artefato, não código | AD-026; PRD §M7 critério final | n (a redigir) |
 | Onde vive o opt-out do flywheel | Tela de conta/privacidade, 1 chave, sem ginástica; opt-out **não** degrada o produto do aluno | AD-026 (legítimo interesse exige opt-out real) | y |
-| Analytics de produto como operador | **PostHog Cloud região UE** (AD-079/INFRA-12). No lançamento mede **só o funil pré-login**, em modo anônimo, sem `user_id`/e-mail/nome/CPF. É o **primeiro subprocessador fora do Brasil** do projeto | Pré-login não é aluno: não tem `user_id` e não entra nos 3 grupos. Ainda assim o evento carrega IP e id de dispositivo — risco **menor, não nulo** | y (ferramenta e escopo) / **n** (base legal — advogado) |
+| Analytics de produto como operador | **PostHog Cloud região Estados Unidos** (AD-079/INFRA-12). No lançamento mede **só o funil pré-login**, em modo anônimo, sem `user_id`/e-mail/nome/CPF. É o **primeiro subprocessador fora do Brasil** do projeto | Pré-login não é aluno: não tem `user_id` e não entra nos 3 grupos. Ainda assim o evento carrega IP e id de dispositivo — risco **menor, não nulo** | y (ferramenta e escopo) / **n** (base legal — advogado) |
+| Instrumento da transferência internacional | Os **EUA não têm decisão de adequação da ANPD** → a transferência precisa de outro mecanismo do **art. 33** da LGPD (cláusulas-padrão contratuais é o caminho usual, aprovadas por resolução da ANPD). SHALL ser resolvido **antes** de ligar a flag da superfície logada | AD-079 — com o destino EUA, o item do advogado deixa de ser só "qual base legal" e passa a incluir "qual instrumento"; no escopo pré-login o risco é menor, não nulo | **n** (advogado) |
 | Superfície logada no analytics | Nasce **atrás de flag desligada**; ligar exige as 3 condições do AD-079 — política nomeando operador + transferência internacional, deleção amarrada ao DADOS-04, lista de eventos fechada e revisada | DADOS-02 exige todo dado pessoal **declarado no schema**; evento com `user_id` em serviço de terceiro é grupo 1 fora do schema | y |
 | Session replay | **Proibido** em qualquer etapa | Grava a tela do aluno — contraria DADOS-07 AC6 mais fortemente que um log de erro (AD-079) | y |
 
@@ -100,7 +101,8 @@ produto que eu contratei — e quero uma política clara em português.
 7. SHALL NOT existir tela de consentimento granular por finalidade (switches) — rejeitada em AD-026.
 8. A política SHALL nomear os **operadores** que tratam dado pessoal por nossa conta e SHALL declarar toda
    **transferência internacional** — qual serviço, para que finalidade, em que país/região. Isso inclui a
-   ferramenta de analytics (AD-079/INFRA-12, região UE), primeiro tratamento fora do Brasil do projeto.
+   ferramenta de analytics (AD-079/INFRA-12, região **Estados Unidos**), primeiro tratamento fora do
+   Brasil do projeto.
    WHEN um operador novo passa a tratar dado pessoal, THEN a política SHALL ser atualizada e versionada
    **antes** de o tratamento começar; SHALL NOT existir operador não declarado.
 

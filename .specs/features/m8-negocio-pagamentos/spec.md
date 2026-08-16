@@ -57,7 +57,7 @@ fiscal nativamente — o que evita um segundo serviço só para isso.
 | Idade mínima | Declaração 18+ no checkout (AD-047/DADOS-11) | M7 | y |
 | Provedor de e-mail transacional | Supabase Auth para "defina a senha"/link mágico; e-mails de negócio (aviso de vencimento) por provedor a definir no Design | AD-034 | n (Design) |
 | Moeda / internacional | Só **BRL**, só Brasil no lançamento | Público é concurso brasileiro | y |
-| Medição do funil de venda | Eventos **anônimos** pré-login na ferramenta do INFRA-12 (default **PostHog região UE**, AD-079); sem e-mail/nome/CPF/dado de pagamento | O produto está atrás do paywall e a página é a única superfície de conversão — sem isso, tráfego pago é gasto às cegas. Pré-login não tem `user_id` e não entra nos grupos do AD-027 | y (escopo) / n (base legal — advogado, junto do M7) |
+| Medição do funil de venda | Eventos **anônimos** pré-login na ferramenta do INFRA-12 (default **PostHog região Estados Unidos**, AD-079); sem e-mail/nome/CPF/dado de pagamento | O produto está atrás do paywall e a página é a única superfície de conversão — sem isso, tráfego pago é gasto às cegas. Pré-login não tem `user_id` e não entra nos grupos do AD-027 | y (escopo) / n (base legal — advogado, junto do M7) |
 
 **Open questions:** none — as pendências acima são *due diligence* (contador, contrato do Asaas) ou
 detalhe de Design, todas com default registrado.

@@ -59,7 +59,7 @@ Toda ambiguidade está resolvida ou registrada aqui — nada fica silenciosament
 | RPO/RTO com backup diário 7d | RPO ≈ até 24h (último snapshot diário); RTO = tempo de restore Supabase | Sem PITR não há recuperação a ponto arbitrário; aceito no MVP | n |
 | Onde vivem flags e parâmetros de config | **Tabela versionada no Postgres** (Supabase), com cache curto na aplicação; env var só para o que precede o banco (URL/chave do Supabase, segredos) | **AD-078** — o requisito real é trocar valor **sem deploy**, e o GITFLOW depende disso ("deploy ≠ release"); env var obrigaria deploy para ligar uma flag | **y** |
 | Granularidade da flag no lançamento | **Booleana global** por módulo/superfície; sem rollout percentual, sem segmentação por aluno, sem A/B | AD-078 — o AD-076 pede liga/desliga para todos, não rollout gradual; serviço externo custaria subprocessador novo para entregar o que ninguém pediu | **y** |
-| Ferramenta de analytics de produto | **PostHog Cloud, região UE**, com proxy reverso no domínio próprio | **AD-079** — não há região BR; self-host excluído por este mesmo M9 ("3 devs sem ops") | **y** (ferramenta) / **n** (base legal — advogado, junto do M7) |
+| Ferramenta de analytics de produto | **PostHog Cloud, região Estados Unidos** (org criada em 2026-08-16), com proxy reverso no domínio próprio | **AD-079** — não há região BR; self-host excluído por este mesmo M9 ("3 devs sem ops"). Região é de mão única no plano gratuito: migrar US→UE exige Scale/Enterprise | **y** (ferramenta e região) / **n** (base legal **e instrumento** da transferência — advogado, junto do M7) |
 | Escopo do analytics no lançamento | **Só o funil pré-login** (página de vendas + checkout), em modo anônimo. Superfície logada nasce **atrás de flag desligada**, com 3 condições escritas | AD-079 — pré-login não tem `user_id` e não entra nos grupos do AD-027; a superfície logada esbarra em DADOS-02 e precisa da deleção amarrada antes | **y** |
 | Session replay | **Não usar**, em nenhuma etapa | AD-079 — grava a tela do aluno; contraria DADOS-07 AC6 mais fortemente que um log de erro | **y** |
 | Sentry × PostHog | **Coexistem com papéis distintos**: Sentry = defeito (INFRA-09), PostHog = comportamento (INFRA-12). Error tracking do PostHog fica desligado | AD-079 — ferramentas respondem perguntas diferentes; ligar as duas para erro é custo duplicado e alerta duplicado | **y** |
@@ -261,8 +261,8 @@ sem nenhum erro é invisível para o INFRA-09.
 **Acceptance Criteria**:
 
 1. O sistema SHALL instrumentar o **funil pré-login** (página de vendas → checkout → confirmação do
-   pagamento) na ferramenta de analytics configurada (default hoje **PostHog Cloud região UE**,
-   AD-079; o nome vive na configuração, INFRA-11).
+   pagamento) na ferramenta de analytics configurada (default hoje **PostHog Cloud região Estados
+   Unidos**, AD-079; host e chave vivem na configuração, INFRA-11 — SHALL NOT ser fixados em código).
 2. Os eventos pré-login SHALL ser enviados em **modo anônimo**, sem criar perfil de pessoa, e SHALL
    NOT conter `user_id`, e-mail, nome, CPF nem qualquer campo de meio de pagamento. Propriedade
    sensível SHALL ser barrada **na origem** (lista de bloqueio no SDK), não filtrada depois.
@@ -270,8 +270,9 @@ sem nenhum erro é invisível para o INFRA-09.
    ser carregada direto do domínio do fornecedor (bloqueador de anúncio derrubaria a medição).
 4. A superfície **logada** (ativação, uso do plano, sessão de questões) SHALL nascer **atrás de flag
    desligada** e SHALL NOT ser ligada antes de as três condições do AD-079 estarem cumpridas:
-   política nomeando o operador e a transferência internacional, deleção amarrada ao DADOS-04, e
-   lista de eventos/propriedades fechada e revisada.
+   (a) política nomeando o operador e a transferência internacional, **com o instrumento da
+   transferência para os EUA resolvido** (art. 33 LGPD); (b) deleção amarrada ao DADOS-04 com
+   confirmação de conclusão; (c) lista de eventos e propriedades fechada e revisada.
 5. O sistema SHALL NOT usar **session replay** em nenhuma etapa (AD-079).
 6. O analytics SHALL NOT substituir a observabilidade do INFRA-09; o **error tracking** da
    ferramenta de analytics SHALL NOT ser ligado, e o Sentry SHALL continuar sendo a fonte de defeito.

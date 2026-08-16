@@ -1,0 +1,157 @@
+import { z } from "zod";
+
+/**
+ * Catalogo de chaves de configuracao (INFRA-11 AC8, AD-078).
+ *
+ * O banco guarda **override**; este arquivo guarda a **verdade sobre o que a
+ * chave e** — tipo, valor padrao, modulo dono e descricao. Chave sem linha no
+ * banco vale o default daqui, e e assim que o sistema sobe num banco vazio.
+ *
+ * Este catalogo e a **unica** forma de criar chave nova. Chave que existe no
+ * banco e nao existe aqui e orfa: erro, nao configuracao.
+ */
+
+export const MODULOS = [
+  "m1",
+  "m2",
+  "m3",
+  "m4",
+  "m5",
+  "m6",
+  "m7",
+  "m8",
+  "m9",
+] as const;
+
+export type ModuloDono = (typeof MODULOS)[number];
+
+/**
+ * Mesmo padrao do `CHECK chave_com_prefixo_valido` da migracao. Duplicado de
+ * proposito: o banco recusa a linha, e o catalogo recusa a declaracao — as duas
+ * pontas seguram, e o teste confere que continuam iguais.
+ */
+export const PADRAO_DA_CHAVE = /^(flag|param)\.m[1-9]\.[a-z0-9_]+$/;
+
+type Definicao<T extends z.ZodType> = {
+  /** Valida o jsonb que vem do banco. */
+  tipo: T;
+  /** Vale quando nao ha linha, ou quando a leitura falha. */
+  padrao: z.infer<T>;
+  moduloDono: ModuloDono;
+  /** Aparece na tela de administracao. */
+  descricao: string;
+};
+
+/**
+ * Amarra `padrao` ao `tipo` da propria chave: default do formato errado vira
+ * erro de compilacao, nao surpresa em producao. O que o tipo do TypeScript nao
+ * alcanca — `.int()`, `.positive()`, faixa — o teste do catalogo pega.
+ */
+function chave<T extends z.ZodType>(definicao: Definicao<T>): Definicao<T> {
+  return definicao;
+}
+
+export const CATALOGO = {
+  // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
+  // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da
+  // spec do M4. Estao aqui com default porque o AD-078 exige default declarado
+  // em codigo; calibram sem deploy.
+  "param.m4.algoritmo_revisao": chave({
+    tipo: z.enum(["fsrs", "regua_fixa"]),
+    padrao: "fsrs",
+    moduloDono: "m4",
+    descricao:
+      "Qual algoritmo agenda a revisao. 'regua_fixa' e o plano B (1/3/7/14/30) e grava na mesma coluna, entao a troca nao perde agendamento.",
+  }),
+  "param.m4.fsrs_faixas_nota": chave({
+    tipo: z.object({
+      errei: z.number().min(0).max(1),
+      dificil: z.number().min(0).max(1),
+      bom: z.number().min(0).max(1),
+    }),
+    padrao: { errei: 0.5, dificil: 0.7, bom: 0.9 },
+    moduloDono: "m4",
+    descricao:
+      "Converte percentual de acerto do bloco em Rating 1-4 do FSRS. Adaptacao registrada na AD-072; recalibravel olhando revisao_evento.",
+  }),
+  "param.m4.minutos_por_questao": chave({
+    tipo: z.number().positive(),
+    padrao: 2,
+    moduloDono: "m4",
+    descricao:
+      "Converte o tempo que o aluno declara em tamanho de bloco do plano do dia.",
+  }),
+  "param.m4.diagnostico_n_questoes": chave({
+    tipo: z.number().int().positive(),
+    padrao: 20,
+    moduloDono: "m4",
+    descricao: "Quantas questoes tem o diagnostico inicial. Sempre pulavel.",
+  }),
+  "param.m4.dias_sem_repetir_questao": chave({
+    tipo: z.number().int().positive(),
+    padrao: 30,
+    moduloDono: "m4",
+    descricao:
+      "Janela em que a mesma questao nao volta no Treinar, para o aluno nao decorar a alternativa.",
+  }),
+  "param.m4.peso_devendo_revisao": chave({
+    tipo: z.number().positive(),
+    padrao: 1.5,
+    moduloDono: "m4",
+    descricao:
+      "Multiplicador do topico com revisao vencida no motor de prioridade do plano.",
+  }),
+  "param.m4.fsrs_limiar_otimizacao": chave({
+    tipo: z.number().int().positive(),
+    padrao: 1000,
+    moduloDono: "m4",
+    descricao:
+      "Quantas revisoes registradas antes de ligar o computeParameters do FSRS. Fast-follow.",
+  }),
+  "flag.m4.diagnostico_adaptativo": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m4",
+    descricao:
+      "Diagnostico adaptativo por questoes. Desligada no lancamento (AD-076): o aluno so declara o nivel.",
+  }),
+  "flag.m4.simulado_semanal": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m4",
+    descricao: "Simulado semanal. P3, nasce desligada.",
+  }),
+  "flag.m4.caderno_erros": chave({
+    tipo: z.boolean(),
+    padrao: true,
+    moduloDono: "m4",
+    descricao:
+      "Caderno de erros. Nasce ligada: faz parte de 'progresso', uma das 4 superficies do lancamento (AD-076).",
+  }),
+} as const;
+
+/** Toda chave que existe. Ler chave fora daqui e erro de compilacao. */
+export type Chave = keyof typeof CATALOGO;
+
+/** Feature flag: em qualquer duvida vale `false`. */
+export type ChaveFlag = Extract<Chave, `flag.${string}`>;
+
+/** Parametro de regra de negocio: em qualquer duvida vale o default. */
+export type ChaveParam = Extract<Chave, `param.${string}`>;
+
+/** O tipo que a chave devolve, derivado do proprio schema declarado. */
+export type TipoDe<K extends Chave> = z.infer<(typeof CATALOGO)[K]["tipo"]>;
+
+export const CHAVES = Object.keys(CATALOGO) as Chave[];
+
+export function existeNoCatalogo(chave: string): chave is Chave {
+  return Object.prototype.hasOwnProperty.call(CATALOGO, chave);
+}
+
+/**
+ * Quais das chaves vindas do banco nao existem no catalogo (AC8).
+ * Chave orfa nao e configuracao: e lixo que ninguem sabe ler.
+ */
+export function chavesOrfas(chavesDoBanco: readonly string[]): string[] {
+  return chavesDoBanco.filter((chave) => !existeNoCatalogo(chave));
+}

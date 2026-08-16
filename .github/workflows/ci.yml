@@ -94,31 +94,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Existe aplicação?
-        id: existe
-        run: |
-          if [ -f package.json ]; then echo "sim=true" >> "$GITHUB_OUTPUT";
-          else echo "sim=false" >> "$GITHUB_OUTPUT"; fi
-
-      # Ainda não há código de aplicação (fase Specify). Os passos abaixo ligam
-      # sozinhos assim que o package.json existir, no Design do M9/M4.
       - uses: actions/setup-node@v4
-        if: steps.existe.outputs.sim == 'true'
         with:
           node-version: 22
           cache: npm
 
-      - if: steps.existe.outputs.sim == 'true'
+      - name: Instalar dependências
         run: npm ci
 
-      - if: steps.existe.outputs.sim == 'true'
-        run: npm run typecheck --if-present
+      # `next build` roda o TypeScript: compilar já é o typecheck.
+      - name: Compilar
+        run: npm run build
 
-      - if: steps.existe.outputs.sim == 'true'
-        run: npm test --if-present
+      - name: Lint
+        run: npm run lint
 
-      - if: steps.existe.outputs.sim == 'true'
-        run: npm run build --if-present
+      # Teste unit não toca banco nem rede: roda sempre, em qualquer clone.
+      - name: Testes unit
+        run: npm run test:unit
 
-      - if: steps.existe.outputs.sim == 'false'
-        run: echo "Sem package.json ainda — fase Specify. Nada a construir."
+      # O teste de banco escreve no projeto Supabase de desenvolvimento. Sem o
+      # segredo, PULA com aviso — ausência de credencial nunca reprova o PR.
+      - name: Existe o segredo do banco?
+        id: segredo
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -n "${DATABASE_URL:-}" ]; then echo "tem=true" >> "$GITHUB_OUTPUT";
+          else echo "tem=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Testes de banco
+        if: steps.segredo.outputs.tem == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run test:db
+
+      - name: Testes de banco pulados
+        if: steps.segredo.outputs.tem != 'true'
+        run: |
+          echo "::notice::segredo DATABASE_URL não configurado no repositório — testes de banco pulados."

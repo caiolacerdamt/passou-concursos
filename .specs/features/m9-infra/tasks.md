@@ -115,12 +115,12 @@ Sequencial inteira: T5 cria a tabela que T6…T9 leem, e todo teste desta fase �
 
 **Done when**:
 
-- [ ] `npm run build` conclui sem erro
-- [ ] `npm run lint` conclui sem erro
-- [ ] As pastas do design existem, cada uma com um `.gitkeep` ou um `index.ts` vazio:
+- [x] `npm run build` conclui sem erro
+- [x] `npm run lint` conclui sem erro
+- [x] As pastas do design existem, cada uma com um `.gitkeep` ou um `index.ts` vazio:
       `src/modules/config/`, `src/modules/aluno/{tentativas,revisao,projecoes,plano}/`,
       `src/lib/db/`, `supabase/migrations/`, `scripts/jobs/`
-- [ ] `.gitignore` já cobre `node_modules/`, `.next/`, `.env` — conferir, não reescrever
+- [x] `.gitignore` já cobre `node_modules/`, `.next/`, `.env` — conferir, não reescrever
 
 **Tests**: none (camada "configuração do projeto" na matriz)
 **Gate**: build
@@ -146,14 +146,14 @@ sequencial) — e os scripts de npm que a matriz de gates usa.
 
 **Done when**:
 
-- [ ] `npm run test:unit` existe e passa
-- [ ] `npm run test:db` existe; **pula com mensagem clara** quando `DATABASE_URL` não está definida
+- [x] `npm run test:unit` existe e passa
+- [x] `npm run test:db` existe; **pula com mensagem clara** quando `DATABASE_URL` não está definida
       (não falha — quem clona o repo sem credencial ainda consegue rodar `test:unit`)
-- [ ] `npm test` roda os dois
-- [ ] O projeto `db` roda com `fileParallelism: false` (ver Parallelism Assessment)
-- [ ] Um teste trivial em cada projeto prova que os dois comandos funcionam
-- [ ] Gate: `npm run build && npm run lint && npm test`
-- [ ] Contagem de testes: 2 passam
+- [x] `npm test` roda os dois
+- [x] O projeto `db` roda com `fileParallelism: false` (ver Parallelism Assessment)
+- [x] Um teste trivial em cada projeto prova que os dois comandos funcionam
+- [x] Gate: `npm run build && npm run lint && npm test`
+- [x] Contagem de testes: 2 passam
 
 **Tests**: unit
 **Gate**: build
@@ -179,18 +179,22 @@ sequencial) — e os scripts de npm que a matriz de gates usa.
 
 **Done when**:
 
-- [ ] `npx supabase --version` responde (CLI instalado como devDependency, não global)
-- [ ] `supabase/config.toml` existe e aponta para `kfpmetkmhjtmgwgaaerl`
-- [ ] `npm run db:push` existe e aplica migração no projeto ligado **sem Docker**
-- [ ] ⚠️ **O script passa o token lendo do `.env`, explicitamente.** A variável de ambiente do
+- [x] `npx supabase --version` responde (CLI instalado como devDependency, não global)
+- [x] `supabase/config.toml` existe e aponta para `kfpmetkmhjtmgwgaaerl`
+- [x] `npm run db:push` existe e aplica migração no projeto ligado **sem Docker**
+- [x] ⚠️ **O script passa o token lendo do `.env`, explicitamente.** A variável de ambiente do
       Windows `SUPABASE_ACCESS_TOKEN` existe na máquina e contém o token de **outra conta** — o CLI
       leria ela e ligaria no projeto errado. Um teste confere que `db:push` aponta para
       `kfpmetkmhjtmgwgaaerl`, não para qualquer projeto que o ambiente sugira
-- [ ] `.env.example` documenta `DATABASE_URL` (string de conexão direta, para os testes de banco),
+- [x] `.env.example` documenta `DATABASE_URL` (string de conexão direta, para os testes de banco),
       **sem valor**, com o mesmo aviso de "nunca commite segredo" das outras chaves
-- [ ] `tests/db/conexao.ts` abre e fecha uma conexão contra `DATABASE_URL` e um teste prova isso
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 3 passam (2 de T2 + 1 novo)
+- [x] `tests/db/conexao.ts` abre e fecha uma conexão contra `DATABASE_URL` e um teste prova isso
+- [x] Gate: `npm test`
+- [x] ~~Contagem de testes: 3 passam (2 de T2 + 1 novo)~~ → **entregue: 6 passam** (2 de T2 + 4
+      novos). A estimativa de 1 teste novo não batia com os critérios da própria T3, que pedem dois
+      testes distintos: o que confere o alvo do `db:push` e o que prova a conexão. Os outros dois
+      cobrem `lerEnv` e a ligação real entre `package.json`, `db-push.mjs` e `config.toml`.
+      **A contagem das tasks seguintes (T5…T9) está defasada em +3.**
 
 **Tests**: integration (banco)
 **Gate**: full
@@ -215,11 +219,11 @@ testes unit; os de banco rodam se o segredo estiver configurado.
 
 **Done when**:
 
-- [ ] O job novo roda `npm ci`, `npm run build`, `npm run lint`, `npm run test:unit`
-- [ ] O job roda `npm run test:db` **apenas** quando o segredo `DATABASE_URL` existe no repositório;
+- [x] O job novo roda `npm ci`, `npm run build`, `npm run lint`, `npm run test:unit`
+- [x] O job roda `npm run test:db` **apenas** quando o segredo `DATABASE_URL` existe no repositório;
       sem ele, pula com aviso — nunca falha por ausência de credencial
-- [ ] Os jobs `segredos` e `documentos` continuam existindo e passando
-- [ ] O PR desta task mostra a CI verde
+- [x] Os jobs `segredos` e `documentos` continuam existindo e passando
+- [x] O PR desta task mostra a CI verde
 
 **Tests**: none (camada "configuração do projeto")
 **Gate**: build

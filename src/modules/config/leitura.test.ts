@@ -152,6 +152,24 @@ describe("getParams", () => {
   });
 });
 
+describe("fronteira da variavel de ambiente (AC2)", () => {
+  it("nenhum valor de configuracao vem de variavel de ambiente", async () => {
+    const { readFileSync } = await import("node:fs");
+
+    // Env var existe so para o que precisa existir ANTES de o banco responder —
+    // URL e chave do Supabase, que moram em src/lib/db. Flag e parametro de
+    // produto vem da tabela, com default no catalogo. Se um dia alguem ler
+    // process.env aqui dentro, este teste avisa.
+    for (const arquivo of [
+      "src/modules/config/leitura.ts",
+      "src/modules/config/escrita.ts",
+      "src/modules/config/catalogo.ts",
+    ]) {
+      expect(readFileSync(arquivo, "utf8")).not.toContain("process.env");
+    }
+  });
+});
+
 describe("janela de cache", () => {
   it("e constante em codigo, 30s, e nao existe como chave de configuracao", async () => {
     expect(JANELA_DE_CACHE_SEGUNDOS).toBe(30);

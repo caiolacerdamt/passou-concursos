@@ -57,6 +57,23 @@ describe("catalogo de chaves", () => {
     expect(typeof inexistente).toBe("string");
   });
 
+  it("toda flag e booleana e global, sem rollout percentual nem segmentacao (AC4)", () => {
+    const flags = CHAVES.filter((chave) => chave.startsWith("flag."));
+    expect(flags.length).toBeGreaterThan(0);
+
+    for (const flag of flags) {
+      const { tipo, padrao } = CATALOGO[flag];
+
+      // Booleana: nada de porcentagem, lista de aluno ou variante de teste A/B.
+      expect(tipo.safeParse(true).success).toBe(true);
+      expect(tipo.safeParse(false).success).toBe(true);
+      expect(tipo.safeParse(50).success).toBe(false);
+      expect(tipo.safeParse("on").success).toBe(false);
+      expect(tipo.safeParse({ percentual: 10 }).success).toBe(false);
+      expect(typeof padrao).toBe("boolean");
+    }
+  });
+
   it("chavesOrfas aponta a chave que o banco tem e o catalogo nao", () => {
     expect(chavesOrfas(CHAVES)).toEqual([]);
     expect(chavesOrfas([])).toEqual([]);

@@ -130,8 +130,10 @@ ser obrigado a fazer prova de 3 horas.
    (acertou→sobe a dificuldade estimada; errou→desce), gravando cada uma como `tentativa` com
    `contexto='diagnostico'`, **sem** perguntar causa.
 3. WHEN o diagnóstico termina (ou é pulado), THEN o sistema SHALL montar o retrato inicial (projeção) e
-   SHALL fazer **uma** chamada de IA por aluno (Sonnet) que **lê** retrato+meta+Raio-X e **escreve** o
-   plano inicial — não corrige, não mede.
+   SHALL fazer **uma** chamada de IA por aluno que **lê** retrato+meta+Raio-X e **escreve** o plano
+   inicial — não corrige, não mede. Essa chamada SHALL ser uma **tarefa própria do gateway** ("plano inicial
+   pós-diagnóstico", IA-02), distinta da "frase do plano diário": default hoje `gpt-5.6-luna` com esforço
+   `high`, síncrona (sem Batch), com cache (**AD-073**).
 4. WHEN a chamada de IA do plano inicial falha, THEN o sistema SHALL entregar o plano por **regra/SQL**
    mesmo assim (sem a frase escrita pela IA), pois o núcleo não depende de IA ao vivo (invariante #7).
 
@@ -291,7 +293,7 @@ nenhum agendamento.
 | ALUNO-09 | P1: Revisão espaçada em **FSRS com parâmetros padrão** desde o dia 1; régua fixa = plano B; otimização por aluno = fast-follow (AD-018/AD-072) | Design | Pending |
 | ALUNO-10 | P2: Caderno de erros como projeção (AD-015/AD-016) | Design | Pending |
 | ALUNO-11 | P1: Plano emite dois níveis piso/meta cheia (AD-018, p/ M6) | Design | Pending |
-| ALUNO-12 | P1: Uma chamada de IA (Sonnet) escreve o plano inicial/frase (AD-017/AD-018) | Design | Pending |
+| ALUNO-12 | P1: Uma chamada de IA escreve o plano inicial — **tarefa própria do gateway**, default `gpt-5.6-luna`/`high` (AD-017/AD-018/**AD-073**) | Design | Pending |
 
 **ID format:** `ALUNO-NN`.
 

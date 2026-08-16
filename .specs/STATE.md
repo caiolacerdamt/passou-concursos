@@ -743,6 +743,44 @@
 - **Date**: 2026-08-16
 - **Status**: active
 
+### AD-084
+- **Decision**: A trava de tabela **append-only** do projeto tem **três** peças, não duas:
+  (1) `revoke update, delete, truncate` de `anon`/`authenticated`; (2) gatilho `for each row` em
+  `before update or delete`; (3) gatilho `for each statement` em `before truncate`. A função do
+  gatilho é declarada com `set search_path = ''`. Substitui a receita de duas peças do **AD-082**,
+  que vale para `configuracoes` e **também para `tentativas`** quando o M4 for implementado (T12).
+- **Reason**: Inspecionando os privilégios reais depois de aplicar a primeira migração, `anon` e
+  `authenticated` ainda tinham **TRUNCATE** — vem do `alter default privileges` do Supabase — e
+  **RLS não governa TRUNCATE**. A tabela append-only podia ser esvaziada inteira. O `service_role`
+  tem `rolbypassrls` e mantém o privilégio de propósito, então só o gatilho por comando o segura.
+  O `search_path` mutável era aviso `function_search_path_mutable` do linter do Supabase.
+- **Trade-off**: Mais três linhas por tabela de log. Nenhuma perda: TRUNCATE não é usado em lugar
+  nenhum do projeto. Não fecha a porta de esquecimento do AD-029/AD-082 em `tentativas`, que
+  continua sendo a única exceção de DELETE e vale só ali — `configuracoes` não tem dado pessoal.
+- **Scope**: Toda tabela append-only do projeto: `configuracoes` (INFRA-11) e `tentativas` (M4/T12).
+- **Date**: 2026-08-16
+- **Status**: active
+
+### AD-085
+- **Decision**: A leitura de configuração continua no **`unstable_cache`** do Next, **não** migra
+  para a diretiva `use cache`. E o leitor padrão **cai para leitura direta do banco** quando o cache
+  do Next não está disponível, em vez de tratar isso como leitura quebrada. A janela segue constante
+  em código, 30s. A migração para `use cache` fica como decisão própria, futura.
+- **Reason**: O Next 16 substituiu o `unstable_cache` pelo `use cache` (confirmado no Context7 em
+  2026-08-16), mas adotar a diretiva exige ligar `cacheComponents` no `next.config`, o que muda o
+  comportamento de cache do **app inteiro** — grande demais para entrar de carona numa task de
+  leitura de config. Mais sério: o `unstable_cache` **só vale dentro de uma requisição**, e job do
+  GitHub Actions e script de linha de comando (AD-035/AD-036) rodam fora dela. Sem a queda para
+  leitura direta, o job trataria a ausência de cache como falha e usaria o **default do catálogo em
+  silêncio** — trabalhando com configuração errada sem ninguém saber. Há teste provando os dois
+  lados: fora de requisição lê direto; banco fora do ar cai no default e reporta.
+- **Trade-off**: Fica-se numa API que a Vercel marcou como legada, e a migração vai ter custo depois.
+  Job não tem cache de config (1 aluno por execução não precisa). Uma leitura extra ao banco quando
+  o banco está mesmo fora do ar, antes de cair no default.
+- **Scope**: `src/modules/config` (INFRA-11) e todo consumidor de config em job — M4 em diante.
+- **Date**: 2026-08-16
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Fase **Execute**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
@@ -768,6 +806,25 @@
   4. `next build` roda o TypeScript: **compilar já é o typecheck**, não existe script `typecheck`.
   5. A contagem de testes prevista nas tasks está defasada a partir da T3: a T3 previa 3 no total, mas
      os próprios critérios dela pedem dois testes novos. Total real ao fim da fase 0: **6**.
+- **Execute — fase 1 (INFRA-11) concluída (2026-08-16)**, branch `feat/m9-infra11-configuracao`:
+  | Task | Commit | O quê |
+  | --- | --- | --- |
+  | T5 | `7b924e3` | migração `configuracoes` append-only + view vigente + RLS + trava de 3 camadas |
+  | T6 | `a82d83a` | catálogo com as 10 chaves do M4; default amarrado ao tipo em compilação |
+  | T7 | `cd6e770` | `getParam`, `isFlagOn`, `getParams`; cache 30s; queda segura |
+  | T8 | `4904d42` | `setConfig` — INSERT com autor obrigatório, validação antes do banco |
+  | T9 | `63c1000` | Independent Test: config ilegível deixa a flag desligada |
+  | — | `61a2d92` | dois AC que a verificação achou sem teste (AC2 e AC4), fechados |
+  **Verificação independente**: `.specs/features/m9-infra/validation.md` — PASS, 8 de 8 AC com
+  evidência `file:line`, sensor de discriminação **4 mutantes injetados, 4 mortos**. Gate final:
+  build ✓ lint ✓ **41 testes**.
+  **Três achados que viraram código**, dois deles em AD nova:
+  1. **AD-084** — `anon`/`authenticated` ficavam com **TRUNCATE** e a RLS não governa TRUNCATE: a
+     tabela append-only podia ser esvaziada inteira. **A mesma lacuna está no design de `tentativas`
+     (AD-082) e precisa entrar na T12.**
+  2. **AD-085** — `unstable_cache` só vale dentro de uma requisição do Next; job e script rodam fora
+     e leriam o default do catálogo **em silêncio**. O leitor cai para leitura direta.
+  3. `revalidateTag` mudou de assinatura no Next 16: exige o perfil de cache como 2º argumento.
 - **Rodada 10 — Tasks de INFRA-11 + M4 (2026-08-16)**. Dois documentos escritos:
   `.specs/features/m9-infra/tasks.md` (**T1…T9**) e
   `.specs/features/m4-coluna-vertebral/tasks.md` (**T10…T22**). A numeração é **contínua entre os
@@ -793,9 +850,11 @@
   questão para aplicar. **Nenhuma tela** entra nesta leva: o Design da rodada 1 não desenhou
   superfície, só servidor.
 - **In-progress** (file:line): none
-- **Next step**: **T5** — primeira migração do banco (tabela `configuracoes`), na branch
-  `feat/m9-infra11-configuracao`, depois de mergear o PR da fase 0. Depois do M4: **M1** (Design),
-  caminho crítico de produto, que pede **2–3 PDFs de prova de amostra** na mão.
+- **Next step**: **T10** — início do M4, em `.specs/features/m4-coluna-vertebral/tasks.md`, na branch
+  `feat/m4-p1-log-tentativas`, depois de mergear o PR da fase 1. **A T12 tem de aplicar a AD-084**
+  (trava de 3 camadas, incluindo TRUNCATE) em `tentativas`, não a receita de 2 camadas do AD-082.
+  Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de prova de
+  amostra** na mão.
 - **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json`
   expande da variável de ambiente do **sistema operacional**; o bloco `env` de
   `.claude/settings.local.json` **não** alimenta essa expansão (testado). A variável global do
@@ -809,8 +868,9 @@
   respondendo (`list_tables` devolveu vazio) em 2026-08-16, antes do primeiro commit de código.
 - **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
   AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
-  (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log),
-  **AD-083** (ambiente de teste).
+  (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log,
+  **substituída pela AD-084**), **AD-083** (ambiente de teste), **AD-084** (trava de 3 camadas),
+  **AD-085** (cache da config fora de requisição).
 - **Decisões do Design que outros módulos herdam** (inalteradas): `raiox_peso_topico` nasce como
   **view stub devolvendo 1.0** — o M5 a substitui mantendo a assinatura, sem tocar no M4 (T19). O M4
   cria `materias`, `topicos` e uma `questoes` **mínima** (contrato AD-039/040) para poder ser testado
@@ -849,7 +909,8 @@
     explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073/080).
   - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
   - `docs/historico/` — **congelado de propósito**. Nunca é reescrito.
-- **Branch**: fase 0 do Execute em `chore/esqueleto-projeto`, por PR. `main` protegida só pelo hook local
+- **Branch**: fase 1 do Execute em `feat/m9-infra11-configuracao`, por PR (a fase 0 entrou pelo PR #9).
+  `main` protegida só pelo hook local
   `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano Free) —
   ativar por clone com `git config core.hooksPath .githooks`. PRs #5 e #6 mergeados.
 - **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou

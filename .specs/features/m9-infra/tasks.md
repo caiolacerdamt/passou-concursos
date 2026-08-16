@@ -248,15 +248,15 @@ o RLS e as duas camadas de trava contra UPDATE/DELETE.
 
 **Done when**:
 
-- [ ] A tabela existe com as colunas do design, incluindo `alterado_por uuid not null references auth.users(id)`
-- [ ] O `CHECK chave_com_prefixo_valido` recusa chave fora do padrão `^(flag|param)\.m[1-9]\.[a-z0-9_]+$`
-- [ ] A view `configuracoes_vigentes` devolve **a última linha** de cada chave (AC7: o valor anterior
+- [x] A tabela existe com as colunas do design, incluindo `alterado_por uuid not null references auth.users(id)`
+- [x] O `CHECK chave_com_prefixo_valido` recusa chave fora do padrão `^(flag|param)\.m[1-9]\.[a-z0-9_]+$`
+- [x] A view `configuracoes_vigentes` devolve **a última linha** de cada chave (AC7: o valor anterior
       é a penúltima linha, não uma tabela paralela)
-- [ ] `REVOKE update, delete` + gatilho recusam UPDATE e DELETE **inclusive** para o papel de serviço
+- [x] `REVOKE update, delete` + gatilho recusam UPDATE e DELETE **inclusive** para o papel de serviço
       (AD-081 herda a trava do AD-082, sem porta de esquecimento — a tabela não tem dado pessoal)
-- [ ] RLS ligado, **sem policy** para `anon`/`authenticated`: a tabela é invisível ao navegador
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 8 passam (3 anteriores + 5 novos: prefixo inválido recusado · valor vigente
+- [x] RLS ligado, **sem policy** para `anon`/`authenticated`: a tabela é invisível ao navegador
+- [x] Gate: `npm test`
+- [x] ~~Contagem de testes: 8 passam~~ -> **entregue: 13** (3 anteriores + 5 novos: prefixo inválido recusado · valor vigente
       = última linha · histórico preservado após 2 INSERTs · UPDATE recusado · DELETE recusado)
 
 **Tests**: integration (banco)
@@ -284,15 +284,15 @@ teste que prova que não há chave órfã no banco.
 
 **Done when**:
 
-- [ ] `CATALOGO` declara as 10 chaves do M4 do design, cada uma com `tipo` (schema zod), `padrao`,
+- [x] `CATALOGO` declara as 10 chaves do M4 do design, cada uma com `tipo` (schema zod), `padrao`,
       `moduloDono` e `descricao`
-- [ ] O tipo `Chave` é derivado do catálogo — ler chave inexistente é **erro de compilação**
-- [ ] `ChaveFlag` e `ChaveParam` são tipos separados, derivados do prefixo
-- [ ] Teste de banco: toda `chave` presente em `configuracoes` existe no catálogo (AC8 — chave órfã
+- [x] O tipo `Chave` é derivado do catálogo — ler chave inexistente é **erro de compilação**
+- [x] `ChaveFlag` e `ChaveParam` são tipos separados, derivados do prefixo
+- [x] Teste de banco: toda `chave` presente em `configuracoes` existe no catálogo (AC8 — chave órfã
       falha o teste)
-- [ ] Todo `padrao` valida contra o próprio `tipo` da chave (default inválido é erro no teste)
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 12 passam (8 anteriores + 4 novos)
+- [x] Todo `padrao` valida contra o próprio `tipo` da chave (default inválido é erro no teste)
+- [x] Gate: `npm test`
+- [x] ~~Contagem: 12~~ -> **entregue: 17** (4 novos, como previsto)
 
 **Tests**: unit + integration (banco)
 **Gate**: full
@@ -319,19 +319,19 @@ servidor de `src/lib/db/`
 
 **Done when**:
 
-- [ ] `getParam(chave)` devolve o valor vigente do banco, tipado
-- [ ] `getParam` devolve o **default do catálogo** quando não há linha no banco (banco vazio sobe)
-- [ ] `getParam` devolve o **default do catálogo** quando a leitura falha, e reporta o erro (AC6)
-- [ ] `getParam` devolve o **default do catálogo** quando o valor do banco não valida contra o tipo,
+- [x] `getParam(chave)` devolve o valor vigente do banco, tipado
+- [x] `getParam` devolve o **default do catálogo** quando não há linha no banco (banco vazio sobe)
+- [x] `getParam` devolve o **default do catálogo** quando a leitura falha, e reporta o erro (AC6)
+- [x] `getParam` devolve o **default do catálogo** quando o valor do banco não valida contra o tipo,
       e reporta o erro
-- [ ] `isFlagOn(chave)` devolve **`false`** em qualquer falha — mesmo que o default declarado seja
+- [x] `isFlagOn(chave)` devolve **`false`** em qualquer falha — mesmo que o default declarado seja
       `true` (AC6: flag ilegível nunca liga superfície)
-- [ ] `getParams(...chaves)` lê em lote, **um** round-trip
-- [ ] A janela de cache é **constante em código, 30s** — não vem da tabela (circularidade registrada
+- [x] `getParams(...chaves)` lê em lote, **um** round-trip
+- [x] A janela de cache é **constante em código, 30s** — não vem da tabela (circularidade registrada
       no design §Risks)
-- [ ] Teste de banco: mudar o valor por INSERT e ver a leitura mudar **sem novo build** (AC3)
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 21 passam (12 anteriores + 9 novos — um por marcador acima)
+- [x] Teste de banco: mudar o valor por INSERT e ver a leitura mudar **sem novo build** (AC3)
+- [x] Gate: `npm test`
+- [x] ~~Contagem: 21~~ -> **entregue: 27** (12 anteriores + 9 novos — um por marcador acima)
 
 **Tests**: unit + integration (banco)
 **Gate**: full
@@ -357,16 +357,16 @@ o cache.
 
 **Done when**:
 
-- [ ] `setConfig(chave, valor, { autorId, motivo })` faz **INSERT** — nunca UPDATE
-- [ ] Valor que não valida contra o tipo do catálogo é recusado **antes** do INSERT
-- [ ] Chave fora do catálogo é recusada (erro de compilação para chave literal; erro em execução para
+- [x] `setConfig(chave, valor, { autorId, motivo })` faz **INSERT** — nunca UPDATE
+- [x] Valor que não valida contra o tipo do catálogo é recusado **antes** do INSERT
+- [x] Chave fora do catálogo é recusada (erro de compilação para chave literal; erro em execução para
       chave dinâmica)
-- [ ] `autorId` ausente ou nulo é recusado — **não existe alteração anônima** (AC7)
-- [ ] Depois do INSERT, a leitura de T7 devolve o valor novo dentro da janela de cache
-- [ ] Teste de banco: dois `setConfig` seguidos na mesma chave deixam **duas linhas**; a consulta do
+- [x] `autorId` ausente ou nulo é recusado — **não existe alteração anônima** (AC7)
+- [x] Depois do INSERT, a leitura de T7 devolve o valor novo dentro da janela de cache
+- [x] Teste de banco: dois `setConfig` seguidos na mesma chave deixam **duas linhas**; a consulta do
       histórico mostra quem, quando, valor anterior e valor novo (AC7) sem tabela paralela
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 27 passam (21 anteriores + 6 novos)
+- [x] Gate: `npm test`
+- [x] ~~Contagem: 27~~ -> **entregue: 35** (8 novos)
 
 **Tests**: unit + integration (banco)
 **Gate**: full
@@ -391,13 +391,13 @@ desligada e o alerta dispara.
 
 **Done when**:
 
-- [ ] Com a leitura do banco falhando (conexão inválida), `isFlagOn` de uma flag cujo default é
+- [x] Com a leitura do banco falhando (conexão inválida), `isFlagOn` de uma flag cujo default é
       `true` devolve **`false`**
-- [ ] Com a leitura falhando, `getParam` devolve o default do catálogo
-- [ ] A falha é **reportada** por um ponto único, pronto para o Sentry ligar no INFRA-09 — nesta leva
+- [x] Com a leitura falhando, `getParam` devolve o default do catálogo
+- [x] A falha é **reportada** por um ponto único, pronto para o Sentry ligar no INFRA-09 — nesta leva
       o Sentry não existe, então o reporte é uma função injetável e o teste prova que foi chamada
-- [ ] Gate: `npm test`
-- [ ] Contagem de testes: 30 passam (27 anteriores + 3 novos)
+- [x] Gate: `npm test`
+- [x] ~~Contagem: 30~~ -> **entregue: 39** (4 novos), e **41** depois das duas lacunas de AC fechadas na verificacao
 
 **Tests**: integration (banco)
 **Gate**: full

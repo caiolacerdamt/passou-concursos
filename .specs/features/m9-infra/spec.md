@@ -21,6 +21,10 @@ convivem com a LGPD — decisões que todas as outras features (M1–M8) herdam.
 - [ ] Backup e política de DELETE (D29) casam sem furo de LGPD, com prazo documentado.
 - [ ] Ambiente 100% na região São Paulo, gerenciado, com staging isolado por branch.
 - [ ] Erro em produção é visível e alertável antes de o aluno reclamar.
+- [ ] Existe **um** lugar para flags e parâmetros de produto, trocável sem deploy e com registro de
+      quem mudou o quê — de onde M1–M8 leem tudo que suas specs mandaram para "configuração".
+- [ ] O funil pré-login é medido sem nenhum dado pessoal, e o produto funciona igual se a medição
+      cair.
 
 ## Out of Scope
 
@@ -53,9 +57,17 @@ Toda ambiguidade está resolvida ou registrada aqui — nada fica silenciosament
 | Gestão de migrações de schema | **Supabase CLI**, migrações versionadas em git, aplicadas via GitHub Actions; prod exige merge aprovado | Reproduzível, staging→prod controlado, sem clicar em produção | n |
 | Ciclo de vida das partições de `tentativas` | Partições **nunca dropadas** (é a verdade crua). Na retenção dos 24m, as **linhas daquele `user_id` são APAGADAS** (DADOS-03), não anonimizadas in-place — a contribuição estatística já foi consolidada antes no acumulador anônimo do grupo 2 (AD-046) | Linha sem `user_id` mas com `sessao_id` ainda é uma sequência de uma pessoa só = **pseudonimizado**, que continua sendo dado pessoal; manter teria custo e nenhum ganho, já que o grupo 2 não depende dessas linhas. Corrige contradição com M7 (**AD-067**) | **y** (AD-067) |
 | RPO/RTO com backup diário 7d | RPO ≈ até 24h (último snapshot diário); RTO = tempo de restore Supabase | Sem PITR não há recuperação a ponto arbitrário; aceito no MVP | n |
+| Onde vivem flags e parâmetros de config | **Tabela versionada no Postgres** (Supabase), com cache curto na aplicação; env var só para o que precede o banco (URL/chave do Supabase, segredos) | **AD-078** — o requisito real é trocar valor **sem deploy**, e o GITFLOW depende disso ("deploy ≠ release"); env var obrigaria deploy para ligar uma flag | **y** |
+| Granularidade da flag no lançamento | **Booleana global** por módulo/superfície; sem rollout percentual, sem segmentação por aluno, sem A/B | AD-078 — o AD-076 pede liga/desliga para todos, não rollout gradual; serviço externo custaria subprocessador novo para entregar o que ninguém pediu | **y** |
+| Ferramenta de analytics de produto | **PostHog Cloud, região Estados Unidos** (org criada em 2026-08-16), com proxy reverso no domínio próprio | **AD-079** — não há região BR; self-host excluído por este mesmo M9 ("3 devs sem ops"). Região é de mão única no plano gratuito: migrar US→UE exige Scale/Enterprise | **y** (ferramenta e região) / **n** (base legal **e instrumento** da transferência — advogado, junto do M7) |
+| Escopo do analytics no lançamento | **Só o funil pré-login** (página de vendas + checkout), em modo anônimo. Superfície logada nasce **atrás de flag desligada**, com 3 condições escritas | AD-079 — pré-login não tem `user_id` e não entra nos grupos do AD-027; a superfície logada esbarra em DADOS-02 e precisa da deleção amarrada antes | **y** |
+| Session replay | **Não usar**, em nenhuma etapa | AD-079 — grava a tela do aluno; contraria DADOS-07 AC6 mais fortemente que um log de erro | **y** |
+| Sentry × PostHog | **Coexistem com papéis distintos**: Sentry = defeito (INFRA-09), PostHog = comportamento (INFRA-12). Error tracking do PostHog fica desligado | AD-079 — ferramentas respondem perguntas diferentes; ligar as duas para erro é custo duplicado e alerta duplicado | **y** |
+| Custo do PostHog no lançamento | Plano gratuito **provavelmente** suficiente no volume pré-lançamento (ordem de grandeza divulgada: ~1M eventos/mês, 1 projeto, retenção 1 ano) | Volume de visitante pré-lançamento é baixo; **número não confirmado em fonte primária de preço** — conferir antes de ligar | **n** (a confirmar) |
 
-**Open questions:** none — tudo acima resolvido ou registrado. (Custo exato do compute Supabase e
-do plano Vercel Pro é due-diligence de orçamento, não decisão de arquitetura.)
+**Open questions:** none — tudo acima resolvido ou registrado. (Custo exato do compute Supabase, do
+plano Vercel Pro e do PostHog é due-diligence de orçamento, não decisão de arquitetura. A base legal
+do evento pré-login entra na mesma lista de confirmação jurídica que o M7 já mantém.)
 
 ---
 
@@ -198,6 +210,82 @@ resto do app responde do banco.
 
 ---
 
+### P1: Configuração e feature flags sem deploy ⭐ MVP
+
+**User Story**: Como time, quero ligar/desligar uma superfície e trocar um parâmetro de produto sem
+fazer deploy, para o "deploy ≠ release" do GITFLOW ser verdade e o Design dos módulos ter onde
+guardar os números que as specs já mandaram para "configuração".
+
+**Why P1**: O AD-001 escolheu flag como mecanismo e o AD-076 pôs 5 superfícies atrás de flag
+desligada, mas nenhuma spec dizia onde o valor mora. Sem isto, M1–M8 não têm onde ler dezenas de
+parâmetros já especificados — e o Design do M4 para na primeira história.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL manter **uma** fonte de configuração — tabela versionada no **Postgres** — que
+   guarda tanto **feature flags** quanto **parâmetros de produto**; SHALL NOT espalhar esses valores
+   por variável de ambiente, constante em código ou arquivo por ambiente.
+2. Variável de ambiente SHALL ser usada **apenas** para o que precisa existir antes de o banco
+   responder (URL/chave do Supabase, segredos de provedor); SHALL NOT hospedar flag nem parâmetro de
+   produto.
+3. WHEN o valor de uma flag ou de um parâmetro muda, THEN a mudança SHALL passar a valer **sem novo
+   deploy**, dentro da janela de cache configurada.
+4. A flag SHALL ser **booleana e global** por módulo/superfície; o sistema SHALL NOT oferecer rollout
+   percentual, segmentação por aluno nem teste A/B no lançamento (AD-078).
+5. WHEN a aplicação lê uma flag, THEN a leitura SHALL usar **cache curto**; SHALL NOT consultar o
+   banco a cada verificação dentro da mesma requisição.
+6. WHEN a fonte de configuração está indisponível, THEN o sistema SHALL assumir o **default
+   declarado em código** para cada chave e SHALL alertar (AD-037); uma flag sem valor legível SHALL
+   ser tratada como **desligada**, nunca como ligada.
+7. WHEN uma flag ou parâmetro é alterado, THEN o sistema SHALL registrar **quem, quando, valor
+   anterior e valor novo**; SHALL NOT permitir alteração anônima.
+8. Toda chave SHALL ter **dono declarado** (o módulo que a consome) e um default; SHALL NOT existir
+   chave órfã lida por dois módulos com significados diferentes.
+
+**Independent Test**: Ligar uma flag pela tabela e ver a superfície aparecer sem deploy; derrubar a
+leitura da config e confirmar que a superfície fica desligada (não ligada) e que o alerta dispara;
+mudar `piso_anonimato` e ver a linha de registro com valor antigo e novo.
+
+---
+
+### P2: Analytics do funil pré-login
+
+**User Story**: Como negócio, quero ver onde o visitante desiste entre a página de vendas e o
+pagamento confirmado, para não gastar em tráfego às cegas — sabendo que o Sentry nunca vai me
+contar isso, porque não é defeito.
+
+**Why P2**: Não bloqueia o loop central nem a ativação, mas o produto está inteiro atrás do paywall
+(AD-031) e a página de vendas é a única superfície de conversão (PAG-08). Um funil que converte mal
+sem nenhum erro é invisível para o INFRA-09.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL instrumentar o **funil pré-login** (página de vendas → checkout → confirmação do
+   pagamento) na ferramenta de analytics configurada (default hoje **PostHog Cloud região Estados
+   Unidos**, AD-079; host e chave vivem na configuração, INFRA-11 — SHALL NOT ser fixados em código).
+2. Os eventos pré-login SHALL ser enviados em **modo anônimo**, sem criar perfil de pessoa, e SHALL
+   NOT conter `user_id`, e-mail, nome, CPF nem qualquer campo de meio de pagamento. Propriedade
+   sensível SHALL ser barrada **na origem** (lista de bloqueio no SDK), não filtrada depois.
+3. A ferramenta SHALL ser servida pelo **domínio próprio via proxy reverso** do Next.js; SHALL NOT
+   ser carregada direto do domínio do fornecedor (bloqueador de anúncio derrubaria a medição).
+4. A superfície **logada** (ativação, uso do plano, sessão de questões) SHALL nascer **atrás de flag
+   desligada** e SHALL NOT ser ligada antes de as três condições do AD-079 estarem cumpridas:
+   (a) política nomeando o operador e a transferência internacional, **com o instrumento da
+   transferência para os EUA resolvido** (art. 33 LGPD); (b) deleção amarrada ao DADOS-04 com
+   confirmação de conclusão; (c) lista de eventos e propriedades fechada e revisada.
+5. O sistema SHALL NOT usar **session replay** em nenhuma etapa (AD-079).
+6. O analytics SHALL NOT substituir a observabilidade do INFRA-09; o **error tracking** da
+   ferramenta de analytics SHALL NOT ser ligado, e o Sentry SHALL continuar sendo a fonte de defeito.
+7. A ferramenta de analytics SHALL NOT ser fonte de feature flag — flags vivem no INFRA-11 (AD-078).
+8. WHEN o analytics fica indisponível ou é bloqueado no navegador, THEN a página de vendas e o
+   checkout SHALL funcionar integralmente; SHALL NOT haver caminho de compra que dependa dele.
+
+**Independent Test**: Percorrer o funil num ambiente de teste e ver os passos aparecerem sem nenhum
+dado pessoal nas propriedades; bloquear a ferramenta no navegador e concluir a compra normalmente;
+confirmar que a flag da superfície logada está desligada.
+
+---
+
 ## Edge Cases
 
 - WHEN uma função da Vercel tenta processar trabalho longo (regressão de código), THEN o desenho
@@ -213,6 +301,17 @@ resto do app responde do banco.
   Supabase env + GitHub Secrets, nunca no código.
 - WHEN o webhook do Asaas chega (M8), THEN a infra SHALL exigir verificação de assinatura antes de
   processar (a lógica é M8; a infra garante o endpoint e o segredo).
+- WHEN a tabela de configuração fica indisponível, THEN cada chave SHALL cair no default declarado em
+  código e toda flag sem valor legível SHALL ficar **desligada** — falha de config SHALL NOT ligar
+  superfície que estava desligada.
+- WHEN uma flag é ligada e desligada em seguida, THEN a janela de cache SHALL fazer a mudança demorar
+  no máximo o tempo configurado; o comportamento SHALL NOT variar entre instâncias por mais que isso.
+- WHEN alguém altera um parâmetro que a política de privacidade declara em número (`retencao_meses`,
+  DADOS-03 AC5), THEN a alteração SHALL exigir revisão da política — política e config SHALL NOT
+  divergir por mudança silenciosa na tabela.
+- WHEN o bloqueador de anúncio do visitante derruba o script de analytics, THEN o checkout SHALL
+  concluir normalmente e a venda SHALL ser registrada pelo Asaas — a medição SHALL NOT ser caminho
+  crítico de nenhuma compra.
 
 ---
 
@@ -230,12 +329,14 @@ resto do app responde do banco.
 | INFRA-08 | (Out of scope reforçado) n8n adiado | - | Pending |
 | INFRA-09 | P2: Observabilidade (Sentry + logs nativos + advisors) | Design | Pending |
 | INFRA-10 | P1/P2: Segredos fora do código + webhook Asaas verificado | Design | Pending |
+| INFRA-11 | P1: Configuração + feature flags em tabela Postgres, sem deploy, com registro de alteração (AD-078) | Design | Pending |
+| INFRA-12 | P2: Analytics do funil pré-login, anônimo, por proxy reverso; superfície logada atrás de flag (AD-079) | Design | Pending |
 
 **ID format:** `[CATEGORY]-[NUMBER]` → `INFRA-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 10 requisitos, 0 mapeados a tasks ainda (Specify), 0 sem cobertura de story ⚠️ (todos
+**Coverage:** 12 requisitos, 0 mapeados a tasks ainda (Specify), 0 sem cobertura de story ⚠️ (todos
 ligados a uma story ou ao Out of Scope).
 
 ---
@@ -249,3 +350,9 @@ ligados a uma story ou ao Out of Scope).
 - [ ] Retenção de backup = 7d documentada; DELETE some do backup em ≤7d (teste de rollover).
 - [ ] Erro proposital aparece no Sentry com alerta; falha de pg_cron/GitHub Actions não é silenciosa.
 - [ ] Com a API de IA fora do ar, o core pré-computado responde normalmente.
+- [ ] Ligar e desligar uma superfície é mudar uma linha na tabela de config — nenhum deploy, e a
+      alteração fica registrada com autor.
+- [ ] Config ilegível deixa toda flag **desligada** e dispara alerta; nunca liga nada por omissão.
+- [ ] Nenhum evento de analytics carrega dado pessoal; a compra se conclui com o analytics bloqueado.
+- [ ] A flag da superfície logada do analytics está desligada no lançamento e nenhuma tela usa
+      session replay.

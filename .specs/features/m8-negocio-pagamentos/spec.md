@@ -57,6 +57,7 @@ fiscal nativamente — o que evita um segundo serviço só para isso.
 | Idade mínima | Declaração 18+ no checkout (AD-047/DADOS-11) | M7 | y |
 | Provedor de e-mail transacional | Supabase Auth para "defina a senha"/link mágico; e-mails de negócio (aviso de vencimento) por provedor a definir no Design | AD-034 | n (Design) |
 | Moeda / internacional | Só **BRL**, só Brasil no lançamento | Público é concurso brasileiro | y |
+| Medição do funil de venda | Eventos **anônimos** pré-login na ferramenta do INFRA-12 (default **PostHog região Estados Unidos**, AD-079); sem e-mail/nome/CPF/dado de pagamento | O produto está atrás do paywall e a página é a única superfície de conversão — sem isso, tráfego pago é gasto às cegas. Pré-login não tem `user_id` e não entra nos grupos do AD-027 | y (escopo) / n (base legal — advogado, junto do M7) |
 
 **Open questions:** none — as pendências acima são *due diligence* (contador, contrato do Asaas) ou
 detalhe de Design, todas com default registrado.
@@ -247,9 +248,17 @@ consigo experimentar o produto.
    funcionalidade não entregue (invariante de notificação honesta, nº14, vale também para a venda).
 3. A página SHALL ser **responsiva** (web mobile-first) e SHALL funcionar sem login.
 4. A página SHALL linkar a política de privacidade e os termos (M7).
+5. A página e o checkout SHALL emitir os **eventos do funil pré-login** (INFRA-12/AD-079) — no mínimo:
+   página de vendas vista, checkout iniciado, meio de pagamento escolhido, pagamento confirmado — em
+   **modo anônimo**, SHALL NOT enviar e-mail, nome, CPF nem dado de meio de pagamento, e SHALL NOT tornar
+   nenhum passo da compra dependente de a medição funcionar.
+6. A **taxa de conversão** medida por esses eventos SHALL ser tratada como sinal de onde o visitante
+   desiste; a verdade do dinheiro SHALL continuar sendo a conciliação do PAG-15 (vendas confirmadas ×
+   valores recebidos), SHALL NOT ser o número do analytics.
 
 **Independent Test**: Abrir a página no celular, entender método/preço/garantia e chegar ao checkout em um
-clique.
+clique; percorrer o funil e ver os quatro eventos sem nenhum dado pessoal nas propriedades; bloquear o
+analytics no navegador e concluir a compra normalmente.
 
 ---
 
@@ -334,12 +343,13 @@ quem paga mais e quem não pode pagar à vista.
 | PAG-14 | P1: Onboarding meta + diagnóstico pulável → plano do 1º dia (AD-017/AD-034) | Design | Pending |
 | PAG-15 | P2: Emissão de NF + relatório de conciliação (AD-033) | Design | Pending |
 | PAG-16 | P3: Tiers/mensalidade com dado do flywheel (AD-032) | - | Pending |
+| PAG-17 | P2: Eventos do funil pré-login, anônimos, sem virar caminho crítico da compra (AD-079/INFRA-12) | Design | Pending |
 
 **ID format:** `PAG-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 16 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 17 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
 
 ---
 
@@ -355,3 +365,5 @@ quem paga mais e quem não pode pagar à vista.
 - [ ] Matrícula vencida bloqueia o conteúdo e preserva o histórico; renovar traz tudo de volta.
 - [ ] Toda compra confirmada tem nota fiscal referenciada, e falha de emissão nunca bloqueia o aluno.
 - [ ] Trocar o preço na configuração não afeta matrículas já vendidas.
+- [ ] O funil pré-login é mensurável ponta a ponta sem nenhum dado pessoal, e bloquear o analytics no
+      navegador não impede ninguém de comprar.

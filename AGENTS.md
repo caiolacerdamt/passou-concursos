@@ -6,10 +6,14 @@ adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a
 
 ## Estado
 
-Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-079`). Design/Tasks/Execute não
-começaram. **Não existe código de aplicação ainda.**
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-083`). **Design e Tasks concluídos** para
+**INFRA-11** e **M4** — ver `.specs/features/m9-infra/tasks.md` (T1…T9) e
+`.specs/features/m4-coluna-vertebral/tasks.md` (T10…T22). **Execute não começou: ainda não existe
+código de aplicação** (a T1 é o esqueleto do Next.js).
 
 Ordem de Design definida no handoff do `.specs/STATE.md`: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
+Ressalva registrada no Design do M4: como o AD-076 exige a conta do Raio-X ligada desde o dia 1,
+**o M5 precisa entrar antes do lançamento**, não em sexto lugar.
 M3 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não estiver perto de ligar (AD-064).
 
 O lançamento separa **construído × ligado** (AD-076): tudo é construído (exceto M3, congelado), mas só
@@ -45,6 +49,7 @@ que diz o que substitui.
 | Config + feature flags | Tabela versionada no Postgres. Troca sem deploy, alteração registrada | AD-078 |
 | Analytics de produto | PostHog Cloud **região EUA**. Só funil pré-login no lançamento | AD-079 |
 | Erro / observabilidade | Sentry. **Não** se confunde com analytics — erro ≠ comportamento | AD-037 |
+| Teste | Vitest — `unit` (paralelo) e `db` (sequencial, contra o projeto Supabase de dev). **Sem Docker** | AD-083 |
 
 ## Invariantes — quebrar qualquer um destes é bug, não escolha
 

@@ -322,22 +322,23 @@ confirmar que a flag da superfície logada está desligada.
 | INFRA-01 | P1: Região SP, gerenciado | Design | Pending |
 | INFRA-02 | P1: Cada carga no seu lar (trabalho longo → GitHub Actions/Batch) | Design | Pending |
 | INFRA-03 | P1: Cada carga no seu lar (jobs leves → pg_cron) | Design | Pending |
-| INFRA-04 | P1: `tentativas` particionada + indexada (pg_partman) | Tasks | Pending |
+| INFRA-04 | P1: `tentativas` particionada + indexada (pg_partman) | Execute | In Tasks (T13) |
 | INFRA-05 | P1: Tutor ao vivo por streaming (Vercel Pro) (AD-051/AD-066) | Design | Pending |
 | INFRA-06 | P1: Backup 7d ↔ DELETE D29 | Design | Pending |
 | INFRA-07 | P1: Staging por branch | Design | Pending |
 | INFRA-08 | (Out of scope reforçado) n8n adiado | - | Pending |
 | INFRA-09 | P2: Observabilidade (Sentry + logs nativos + advisors) | Design | Pending |
 | INFRA-10 | P1/P2: Segredos fora do código + webhook Asaas verificado | Design | Pending |
-| INFRA-11 | P1: Configuração + feature flags em tabela Postgres, sem deploy, com registro de alteração (AD-078) | Tasks | Pending |
+| INFRA-11 | P1: Configuração + feature flags em tabela Postgres, sem deploy, com registro de alteração (AD-078) | Execute | In Tasks (T5–T9) |
 | INFRA-12 | P2: Analytics do funil pré-login, anônimo, por proxy reverso; superfície logada atrás de flag (AD-079) | Design | Pending |
 
 **ID format:** `[CATEGORY]-[NUMBER]` → `INFRA-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 12 requisitos, 0 mapeados a tasks ainda (Specify), 0 sem cobertura de story ⚠️ (todos
-ligados a uma story ou ao Out of Scope).
+**Coverage:** 12 requisitos, **2 mapeados a tasks** (INFRA-11 e INFRA-04 — ver
+`.specs/features/m9-infra/tasks.md`), 0 sem cobertura de story ⚠️ (todos ligados a uma story ou ao
+Out of Scope). Os outros 10 entram em Design junto do módulo que os consome (design.md §Escopo).
 
 ---
 

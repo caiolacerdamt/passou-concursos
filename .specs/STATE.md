@@ -721,82 +721,108 @@
 - **Date**: 2026-08-16
 - **Status**: active
 
+### AD-083
+- **Decision**: A suíte de testes do projeto é **Vitest**, com dois projetos no mesmo runner:
+  `unit` (TypeScript puro, paralelo) e `db` (integração, **sequencial**). O teste de banco roda
+  contra o **próprio projeto Supabase de desenvolvimento** (`kfpmetkmhjtmgwgaaerl`, São Paulo) — não
+  contra um Postgres local. **Docker não entra no projeto.** Migração é aplicada por
+  `supabase db push` / `supabase migration up --linked`, ou pelo `apply_migration` do MCP; nenhum dos
+  três usa Docker. Staging isolado (INFRA-06/INFRA-07) segue fast-follow e vira **pré-requisito**
+  quando existir aluno pagante.
+- **Reason**: O banco de desenvolvimento está vazio, sem aluno e sem dado real — ele *é* o ambiente
+  de dev. Um Postgres local por Docker adicionaria dependência de máquina (Docker Desktop no Windows)
+  e um segundo ambiente para manter em dia, sem proteger nada que ainda exista. Verificado em fonte
+  primária (doc do Supabase CLI, 2026-08-16): só `supabase start`, `db diff` e `db pull` exigem
+  Docker — aplicar migração em projeto ligado, não.
+- **Trade-off**: Teste de banco escreve no banco de desenvolvimento real, então cada teste precisa
+  limpar o que criou e usar `user_id` gerado na hora. Testes de banco não rodam em paralelo (um banco
+  só) e não rodam sem `DATABASE_URL` — quem clona o repo sem credencial roda só `test:unit`. No dia
+  em que existir aluno pagante, esta decisão deixa de valer e o staging isolado passa a ser
+  obrigatório antes de qualquer teste de banco.
+- **Scope**: Projeto inteiro (M1…M9), fase Execute.
+- **Date**: 2026-08-16
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Fase **Design**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
-  (coluna vertebral do aluno). Specify segue concluído nas 9 features (AD-001…AD-082).
-- **Rodada 9 — Design de INFRA-11 + M4 (2026-08-16)**. Primeira rodada de Design do projeto. Dois
-  documentos escritos: `.specs/features/m9-infra/design.md` (só INFRA-11 + a parte do INFRA-04 que o
-  M4 consome — as outras histórias do M9 entram junto do módulo que as usa) e
-  `.specs/features/m4-coluna-vertebral/design.md` (12 requisitos ALUNO-01…12 mapeados a componentes).
-  Três ADs novas:
-  1. **AD-080** — a frase de abertura do plano diário sai da Batch API e vira chamada síncrona; é a
-     única tarefa da matriz com hora marcada (precisa existir quando o aluno acorda). ~US$3/mês de
-     diferença em 1.000 alunos. Substitui só essa linha do AD-073.
-  2. **AD-081** — a tabela de configuração é **append-only**, valor vigente = última linha, catálogo
-     de chaves em código. O registro de alteração do INFRA-11 AC7 deixa de ser tabela paralela e
-     passa a ser o próprio dado. Detalha o AD-078.
-  3. **AD-082** — só-INSERT de `tentativas` garantido em duas camadas (REVOKE+RLS e gatilho), com
-     porta nomeada para o DELETE-por-esquecimento do M7.
-  - **O impasse do FSRS, resolvido sem exceção à infra**: `ts-fsrs` é TypeScript e o INFRA-03 manda
-    job em pg_cron. O ALUNO-09 AC3 já reduzia o contrato a "este tópico está devendo revisão ou não",
-    então o FSRS roda **na requisição** quando o aluno fecha um bloco (1 aluno × 1 tópico) e grava a
-    data; o job SQL só compara datas. Trocar para a régua fixa (plano B) troca quem calcula a data e
-    mais nada.
-  - **Verificado em fonte primária (2026-08-16)**: `pg_partman`, `pg_cron` e `pg_net` disponíveis no
-    Supabase; `fsrs()` do `ts-fsrs` agenda sem histórico nenhum com os pesos padrão (confirma
-    AD-072) e `computeParameters` vive em pacote separado (`@open-spaced-repetition/binding`);
-    `unstable_cache` é o mecanismo de cache curto do Next.js para leitura de banco (INFRA-11 AC5).
-  - **Arquivos tocados**: `.specs/STATE.md` (AD-080/081/082 + este handoff) ·
-    `m9-infra/design.md` (novo) · `m4-coluna-vertebral/design.md` (novo) · traceability das duas
-    specs movida de `Design` para `Tasks`.
+- **Feature**: Fase **Tasks**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
+  (coluna vertebral do aluno). Specify e Design concluídos nas duas (AD-001…AD-083).
+- **Rodada 10 — Tasks de INFRA-11 + M4 (2026-08-16)**. Dois documentos escritos:
+  `.specs/features/m9-infra/tasks.md` (**T1…T9**) e
+  `.specs/features/m4-coluna-vertebral/tasks.md` (**T10…T22**). A numeração é **contínua entre os
+  dois arquivos** de propósito — T10 depende de T9. Uma AD nova:
+  1. **AD-083** — ferramenta e ambiente de teste: Vitest com dois projetos (`unit` paralelo, `db`
+     sequencial); teste de banco contra o próprio projeto Supabase de desenvolvimento; **sem
+     Docker**. Verificado na doc oficial do Supabase CLI que `db push` / `migration up --linked` não
+     exigem Docker (só `start`, `db diff` e `db pull` exigem).
+- **22 tasks, 6 fases, 6 branches** (o `docs/GITFLOW.md` limita a branch a ~10 commits / 3 dias):
+  | Branch | Tasks | O quê |
+  | --- | --- | --- |
+  | `chore/esqueleto-projeto` | T1–T4 | Next.js + Vitest + Supabase CLI + CI com build/lint/teste |
+  | `feat/m9-infra11-configuracao` | T5–T9 | tabela `configuracoes`, catálogo, leitura, escrita, queda |
+  | `feat/m4-p1-log-tentativas` | T10–T14 | enums, `tentativas` particionada, trava, partman, sessões |
+  | `feat/m4-p1-registrar-tentativa` | T15 | `registrarTentativa` com dedup |
+  | `feat/m4-p1-projecoes` | T16–T18 | projeções, `recalcula_projecoes()`, `agendarRevisao` (FSRS) |
+  | `feat/m4-p1-plano-do-dia` | T19–T22 | plano, motor de prioridade, pg_cron, frase do plano |
+- **Cobertura de requisito**: INFRA-11 com **8 de 8 AC** mapeados; INFRA-04 em T13; M4 com **12 de
+  12 requisitos** mapeados. **Duas lacunas declaradas** (AC sem componente no Design da rodada 1,
+  registradas em `m4-coluna-vertebral/tasks.md` §Lacunas): **ALUNO-05 AC2** (diagnóstico de ~20
+  questões adaptativas) e **ALUNO-05 AC3** (chamada de IA do "plano inicial pós-diagnóstico", tarefa
+  do gateway distinta da frase diária do ALUNO-12). As duas **dependem do M1** — sem acervo não há
+  questão para aplicar. **Nenhuma tela** entra nesta leva: o Design da rodada 1 não desenhou
+  superfície, só servidor.
 - **In-progress** (file:line): none
-- **Next step**: **Tasks** de INFRA-11 + M4, nessa ordem — a configuração precisa existir antes,
-  porque o M4 lê 10 chaves dela. A primeira migração do projeto sai dessa leva: não existe
-  `package.json` nem schema ainda, então a task 1 é o esqueleto do Next.js + Supabase CLI ligado ao
-  projeto `kfpmetkmhjtmgwgaaerl` (São Paulo). Depois do M4: **M1** (Design), que é o caminho crítico
-  de produto — e o Design do M1 pede **2–3 PDFs de prova de amostra** na mão, porque o formato real
-  do arquivo decide o desenho da extração e do `precisa_ocr`.
+- **Next step**: **Execute**, começando por **T1** (`chore/esqueleto-projeto`) — não existe
+  `package.json`. Antes de T5, o **MCP `supabase-passou` precisa estar conectado**: o token novo já
+  está espelhado em `.claude/settings.local.json` e validado contra a API (HTTP 200, projeto
+  `kfpmetkmhjtmgwgaaerl` ACTIVE_HEALTHY), mas o Claude Code só carrega MCP na abertura — **exige um
+  restart**. Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de prova
+  de amostra** na mão.
 - **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
   AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
-  (anel por bloco), AD-063 (áudio × versão), AD-078/**081** (config), **AD-082** (trava do log).
-- **Decisões do Design que outros módulos herdam**: `raiox_peso_topico` nasce como **view stub
-  devolvendo 1.0** — o M5 a substitui mantendo a assinatura, sem tocar no M4. O M4 cria uma tabela
-  `questoes` **mínima** (contrato AD-039/040) para poder ser testado antes do M1 existir; o M1 a
-  completa. `tentativa_causa_simulado` é a tabela vizinha que recebe a causa do simulado sem UPDATE
-  no fato (AD-043).
-- **Blockers**: none para Tasks. Pendências que **não travam**: (a) *due diligence* — advogado (base
-  legal das questões AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base legal do evento
-  pré-login **e** o instrumento da transferência internacional para os EUA, art. 33 LGPD, AD-079) e
-  contador (CNPJ/regime); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado;
-  (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do
-  M3, ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065); (e)
-  reconfirmar preços de TTS em fonte oficial; (f) **free tier do PostHog em fonte primária** antes de
-  ligar (AD-079); (g) duas chamadas de IA fora da lista fechada do IA-02 — pré-diagnóstico de questão
+  (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log),
+  **AD-083** (ambiente de teste).
+- **Decisões do Design que outros módulos herdam** (inalteradas): `raiox_peso_topico` nasce como
+  **view stub devolvendo 1.0** — o M5 a substitui mantendo a assinatura, sem tocar no M4 (T19). O M4
+  cria `materias`, `topicos` e uma `questoes` **mínima** (contrato AD-039/040) para poder ser testado
+  antes do M1 existir; o M1 as completa (T10). `tentativa_causa_simulado` recebe a causa do simulado
+  sem UPDATE no fato (T14, AD-043).
+- **A confirmar na primeira migração** (pergunta aberta que o Design registrou e o **T12** resolve):
+  gatilho `BEFORE UPDATE OR DELETE ... FOR EACH ROW` na tabela-pai propaga para as partições? O
+  Postgres suporta desde a 13 e o projeto roda 17.6, mas isso é afirmação a verificar aplicando. Se
+  não propagar, criar por partição via template do `pg_partman` e **registrar o achado aqui**.
+- **Blockers**: none para Execute — exceto o restart do Claude Code para o MCP conectar (T5 em
+  diante). Pendências que **não travam**: (a) *due diligence* — advogado (base legal das questões
+  AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base legal do evento pré-login **e** o
+  instrumento da transferência internacional para os EUA, art. 33 LGPD, AD-079) e contador
+  (CNPJ/regime); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado; (c) preço do
+  Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3,
+  ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065); (e) reconfirmar
+  preços de TTS em fonte oficial; (f) **free tier do PostHog em fonte primária** antes de ligar
+  (AD-079); (g) duas chamadas de IA fora da lista fechada do IA-02 — pré-diagnóstico de questão
   suspeita (M7) e extração do programa do edital (M5, RAIOX-09); (h) **critério de morte do produto**
   — decisão de sócios; (i) calibrações registradas como assumptions, agora com default em config
-  (ver a tabela de chaves no design do M4).
-- **Riscos registrados no Design que precisam de decisão futura**: o **peso do Raio-X fica em 1.0**
-  até o M5 entrar — como o AD-076 exige a conta do Raio-X ligada desde o dia 1, **o M5 precisa entrar
-  antes do lançamento**, não só antes da tela. E a conversão "percentual do bloco → nota 1–4 do FSRS"
-  é adaptação registrada (AD-072): `revisao_evento` guarda percentual **e** nota justamente para
-  permitir recalibrar depois olhando o histórico.
+  (tabela de chaves no design do M4).
+- **Riscos registrados que precisam de decisão futura**: o **peso do Raio-X fica em 1.0** até o M5
+  entrar — como o AD-076 exige a conta do Raio-X ligada desde o dia 1, **o M5 precisa entrar antes do
+  lançamento**, não em sexto na fila de Design. E a conversão "percentual do bloco → nota 1–4 do
+  FSRS" é adaptação registrada (AD-072): `revisao_evento` guarda percentual **e** nota justamente
+  para permitir recalibrar depois olhando o histórico (T16/T18).
 - **Documentos anteriores que ficaram desatualizados** (aplicar quando tocar neles):
-  - `AGENTS.md` — diz "AD-001…AD-079"; passou a ser **AD-001…AD-082**; a seção de estado ainda diz
-    "Design/Tasks/Execute não começaram", o que deixou de ser verdade.
+  - `AGENTS.md` — diz "AD-001…AD-079"; passou a ser **AD-001…AD-083**; a seção de estado ainda diz
+    "Design/Tasks/Execute não começaram" e "**Não existe código de aplicação ainda**" — o primeiro
+    deixou de ser verdade; o segundo deixa de ser na T1.
   - `PRD.md` **§4.1** substituído por AD-076 · **§4.2** tutor e Raio-X saem de "no MVP" para
     "construídos, ligados depois" · **§4.3** app nativo vira decisão registrada (AD-077) · **§M6**
     critério "resposta rápida demais não conta" revogado por AD-060 · **§M3** áudio narra questão +
     explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073/080).
   - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
   - `docs/historico/` — **congelado de propósito**. Nunca é reescrito.
-- **Branch**: rodada 9 em `spec/infra11-m4-design`, por PR. Aberto e **não mergeado**:
-  `chore/mcp-supabase-passou` (PR #5) — isola o MCP do Supabase por projeto e corrige o
-  `.env.example`. `main` protegida só pelo hook local `.githooks/pre-push` (proteção do GitHub não
-  funciona em repositório privado no plano Free) — ativar por clone com
-  `git config core.hooksPath .githooks`.
+- **Branch**: rodada 10 em `spec/infra11-m4-tasks`, por PR. `main` protegida só pelo hook local
+  `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano Free) —
+  ativar por clone com `git config core.hooksPath .githooks`. PRs #5 e #6 mergeados.
 - **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
-  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free. Um projeto anterior criado
-  em `us-east-2` foi descartado antes de receber qualquer dado. Vercel, OpenAI, Cohere e Sentry ainda
-  **não** provisionados — nenhum deles trava as Tasks de INFRA-11/M4.
+  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free, **ACTIVE_HEALTHY, banco
+  vazio** — é o ambiente de desenvolvimento (AD-083). Vercel, OpenAI, Cohere e Sentry ainda **não**
+  provisionados; nenhum deles trava T1…T21. **T22 precisa de `OPENAI_API_KEY`.**
 - **Uncommitted files**: none.

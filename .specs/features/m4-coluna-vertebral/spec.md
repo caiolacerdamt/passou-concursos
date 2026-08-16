@@ -282,24 +282,26 @@ nenhum agendamento.
 
 | Requirement ID | Story | Fase | Status |
 | --- | --- | --- | --- |
-| ALUNO-01 | P1: `tentativas` só-INSERT + snapshot congelado (AD-015) | Tasks | Pending |
-| ALUNO-02 | P1: Projeções recalculáveis por cima do log (AD-015) | Tasks | Pending |
-| ALUNO-03 | P1: Causa do erro auto-relato obrigatório + "não sei" (AD-016) | Tasks | Pending |
-| ALUNO-04 | P1: Taxonomia enxuta 6 causas + faltou-tempo no simulado (AD-016) | Tasks | Pending |
-| ALUNO-05 | P1: Diagnóstico curto adaptativo pulável (AD-017) | Tasks | Pending |
-| ALUNO-06 | P1/P2: Calibração da dificuldade real pelo uso (AD-017) | Tasks | Pending |
-| ALUNO-07 | P1: Motor de prioridade (quanto cai × fraqueza × devendo revisão) (AD-018) | Tasks | Pending |
-| ALUNO-08 | P1: Blocos Revisar/Avançar/Treinar/Simulado + intercalação (AD-018) | Tasks | Pending |
-| ALUNO-09 | P1: Revisão espaçada em **FSRS com parâmetros padrão** desde o dia 1; régua fixa = plano B; otimização por aluno = fast-follow (AD-018/AD-072) | Tasks | Pending |
-| ALUNO-10 | P2: Caderno de erros como projeção (AD-015/AD-016) | Tasks | Pending |
-| ALUNO-11 | P1: Plano emite dois níveis piso/meta cheia (AD-018, p/ M6) | Tasks | Pending |
-| ALUNO-12 | P1: Uma chamada de IA escreve o plano inicial — **tarefa própria do gateway**, default `gpt-5.6-luna`/`high` (AD-017/AD-018/**AD-073**) | Tasks | Pending |
+| ALUNO-01 | P1: `tentativas` só-INSERT + snapshot congelado (AD-015) | Execute | In Tasks (T11, T12) |
+| ALUNO-02 | P1: Projeções recalculáveis por cima do log (AD-015) | Execute | In Tasks (T17, T21) |
+| ALUNO-03 | P1: Causa do erro auto-relato obrigatório + "não sei" (AD-016) | Execute | In Tasks (T11, T15) |
+| ALUNO-04 | P1: Taxonomia enxuta 6 causas + faltou-tempo no simulado (AD-016) | Execute | In Tasks (T10, T11, T14) |
+| ALUNO-05 | P1: Diagnóstico curto adaptativo pulável (AD-017) | Execute | In Tasks (T19) — parcial, ver lacunas em tasks.md |
+| ALUNO-06 | P1/P2: Calibração da dificuldade real pelo uso (AD-017) | Execute | In Tasks (T17) — parcial, a calibração em si é M7 |
+| ALUNO-07 | P1: Motor de prioridade (quanto cai × fraqueza × devendo revisão) (AD-018) | Execute | In Tasks (T20) |
+| ALUNO-08 | P1: Blocos Revisar/Avançar/Treinar/Simulado + intercalação (AD-018) | Execute | In Tasks (T20) |
+| ALUNO-09 | P1: Revisão espaçada em **FSRS com parâmetros padrão** desde o dia 1; régua fixa = plano B; otimização por aluno = fast-follow (AD-018/AD-072) | Execute | In Tasks (T16, T18) |
+| ALUNO-10 | P2: Caderno de erros como projeção (AD-015/AD-016) | Execute | In Tasks (T16, T17) |
+| ALUNO-11 | P1: Plano emite dois níveis piso/meta cheia (AD-018, p/ M6) | Execute | In Tasks (T19, T20) |
+| ALUNO-12 | P1: Uma chamada de IA escreve o plano inicial — **tarefa própria do gateway**, default `gpt-5.6-luna`/`high` (AD-017/AD-018/**AD-073**) | Execute | In Tasks (T22) |
 
 **ID format:** `ALUNO-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 12 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 12 requisitos, **12 mapeados a tasks** (`.specs/features/m4-coluna-vertebral/tasks.md`),
+0 sem cobertura de story. **2 AC ficaram sem componente no design** e estão listados como lacunas no
+tasks.md: ALUNO-05 AC2 (diagnóstico adaptativo) e ALUNO-05 AC3 (chamada de IA do plano inicial).
 
 ---
 

@@ -6,7 +6,7 @@ adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a
 
 ## Estado
 
-Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-077`). Design/Tasks/Execute não
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-079`). Design/Tasks/Execute não
 começaram. **Não existe código de aplicação ainda.**
 
 Ordem de Design definida no handoff do `.specs/STATE.md`: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
@@ -14,8 +14,9 @@ M3 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não estiver pe
 
 O lançamento separa **construído × ligado** (AD-076): tudo é construído (exceto M3, congelado), mas só
 4 superfícies nascem ligadas — plano do dia, sessão de questões, progresso, conta. O resto (tutor,
-tela do Raio-X, gamificação além da sequência, diagnóstico adaptativo, flywheel) entra atrás de flag
-desligada. Superfície é **web responsivo só, sem app nativo nem PWA** no lançamento (AD-077).
+tela do Raio-X, gamificação além da sequência, diagnóstico adaptativo, flywheel, **analytics da
+superfície logada**) entra atrás de flag desligada. Superfície é **web responsivo só, sem app nativo
+nem PWA** no lançamento (AD-077).
 
 ## Hierarquia da verdade
 
@@ -41,6 +42,9 @@ que diz o que substitui.
 | Trabalho longo | **GitHub Actions + Batch API. Nunca serverless.** | AD-035, AD-036 |
 | Bastidor | n8n | AD-002 |
 | Pagamento | Asaas, checkout próprio | AD-033 |
+| Config + feature flags | Tabela versionada no Postgres. Troca sem deploy, alteração registrada | AD-078 |
+| Analytics de produto | PostHog Cloud **região EUA**. Só funil pré-login no lançamento | AD-079 |
+| Erro / observabilidade | Sentry. **Não** se confunde com analytics — erro ≠ comportamento | AD-037 |
 
 ## Invariantes — quebrar qualquer um destes é bug, não escolha
 
@@ -91,8 +95,14 @@ já travado nas specs (`questoes`, `tentativas`, `n_respostas`, `gabarito_versao
 (`RateLimiter`, `chunk`, `retry`). Documentos, specs e UI em PT-BR. Sem camada de tradução entre
 banco e código.
 
-**Feature flags.** Todo módulo entra atrás de flag (AD-001). Merge com a flag desligada é o normal —
-é o que permite trunk-based sem branch longa.
+**Feature flags e configuração.** Todo módulo entra atrás de flag (AD-001). Merge com a flag desligada
+é o normal — é o que permite trunk-based sem branch longa. O valor vive numa **tabela versionada no
+Postgres**, não em variável de ambiente: trocar flag ou parâmetro **não exige deploy**, e toda
+alteração é registrada com autor (AD-078/INFRA-11). Flag é **booleana e global** no lançamento — sem
+rollout percentual, sem A/B. Env var é só para o que precede o banco (URL/chave do Supabase, segredos).
+Todo parâmetro que as specs mandam para "configuração" (`retencao_meses`, `piso_anonimato`, preço,
+teto do tutor, matriz de modelos, decaimento do Raio-X, faixas do FSRS, voz do TTS) mora nessa tabela.
+Config ilegível deixa a flag **desligada**, nunca ligada.
 
 **Git.** Ver `docs/GITFLOW.md`. Resumo: `main` protegida, branch curta por fase, Conventional Commits
 com o requisito e a AD no corpo, um commit atômico por task, merge `--no-ff` via PR.
@@ -111,6 +121,8 @@ experiments/tts-comparacao ferramenta do teste cego de voz (trava o 1º lote do 
 
 ## Pendências que não travam o Design
 
-Advogado (base legal das questões, janela de 24m, LIA antes do flywheel) · contador (CNPJ/regime) ·
-contrato do Asaas (o que volta num estorno, D+ do parcelado) · preço do Cohere embed-v4 ·
+Advogado (base legal das questões, janela de 24m, LIA antes do flywheel, **e o instrumento da
+transferência internacional para os EUA** — art. 33 LGPD, sem decisão de adequação da ANPD, AD-079) ·
+contador (CNPJ/regime) · contrato do Asaas (o que volta num estorno, D+ do parcelado) · preço do
+Cohere embed-v4 · **free tier do PostHog em fonte primária** antes de ligar (AD-079) ·
 **teste cego da voz** (trava o 1º lote do M3) · calibrações registradas como assumptions nas specs.

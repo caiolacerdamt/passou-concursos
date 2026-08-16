@@ -6,11 +6,16 @@ adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a
 
 ## Estado
 
-Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-072`). Design/Tasks/Execute não
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-077`). Design/Tasks/Execute não
 começaram. **Não existe código de aplicação ainda.**
 
 Ordem de Design definida no handoff do `.specs/STATE.md`: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
 M3 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não estiver perto de ligar (AD-064).
+
+O lançamento separa **construído × ligado** (AD-076): tudo é construído (exceto M3, congelado), mas só
+4 superfícies nascem ligadas — plano do dia, sessão de questões, progresso, conta. O resto (tutor,
+tela do Raio-X, gamificação além da sequência, diagnóstico adaptativo, flywheel) entra atrás de flag
+desligada. Superfície é **web responsivo só, sem app nativo nem PWA** no lançamento (AD-077).
 
 ## Hierarquia da verdade
 
@@ -31,8 +36,8 @@ que diz o que substitui.
 |---|---|---|
 | App | Next.js (App Router), TypeScript, monólito modular | AD-002 |
 | Dados | Supabase — Postgres + Auth + Storage + RLS + pgvector, região SP | AD-002, AD-035 |
-| IA | SDK TS por gateway trocável, modelo por tarefa, versão fixada | AD-011, AD-049 |
-| Hospedagem | Vercel (Pro — requisito de lançamento por causa do tutor) | AD-035, AD-066 |
+| IA | SDK nativo OpenAI por gateway trocável, modelo+esforço por tarefa, versão fixada | AD-011, AD-073, AD-074 |
+| Hospedagem | Vercel (Pro — requisito só quando a flag do tutor ligar, não do lançamento) | AD-035, AD-076 |
 | Trabalho longo | **GitHub Actions + Batch API. Nunca serverless.** | AD-035, AD-036 |
 | Bastidor | n8n | AD-002 |
 | Pagamento | Asaas, checkout próprio | AD-033 |

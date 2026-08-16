@@ -389,8 +389,9 @@ diagnóstico inicial é **curto, adaptativo-simplificado e pulável** (só semen
   **WHEN** ele faz, **THEN SHALL** aplicar ~20 questões reais adaptativas (acertou→sobe, errou→desce),
   gravando cada uma como `tentativa` com `contexto='diagnostico'`, **sem** perguntar causa.
 - **WHEN** o diagnóstico termina, **THEN** o sistema **SHALL** montar o retrato inicial (projeção) e
-  **SHALL** fazer **uma** chamada de IA por aluno (Sonnet) que **lê** retrato+meta+Raio-X e **escreve** o
-  plano inicial (não corrige, não mede).
+  **SHALL** fazer **uma** chamada de IA por aluno que **lê** retrato+meta+Raio-X e **escreve** o
+  plano inicial (não corrige, não mede) — **tarefa própria do gateway**, default `gpt-5.6-luna`/`high`
+  (AD-073).
 - **WHEN** o plano diário roda (job 1×/dia), **THEN** a escolha do que estudar **SHALL** ser por
   **regra/SQL** (a IA **SHALL** apenas escrever a frase de abertura); a nota por tópico **SHALL** = quanto
   cai (Raio-X) × quão fraco (log) × quão "devendo revisão"; e o plano **SHALL** emitir **dois níveis**:
@@ -753,8 +754,10 @@ INFRA-07 staging por branch (D35) · INFRA-08 n8n adiado (D35/D2).
 | Front + servidor | **Next.js** (na **Vercel**) | telas + lógica de servidor; tutor por streaming | D2/D35 |
 | Banco/Auth/Storage | **Supabase Cloud** (Postgres, Auth, Storage, RLS, **pgvector**), região **SP** | dados + login + arquivos + busca por similaridade | D2/D35 |
 | Partição/jobs | **pg_partman** (partição mensal) + **pg_cron** (projeções, plano) | escala da tabela de eventos + jobs leves | D15/D18/D35 |
-| IA principal | **Claude (Anthropic) via SDK TS** `@anthropic-ai/sdk` | Batch −50%, **citações**, **PDF nativo**, **execução de código** (D12.3) | D2/D11/D12 |
-| Modelos por tarefa | **Sonnet 5** (extração/explicação/diagnóstico), **Haiku 4.5** (tutor), **GLM 5.2** (rascunho inéditas), **DeepSeek V4 Pro** (classificação), **DeepSeek V4 Flash** (frase do plano) — baratos via **OpenRouter** | equilíbrio qualidade×preço; gateway trocável | D11 |
+| IA principal | **OpenAI via SDK TS** `openai` (Responses API) | Batch −50%, prompt caching (entrada em cache a 0,1×), **PDF nativo**, **saída estruturada**, níveis de esforço `none…max` | D2/D11/**AD-073**/**AD-074** |
+| Modelos por tarefa | **`gpt-5.6-luna` em todas as tarefas** (US$0,20/US$1,20), com **`gpt-5.6-terra`** (US$2/US$12) **só** no refaz 1×. Esforço por tarefa: `high` na fábrica, `max` na verificação quantitativa e no refaz, `medium` no tutor | preço/qualidade após o corte de 80% da OpenAI em 30/07/2026; gateway trocável resolve **modelo + esforço + batch + cache + fallback** | D11/**AD-073** |
+| Acesso ao provedor | **SDK nativo da OpenAI**, adapter único; **OpenRouter só no eval cego trimestral** (chave separada, fora da produção) | 100% das tarefas são OpenAI hoje — os 5,5% de taxa comprariam capacidade não usada, e agregador demora a repassar recurso novo | **AD-074** |
+| Citações da explicação | **Saída estruturada `(doc_id, trecho)` + conferência por código nosso** de que o trecho existe literalmente na fonte | a OpenAI só anota citação em busca web e file_search, não em documento entregue inline; conferir por código é o mesmo padrão do AD-069 | **AD-075** |
 | Embeddings | **Cohere embed-v4** (alternativa Voyage) | dedup, busca híbrida, diff do edital | D5/D22 |
 | TTS | **ElevenLabs `eleven_v3`** (principal) + fallback barato (**Fish `s2.1-pro`** / **OpenAI `gpt-4o-mini-tts`**) | áudio das explicações, camada trocável | D14 |
 | Pagamentos/NF | **Asaas** (checkout próprio) | Pix + boleto + cartão 12x + **nota fiscal** + webhook | D33/D34 |
@@ -903,7 +906,10 @@ vivo". **Scope:** M2. **Date:** 2026-07-01. **Status:** active.
 cego PT-BR** como porteiro): Sonnet 5 (extração/explicação/diagnóstico), Haiku 4.5 (tutor), GLM 5.2
 (rascunho inéditas), DeepSeek V4 Pro (classificação), DeepSeek V4 Flash (frase do plano), Cohere embed-v4
 (embeddings). **Reason:** equilíbrio qualidade×preço; o líder muda toda semana. **Trade-off:** manter
-gateway + evals. **Scope:** M2. **Date:** 2026-07-01. **Status:** active (nomes de modelo **[provisível]**).
+gateway + evals. **Scope:** M2. **Date:** 2026-07-01. **Status:** **nomes superseded por AD-073**
+(2026-08-04) — `gpt-5.6-luna` em todas as tarefas, `gpt-5.6-terra` só no refaz 1×, Cohere embed-v4
+mantido. O **princípio** (gateway trocável + versão fixada + fallback + eval cego PT-BR como porteiro)
+continua **active**, agora resolvendo também **esforço, batch e cache** por tarefa.
 
 **AD-012** — **Decision:** conferência da explicação **pré-computada** (1× na fábrica, gravada), dois
 trilhos — **norma citável** (documento entregue por etiqueta + citação; base oficial-quando-existe +

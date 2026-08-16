@@ -10,6 +10,12 @@
 > (2026-07-23): AD-049 (matriz de modelos pesquisada + rotina de revisão), AD-050 (fonte mínima quando não
 > há documento de referência), AD-051 (tutor no MVP com travas), AD-052 (explicação amarrada à versão da
 > questão).
+>
+> **Migração de modelos (2026-08-04):** **AD-073** substitui a matriz do AD-049 — `gpt-5.6-luna` em todas
+> as tarefas, `gpt-5.6-terra` só no refaz 1×, e o gateway passa a resolver **`(modelo, esforço, batch,
+> cache, fallback)`** por tarefa. **AD-074** fixa acesso por **SDK nativo da OpenAI**, com a OpenRouter
+> reservada ao eval trimestral. **AD-075** substitui o mecanismo de citação: saída estruturada + conferência
+> por código nosso, no lugar do recurso de citations do fornecedor.
 
 ## Problem Statement
 
@@ -51,16 +57,19 @@ número é conferido **rodando a conta por código** antes de publicar.
 
 | Assumption / decisão | Default escolhido | Racional | Confirmed? |
 | --- | --- | --- | --- |
-| Matriz de modelos por tarefa | Tabela pesquisada em **2026-07-23** na OpenRouter (ver AD-049); vive em **configuração**, nenhum requisito depende do nome | Discuss 2026-07-23; AD-011 dizia [provisível] | y (tabela) / n (nomes envelhecem) |
+| Matriz de modelos por tarefa | Tabela pesquisada em **2026-08-04** (ver **AD-073**, substitui AD-049): **`gpt-5.6-luna` em todas as tarefas**, `gpt-5.6-terra` só no refaz 1×; vive em **configuração**, nenhum código ou teste depende do nome | Corte de preço da OpenAI em 30/07/2026 (−80% na Luna) tornou a matriz anterior cara sem ganho | y (tabela) / n (nomes envelhecem) |
+| Esforço de raciocínio por tarefa | **Faz parte da configuração**, não do código: `high` na fábrica, **`max`** na verificação quantitativa e no refaz 1×, **`medium`** no tutor | Tokens de raciocínio são cobrados como **saída**; no tutor custam também latência antes da primeira palavra (AD-073) | y |
+| Provedor de acesso | **SDK nativo da OpenAI** (Responses API), adapter único no dia 1; OpenRouter **só no eval trimestral**, com chave separada | AD-074 — 100% das tarefas são OpenAI hoje; 5,5% de taxa compraria capacidade não usada, e recurso novo demora a ser repassado por agregador | y |
 | Tópico sem documento de referência | Publica, usando **prova + gabarito oficial** como fonte mínima, e **proibida** de afirmar norma/prazo/percentual externo; tópico entra na fila por frequência | Discuss 2026-07-23 (AD-050); base construída por frequência (PRD §10.8) | y |
-| Tutor no MVP | **Sim, P1** — default hoje `minimax/minimax-m3` (em config), teto **3 perguntas/dia/aluno**, cache de pergunta repetida, alerta de gasto (sem desligamento automático) | Discuss 2026-07-23 (AD-051). O `PRD.md` §4.2 e o M9 (INFRA-05) foram **corrigidos** para acompanhar em **AD-066** — não há mais divergência entre os três documentos | y |
+| Tutor no MVP | **Sim, P1** — default hoje `gpt-5.6-luna` com esforço **`medium`** (em config, AD-073), teto **3 perguntas/dia/aluno**, cache de pergunta repetida, alerta de gasto (sem desligamento automático) | Discuss 2026-07-23 (AD-051). O `PRD.md` §4.2 e o M9 (INFRA-05) foram **corrigidos** para acompanhar em **AD-066** — não há mais divergência entre os três documentos | y |
 | Nova versão da questão × explicação | Mudou gabarito/enunciado/alternativas → explicação **invalidada na hora**, refeita e revisada por humano antes de voltar; mudança cosmética → segue válida | Discuss 2026-07-23 (AD-052) | y |
 | Tamanho do eval cego | **~50 questões** com "explicação boa" definida pelo time; nota mínima e critério de aprovação a definir no Design | PRD §M2; risco #11 ("detalhe, não arquitetura") | n (calibra) |
-| Refaz 1× da verificação de cálculo | O reprocessamento sobe para um modelo mais forte (default hoje `anthropic/claude-opus-4.8`, em config) antes de ir à fila humana | AD-012 diz "refaz 1×, senão humano"; usar o mesmo modelo repetiria o erro | n (custo baixo, volume pequeno) |
+| Refaz 1× da verificação de cálculo | O reprocessamento sobe **de modelo e de esforço**: primeira tentativa `gpt-5.6-luna` em `max`, refaz em **`gpt-5.6-terra` em `max`** (em config, AD-073) antes de ir à fila humana. É **uma única** tentativa extra — nunca um laço | AD-012 diz "refaz 1×, senão humano"; usar o mesmo modelo no mesmo esforço repetiria o erro | n (custo baixo, volume pequeno) |
 | Como a conta é conferida | **Catálogo fechado de fórmulas + função própria testada**; a IA só escolhe a fórmula e os parâmetros. **Sem execução de código gerado por IA, sem sandbox** | Discuss 2026-07-23 → **AD-069**; determinístico, testável uma vez, sem superfície de segurança, mais barato (a IA escreve menos) | **y** |
 | Cobertura do catálogo | Desconhecida até a 1ª leva. A taxa de "quantitativa sem fórmula aplicável" SHALL ser medida na primeira leva; **se for alta, reabrir a decisão** de executar código | Risco honesto do AD-069: matemática financeira é fechada, RLM não | n (medir) |
 | Tolerância de comparação numérica | Em configuração (arredondamento de centavos e de percentual) | Gabarito da banca e conta exata divergem na última casa | n (calibra) |
-| Custo estimado da fábrica | < **US$100** uma vez para ~10 mil questões (Sonnet 5 com Batch −50%) | Cálculo de 2026-07-23 sobre os preços pesquisados | n (estimativa) |
+| Custo estimado da fábrica | Ordem de **US$15–30** uma vez para ~10 mil questões (`gpt-5.6-luna` a US$0,20/US$1,20, com Batch −50% e cache de entrada a US$0,02), já contando esforço `high`. O refaz em Terra soma ordem de **US$5–10** | Recálculo de 2026-08-04 (AD-073); a estimativa anterior de < US$100 era com Sonnet 5 | n (estimativa) |
+| Fatiamento do PDF na extração | A extração **SHALL** enviar o PDF em **blocos de questões**, nunca a prova inteira num pedido, e usar `detail: low` quando a questão não tiver gráfico/figura | Requisição acima de **272K tokens** é cobrada a 2× entrada / 1,5× saída, e PDF entra como texto **e** imagem de página (`detail` padrão `high` no GPT-5.6) — sem fatiar, o desconto do modelo é anulado (AD-073) | y |
 | Teto de gasto de IA | **Alerta** quando o gasto do mês passa do limite configurado; **SHALL NOT** desligar o tutor automaticamente | Discuss 2026-07-23 — o usuário optou por alerta sem desligamento | y |
 | Idempotência da fábrica | Toda chamada de IA tem **chave de dedup** (`questao_id` + `questao_versao` + tarefa + versão do prompt); rerodar não regenera nem cobra de novo | AD-036 (jobs retomáveis) | y |
 | Versão do prompt | Cada tarefa guarda a **versão do prompt** usada, junto com o modelo e a data | Auditoria: saber com que instrução e que modelo cada explicação nasceu | y |
@@ -84,8 +93,12 @@ fonte citada, para aprender sem medo de decorar errado.
 1. WHEN uma explicação é gerada na fábrica, THEN o sistema SHALL entregar à IA, no mesmo pedido, o
    **documento de referência** do tópico (buscado pela etiqueta de assunto da questão) e SHALL exigir que
    todo fato, número, prazo ou regra afirmado esteja **naquele material**.
-2. WHEN a explicação é aceita, THEN o sistema SHALL gravar as **citações** em `explicacoes.fontes_citadas`
-   (documento + trecho), e SHALL rejeitar a explicação que não traga nenhuma citação.
+2. WHEN a explicação é gerada, THEN a IA SHALL devolver as citações em **saída estruturada**, como lista de
+   `(doc_id, trecho)`; o sistema SHALL **conferir por código**, antes de aceitar, que cada `trecho` existe
+   **literalmente no documento entregue naquele pedido** (comparação normalizada — espaços, acentuação,
+   pontuação). SHALL gravar as citações conferidas em `explicacoes.fontes_citadas`, e SHALL rejeitar,
+   enviando à fila humana, a explicação que não traga nenhuma citação **ou** que traga citação que não bate
+   com a fonte (**AD-075**). O sistema SHALL NOT depender de recurso de citação do fornecedor.
 3. WHEN a IA não encontra base para um fato, THEN ela SHALL NOT afirmá-lo — SHALL omitir, nunca inventar.
 4. WHEN o tópico da questão **ainda não tem documento de referência**, THEN o sistema SHALL usar como
    fonte mínima a **própria prova + o gabarito oficial** (documentos oficiais, AD-003), SHALL permitir
@@ -129,9 +142,11 @@ desnecessário executar código gerado pela IA (**AD-069**, substitui o sandbox 
 4. WHEN a questão é quantitativa mas **não encaixa em nenhuma fórmula do catálogo** (ex.: RLM, pegadinha
    de enunciado), THEN o sistema SHALL enviá-la à **fila de revisão humana** e SHALL NOT publicar por conta
    própria — e SHALL registrar o caso, para medir a taxa de não-cobertura.
-5. WHEN o cruzamento falha, THEN o sistema SHALL refazer **1×** automaticamente, **escalando para um
-   modelo mais forte** (default hoje `anthropic/claude-opus-4.8`, resolvido por config — AD-068); WHEN a
-   segunda tentativa também falha, THEN SHALL enviar à **fila de revisão humana** e SHALL NOT publicar.
+5. WHEN o cruzamento falha, THEN o sistema SHALL refazer **exatamente 1×**, **escalando de modelo e de
+   esforço** (default hoje: primeira tentativa `gpt-5.6-luna` em `max`, refaz em `gpt-5.6-terra` em `max`,
+   ambos resolvidos por config — AD-068/AD-073); WHEN a segunda tentativa também falha, THEN SHALL enviar à
+   **fila de revisão humana** e SHALL NOT publicar. O sistema SHALL NOT tentar uma terceira vez, e SHALL NOT
+   reprocessar automaticamente uma questão que já esteja na fila humana.
 6. WHEN o cálculo falha por erro técnico (parâmetro inválido, divisão por zero, estouro), THEN o sistema
    SHALL tratar como falha do cruzamento (não como aprovação) e SHALL registrar o erro (AD-037).
 7. O sistema SHALL registrar, junto da explicação, **qual fórmula e quais parâmetros** produziram o número
@@ -154,32 +169,52 @@ fixada e fallback, para trocar de modelo sem reescrever código.
 **Acceptance Criteria**:
 
 1. Toda chamada de IA SHALL passar por um **gateway** que resolve `tarefa → (modelo, versão fixada,
-   fallback, parâmetros)` a partir de **configuração**. Nenhum **trecho de código** e nenhum **teste
-   automatizado** SHALL depender do nome de um modelo — o nome vive **só** na configuração, e trocá-lo
-   SHALL NOT exigir alteração de código. Specs, ADs e comentários **PODEM** citar o modelo default vigente:
-   isso é documentação do que está configurado hoje, não acoplamento (**AD-068**).
-2. As tarefas cobertas SHALL ser exatamente: **extração de PDF**, **explicação**, **classificação no
-   tópico**, **frase do plano diário**, **tutor**, **rascunho de inéditas** (P2), **reprocessamento de
-   verificação**. A chamada de **embeddings** SHALL NOT passar pelo gateway (é chamada direta ao Cohere —
-   a OpenRouter não serve embeddings, confirmado em 2026-07-23).
-3. A versão do modelo SHALL ser **fixada** na configuração (nunca um apelido flutuante), e o gateway SHALL
-   gravar, em cada geração, **qual modelo, qual versão e qual versão do prompt** produziram o resultado.
-4. WHEN o modelo principal de uma tarefa falha ou fica indisponível, THEN o gateway SHALL acionar o
+   **esforço de raciocínio**, **batch on/off**, **cache on/off**, fallback, parâmetros)` a partir de
+   **configuração** (**AD-073**). Nenhum **trecho de código** e nenhum **teste automatizado** SHALL depender
+   do nome de um modelo **nem do nível de esforço** — ambos vivem **só** na configuração, e trocá-los SHALL
+   NOT exigir alteração de código. Mudar o esforço de **uma** tarefa SHALL NOT afetar as demais. Specs, ADs
+   e comentários **PODEM** citar o default vigente: isso é documentação do que está configurado hoje, não
+   acoplamento (**AD-068**).
+2. As tarefas cobertas SHALL ser exatamente: **extração de PDF**, **explicação**, **verificação
+   quantitativa** (escolha de fórmula + parâmetros), **classificação no tópico**, **plano inicial
+   pós-diagnóstico**, **frase do plano diário**, **tutor**, **rascunho de inéditas** (P2), **reprocessamento
+   de verificação**. A chamada de **embeddings** SHALL NOT passar pelo gateway (é chamada direta ao Cohere —
+   `gpt-5.6-luna` não expõe endpoint de embeddings, confirmado em 2026-08-04; AD-005/AD-073).
+   > **Pendente de decisão:** duas chamadas de IA existem em outros módulos e **ainda não estão nesta
+   > lista** — o pré-diagnóstico de questão suspeita (M7, esteira 2, P2) e a extração do programa do edital
+   > (M5, RAIOX-09, P3). Ou entram na matriz com modelo e esforço próprios, ou viram exceção registrada em
+   > AD. Resolver antes do Design do M7/M5.
+3. O acesso ao provedor SHALL ser por **SDK nativo da OpenAI** (Responses API), com **um único adapter** no
+   lançamento (**AD-074**). A OpenRouter SHALL NOT ser usada na fábrica nem no tutor; SHALL ser usada
+   **apenas** no eval cego trimestral (IA-11), com chave separada. Acrescentar um segundo adapter à produção
+   SHALL exigir decisão registrada (novo AD).
+4. A versão do modelo SHALL ser **fixada** na configuração (nunca um apelido flutuante), e o gateway SHALL
+   gravar, em cada geração, **qual modelo, qual versão, qual esforço e qual versão do prompt** produziram o
+   resultado.
+5. WHEN o modelo principal de uma tarefa falha ou fica indisponível, THEN o gateway SHALL acionar o
    **fallback** configurado e SHALL registrar o evento; WHEN também o fallback falha, THEN o job SHALL
    parar de forma visível/alertada (AD-037), SHALL NOT publicar resultado parcial.
-5. WHEN um modelo candidato entra em **tarefa sensível** (extração, explicação, tutor), THEN ele SHALL
+6. WHEN um modelo candidato entra em **tarefa sensível** (extração, explicação, tutor), THEN ele SHALL
    passar antes no **eval cego de PT-BR** (~50 questões com "explicação boa" definida pelo time, avaliadas
    sem saber qual modelo escreveu qual) — o eval é **porteiro**, SHALL NOT ser opcional.
-6. A matriz de modelos SHALL ser **revista periodicamente** (rotina agendada, default trimestral): puxar
+7. A matriz de modelos SHALL ser **revista periodicamente** (rotina agendada, default trimestral): puxar
    preços/opções atuais, rodar o eval nos candidatos, trocar se houver ganho. A data da última revisão
-   SHALL ficar registrada.
-7. Toda geração da fábrica SHALL ter **chave de dedup** (`questao_id` + `questao_versao` + tarefa +
+   SHALL ficar registrada. O corte de 80% no preço da `gpt-5.6-luna` em 30/07/2026, quatro dias antes da
+   AD-073, é o caso que justifica a rotina.
+8. Toda geração da fábrica SHALL ter **chave de dedup** (`questao_id` + `questao_versao` + tarefa +
    versão do prompt); rerodar o job SHALL NOT regerar nem cobrar de novo o que já existe (AD-036).
-8. As chamadas em lote da fábrica SHALL usar a **Batch API** quando o provedor oferecer (−50%), já que
-   latência não importa fora do tutor.
+9. As chamadas em lote da fábrica SHALL usar a **Batch API** (−50%), já que latência não importa fora do
+   tutor, e SHALL usar **prompt caching** no trecho estável do pedido (instrução + documento de referência),
+   cobrado a **0,1×** da entrada. Os dois descontos SHALL ser acumulados. WHEN uma tarefa é marcada
+   `batch: não` na configuração (plano inicial e tutor), THEN ela SHALL usar a chamada síncrona — SHALL NOT
+   ser empurrada para a fila de lote.
+10. A extração de PDF SHALL enviar o documento em **blocos de questões**, SHALL NOT enviar a prova inteira
+    num único pedido, e SHALL usar `detail: low` para questão sem gráfico/figura — requisição acima de
+    **272K tokens** é cobrada a 2× entrada e 1,5× saída (AD-073).
 
 **Independent Test**: Trocar o modelo da tarefa "classificação" na configuração e ver o pipeline rodar sem
-alteração de código; derrubar o principal e ver o fallback assumir com registro.
+alteração de código; mudar só o esforço do tutor e confirmar que nenhuma outra tarefa muda de
+comportamento; derrubar o principal e ver o fallback assumir com registro.
 
 ---
 
@@ -347,9 +382,9 @@ explicações daquele tópico entrarem na fila de reavaliação.
 | Requirement ID | Story | Fase | Status |
 | --- | --- | --- | --- |
 | IA-01 | P1: Pré-computa primeiro; única superfície ao vivo = tutor (AD-010) | Design | Pending |
-| IA-02 | P1: Gateway trocável + matriz de modelos por tarefa em config (AD-011/AD-049) | Design | Pending |
+| IA-02 | P1: Gateway trocável resolvendo **modelo + esforço + batch + cache + fallback** por tarefa, em config (AD-011/**AD-073**) | Design | Pending |
 | IA-03 | P1: Eval cego PT-BR como porteiro de modelo (AD-011) | Design | Pending |
-| IA-04 | P1: Grounding por documento entregue + citação gravada (AD-012.1/12.2) | Design | Pending |
+| IA-04 | P1: Grounding por documento entregue + **citação por saída estruturada conferida por código** (AD-012.1/12.2/**AD-075**) | Design | Pending |
 | IA-05 | P2: Base de referência oficial-quando-existe + resumo conferido (AD-012.2) | Design | Pending |
 | IA-06 | P1: Verificação de conta por **catálogo de fórmulas + código nosso** + cruzamento duplo (AD-012.3/AD-069) | Design | Pending |
 | IA-15 | P1: Quantitativa fora do catálogo vai à fila humana, com taxa de não-cobertura medida (AD-069) | Design | Pending |
@@ -357,25 +392,29 @@ explicações daquele tópico entrarem na fila de reavaliação.
 | IA-08 | P1: Fonte mínima (prova+gabarito) quando não há documento; veto a norma externa (AD-050) | Design | Pending |
 | IA-09 | P1: Explicação amarrada a `questao_versao` + invalidação por tipo de mudança (AD-052) | Design | Pending |
 | IA-10 | P1: Tutor com teto 3/dia + cache de pergunta repetida + contexto injetado (AD-051) | Design | Pending |
-| IA-11 | P1: Rotina periódica de revisão da matriz de modelos (AD-049) | Design | Pending |
+| IA-11 | P1: Rotina periódica de revisão da matriz de modelos, com eval via OpenRouter fora da produção (AD-049/**AD-074**) | Design | Pending |
 | IA-12 | P1: Alerta de gasto mensal de IA, sem desligamento automático (AD-051) | Design | Pending |
-| IA-13 | P1: Refaz 1× escalando para modelo mais forte antes da fila humana (AD-012.3) | Design | Pending |
-| IA-14 | P1: Chave de dedup + versão de prompt/modelo gravadas em toda geração (AD-036) | Design | Pending |
+| IA-13 | P1: Refaz **exatamente 1×**, escalando de modelo **e** de esforço, antes da fila humana (AD-012.3/**AD-073**) | Design | Pending |
+| IA-14 | P1: Chave de dedup + versão de prompt/modelo/**esforço** gravadas em toda geração (AD-036) | Design | Pending |
+| IA-16 | P1: Acesso por **SDK nativo da OpenAI**, adapter único; OpenRouter só no eval (**AD-074**) | Design | Pending |
+| IA-17 | P1: Extração fatia o PDF por blocos + `detail: low` sem figura; Batch e cache acumulados (**AD-073**) | Design | Pending |
 
 **ID format:** `IA-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 15 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 17 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
 
 ---
 
 ## Success Criteria
 
-- [ ] Toda questão publicada tem explicação com pelo menos uma citação gravada; nenhuma afirma norma
-      externa sem documento.
+- [ ] Toda questão publicada tem explicação com pelo menos uma citação gravada, e **todo trecho citado foi
+      conferido por código contra o documento entregue**; nenhuma afirma norma externa sem documento.
 - [ ] Nenhuma questão quantitativa publica com número que não bate com o gabarito e com o texto.
-- [ ] Trocar qualquer modelo é mudar uma linha de configuração; nenhum teste quebra por causa do nome.
+- [ ] Trocar qualquer modelo **ou qualquer nível de esforço** é mudar uma linha de configuração; nenhum
+      teste quebra por causa do nome, e mudar uma tarefa não afeta as outras.
+- [ ] Nenhum pedido da fábrica passa de 272K tokens; Batch e cache estão ativos onde a config manda.
 - [ ] Nenhum modelo novo entra em tarefa sensível sem passar no eval cego de PT-BR.
 - [ ] Com a API de IA desligada, o loop central roda inteiro; só o tutor degrada, com mensagem clara.
 - [ ] Tutor respeita o teto diário, reaproveita pergunta repetida e nunca busca informação por conta

@@ -4,6 +4,11 @@
 > AD-009 (+ AD-035/AD-036 p/ onde a fábrica roda). Contratos fixados nesta rodada:
 > AD-039 (versionamento/enums de `questoes`), AD-040 (formato de dados da questão),
 > AD-041 (escopo MVP: imagens sim, escaneadas não, inéditas P2).
+>
+> **Migração de modelos (2026-08-04):** a extração passa a usar `gpt-5.6-luna` com esforço `high`, por SDK
+> nativo da OpenAI (**AD-073/AD-074**), com **fatiamento obrigatório do PDF** por causa do degrau de preço
+> acima de 272K tokens. Embeddings **permanecem** em Cohere embed-v4 (AD-005): a Luna não expõe endpoint de
+> embeddings. Rascunho de inéditas passa de GLM 5.2 para `gpt-5.6-luna`.
 
 ## Problem Statement
 
@@ -72,20 +77,26 @@ as questões em dados estruturados, para popular o banco sem digitar à mão.
 
 1. WHEN um PDF de prova oficial **com texto nativo** é submetido ao pipeline, THEN o sistema SHALL
    extrair cada questão em JSON estruturado (`enunciado`, `alternativas`, `numero`, `materia/topico`
-   sugeridos, `tipo_questao`, `confianca_ia`) usando **saída estruturada por schema** e **PDF nativo do
-   Claude**.
-2. WHEN o PDF **não tem texto nativo** (escaneado), THEN o sistema SHALL registrar a prova como
+   sugeridos, `tipo_questao`, `confianca_ia`) usando **saída estruturada por schema** e **entrada de PDF
+   nativa do provedor configurado** (default hoje `gpt-5.6-luna` pela Responses API — AD-073; o nome vive
+   só na config, IA-02).
+2. WHEN o PDF é enviado ao modelo, THEN o sistema SHALL fatiá-lo em **blocos de questões** e SHALL NOT
+   enviar a prova inteira num único pedido; SHALL usar `detail: low` para questão sem gráfico/figura.
+   Requisição acima de **272K tokens** é cobrada a 2× entrada e 1,5× saída, o que anularia o ganho de preço
+   do modelo (AD-073/IA-17).
+3. WHEN o PDF **não tem texto nativo** (escaneado), THEN o sistema SHALL registrar a prova como
    `status='precisa_ocr'` e SHALL NOT tentar extrair no MVP.
-3. WHEN uma questão contém imagem (gráfico/tabela/figura), THEN o sistema SHALL extrair a imagem para o
+4. WHEN uma questão contém imagem (gráfico/tabela/figura), THEN o sistema SHALL extrair a imagem para o
    **Supabase Storage** e SHALL preencher `imagens` (jsonb com ref + posição), servindo-a junto do
    enunciado.
-4. WHEN a extração roda, THEN SHALL executar em **script standalone / Batch API disparado por GitHub
+5. WHEN a extração roda, THEN SHALL executar em **script standalone / Batch API disparado por GitHub
    Actions**, e SHALL NOT rodar em função da Vercel (AD-036).
-5. WHEN a extração termina, THEN cada questão nasce com `status='rascunho'` ou `'em_revisao'` (nunca
+6. WHEN a extração termina, THEN cada questão nasce com `status='rascunho'` ou `'em_revisao'` (nunca
    `'publicada'` direto).
 
 **Independent Test**: Submeter uma prova real nativa e ver N questões viram linhas estruturadas com
-`confianca_ia` preenchida; submeter uma escaneada e ver a prova cair em `precisa_ocr`.
+`confianca_ia` preenchida; submeter uma escaneada e ver a prova cair em `precisa_ocr`; submeter uma prova
+longa e confirmar que ela foi enviada em blocos, nenhum pedido passando de 272K tokens.
 
 ---
 

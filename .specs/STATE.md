@@ -94,7 +94,7 @@
 - **Trade-off**: Manter gateway + evals.
 - **Scope**: M2.
 - **Date**: 2026-07-01
-- **Status**: active (nomes de modelo **[provisível]**)
+- **Status**: **superseded pela AD-073** quanto aos **nomes de modelo**. Continua **active** quanto ao **princípio**: gateway trocável + versão fixada + fallback + eval cego PT-BR como porteiro.
 
 ### AD-012
 - **Decision**: Conferência da explicação pré-computada (1× na fábrica, gravada), dois trilhos — norma citável (documento por etiqueta + citação; base oficial-quando-existe + resumo nosso conferido) e cálculo verificado por código (cruzamento duplo: bate com gabarito e com o texto; refaz 1×, senão humano). Tutor não faz busca ao vivo.
@@ -407,7 +407,7 @@
 - **Trade-off**: Nomes envelhecem em semanas; a rotina de revisão é a mitigação. Preço do Cohere embed-v4 **não confirmado** (página de pricing só mostra Model Vault).
 - **Scope**: M2 (herdado por M1 extração e M4 frase do plano).
 - **Date**: 2026-07-23
-- **Status**: active (nomes **[provisível]** — tabela válida em 2026-07-23)
+- **Status**: **superseded pela AD-073** (2026-08-04) quanto à **matriz de modelos e ao custo estimado**. Continua **active** quanto à **rotina trimestral de revisão da matriz** e ao **eval cego como porteiro**, que a AD-073 herda. A justificativa "Sonnet é o único com PDF nativo + citações + execução de código" caiu: execução de código morreu na AD-069, PDF a Luna atende, e as citações foram substituídas pela AD-075.
 
 ### AD-050
 - **Decision**: Tópico **sem documento de referência** montado → a fábrica **publica** a explicação usando **prova + gabarito oficial** como fonte mínima (ambos são ato oficial, AD-003); a IA pode explicar o raciocínio da questão mas **SHALL NOT** afirmar norma, prazo, percentual ou regra externa que não esteja no material entregue; o tópico entra na fila de construção da base, priorizada por **frequência real**.
@@ -423,7 +423,7 @@
 - **Trade-off**: Única peça com custo variável por aluno e única que degrada se a API cair; sem freio automático, o pior caso não tem teto em dinheiro (só teto de perguntas).
 - **Scope**: M2 (consome contrato de M4/M7; entra no escopo do MVP §4.1).
 - **Date**: 2026-07-23
-- **Status**: active
+- **Status**: active — **exceto o modelo**: `minimax/minimax-m3` foi substituído por `gpt-5.6-luna` com esforço **`medium`** (AD-073). Todo o resto (teto de 3/dia, cache de pergunta repetida, contexto injetado, streaming, alerta sem desligamento, tabela própria do grupo 1) permanece. O esforço `medium` é decisão consciente: o tutor é a única superfície ao vivo e tokens de raciocínio custam latência antes da primeira palavra.
 
 ### AD-052
 - **Decision**: Explicação amarrada a `questao_id` + `questao_versao` (AD-039), com versão e `status` próprios. Nova versão da questão por mudança de **gabarito, enunciado ou alternativas** → explicação **invalidada imediatamente** (sai do ar), regerada e só volta após **revisão humana**; o áudio é descartado e refeito (AD-014). Mudança **cosmética** (typo/formatação/acento) → explicação segue válida, sem regerar. A classificação cosmética×substantiva é **registrada por quem cria a versão** (campo do M1), nunca inferida depois pela IA. Tentativas já gravadas seguem apontando para a versão respondida.
@@ -593,9 +593,60 @@
 - **Date**: 2026-07-23
 - **Status**: active
 
+### AD-073
+- **Decision**: Matriz de modelos migrada para a família **OpenAI GPT-5.6**, pesquisada em **2026-08-04**. **`openai/gpt-5.6-luna` em todas as tarefas do gateway**, com `openai/gpt-5.6-terra` **apenas** no reprocessamento do "refaz 1×". O gateway passa a resolver, por tarefa, **`(modelo, esforço, batch, cache, fallback)`** — não só o modelo:
+  · extração de PDF → `gpt-5.6-luna`, esforço `high`, batch **sim**, cache **sim**
+  · explicação → `gpt-5.6-luna`, `high`, batch sim, cache sim
+  · verificação quantitativa (escolha de fórmula + parâmetros) → `gpt-5.6-luna`, **`max`**, batch sim, cache sim
+  · reprocessamento do "refaz 1×" → **`gpt-5.6-terra`**, **`max`**, batch sim, cache sim
+  · classificação no tópico → `gpt-5.6-luna`, `high`, batch sim, cache sim
+  · **plano inicial pós-diagnóstico** (tarefa própria, ver AD-068/M4) → `gpt-5.6-luna`, `high`, batch **não**, cache sim
+  · frase do plano diário → `gpt-5.6-luna`, `high`, batch sim, cache sim
+  · tutor → `gpt-5.6-luna`, **`medium`**, batch **não**, cache sim
+  · rascunho de inéditas (P2) → `gpt-5.6-luna`, `high`, batch sim, cache sim
+  · embeddings → **Cohere embed-v4 permanece**, chamada direta fora do gateway (AD-005): a Luna não expõe endpoint de embeddings.
+  Preços de 2026-08-04: Luna **US$0,20/US$1,20** por M tokens (cache de entrada **US$0,02**, escrita de cache 1,25× a entrada); Terra **US$2/US$12**. Batch **−50%**, acumulável com o cache. **Escalonamento do refaz 1× passa a ser por modelo _e_ por esforço** (Luna `max` → Terra `max`), substituindo `anthropic/claude-opus-4.8`. **Consequência operacional obrigatória:** requisição acima de **272K tokens** é cobrada a **2× entrada e 1,5× saída**, e PDF entra no contexto como texto **e** imagem de página (`detail` padrão `high` no GPT-5.6) — a extração **SHALL** fatiar o PDF por blocos de questões e usar `detail: low` quando a questão não tiver gráfico/figura. **Substitui AD-049 e a parte de modelos do AD-011.**
+- **Reason**: Corte de preço da OpenAI em 30/07/2026 derrubou a Luna em 80% ($1/$6 → $0,20/$1,20). Contra o Sonnet 5 do AD-049 ($2/$10), isso é **entrada 10× e saída 8,3× mais barata**, com saída estruturada, function calling, Batch, prompt caching explícito, entrada de PDF e níveis de esforço `none…max` — tudo que a fábrica usa. Dos três motivos que elegeram o Sonnet no AD-049, a execução de código já tinha morrido no AD-069 e o PDF nativo a Luna atende; só as citações caem (ver AD-075). Estimativa da fábrica cai de "< US$100" para **ordem de US$15–30** mesmo com esforço alto.
+- **Trade-off**: Fornecedor único para tudo que é geração (o risco de indisponibilidade concentra), e tokens de raciocínio são cobrados como **saída** — por isso o tutor fica em `medium`, já que é a única superfície ao vivo e esforço alto custa latência antes da primeira palavra aparecer. Nomes seguem `[provisível]`: o corte de 80% aconteceu 4 dias antes desta decisão, o que é a própria prova de que a rotina trimestral do AD-049/IA-11 é o que importa, não a tabela.
+- **Scope**: M2 (IA-02, IA-06, IA-10, IA-13), herdado por M1 (extração) e M4 (plano inicial e frase do plano); PRD §8.
+- **Date**: 2026-08-04
+- **Status**: active (nomes **[provisível]** — tabela válida em 2026-08-04)
+
+### AD-074
+- **Decision**: O acesso aos modelos é por **SDK nativo da OpenAI** (`openai`, Responses API), com **um único adapter de provedor** no gateway no dia 1. A **OpenRouter NÃO entra na fábrica nem no tutor**; fica reservada ao **eval cego trimestral** (IA-11), com chave separada, para testar candidatos de outras famílias sem custo na produção. Adicionar um adapter OpenRouter à produção é decisão registrada (novo AD), seguindo o mesmo padrão de **slot de reserva em standby** do AD-065.
+- **Reason**: Com AD-073, **100% das tarefas do gateway vão para modelo OpenAI** — a taxa de plataforma de **5,5%** da OpenRouter compraria uma capacidade multi-modelo que não está em uso. Além disso a economia depende de recursos recém-lançados (`max` effort, modo Pro, controle explícito de cache, `detail` no input de PDF), e agregador é onde parâmetro novo demora a ser repassado: a documentação da OpenRouter descreve cache de entrada a 0,25×–0,50×, enquanto a Luna direta na OpenAI tem cache a **0,1×**. Verificado em 2026-08-04 que a OpenRouter **repassa** o Batch −50% — ou seja, o desconto não é o diferencial; a taxa e o repasse de recursos novos são.
+- **Trade-off**: Perde-se a troca instantânea de família de modelo por configuração. Mitigado por: o gateway já é a abstração (IA-02/AD-068), o eval trimestral continua enxergando o mercado inteiro via OpenRouter, e escrever um segundo adapter é trabalho contido.
+- **Scope**: M2 (IA-02, IA-11), M9 (chaves e segredos).
+- **Date**: 2026-08-04
+- **Status**: active
+
+### AD-075
+- **Decision**: As citações da explicação (IA-04) deixam de depender de **recurso do fornecedor** e passam a ser **campo de saída estruturada + verificação por código nosso**: a IA devolve `fontes_citadas` como lista de `(doc_id, trecho)`, e o sistema **SHALL** conferir, antes de aceitar, que cada `trecho` **existe literalmente no documento entregue** naquele pedido (comparação normalizada — espaços, acentuação e pontuação). Explicação sem nenhuma citação, ou com citação que não bate com a fonte, **SHALL** ser rejeitada e enviada à fila humana.
+- **Reason**: A API de Citations da Anthropic devolvia o trecho citado verificado pelo próprio provedor. A OpenAI só produz anotação de citação para **busca web** e para **file_search com vector store** — não para documento entregue inline, que é exatamente o caso do grounding do AD-012.1. Sem essa substituição, o AC 2 da IA-04 ficaria sem mecanismo. Conferir por código é o mesmo padrão que o AD-069 já adotou para a conta: a verdade é checada por função nossa, testada, e não por promessa do fornecedor.
+- **Trade-off**: Uma função de verificação a mais para escrever e manter, e a IA passa a gastar tokens de saída repetindo o trecho citado (a Anthropic não cobrava por esse trecho). Em compensação a verificação passa a ser nossa, auditável e independente de fornecedor — o que também remove um acoplamento que o AD-049 tinha criado sem perceber.
+- **Scope**: M2 (IA-04 AC2), herdado por M5 (RAIOX-09, extração do edital com citações).
+- **Date**: 2026-08-04
+- **Status**: active
+
+### AD-076
+- **Decision**: O lançamento passa a separar **o que é construído** de **o que nasce ligado**. Constrói-se tudo o que as 9 specs definem (exceto M3, congelado por AD-064), mas **apenas 4 superfícies nascem ligadas** para o aluno: (1) **plano de hoje** — blocos Revisar/Avançar/Treinar (AD-018); (2) **sessão de questões** — responder → explicação conferida → causa do erro (AD-016); (3) **progresso** — domínio por matéria, caderno de erros e sequência; (4) **conta** — compra, login, senha e matrícula (AD-034). Todo o resto é entregue **atrás de flag desligada** (AD-001) e ligado quando um aluno pagante pedir: **tutor ao vivo**, **tela dedicada do Raio-X**, **gamificação** (M6 além da sequência), **diagnóstico adaptativo** (no lançamento o aluno **só declara o nível**, caminho que o AD-017 já previa como "pular") e **flywheel** (M7 além de política de privacidade e DELETE). O **acervo de lançamento** deixa de ser "~10 anos × 3 bancas" e passa a ser **as últimas 3–4 provas do BB**; os 10 anos do AD-009 viram **meta contínua**, ingerida com o produto já vendendo. **A conta do Raio-X (AD-056/057) roda desde o dia 1** alimentando a nota do plano e aparecendo como número na página de vendas e dentro do plano ("este tópico cai X% da prova") — o que fica desligado é a **tela** dedicada, não o motor. **NÃO descarta AD-066:** tutor e Raio-X completo seguem sendo construídos como MVP de engenharia; muda apenas que não nascem ligados. **Consequência em INFRA-05:** Vercel Pro deixa de ser requisito de *lançamento* e passa a ser requisito de *ligar a flag do tutor*. **Substitui o §4.1 do PRD** (o "loop central" de 7 itens) e **a parte do AD-009 que trata de pré-requisito de lançamento**.
+- **Reason**: O time vai construir com IA, o que derruba o custo de escrever código — mas **não** derruba as outras duas grandezas do projeto: (a) as horas humanas de curadoria do acervo e da base de referência (AD-003/AD-006/AD-012.2), que ninguém automatiza e que o próprio Handoff já marca como **caminho crítico**; e (b) o custo de o aluno **entender a tela** no primeiro dia, que não cai com IA nenhuma — piora, porque feature barata de construir incentiva tela cheia. O postmortem estudado em 2026-08-13 (`_wiki/principios/validacao-de-produto.md`) identifica exatamente esses dois modos de falha: meses até o primeiro usuário tocar no produto, e produto tão carregado que quem baixou não soube usar. O sinal de alerta já estava nos nossos arquivos: AD-051 e AD-066 **subiram** tutor e Raio-X completo de fast-follow para MVP com justificativas boas, **sem que existisse um único usuário** — o escopo de lançamento cresceu sozinho. Separar construído × ligado preserva o ganho da IA (constrói tudo) sem pagar o preço da tela inchada, e usa a feature flag que o AD-001 já tinha escolhido como mecanismo. Reduzir o acervo de lançamento tira do caminho crítico a única tarefa que a IA não acelera: 3–4 provas do BB dão semanas de estudo e podem ser curadas **em paralelo ao Design**, sem depender de código pronto.
+- **Trade-off**: Constrói-se mais código do que se entrega, e código atrás de flag ainda precisa ser mantido e testado; as flags viram superfície própria de bug. O acervo de 3–4 provas é **magro** para uma promessa de R$197/ano (AD-031), o que obriga a página de vendas a vender **acesso fundador com acervo crescendo toda semana** — e não produto pronto; vender diferente disso transforma a garantia de 7 dias (AD-031) em reembolso em massa e apaga o sinal de validação. Risco residual: aluno dedicado esgota 3–4 provas antes de a ingestão alcançar, o que torna o ritmo de ingestão pós-lançamento uma obrigação, não um desejo.
+- **Scope**: Arquitetura geral e sequência de lançamento. Toca PRD §4.1/§4.2, M1 (AD-009, ritmo de ingestão), M2 (tutor atrás de flag), M4 (diagnóstico declarado no lançamento), M5 (motor ligado, tela desligada), M6 (só sequência), M7 (só política + DELETE), M9 (INFRA-05).
+- **Date**: 2026-08-13
+- **Status**: active
+
+### AD-077
+- **Decision**: A superfície do produto é **web responsivo no navegador**, e só. **Sem app nativo** (iOS/Android) e **sem PWA** no lançamento — nem manifest, nem service worker, nem passo de "adicionar à tela de início" no onboarding. A notificação de hábito do AD-025 (teto ~1/dia) é entregue por **e-mail** no lançamento. PWA e WhatsApp ficam registrados como as duas próximas opções, nessa ordem, **caso** a notificação se comprove gargalo de retenção com dado real.
+- **Reason**: Três motivos, em ordem de peso. **(1) Cobrança.** O modelo é R$197 anual com **Pix, boleto e cartão 12x pelo Asaas** (AD-031/AD-033), e Pix e boleto **não existem** dentro da compra da Apple. Mesmo depois do acordo Apple × CADE que entrou no **iOS 26.5 em junho/2026**, vender conteúdo digital dentro do app iOS no Brasil custa **10% ou 21%** de comissão (+5% se usar o pagamento da Apple), e **15%** (10% em alguns casos) sobre compra feita no site via link a partir do app — R$20 a R$50 por aluno numa venda de R$197. **(2) Velocidade de correção.** Web sobe e todo mundo está na versão nova; app depende de revisão de loja e de o aluno atualizar, e nos primeiros meses o produto muda toda semana. **(3) Já era a posição implícita** do PRD §4.3 e do AD-035 (Vercel + Next.js) — este AD a registra porque a decisão foi **reaberta e reconfirmada** em 2026-08-13. **PWA fora por ora:** no iPhone o push web só funciona se o aluno adicionar à tela de início **pelo Safari**, e **não existe pop-up automático** pedindo isso (verificado em 2026-08-13) — é uma etapa de onboarding com perda garantida, e não se paga antes de existir retenção medida para comparar.
+- **Trade-off**: Sem push no lançamento; o lembrete diário depende de e-mail, que tem abertura menor que notificação de celular — é uma aposta contra o AD-023/AD-025, cujo mecanismo de hábito assume alcançar o aluno. Sem presença em loja, ninguém descobre o produto buscando na App Store — aceitável porque o modelo é paga-primeiro por página de vendas (AD-031), onde descoberta por loja nunca esteve no plano. Caminho registrado se a notificação virar gargalo comprovado: **PWA primeiro** (custo da ordem de 1 dia, reaproveita o mesmo site); **app nativo só depois** e, nesse caso, **a venda continua no site e o app é só login**, para não pagar comissão de loja.
+- **Scope**: M8 (superfície de venda e onboarding), M6 (GAM-06, canal da notificação), M9 (INFRA-01). PRD §4.3 e §6.
+- **Date**: 2026-08-13
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Specify **CONCLUÍDO PARA AS 9 FEATURES**. Rodada 1: M9, M1, M4. Rodada 2 (2026-07-23): M7, M2, M8. Rodada 3 (2026-07-23): **M5, M6, M3**. **Rodada 4 (2026-07-23): revisão de consistência cruzada das 9 specs + PRD — 6 contradições encontradas e resolvidas (AD-066…AD-072).**
+- **Feature**: Specify **CONCLUÍDO PARA AS 9 FEATURES**. Rodada 1: M9, M1, M4. Rodada 2 (2026-07-23): M7, M2, M8. Rodada 3 (2026-07-23): **M5, M6, M3**. **Rodada 4 (2026-07-23): revisão de consistência cruzada das 9 specs + PRD — 6 contradições encontradas e resolvidas (AD-066…AD-072).** **Rodada 5 (2026-08-04): migração da matriz de modelos para OpenAI GPT-5.6 (AD-073…AD-075) — aplicada em STATE, M2, M1, M4 e PRD §8.** **Rodada 6 (2026-08-13): recorte de lançamento — construído × ligado (AD-076…AD-077) — aplicada só em STATE (nenhum requisito de módulo mudou).** **Rodada 7 (2026-08-16): sincronização — reorganização do repositório (outra sessão) + rodadas 5/6 (nunca empurradas) reconciliadas via PR, sem perda de decisão.**
 - **Phase / Task**: Fase **Specify encerrada e reconciliada**. Design/Tasks/Execute **ainda não iniciados em nenhum módulo**.
 - **Completed**:
   - Rodada 1: `m9-infra/spec.md` (INFRA-01…10, AD-036/037/038) · `m1-banco-questoes/spec.md` (BANCO-01…13, AD-039/040/041) · `m4-coluna-vertebral/spec.md` (ALUNO-01…12, AD-042/043/044).
@@ -632,15 +683,72 @@
   - `PRD.md` §10 abertas: **nº5** (renovação) e **nº9** (reembolso × antecipação) resolvidas (AD-055, AD-054); **nº10** (menores) por AD-047; **nº12** (auto-aplicação da IA) por AD-048; **nº11** (números exatos) **resolvida na parte do Raio-X** (AD-056/057) e **na parte do anti-trapaça** (AD-060 elimina o piso de tempo) — segue aberta só para params FSRS e tamanho de bloco (M4, calibração).
   - `PRD.md` §10 risco **nº4** (voz do ElevenLabs) continua **pendente**, mas deixou de ser risco solto: virou porteiro especificado (TTS-06/AD-062).
   - AD-011 (modelos), AD-031 (preço), AD-028 (retenção), AD-020 (pesos do Raio-X), AD-014 (áudio) e AD-025 (anti-trapaça) foram **refinados/substituídos parcialmente** por AD-049, AD-053, AD-045, AD-056/057, AD-062/063/065 e AD-060 — nenhum foi descartado.
-- **Next step**: entrar em **Design**. Recomendação de ordem: **M4** primeiro (a fundação `tentativas`/AD-015/AD-042 é a peça mais crítica e a que mais módulos herdam), depois **M1 → M2 → M8 → M7 → M5 → M6 → M3**. **M3 SHALL NOT entrar em Design enquanto a flag do áudio não estiver perto de ser ligada** (AD-064) — a spec está escrita e congelada. **Caminho crítico de produto: a ingestão do acervo (M1)** — o Raio-X é a primeira tela e sua qualidade vem do acervo, não da fórmula (AD-066). Contratos de schema a respeitar no Design: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), **AD-056/057** (fórmula do Raio-X), **AD-060** (anel por bloco), **AD-063** (áudio × versão de questão *e* de explicação).
+- **Rodada 5 — migração de modelos (2026-08-04)**. Motivo: a OpenAI cortou o preço da `gpt-5.6-luna` em
+  **80%** em 30/07/2026 ($1/$6 → **$0,20/$1,20**), 4 dias antes desta decisão. Três ADs novas, **todas já
+  aplicadas nos arquivos**:
+  1. **AD-073** — matriz migrada: `gpt-5.6-luna` em todas as tarefas, `gpt-5.6-terra` só no refaz 1×; o
+     gateway passa a resolver **modelo + esforço + batch + cache + fallback** por tarefa. Esforço: `high` na
+     fábrica, `max` na verificação quantitativa e no refaz, `medium` no tutor. Fábrica cai de "< US$100"
+     para **ordem de US$15–30**. Substitui AD-049 e os nomes do AD-011.
+  2. **AD-074** — acesso por **SDK nativo da OpenAI**; OpenRouter **só** no eval trimestral, com chave
+     separada. Verificado que a OpenRouter **repassa** o Batch −50%; o que pesou foi a taxa de 5,5% sobre
+     capacidade não usada e o atraso de repasse de recurso novo.
+  3. **AD-075** — citações deixam de vir de recurso do fornecedor (a API de Citations da Anthropic) e
+     passam a ser **saída estruturada `(doc_id, trecho)` + conferência por código** de que o trecho existe
+     literalmente na fonte.
+  - **Consequência operacional nova:** requisição acima de **272K tokens** custa 2× entrada / 1,5× saída, e
+    PDF entra como texto **e** imagem de página — a extração passa a **fatiar o PDF** obrigatoriamente
+    (IA-17 / M1 AC2). Sem isso o desconto do modelo é anulado.
+  - **Requisitos novos no M2:** **IA-16** (SDK nativo, adapter único) e **IA-17** (fatiamento + Batch e
+    cache acumulados). Cobertura do M2 vai de 15 para **17 requisitos**.
+  - **Não reescritos de propósito:** `DECISOES-TECNICAS.md` (D11/D12) e `HANDOFF.md` continuam registro
+    histórico. As ADs novas dizem o que substituem.
+  - **Fica pendente de decisão (não trava o Design do M4):** duas chamadas de IA existem fora da lista
+    fechada do IA-02 — o **pré-diagnóstico de questão suspeita** (M7, esteira 2, P2) e a **extração do
+    programa do edital** (M5, RAIOX-09, P3). Ou entram na matriz com modelo e esforço próprios, ou viram
+    exceção registrada em AD. Nota deixada no próprio IA-02 AC2.
+- **Rodada 6 — recorte de lançamento (2026-08-13)**. Motivo: revisão do escopo contra o postmortem de
+  produto estudado em `_wiki/principios/validacao-de-produto.md`, somada à premissa nova de que **a
+  construção é feita com IA**. Duas ADs novas:
+  1. **AD-076** — separa **construído × ligado**. Constrói-se tudo (menos M3, congelado); nascem ligadas
+     só **4 superfícies**: plano de hoje · sessão de questões · progresso · conta. Tutor, tela do Raio-X,
+     gamificação (além da sequência), diagnóstico adaptativo e flywheel nascem **atrás de flag desligada**.
+     O **motor** do Raio-X (AD-056/057) roda desde o dia 1; só a tela dedicada fica desligada. Acervo de
+     lançamento cai para **3–4 provas do BB**; os 10 anos do AD-009 viram **meta contínua**. Substitui o
+     **PRD §4.1**. Não descarta AD-066 (tutor e Raio-X seguem sendo construídos).
+  2. **AD-077** — superfície é **web responsivo**, sem app nativo **e sem PWA** no lançamento; notificação
+     do AD-025 sai por **e-mail**. Motivo principal: Pix e boleto não existem em compra dentro do app iOS,
+     e mesmo após o acordo Apple × CADE (iOS 26.5, jun/2026) a comissão é de 10–21% (+5% no IAP) ou 15%
+     via link externo — R$20–50 por aluno sobre uma venda de R$197. Registra o que PRD §4.3 e AD-035 já
+     diziam de forma implícita, agora reaberto e reconfirmado.
+  - **Consequência em INFRA-05:** Vercel Pro deixa de ser requisito de *lançamento* e passa a ser
+    requisito de *ligar a flag do tutor* (revisa essa parte do AD-066).
+  - **Consequência no caminho crítico:** a curadoria do acervo é a única parte que a IA **não** acelera e
+    **não depende de código existir** — pode e deve começar **em paralelo ao Design do M4**, não depois.
+  - **Mudanças que alteram documentos anteriores** (aplicar quando tocar neles): `PRD.md` **§4.1** (loop
+    central de 7 itens) — **substituído** por AD-076; `PRD.md` **§4.2** — tutor e Raio-X completo saem de
+    "no MVP" para "construídos, ligados depois"; `PRD.md` **§4.3** — "app mobile nativo fora de escopo"
+    passa a ser decisão registrada (AD-077) e não mais nota de escopo; `AD-009` — os "~10 anos × 3 bancas"
+    deixam de ser pré-requisito de lançamento e viram meta contínua.
+  - **Pendente, não trava o Design:** falta escolher o **critério de morte** do produto (um número de
+    compras aprovadas + um prazo a partir do primeiro cliente pagante). Decisão de sócios, vira AD quando
+    fechada.
+- **Next step**: entrar em **Design**, agora sob o recorte do **AD-076** (construir tudo, ligar 4
+  superfícies) e do **AD-077** (web puro). Recomendação de ordem: **M4** primeiro (a fundação `tentativas`/AD-015/AD-042 é a peça mais crítica e a que mais módulos herdam), depois **M1 → M2 → M8 → M7 → M5 → M6 → M3**. **M3 SHALL NOT entrar em Design enquanto a flag do áudio não estiver perto de ser ligada** (AD-064) — a spec está escrita e congelada. **Caminho crítico de produto: a ingestão do acervo (M1)** — o Raio-X é a primeira tela e sua qualidade vem do acervo, não da fórmula (AD-066). Contratos de schema a respeitar no Design: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), **AD-056/057** (fórmula do Raio-X), **AD-060** (anel por bloco), **AD-063** (áudio × versão de questão *e* de explicação).
 - **Blockers**: none para Design. Pendências abertas que **não travam**: (a) *due diligence* — advogado (base legal das questões AD-003; janela de 24m AD-045; LIA antes de ligar o flywheel AD-026) e contador (CNPJ/regime para NF, hipótese ME no Simples); (b) confirmar no contrato do Asaas o que volta num estorno e o D+ do parcelado; (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3, ferramenta pronta em `experiments/tts-comparacao/`, incluir Inworld e Hume na rodada (AD-062/065); (e) reconfirmar preços de TTS em fonte oficial antes de contratar (AD-065 usou fontes secundárias); (f) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de recuperação).
-- **Uncommitted files**: none. As 4 rodadas de Specify foram commitadas e empurradas em
-  `docs(specs): specs M1-M9 + reconciliacao AD-036..AD-072` (2026-08-04).
-- **Branch**: `main`. O repositório passou a seguir `docs/GITFLOW.md` — trunk-based com branch curta,
-  todo trabalho por PR. Proteção de branch do GitHub **não está ligada** (plano Free não permite em
-  repositório privado); a trava é o hook `.githooks/pre-push`, ativado com
-  `git config core.hooksPath .githooks`.
+- **Rodada 7 — sincronização (2026-08-16)**. Motivo: as rodadas 5 e 6 (AD-073…AD-077) foram feitas
+  numa máquina que nunca chegou a empurrar o commit — enquanto isso, outra sessão reorganizou o
+  repositório (`AGENTS.md`/`CLAUDE.md`/`README.md`/`docs/GITFLOW.md`, `docs/historico/`, CI, trava de
+  `main`) partindo do estado antigo (só até AD-072), sem saber que AD-073…077 existiam. As duas
+  histórias divergiram por 7 commits de um lado e 5 arquivos não commitados do outro. Reconciliados
+  numa branch `spec/sync-ad073-077`, PR e merge — nenhuma decisão foi perdida ou reescrita.
+- **Uncommitted files**: none. Rodadas 5 e 6 commitadas em
+  `docs(specs): rodada 5+6 - migracao de modelos e recorte de lancamento`, mescladas via PR na rodada 7.
+- **Branch**: `main`. Segue `docs/GITFLOW.md` — trunk-based com branch curta, todo trabalho por PR.
+  Proteção de branch do GitHub **não está ligada** (plano Free não permite em repositório privado); a
+  trava é o hook `.githooks/pre-push`, ativado com `git config core.hooksPath .githooks`.
 - **Estrutura do repositório (2026-08-04)**: `AGENTS.md` (regras, invariantes, convenções) +
   `CLAUDE.md` (importa o AGENTS) + `README.md` + `docs/GITFLOW.md`. Registro congelado movido para
   `docs/historico/`. CI em `.github/workflows/ci.yml` (segredos, integridade dos documentos, e
-  typecheck/teste/build que liga sozinho quando existir `package.json`).
+  typecheck/teste/build que liga sozinho quando existir `package.json`). **Pendente desta rodada:** a
+  `AGENTS.md` ainda diz "Specify concluído... AD-001…AD-072" — desatualizada, precisa citar AD-077.

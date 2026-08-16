@@ -182,6 +182,10 @@ sequencial) — e os scripts de npm que a matriz de gates usa.
 - [ ] `npx supabase --version` responde (CLI instalado como devDependency, não global)
 - [ ] `supabase/config.toml` existe e aponta para `kfpmetkmhjtmgwgaaerl`
 - [ ] `npm run db:push` existe e aplica migração no projeto ligado **sem Docker**
+- [ ] ⚠️ **O script passa o token lendo do `.env`, explicitamente.** A variável de ambiente do
+      Windows `SUPABASE_ACCESS_TOKEN` existe na máquina e contém o token de **outra conta** — o CLI
+      leria ela e ligaria no projeto errado. Um teste confere que `db:push` aponta para
+      `kfpmetkmhjtmgwgaaerl`, não para qualquer projeto que o ambiente sugira
 - [ ] `.env.example` documenta `DATABASE_URL` (string de conexão direta, para os testes de banco),
       **sem valor**, com o mesmo aviso de "nunca commite segredo" das outras chaves
 - [ ] `tests/db/conexao.ts` abre e fecha uma conexão contra `DATABASE_URL` e um teste prova isso

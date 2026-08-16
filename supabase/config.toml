@@ -1,0 +1,11 @@
+# Configuracao do Supabase CLI.
+#
+# Este arquivo e deliberadamente minimo. O `supabase init` gera ~414 linhas, e
+# quase todas configuram a pilha LOCAL (portas do Studio, Inbucket, provedores
+# de auth) que roda em Docker. A AD-083 decidiu **nao usar Docker**: o banco de
+# desenvolvimento e o proprio projeto remoto de Sao Paulo. Nada aqui alem do
+# `project_id` teria efeito, e config morta envelhece pior que config ausente.
+#
+# Migracao se aplica com `npm run db:push`, que passa a conexao explicitamente
+# a partir do .env — ver scripts/db-push.mjs.
+project_id = "kfpmetkmhjtmgwgaaerl"

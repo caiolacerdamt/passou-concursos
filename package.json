@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
-    "test:db": "vitest run --project db"
+    "test:db": "vitest run --project db",
+    "db:push": "node scripts/db-push.mjs"
   },
   "dependencies": {
     "next": "16.3.1",
@@ -18,10 +19,13 @@
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/pg": "^8.21.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "pg": "^8.23.0",
+    "supabase": "^2.114.0",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

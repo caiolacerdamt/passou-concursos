@@ -9,6 +9,7 @@ build/
 .turbo/
 .vercel/
 *.tsbuildinfo
+next-env.d.ts
 
 # Supabase local
 .branches/

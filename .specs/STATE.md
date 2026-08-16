@@ -644,111 +644,94 @@
 - **Date**: 2026-08-13
 - **Status**: active
 
+### AD-078
+- **Decision**: O mecanismo de **configuração e feature flag** é uma **tabela versionada no Postgres** (Supabase), lida pela aplicação com cache curto. **Variável de ambiente** fica reservada ao que precisa existir **antes** do banco responder (URL e chave do próprio Supabase, segredos de provedor) — SHALL NOT ser o lar de flag nem de parâmetro de produto. No lançamento a flag é **booleana e global** por módulo/superfície: SHALL NOT haver rollout percentual, segmentação por aluno nem teste A/B. Mudar o valor de uma flag ou de um parâmetro **SHALL NOT exigir deploy**. Toda alteração SHALL ser registrada (quem, quando, valor anterior e novo). Serviço externo de feature flag (LaunchDarkly, GrowthBook, flags do PostHog) fica **fora do lançamento**; adotar um SHALL exigir AD nova.
+- **Reason**: O AD-001 escolheu feature flag como o mecanismo que permite construir modular e incremental, o AD-076 pôs cinco superfícies atrás de flag desligada, o AD-064 pôs o M3 inteiro atrás de flag, e o `docs/GITFLOW.md` construiu o trunk-based em cima dela ("deploy ≠ release; o que decide se o aluno vê é a feature flag"). Mas **nenhuma das 9 specs diz onde o valor da flag mora** — INFRA-01…10 cobre região, partição, backup, observabilidade e segredo, e não cobre isto. O buraco é maior que as flags: dezenas de parâmetros já estão especificados como "vive em configuração" e igualmente sem dono — `retencao_meses` e `piso_anonimato` (M7), preço e desconto à vista (M8), teto do tutor e a matriz de modelos/esforço (M2, IA-02), decaimento e percentis (M5), escudos e janela de recuperação (M6), faixas de conversão do FSRS e tamanho de bloco (M4), voz e teto de gasto do lote (M3). É o mesmo mecanismo, e ele **trava o Design do M4**, que consome config já na primeira história. Tabela no Postgres resolve porque o banco já existe (AD-035), fica na região SP junto do resto e atende o requisito real, que é **trocar valor sem deploy** — variável de ambiente obrigaria um deploy para ligar uma flag, que é exatamente o que o GITFLOW diz que não deve acontecer. Serviço externo custaria um subprocessador novo para entregar rollout percentual e segmentação que o AD-076 não pede.
+- **Trade-off**: A leitura da flag entra no caminho da requisição e vira consulta ao banco — o cache curto é obrigatório, não refinamento, e uma tabela mal-cacheada vira ponto quente. Sem rollout percentual nem A/B: ligar uma feature é para todos os alunos de uma vez, e descobrir problema em produção não tem meio-termo além de desligar. E config no banco **não aparece no diff do git** como o resto do projeto aparece — por isso o registro de alteração é requisito, não opcional: sem ele, ninguém sabe quem mudou o preço ou a janela de retenção.
+- **Scope**: M9 (**INFRA-11** novo). Consumido por M1…M8 — todo parâmetro marcado "em configuração" nas 8 specs — e por `docs/GITFLOW.md`.
+- **Date**: 2026-08-16
+- **Status**: active
+
+### AD-079
+- **Decision**: A ferramenta de **analytics de produto** é o **PostHog Cloud, região UE**, adotada em **duas etapas de escopo**. **Etapa 1 (lançamento):** mede **apenas o funil pré-login** — página de vendas e checkout até a confirmação do pagamento. SHALL rodar em **modo anônimo** (sem perfil de pessoa), SHALL NOT enviar `user_id`, e-mail, nome, CPF nem qualquer dado de meio de pagamento, e SHALL ser servida pelo **domínio próprio via proxy reverso** do Next.js. **Etapa 2 (atrás de flag desligada, AD-078):** superfície logada — ativação, uso do plano, sessão de questões. SHALL NOT ser ligada antes de as três condições estarem cumpridas: (a) a política de privacidade nomear o PostHog como **operador** e declarar a **transferência internacional**; (b) o DELETE do DADOS-04 chamar a **API de deleção de pessoa** do PostHog e conferir o status de conclusão; (c) a lista de eventos e propriedades ser fechada e revisada, sem nenhum dado do grupo 1 em propriedade. **Session replay SHALL NOT ser usado em nenhuma etapa.** O PostHog **SHALL NOT** substituir o Sentry (INFRA-09) nem ser fonte de feature flag (AD-078); seu error tracking SHALL NOT ser ligado.
+- **Reason**: O modelo é paga-primeiro (AD-031) com o produto inteiro atrás do muro, o que faz da página de vendas a **única superfície de conversão** (PAG-08) — e o AD-076 apostou em vender "acesso fundador com acervo crescendo", o que torna a taxa de desistência do funil o número que diz se a oferta funciona. **Nada no projeto mede isso hoje:** o Sentry do INFRA-09 só enxerga defeito, e um funil que converte 2% sem nenhum erro é silêncio total para ele. Medir **pré-login** é onde o custo de LGPD é menor: quem está na página de vendas ainda não é aluno, não tem `user_id` e não pertence a nenhum dos 3 grupos do AD-027. A superfície logada é o oposto — DADOS-02 exige que todo dado pessoal esteja **declarado no schema**, e evento com `user_id` num serviço de terceiro é dado do grupo 1 morando fora do schema; daí ela nascer desligada com condições escritas em vez de proibida. O **session replay** grava a tela do aluno, o que contraria DADOS-07 AC6 (nada de dado pessoal em claro fora do schema) de forma mais forte que um log de erro — fica fora por decisão registrada, não por esquecimento. Região **UE** porque o PostHog não tem região BR e a UE é a única residência declarada fora dos EUA; self-host era a outra saída para ficar no Brasil e o M9 já a excluiu ("3 devs sem ops").
+- **Trade-off**: Cria o **primeiro subprocessador fora do Brasil** do projeto — até aqui o AD-035 mantinha tudo em SP. Declarar transferência internacional é irreversível no sentido que importa: dá para sair do PostHog depois, não dá para nunca ter declarado. O evento pré-login ainda carrega **IP e identificador de dispositivo**, então é risco **menor, não nulo** — a base legal (legítimo interesse) entra na mesma lista de confirmação do advogado que o resto do M7 já tem pendente. Bloqueador de anúncio derruba parte da medição se o proxy reverso não existir, o que torna o proxy **requisito e não refinamento**. E o número do funil nunca vai bater exatamente com o do Asaas — a conciliação financeira (PAG-15) continua sendo a verdade do dinheiro; o PostHog explica **onde** se perde, nunca **quanto** entrou.
+- **Scope**: M9 (**INFRA-12** novo), M8 (**PAG-17** novo — eventos do funil), M7 (DADOS-04 ganha a deleção no PostHog; DADOS-01 ganha a declaração de transferência internacional). SHALL NOT tocar INFRA-09 — o Sentry permanece como está.
+- **Date**: 2026-08-16
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Specify **CONCLUÍDO PARA AS 9 FEATURES**. Rodada 1: M9, M1, M4. Rodada 2 (2026-07-23): M7, M2, M8. Rodada 3 (2026-07-23): **M5, M6, M3**. **Rodada 4 (2026-07-23): revisão de consistência cruzada das 9 specs + PRD — 6 contradições encontradas e resolvidas (AD-066…AD-072).** **Rodada 5 (2026-08-04): migração da matriz de modelos para OpenAI GPT-5.6 (AD-073…AD-075) — aplicada em STATE, M2, M1, M4 e PRD §8.** **Rodada 6 (2026-08-13): recorte de lançamento — construído × ligado (AD-076…AD-077) — aplicada só em STATE (nenhum requisito de módulo mudou).** **Rodada 7 (2026-08-16): sincronização — reorganização do repositório (outra sessão) + rodadas 5/6 (nunca empurradas) reconciliadas via PR, sem perda de decisão.**
-- **Phase / Task**: Fase **Specify encerrada e reconciliada**. Design/Tasks/Execute **ainda não iniciados em nenhum módulo**.
-- **Completed**:
-  - Rodada 1: `m9-infra/spec.md` (INFRA-01…10, AD-036/037/038) · `m1-banco-questoes/spec.md` (BANCO-01…13, AD-039/040/041) · `m4-coluna-vertebral/spec.md` (ALUNO-01…12, AD-042/043/044).
-  - Rodada 2: `m7-lgpd-flywheel/spec.md` (DADOS-01…13, AD-045/046/047/048) · `m2-camada-ia/spec.md` (IA-01…14, AD-049/050/051/052) · `m8-negocio-pagamentos/spec.md` (PAG-01…16, AD-053/054/055).
-  - **`.specs/features/m5-raiox-banca/spec.md`** (RAIOX-01…15) — Discuss fechou os 4 números que o AD-020 deixara `[provisório]`: decaimento gradual por ano + amortecimento por amostra pequena (**AD-056**), teto do empurrão **por posição** + corte núcleo/condicional **por posição dentro da banca** (**AD-057**). Novo invariante explícito: o Raio-X **não lê `tentativas`** (RAIOX-14).
-  - **`.specs/features/m6-gamificacao/spec.md`** (GAM-01…13) — Discuss: escudos por constância com teto 2 (**AD-058**), reset suave = congela + janela de recuperação (**AD-059**), **anti-clique sem trava de tempo** — anel por bloco concluído + causa declarada (**AD-060**, *substitui* cláusula do AD-025), "no prazo" sem `data_prova` vira ritmo de avanço (**AD-061**).
-  - **`.specs/features/m3-audio/spec.md`** (TTS-01…11) — Discuss + **pesquisa de provedores de TTS em 2026-07-23**: teste cego é **porteiro do primeiro lote** (**AD-062**), áudio narra **questão + explicação** num arquivo contínuo e questão com imagem não recebe áudio (**AD-063**), M3 é **fast-follow atrás de flag** com teto de gasto por lote (**AD-064**), ElevenLabs principal com **reserva em standby** + custo do lote revisado para ~US$1.800–3.700 (**AD-065**).
-  - Decisions estendido AD-056…AD-065 (append-only).
+- **Feature**: Specify **concluído nas 9 features** (AD-001…AD-079). Design/Tasks/Execute **não
+  iniciados em nenhum módulo**. Não existe código de aplicação.
+- **Phase / Task**: Fase **Specify**. Última rodada: **8 — analytics e feature flags (2026-08-16)**.
+- **Rodada 8 — analytics e feature flags (2026-08-16)**. Motivo: a pergunta "onde entraria o PostHog"
+  expôs um buraco maior. O AD-001 escolheu feature flag como mecanismo, o AD-076 pôs 5 superfícies
+  atrás de flag desligada, o AD-064 pôs o M3 inteiro atrás de flag e o `docs/GITFLOW.md` construiu o
+  trunk-based em cima disso ("deploy ≠ release") — mas **nenhuma das 9 specs dizia onde o valor da
+  flag mora**, nem onde moram as dezenas de parâmetros que as specs mandaram para "configuração"
+  (`retencao_meses`, `piso_anonimato`, preço, teto do tutor, matriz de modelos, decaimento do
+  Raio-X, escudos, faixas do FSRS, voz do TTS). Duas ADs novas:
+  1. **AD-078** — config e feature flag em **tabela versionada no Postgres**, cache curto, troca de
+     valor **sem deploy**, alteração registrada com autor. Flag é **booleana global**; sem rollout
+     percentual, sem A/B. Env var só para o que precede o banco. Serviço externo de flag fora do
+     lançamento. → **INFRA-11** novo.
+  2. **AD-079** — analytics de produto = **PostHog Cloud região UE**, em **duas etapas**. Lançamento
+     mede **só o funil pré-login** (página de vendas → checkout → pagamento confirmado), em modo
+     anônimo, por **proxy reverso** no domínio próprio. Superfície logada nasce **atrás de flag
+     desligada**, com 3 condições escritas. **Session replay proibido** (contraria DADOS-07 AC6).
+     Não substitui o Sentry (INFRA-09) e **não** é fonte de flag. → **INFRA-12**, **PAG-17**,
+     **DADOS-14/15** novos.
+  - **Por que o PostHog e não só o Sentry:** respondem perguntas diferentes. Sentry vê defeito;
+    um funil que converte 2% **sem nenhum erro** é silêncio total para ele. Com o produto inteiro
+    atrás do paywall (AD-031), a página de vendas é a única superfície de conversão (PAG-08).
+  - **Por que região UE:** o PostHog não tem região BR, e self-host já estava excluído pelo M9
+    ("3 devs sem ops"). Isso cria o **primeiro subprocessador fora do Brasil** do projeto — daí a
+    transferência internacional entrar na política (DADOS-01 AC8) e o DELETE passar a ter que
+    alcançar operador externo com confirmação (DADOS-15).
+  - **Arquivos tocados**: `.specs/STATE.md` (AD-078/079) · `m9-infra` (2 stories, INFRA-11/12,
+    4 edge cases, success criteria) · `m7-lgpd-flywheel` (DADOS-01 AC8, DADOS-04 AC10/11,
+    DADOS-14/15, 4 assumptions) · `m8-negocio-pagamentos` (PAG-08 AC5/6, PAG-17, 1 assumption).
+  - **Cobertura atualizada**: M9 10→**12** requisitos · M7 13→**15** · M8 16→**17**.
 - **In-progress** (file:line): none
-- **Rodada 4 — revisão de consistência (2026-07-23)**. Contradições encontradas entre documentos e como
-  foram resolvidas (**todas já aplicadas nos arquivos**):
-  1. **Tutor MVP × fast-follow × infra P3** — M2 dizia P1, PRD §4.2 dizia fast-follow, M9 dizia P3.
-     → **AD-066**: tutor é MVP; INFRA-05 sobe para P1; Vercel Pro vira requisito de lançamento.
-  2. **Raio-X: PRD §4.1 mandava "só frequência real" × M5 marcava multi-sinal como P1.**
-     → **AD-066**: Raio-X completo no MVP; PRD corrigido; RAIOX-07/09/10 seguem fast-follow.
-  3. **Nome de modelo citado em requisito, contra a regra do próprio IA-02.**
-     → **AD-068**: a proibição passa a valer só para código e teste automatizado.
-  4. **Retenção 24m: M7 mandava apagar × M9 mandava anonimizar in-place.**
-     → **AD-067**: apagar (M7 vence); pseudonimizado ainda é dado pessoal.
-  5. **"Frequência" com dois sentidos (M5 = quanto cai na prova; M7 = quantas vezes foi respondida).**
-     → **AD-070**: M5 fica com o termo; M7 passa a usar `n_respostas`.
-  6. **Anel do dia atualizando só por job diário, o que anula a função do M6.**
-     → **AD-071**: anel e sequência calculados na abertura da tela; o resto por job.
-  - **Correção de fato:** a análise inicial afirmou que o FSRS não funcionaria no dia 1 por falta de
-    histórico. **Errado** — conferido na documentação do `ts-fsrs`: os parâmetros padrão vêm treinados.
-    Ver **AD-072**; ALUNO-09 subiu de P2 para P1.
-  - **Não reescritos de propósito:** `DECISOES-TECNICAS.md` e `HANDOFF.md` continuam sendo registro
-    histórico das conversas. As ADs novas dizem o que substituem; o histórico não é reescrito.
-- **Mudanças que alteram documentos anteriores** (aplicar quando tocar neles):
-  - ~~`PRD.md` §4.2 listava o **tutor como fast-follow**~~ — **APLICADO** na rodada 4 (AD-066): §4.1 item 7.
-  - `PRD.md` §M6, critério "**resposta rápida demais SHALL NOT contar**" — **revogado** por AD-060 (não há trava por tempo; o anel conta bloco concluído + causa declarada). O resto do §M6 permanece.
-  - `PRD.md` §M3 — o áudio agora narra **questão + explicação** (AD-063), não só a explicação; e o M3 é **confirmado fast-follow** (AD-064), resolvendo a ambiguidade entre a história "P1" do módulo e o risco nº4.
-  - `DECISOES-TECNICAS.md` D14 — estimativa de custo "centenas de USD, uma vez" está **desatualizada**; ver AD-065 (~18M caracteres, US$1.800–3.700 no ElevenLabs).
-  - `PRD.md` §10 abertas: **nº5** (renovação) e **nº9** (reembolso × antecipação) resolvidas (AD-055, AD-054); **nº10** (menores) por AD-047; **nº12** (auto-aplicação da IA) por AD-048; **nº11** (números exatos) **resolvida na parte do Raio-X** (AD-056/057) e **na parte do anti-trapaça** (AD-060 elimina o piso de tempo) — segue aberta só para params FSRS e tamanho de bloco (M4, calibração).
-  - `PRD.md` §10 risco **nº4** (voz do ElevenLabs) continua **pendente**, mas deixou de ser risco solto: virou porteiro especificado (TTS-06/AD-062).
-  - AD-011 (modelos), AD-031 (preço), AD-028 (retenção), AD-020 (pesos do Raio-X), AD-014 (áudio) e AD-025 (anti-trapaça) foram **refinados/substituídos parcialmente** por AD-049, AD-053, AD-045, AD-056/057, AD-062/063/065 e AD-060 — nenhum foi descartado.
-- **Rodada 5 — migração de modelos (2026-08-04)**. Motivo: a OpenAI cortou o preço da `gpt-5.6-luna` em
-  **80%** em 30/07/2026 ($1/$6 → **$0,20/$1,20**), 4 dias antes desta decisão. Três ADs novas, **todas já
-  aplicadas nos arquivos**:
-  1. **AD-073** — matriz migrada: `gpt-5.6-luna` em todas as tarefas, `gpt-5.6-terra` só no refaz 1×; o
-     gateway passa a resolver **modelo + esforço + batch + cache + fallback** por tarefa. Esforço: `high` na
-     fábrica, `max` na verificação quantitativa e no refaz, `medium` no tutor. Fábrica cai de "< US$100"
-     para **ordem de US$15–30**. Substitui AD-049 e os nomes do AD-011.
-  2. **AD-074** — acesso por **SDK nativo da OpenAI**; OpenRouter **só** no eval trimestral, com chave
-     separada. Verificado que a OpenRouter **repassa** o Batch −50%; o que pesou foi a taxa de 5,5% sobre
-     capacidade não usada e o atraso de repasse de recurso novo.
-  3. **AD-075** — citações deixam de vir de recurso do fornecedor (a API de Citations da Anthropic) e
-     passam a ser **saída estruturada `(doc_id, trecho)` + conferência por código** de que o trecho existe
-     literalmente na fonte.
-  - **Consequência operacional nova:** requisição acima de **272K tokens** custa 2× entrada / 1,5× saída, e
-    PDF entra como texto **e** imagem de página — a extração passa a **fatiar o PDF** obrigatoriamente
-    (IA-17 / M1 AC2). Sem isso o desconto do modelo é anulado.
-  - **Requisitos novos no M2:** **IA-16** (SDK nativo, adapter único) e **IA-17** (fatiamento + Batch e
-    cache acumulados). Cobertura do M2 vai de 15 para **17 requisitos**.
-  - **Não reescritos de propósito:** `DECISOES-TECNICAS.md` (D11/D12) e `HANDOFF.md` continuam registro
-    histórico. As ADs novas dizem o que substituem.
-  - **Fica pendente de decisão (não trava o Design do M4):** duas chamadas de IA existem fora da lista
-    fechada do IA-02 — o **pré-diagnóstico de questão suspeita** (M7, esteira 2, P2) e a **extração do
-    programa do edital** (M5, RAIOX-09, P3). Ou entram na matriz com modelo e esforço próprios, ou viram
-    exceção registrada em AD. Nota deixada no próprio IA-02 AC2.
-- **Rodada 6 — recorte de lançamento (2026-08-13)**. Motivo: revisão do escopo contra o postmortem de
-  produto estudado em `_wiki/principios/validacao-de-produto.md`, somada à premissa nova de que **a
-  construção é feita com IA**. Duas ADs novas:
-  1. **AD-076** — separa **construído × ligado**. Constrói-se tudo (menos M3, congelado); nascem ligadas
-     só **4 superfícies**: plano de hoje · sessão de questões · progresso · conta. Tutor, tela do Raio-X,
-     gamificação (além da sequência), diagnóstico adaptativo e flywheel nascem **atrás de flag desligada**.
-     O **motor** do Raio-X (AD-056/057) roda desde o dia 1; só a tela dedicada fica desligada. Acervo de
-     lançamento cai para **3–4 provas do BB**; os 10 anos do AD-009 viram **meta contínua**. Substitui o
-     **PRD §4.1**. Não descarta AD-066 (tutor e Raio-X seguem sendo construídos).
-  2. **AD-077** — superfície é **web responsivo**, sem app nativo **e sem PWA** no lançamento; notificação
-     do AD-025 sai por **e-mail**. Motivo principal: Pix e boleto não existem em compra dentro do app iOS,
-     e mesmo após o acordo Apple × CADE (iOS 26.5, jun/2026) a comissão é de 10–21% (+5% no IAP) ou 15%
-     via link externo — R$20–50 por aluno sobre uma venda de R$197. Registra o que PRD §4.3 e AD-035 já
-     diziam de forma implícita, agora reaberto e reconfirmado.
-  - **Consequência em INFRA-05:** Vercel Pro deixa de ser requisito de *lançamento* e passa a ser
-    requisito de *ligar a flag do tutor* (revisa essa parte do AD-066).
-  - **Consequência no caminho crítico:** a curadoria do acervo é a única parte que a IA **não** acelera e
-    **não depende de código existir** — pode e deve começar **em paralelo ao Design do M4**, não depois.
-  - **Mudanças que alteram documentos anteriores** (aplicar quando tocar neles): `PRD.md` **§4.1** (loop
-    central de 7 itens) — **substituído** por AD-076; `PRD.md` **§4.2** — tutor e Raio-X completo saem de
-    "no MVP" para "construídos, ligados depois"; `PRD.md` **§4.3** — "app mobile nativo fora de escopo"
-    passa a ser decisão registrada (AD-077) e não mais nota de escopo; `AD-009` — os "~10 anos × 3 bancas"
-    deixam de ser pré-requisito de lançamento e viram meta contínua.
-  - **Pendente, não trava o Design:** falta escolher o **critério de morte** do produto (um número de
-    compras aprovadas + um prazo a partir do primeiro cliente pagante). Decisão de sócios, vira AD quando
-    fechada.
-- **Next step**: entrar em **Design**, agora sob o recorte do **AD-076** (construir tudo, ligar 4
-  superfícies) e do **AD-077** (web puro). Recomendação de ordem: **M4** primeiro (a fundação `tentativas`/AD-015/AD-042 é a peça mais crítica e a que mais módulos herdam), depois **M1 → M2 → M8 → M7 → M5 → M6 → M3**. **M3 SHALL NOT entrar em Design enquanto a flag do áudio não estiver perto de ser ligada** (AD-064) — a spec está escrita e congelada. **Caminho crítico de produto: a ingestão do acervo (M1)** — o Raio-X é a primeira tela e sua qualidade vem do acervo, não da fórmula (AD-066). Contratos de schema a respeitar no Design: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), **AD-056/057** (fórmula do Raio-X), **AD-060** (anel por bloco), **AD-063** (áudio × versão de questão *e* de explicação).
-- **Blockers**: none para Design. Pendências abertas que **não travam**: (a) *due diligence* — advogado (base legal das questões AD-003; janela de 24m AD-045; LIA antes de ligar o flywheel AD-026) e contador (CNPJ/regime para NF, hipótese ME no Simples); (b) confirmar no contrato do Asaas o que volta num estorno e o D+ do parcelado; (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3, ferramenta pronta em `experiments/tts-comparacao/`, incluir Inworld e Hume na rodada (AD-062/065); (e) reconfirmar preços de TTS em fonte oficial antes de contratar (AD-065 usou fontes secundárias); (f) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de recuperação).
-- **Rodada 7 — sincronização (2026-08-16)**. Motivo: as rodadas 5 e 6 (AD-073…AD-077) foram feitas
-  numa máquina que nunca chegou a empurrar o commit — enquanto isso, outra sessão reorganizou o
-  repositório (`AGENTS.md`/`CLAUDE.md`/`README.md`/`docs/GITFLOW.md`, `docs/historico/`, CI, trava de
-  `main`) partindo do estado antigo (só até AD-072), sem saber que AD-073…077 existiam. As duas
-  histórias divergiram por 7 commits de um lado e 5 arquivos não commitados do outro. Reconciliados
-  numa branch `spec/sync-ad073-077`, PR e merge — nenhuma decisão foi perdida ou reescrita.
-- **Uncommitted files**: none. Rodadas 5 e 6 commitadas em
-  `docs(specs): rodada 5+6 - migracao de modelos e recorte de lancamento`, mescladas via PR na rodada 7.
-- **Branch**: `main`. Segue `docs/GITFLOW.md` — trunk-based com branch curta, todo trabalho por PR.
-  Proteção de branch do GitHub **não está ligada** (plano Free não permite em repositório privado); a
-  trava é o hook `.githooks/pre-push`, ativado com `git config core.hooksPath .githooks`.
-- **Estrutura do repositório (2026-08-04)**: `AGENTS.md` (regras, invariantes, convenções) +
-  `CLAUDE.md` (importa o AGENTS) + `README.md` + `docs/GITFLOW.md`. Registro congelado movido para
-  `docs/historico/`. CI em `.github/workflows/ci.yml` (segredos, integridade dos documentos, e
-  typecheck/teste/build que liga sozinho quando existir `package.json`). **Pendente desta rodada:** a
-  `AGENTS.md` ainda diz "Specify concluído... AD-001…AD-072" — desatualizada, precisa citar AD-077.
+- **Next step**: entrar em **Design** sob o recorte do **AD-076** (construir tudo, ligar 4
+  superfícies) e do **AD-077** (web puro). Ordem: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3**. O M4 é
+  a fundação (`tentativas`/AD-015/AD-042) e o que mais módulos herdam. **M3 SHALL NOT entrar em
+  Design enquanto a flag do áudio não estiver perto de ligar** (AD-064). **Caminho crítico de
+  produto: a ingestão do acervo (M1)** — é a única parte que a IA não acelera e que não depende de
+  código existir; começa **em paralelo ao Design do M4**. **Novo:** o **INFRA-11** (config/flags) é
+  pré-requisito prático do Design do M4, que consome config já na primeira história — desenhar a
+  tabela de configuração antes ou junto do M4, não depois.
+- **Contratos de schema a respeitar no Design**: AD-039/040 (questão), AD-042/043/044 (log e
+  projeções), AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do
+  Raio-X), AD-060 (anel por bloco), AD-063 (áudio × versão de questão *e* de explicação),
+  **AD-078** (config/flags).
+- **Blockers**: none para Design. Pendências que **não travam**: (a) *due diligence* — advogado
+  (base legal das questões AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; **base legal
+  do evento pré-login e a transferência internacional do AD-079**) e contador (CNPJ/regime para NF,
+  hipótese ME no Simples); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado;
+  (c) preço do Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do
+  M3, ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065);
+  (e) reconfirmar preços de TTS em fonte oficial (AD-065 usou fonte secundária); (f) **confirmar o
+  free tier do PostHog em fonte primária** antes de ligar (AD-079); (g) duas chamadas de IA fora da
+  lista fechada do IA-02 — pré-diagnóstico de questão suspeita (M7, esteira 2) e extração do
+  programa do edital (M5, RAIOX-09): entram na matriz ou viram exceção em AD; (h) **critério de
+  morte do produto** (nº de compras aprovadas + prazo a partir do 1º pagante) — decisão de sócios;
+  (i) calibração registrada como assumptions (params FSRS, thresholds de dedup/confiança, nota do
+  eval cego, N do distrator, piso de anonimato, percentis do Raio-X, dias por escudo, janela de
+  recuperação).
+- **Documentos anteriores que ficaram desatualizados** (aplicar quando tocar neles):
+  - `AGENTS.md` — diz "AD-001…AD-077"; passou a ser **AD-001…AD-079**, e a seção de estado não cita
+    o mecanismo de config/flag do AD-078.
+  - `PRD.md` **§4.1** substituído por AD-076 · **§4.2** tutor e Raio-X saem de "no MVP" para
+    "construídos, ligados depois" · **§4.3** app nativo vira decisão registrada (AD-077) · **§M6**
+    critério "resposta rápida demais não conta" revogado por AD-060 · **§M3** áudio narra questão +
+    explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073).
+  - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
+  - `docs/historico/` — **congelado de propósito**. `DECISOES-TECNICAS.md` D14 tem estimativa de
+    custo de áudio desatualizada (ver AD-065). Registro histórico não é reescrito; as ADs novas
+    dizem o que substituem.
+- **Branch**: trabalho da rodada 8 em `spec/analytics-e-flags`, por PR. `main` protegida só pelo
+  hook local `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano
+  Free) — ativar por clone com `git config core.hooksPath .githooks`.
+- **Uncommitted files**: none após o merge da rodada 8.

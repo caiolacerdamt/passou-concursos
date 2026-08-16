@@ -56,6 +56,9 @@ ninguém (art. 12).
 | Auto-aplicação pela IA | Permitida **só** numa lista fechada, explícita, reversível e auditada (AD-048); lista inicial = **aposentar distrator com 0 marcações em ≥N respostas**, N configurável e alto | Discuss 2026-07-23; ganha velocidade sem abrir a porta toda | y (regra) / n (N) |
 | LIA (teste de balanceamento) | Documento escrito **antes** de ligar o flywheel; é um artefato, não código | AD-026; PRD §M7 critério final | n (a redigir) |
 | Onde vive o opt-out do flywheel | Tela de conta/privacidade, 1 chave, sem ginástica; opt-out **não** degrada o produto do aluno | AD-026 (legítimo interesse exige opt-out real) | y |
+| Analytics de produto como operador | **PostHog Cloud região UE** (AD-079/INFRA-12). No lançamento mede **só o funil pré-login**, em modo anônimo, sem `user_id`/e-mail/nome/CPF. É o **primeiro subprocessador fora do Brasil** do projeto | Pré-login não é aluno: não tem `user_id` e não entra nos 3 grupos. Ainda assim o evento carrega IP e id de dispositivo — risco **menor, não nulo** | y (ferramenta e escopo) / **n** (base legal — advogado) |
+| Superfície logada no analytics | Nasce **atrás de flag desligada**; ligar exige as 3 condições do AD-079 — política nomeando operador + transferência internacional, deleção amarrada ao DADOS-04, lista de eventos fechada e revisada | DADOS-02 exige todo dado pessoal **declarado no schema**; evento com `user_id` em serviço de terceiro é grupo 1 fora do schema | y |
+| Session replay | **Proibido** em qualquer etapa | Grava a tela do aluno — contraria DADOS-07 AC6 mais fortemente que um log de erro (AD-079) | y |
 
 **Tensão registrada (importante para o Design):** AD-015/AD-044 dizem que *toda* projeção é recalculável
 do zero a partir do log. O **grupo 2 é a exceção deliberada** — ele precisa ser um acumulador que
@@ -95,9 +98,15 @@ produto que eu contratei — e quero uma política clara em português.
 6. WHEN o aluno revoga o consentimento de marketing, THEN o sistema SHALL parar os envios em ≤ 48h e SHALL
    registrar a revogação (data/hora).
 7. SHALL NOT existir tela de consentimento granular por finalidade (switches) — rejeitada em AD-026.
+8. A política SHALL nomear os **operadores** que tratam dado pessoal por nossa conta e SHALL declarar toda
+   **transferência internacional** — qual serviço, para que finalidade, em que país/região. Isso inclui a
+   ferramenta de analytics (AD-079/INFRA-12, região UE), primeiro tratamento fora do Brasil do projeto.
+   WHEN um operador novo passa a tratar dado pessoal, THEN a política SHALL ser atualizada e versionada
+   **antes** de o tratamento começar; SHALL NOT existir operador não declarado.
 
 **Independent Test**: Criar conta, nunca marcar nada, e completar o loop central inteiro; ligar o opt-out
-do flywheel e confirmar que o plano/questões continuam idênticos.
+do flywheel e confirmar que o plano/questões continuam idênticos; conferir que todo serviço que recebe
+dado pessoal aparece nomeado na política, com a região onde trata.
 
 ---
 
@@ -171,10 +180,20 @@ dos backups — em prazo definido, entendendo que estatísticas anônimas que n�
    pago será encerrado e que não há reembolso automático fora da garantia (M8), e SHALL exigir confirmação.
 9. O DELETE SHALL ser **idempotente e retomável**: reexecutar após falha parcial SHALL levar ao mesmo
    estado final, e uma falha SHALL ser visível/alertada (AD-037), nunca silenciosa.
+10. O DELETE SHALL alcançar **todo operador** que guarde dado do grupo 1 daquele titular, não apenas o
+    banco próprio. WHEN a superfície logada do analytics estiver ligada (AD-079/INFRA-12), THEN o DELETE
+    SHALL chamar a **API de deleção de pessoa** do fornecedor pedindo a remoção dos eventos, SHALL
+    **conferir o status de conclusão** devolvido por ele, e SHALL NOT dar o pedido por concluído enquanto
+    a confirmação não chegar. WHEN a confirmação não chega no prazo, THEN o caso SHALL ser alertado e
+    permanecer na fila — SHALL NOT ser encerrado como sucesso.
+11. WHEN a superfície logada do analytics está **desligada** (estado de lançamento), THEN não há dado do
+    grupo 1 no fornecedor e o AC10 SHALL ser um no-op registrado; a checagem SHALL existir mesmo assim,
+    para que ligar a flag no futuro não deixe o DELETE incompleto por esquecimento.
 
 **Independent Test**: Criar aluno, responder 30 questões, pedir exclusão; confirmar que nenhuma linha com
 `user_id` sobrevive em nenhuma tabela/partição/projeção, que o contador da questão no grupo 2 **não** caiu,
-e que a fatura permanece.
+e que a fatura permanece. Com a flag do analytics logado ligada em staging, confirmar que o DELETE só
+fecha depois que o fornecedor confirma a remoção dos eventos daquela pessoa.
 
 ---
 
@@ -409,12 +428,14 @@ tabela de correspondência sumiram.
 | DADOS-11 | P1: Declaração 18+ no checkout + termos p/ maiores (AD-047) | Design | Pending |
 | DADOS-12 | P2: Auto-aplicação por lista fechada, reversível e auditada (AD-048) | Design | Pending |
 | DADOS-13 | P3: Grupo 3 pseudonimizado (fast-follow) (AD-027) | - | Pending |
+| DADOS-14 | P1: Operadores nomeados + transferência internacional declarada na política (AD-079) | Design | Pending |
+| DADOS-15 | P1: DELETE alcança operador externo com confirmação de conclusão; no-op verificável enquanto a flag está desligada (AD-079) | Design | Pending |
 
 **ID format:** `DADOS-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 13 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 15 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
 
 ---
 
@@ -425,6 +446,10 @@ tabela de correspondência sumiram.
       indivíduo.
 - [ ] "Apague tudo meu" remove 100% do grupo 1 em ≤7 dias, some dos backups em ≤7 dias, e o contador
       anônimo da questão fica intacto.
+- [ ] Todo serviço que trata dado pessoal por nossa conta está nomeado na política, com a região onde
+      trata; nenhum operador é silencioso.
+- [ ] O DELETE não fecha enquanto um operador externo não confirmar a remoção — e a checagem existe
+      mesmo com a flag desligada, para não quebrar no dia em que ela ligar.
 - [ ] Conta inativa além da janela é anonimizada e apagada por job, com aviso prévio e auditoria.
 - [ ] Nenhum aluno consegue ler dado de outro (RLS); todo acesso administrativo a dado com nome tem linha
       de auditoria.

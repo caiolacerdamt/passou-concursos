@@ -34,7 +34,11 @@ export default defineConfig({
           setupFiles: ["tests/db/setup.ts"],
           fileParallelism: false,
           environment: "node",
-          env: { DATABASE_URL: env.DATABASE_URL ?? "" },
+          env: {
+            DATABASE_URL: env.DATABASE_URL ?? "",
+            NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+            SUPABASE_SECRET_KEY: env.SUPABASE_SECRET_KEY ?? "",
+          },
         },
       },
     ],

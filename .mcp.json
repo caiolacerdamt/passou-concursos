@@ -7,7 +7,7 @@
         "-y",
         "@supabase/mcp-server-supabase@latest",
         "--access-token",
-        "${SUPABASE_ACCESS_TOKEN}"
+        "${SUPABASE_PASSOU_TOKEN}"
       ],
       "env": {}
     }

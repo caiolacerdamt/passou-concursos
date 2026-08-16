@@ -773,11 +773,18 @@
   superfície, só servidor.
 - **In-progress** (file:line): none
 - **Next step**: **Execute**, começando por **T1** (`chore/esqueleto-projeto`) — não existe
-  `package.json`. Antes de T5, o **MCP `supabase-passou` precisa estar conectado**: o token novo já
-  está espelhado em `.claude/settings.local.json` e validado contra a API (HTTP 200, projeto
-  `kfpmetkmhjtmgwgaaerl` ACTIVE_HEALTHY), mas o Claude Code só carrega MCP na abertura — **exige um
-  restart**. Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de prova
-  de amostra** na mão.
+  `package.json`. Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de
+  prova de amostra** na mão.
+- **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json`
+  expande da variável de ambiente do **sistema operacional**; o bloco `env` de
+  `.claude/settings.local.json` **não** alimenta essa expansão (testado). A variável global do
+  Windows contém o token de **outra conta**, então o `.mcp.json` conectava na conta errada em
+  silêncio. Correção aplicada: o servidor `supabase-passou` foi registrado no **escopo local**
+  (`claude mcp add --scope local`), que vive em `~/.claude.json`, é privado, fica fora do git e
+  **vence** o `.mcp.json` no mesmo nome — é o que a doc do Claude Code recomenda para servidor com
+  credencial. O `.mcp.json` passou a pedir `${SUPABASE_PASSOU_TOKEN}`, que não existe globalmente:
+  sem escopo local o servidor falha de forma **visível** em vez de conectar na conta errada. **A
+  mesma armadilha vale para o Supabase CLI na T3** — o script tem de passar o token lido do `.env`.
 - **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
   AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
   (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log),

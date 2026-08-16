@@ -18,3 +18,24 @@ export async function comBanco<T>(
     await cliente.end();
   }
 }
+
+/**
+ * Roda o teste dentro de uma transacao que **sempre** volta atras.
+ *
+ * E a unica forma de um teste limpar o que criou em tabela append-only: as
+ * tabelas de log do projeto recusam DELETE por gatilho (AD-081, AD-082), entao
+ * apagar a linha no fim nao e opcao. O ROLLBACK desfaz o INSERT sem precisar de
+ * privilegio nenhum, e ainda deixa cada teste isolado do outro.
+ */
+export async function comTransacaoRevertida<T>(
+  uso: (cliente: Client) => Promise<T>,
+): Promise<T> {
+  return comBanco(async (cliente) => {
+    await cliente.query("begin");
+    try {
+      return await uso(cliente);
+    } finally {
+      await cliente.query("rollback");
+    }
+  });
+}

@@ -77,11 +77,32 @@ export const leitorDoBanco: LeitorDeConfig = async (chaves) => {
   );
 };
 
-const leitorCacheado: LeitorDeConfig = unstable_cache(
+const lerComCacheDoNext = unstable_cache(
   leitorDoBanco,
   ["configuracoes-vigentes"],
   { revalidate: JANELA_DE_CACHE_SEGUNDOS, tags: [TAG_DE_CACHE] },
 );
+
+/**
+ * Leitor padrao: cache do Next quando ha requisicao, leitura direta quando nao ha.
+ *
+ * O `unstable_cache` **so vale dentro de uma requisicao**. Job do GitHub Actions
+ * e script de linha de comando (AD-035/036) rodam fora dela, e sem esta queda o
+ * cache falharia, `lerBruto` trataria como leitura quebrada e o job usaria o
+ * default do catalogo **em silencio** — lendo configuracao errada sem ninguem
+ * saber. Ler direto e mais lento e e o certo: 1 aluno por execucao de job nao
+ * precisa de cache.
+ *
+ * Se o banco estiver mesmo fora do ar, a leitura direta falha tambem e o erro
+ * sobe normalmente para `lerBruto`, que reporta e cai no default.
+ */
+const leitorCacheado: LeitorDeConfig = async (chaves) => {
+  try {
+    return await lerComCacheDoNext(chaves);
+  } catch {
+    return leitorDoBanco(chaves);
+  }
+};
 
 let leitorAtual: LeitorDeConfig = leitorCacheado;
 

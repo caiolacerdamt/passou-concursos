@@ -745,8 +745,29 @@
 
 ## Handoff
 
-- **Feature**: Fase **Tasks**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
-  (coluna vertebral do aluno). Specify e Design concluídos nas duas (AD-001…AD-083).
+- **Feature**: Fase **Execute**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
+  (coluna vertebral do aluno). Specify, Design e Tasks concluídos nas duas (AD-001…AD-083).
+- **Execute — fase 0 concluída (2026-08-16)**, branch `chore/esqueleto-projeto`, um commit por task:
+  | Task | Commit | O quê |
+  | --- | --- | --- |
+  | T1 | `d3281a2` | Next.js 16.3.1 + React 19.2.8, App Router, TypeScript, **sem Tailwind** (nenhuma spec decidiu camada de estilo); pastas do design com `.gitkeep` |
+  | T2 | `5d34aee` | Vitest 4.1.10 com projetos `unit` e `db`; `db` sequencial; sem `DATABASE_URL` pula com aviso |
+  | T3 | `817fcf0` | Supabase CLI 2.114.0 como devDependency, `npm run db:push` sem Docker, `tests/db/conexao.ts` |
+  | T4 | `a075f4c` | job `app` da CI ativado: `npm ci`, build, lint, `test:unit`; `test:db` só com o segredo |
+  **Achados que valem para o resto do Execute:**
+  1. **`--env-file` do Node e `process.loadEnvFile()` NÃO sobrescrevem variável já existente no
+     sistema** (medido em 2026-08-16). O valor do shell vence o do arquivo. Como a variável global do
+     Windows guarda o token de outra conta, ler o `.env` não bastava: `scripts/db-push.mjs` lê o
+     arquivo e força o valor por cima, e `scripts/alvo-do-banco.mjs` recusa qualquer conexão que não
+     aponte para `kfpmetkmhjtmgwgaaerl`.
+  2. **Conexão direta (`db.<ref>.supabase.co`) não resolve nesta máquina** (sem IPv6). O que funciona
+     é o pooler. Use o **Session pooler, porta 5432** — o Transaction pooler (6543) conecta mas não
+     guarda estado de sessão, e migração precisa disso.
+  3. O **Vitest usa o reporter `minimal` quando detecta que roda dentro de um agente**, e ele esconde
+     `console.warn`. Ao depurar saída de teste por aqui, rodar com `--reporter=default`.
+  4. `next build` roda o TypeScript: **compilar já é o typecheck**, não existe script `typecheck`.
+  5. A contagem de testes prevista nas tasks está defasada a partir da T3: a T3 previa 3 no total, mas
+     os próprios critérios dela pedem dois testes novos. Total real ao fim da fase 0: **6**.
 - **Rodada 10 — Tasks de INFRA-11 + M4 (2026-08-16)**. Dois documentos escritos:
   `.specs/features/m9-infra/tasks.md` (**T1…T9**) e
   `.specs/features/m4-coluna-vertebral/tasks.md` (**T10…T22**). A numeração é **contínua entre os
@@ -772,9 +793,9 @@
   questão para aplicar. **Nenhuma tela** entra nesta leva: o Design da rodada 1 não desenhou
   superfície, só servidor.
 - **In-progress** (file:line): none
-- **Next step**: **Execute**, começando por **T1** (`chore/esqueleto-projeto`) — não existe
-  `package.json`. Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de
-  prova de amostra** na mão.
+- **Next step**: **T5** — primeira migração do banco (tabela `configuracoes`), na branch
+  `feat/m9-infra11-configuracao`, depois de mergear o PR da fase 0. Depois do M4: **M1** (Design),
+  caminho crítico de produto, que pede **2–3 PDFs de prova de amostra** na mão.
 - **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json`
   expande da variável de ambiente do **sistema operacional**; o bloco `env` de
   `.claude/settings.local.json` **não** alimenta essa expansão (testado). A variável global do
@@ -784,7 +805,8 @@
   **vence** o `.mcp.json` no mesmo nome — é o que a doc do Claude Code recomenda para servidor com
   credencial. O `.mcp.json` passou a pedir `${SUPABASE_PASSOU_TOKEN}`, que não existe globalmente:
   sem escopo local o servidor falha de forma **visível** em vez de conectar na conta errada. **A
-  mesma armadilha vale para o Supabase CLI na T3** — o script tem de passar o token lido do `.env`.
+  mesma armadilha valia para o Supabase CLI — resolvida na T3**, ver achado 1 acima. MCP verificado
+  respondendo (`list_tables` devolveu vazio) em 2026-08-16, antes do primeiro commit de código.
 - **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
   AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
   (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log),
@@ -798,8 +820,10 @@
   gatilho `BEFORE UPDATE OR DELETE ... FOR EACH ROW` na tabela-pai propaga para as partições? O
   Postgres suporta desde a 13 e o projeto roda 17.6, mas isso é afirmação a verificar aplicando. Se
   não propagar, criar por partição via template do `pg_partman` e **registrar o achado aqui**.
-- **Blockers**: none para Execute — exceto o restart do Claude Code para o MCP conectar (T5 em
-  diante). Pendências que **não travam**: (a) *due diligence* — advogado (base legal das questões
+- **Blockers**: none para Execute — o MCP já responde e o `.env` local já tem `SUPABASE_ACCESS_TOKEN`
+  e `DATABASE_URL` preenchidos. **Pendência manual sua**: cadastrar o segredo `DATABASE_URL` em
+  Settings → Secrets and variables → Actions do repositório, senão os testes de banco pulam na CI
+  (não reprovam, mas também não protegem). Pendências que **não travam**: (a) *due diligence* — advogado (base legal das questões
   AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base legal do evento pré-login **e** o
   instrumento da transferência internacional para os EUA, art. 33 LGPD, AD-079) e contador
   (CNPJ/regime); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado; (c) preço do
@@ -817,19 +841,20 @@
   para permitir recalibrar depois olhando o histórico (T16/T18).
 - **Documentos anteriores que ficaram desatualizados** (aplicar quando tocar neles):
   - `AGENTS.md` — diz "AD-001…AD-079"; passou a ser **AD-001…AD-083**; a seção de estado ainda diz
-    "Design/Tasks/Execute não começaram" e "**Não existe código de aplicação ainda**" — o primeiro
-    deixou de ser verdade; o segundo deixa de ser na T1.
+    "Design/Tasks/Execute não começaram" e "**Não existe código de aplicação ainda**" — **as duas
+    afirmações já são falsas**: o Execute começou e o esqueleto existe desde o commit `d3281a2`.
   - `PRD.md` **§4.1** substituído por AD-076 · **§4.2** tutor e Raio-X saem de "no MVP" para
     "construídos, ligados depois" · **§4.3** app nativo vira decisão registrada (AD-077) · **§M6**
     critério "resposta rápida demais não conta" revogado por AD-060 · **§M3** áudio narra questão +
     explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073/080).
   - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
   - `docs/historico/` — **congelado de propósito**. Nunca é reescrito.
-- **Branch**: rodada 10 em `spec/infra11-m4-tasks`, por PR. `main` protegida só pelo hook local
+- **Branch**: fase 0 do Execute em `chore/esqueleto-projeto`, por PR. `main` protegida só pelo hook local
   `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano Free) —
   ativar por clone com `git config core.hooksPath .githooks`. PRs #5 e #6 mergeados.
 - **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
   Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free, **ACTIVE_HEALTHY, banco
   vazio** — é o ambiente de desenvolvimento (AD-083). Vercel, OpenAI, Cohere e Sentry ainda **não**
-  provisionados; nenhum deles trava T1…T21. **T22 precisa de `OPENAI_API_KEY`.**
+  provisionados; nenhum deles trava T1…T21. **T22 precisa de `OPENAI_API_KEY`.** Conexão de teste
+  confirmada em 2026-08-16 pelo pooler `aws-0-sa-east-1.pooler.supabase.com`.
 - **Uncommitted files**: none.

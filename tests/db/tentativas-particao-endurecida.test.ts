@@ -70,8 +70,10 @@ descreveComBanco("particoes de tentativas — endurecimento (AD-091)", () => {
     await comTransacaoRevertida(async (cliente) => {
       const particao = nomeDaParticao(new Date());
       await cliente.query("set local role service_role");
+      // `cascade`: `tentativa_causa_simulado` referencia `tentativas`, e sem ele
+      // a recusa vem da FK e nao do gatilho — o teste passaria por nada.
       await expect(
-        cliente.query(`truncate table public.${particao}`),
+        cliente.query(`truncate table public.${particao} cascade`),
       ).rejects.toThrow(/TRUNCATE proibido/);
     });
   });
@@ -141,7 +143,7 @@ descreveComBanco("endurecer_particoes_de_tentativas() — a funcao", () => {
 
       await cliente.query("set local role service_role");
       await expect(
-        cliente.query(`truncate table public.${nome}`),
+        cliente.query(`truncate table public.${nome} cascade`),
       ).rejects.toThrow(/TRUNCATE proibido/);
     });
   });

@@ -77,15 +77,18 @@ descreveComBanco("tentativas — a trava do so-INSERT (ALUNO-01 AC1)", () => {
         await cliente.query("savepoint truncar");
         await cliente.query(`set local role ${papel}`);
         await expect(
-          cliente.query("truncate table public.tentativas"),
+          cliente.query("truncate table public.tentativas cascade"),
         ).rejects.toThrow(/permission denied/);
         await cliente.query("rollback to savepoint truncar");
       }
 
       await cliente.query("savepoint truncar_servico");
       await cliente.query("set local role service_role");
+      // `cascade` porque `tentativa_causa_simulado` referencia esta tabela: sem
+      // ele o Postgres recusa pela FK antes de chegar ao gatilho, e o teste
+      // passaria pelo motivo errado.
       await expect(
-        cliente.query("truncate table public.tentativas"),
+        cliente.query("truncate table public.tentativas cascade"),
       ).rejects.toThrow(/TRUNCATE proibido/);
       await cliente.query("rollback to savepoint truncar_servico");
     });

@@ -98,6 +98,10 @@ export type DadosDaTentativa = {
  * INSERT em `tentativas` com um caso valido por default: multipla escolha,
  * contexto `plano`, resposta certa. Cada teste sobrescreve so o campo que quer
  * provar, para que a razao da recusa seja sempre a que o teste diz.
+ *
+ * `respondida_em` volta como **texto**, nao como `Date`: `timestamptz` tem
+ * microssegundo e o `Date` do JS so tem milissegundo. Devolver `Date` truncava o
+ * valor, e a FK de `tentativa_causa_simulado` nao achava a linha de volta.
  */
 export async function inserirTentativa(
   cliente: Client,
@@ -123,7 +127,7 @@ export async function inserirTentativa(
        $15, $16, $17, $18,
        $19::public.causa_erro, $20::public.causa_origem,
        coalesce($21::timestamptz, now())
-     ) returning id, respondida_em`,
+     ) returning id, respondida_em::text`,
     [
       ou(dados.user_id, novoAluno()),
       questao.questao_id,
@@ -184,4 +188,33 @@ export async function garantirParticao(cliente: Client, data: Date): Promise<str
     );
   }
   return nome;
+}
+
+/** Cria uma sessao aberta para `userId`. */
+export async function criarSessao(
+  cliente: Client,
+  userId: string,
+  contexto: "diagnostico" | "plano" | "treino" | "simulado" | "revisao" = "plano",
+): Promise<string> {
+  const { rows } = await cliente.query<{ id: string }>(
+    `insert into public.sessoes (user_id, contexto) values ($1, $2::public.contexto_tentativa)
+     returning id`,
+    [userId, contexto],
+  );
+  return rows[0].id;
+}
+
+/** Poe uma questao na sessao, ainda sem resposta. */
+export async function criarItemDeSessao(
+  cliente: Client,
+  sessaoId: string,
+  questao: QuestaoParaResponder,
+  ordem = 1,
+): Promise<string> {
+  const { rows } = await cliente.query<{ id: string }>(
+    `insert into public.sessao_itens (sessao_id, questao_id, questao_versao, ordem)
+     values ($1, $2, $3, $4) returning id`,
+    [sessaoId, questao.questao_id, questao.questao_versao, ordem],
+  );
+  return rows[0].id;
 }

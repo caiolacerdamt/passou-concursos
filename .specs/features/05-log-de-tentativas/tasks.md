@@ -16,6 +16,12 @@ T41 → T42 → T43 → T44 → T46
                           → T47
 ```
 
+**Por que o particionamento vem antes da trava (T42 antes de T43):** tabela particionada sem
+partição nenhuma recusa todo INSERT, então a trava não teria como ser testada contra linha real. O
+gatilho criado no pai depois é clonado para as partições que já existem — medido no Design. Só o
+teste do próprio T41 cria uma partição transitória dentro da transação revertida, porque ele roda
+antes do `pg_partman`.
+
 ---
 
 ### T41 — Enums do log e a tabela `tentativas`
@@ -35,7 +41,24 @@ T41 → T42 → T43 → T44 → T46
 
 ---
 
-### T42 — Trava de 3 camadas, RLS e a porta do esquecimento
+### T42 — `pg_partman`: partição mensal, sem retenção, com pruning provado
+
+**Onde**: `supabase/migrations/<ts>_tentativas_particao.sql`, `tests/db/tentativas-particao.test.ts`
+**Requisito**: INFRA-04 AC1/AC2/AC3 · AD-067
+
+- [ ] Extensão `pg_partman` no schema `partman`; `create_parent` na assinatura da 5.3.1 com
+      `p_interval := '1 month'`, `p_premake := 3`, `p_default_table := true`, `p_jobmon := false`
+- [ ] `part_config`: `retention` nula, `retention_keep_table` verdadeiro, `inherit_privileges` verdadeiro
+- [ ] Teste: existem partições do mês corrente e de pelo menos os 3 seguintes, mais a *default*
+- [ ] Teste: INSERT em meses diferentes cai em partições diferentes (`tableoid`)
+- [ ] Teste: com `enable_seqscan = off`, `EXPLAIN` de consulta por `user_id` + período cita **uma** partição
+- [ ] Teste: a retenção está desligada — partição nunca é dropada
+
+**Commit**: `feat(m9): particiona tentativas por mes com pg_partman`
+
+---
+
+### T43 — Trava de 3 camadas, RLS e a porta do esquecimento
 
 **Onde**: `supabase/migrations/<ts>_tentativas_trava.sql`, `tests/db/tentativas-trava.test.ts`
 **Requisito**: ALUNO-01 AC1 (Independent Test) · AD-084 · AD-029 · AD-015
@@ -50,23 +73,6 @@ T41 → T42 → T43 → T44 → T46
 - [ ] Teste de RLS: um aluno não enxerga a linha do outro; INSERT com `user_id` alheio é recusado
 
 **Commit**: `feat(m4): trava o log contra update, delete e truncate`
-
----
-
-### T43 — `pg_partman`: partição mensal, sem retenção, com pruning provado
-
-**Onde**: `supabase/migrations/<ts>_tentativas_particao.sql`, `tests/db/tentativas-particao.test.ts`
-**Requisito**: INFRA-04 AC1/AC2/AC3 · AD-067
-
-- [ ] Extensão `pg_partman` no schema `partman`; `create_parent` na assinatura da 5.3.1 com
-      `p_interval := '1 month'`, `p_premake := 3`, `p_default_table := true`, `p_jobmon := false`
-- [ ] `part_config`: `retention` nula, `retention_keep_table` verdadeiro, `inherit_privileges` verdadeiro
-- [ ] Teste: existem partições do mês corrente e de pelo menos os 3 seguintes, mais a *default*
-- [ ] Teste: INSERT em meses diferentes cai em partições diferentes (`tableoid`)
-- [ ] Teste: com `enable_seqscan = off`, `EXPLAIN` de consulta por `user_id` + período cita **uma** partição
-- [ ] Teste: a retenção está desligada — partição nunca é dropada
-
-**Commit**: `feat(m9): particiona tentativas por mes com pg_partman`
 
 ---
 
@@ -142,12 +148,12 @@ T41 → T42 → T43 → T44 → T46
 
 | Requisito | Task |
 | --- | --- |
-| ALUNO-01 AC1 | T42, T44 |
+| ALUNO-01 AC1 | T43, T44 |
 | ALUNO-01 AC2, AC3, AC4 | T41, T46 |
-| ALUNO-01 AC5 | T43 |
+| ALUNO-01 AC5 | T42 |
 | ALUNO-03 AC1, AC4 | T41 (rede), T46 (recusa antes) |
 | ALUNO-04 AC2 | T41 |
 | ALUNO-04 AC3 | T45 |
-| INFRA-04 AC1, AC2 | T43 |
+| INFRA-04 AC1, AC2 | T42 |
 | INFRA-04 AC3 | T44 |
 | INFRA-04 AC4 | T41 |

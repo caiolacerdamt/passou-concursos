@@ -151,17 +151,27 @@ export async function inserirTentativa(
   return rows[0];
 }
 
+/** Nome que o pg_partman da a particao do mes de `data` (`_pYYYYMMDD`). */
+export function nomeDaParticao(data: Date): string {
+  const ano = data.getUTCFullYear();
+  const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
+  return `tentativas_p${ano}${mes}01`;
+}
+
 /**
- * Cria a particao do mes de `data` se ela ainda nao existir.
+ * Garante que existe particao para o mes de `data`, sem nunca duplicar faixa.
  *
- * Existe para o teste do T41, que roda **antes** de o `pg_partman` entrar: sem
- * nenhuma particao a tabela recusa todo INSERT. Dentro da transacao revertida o
- * `create table` volta atras junto com o resto.
+ * O pg_partman mantem o mes corrente e tres meses para tras e para frente
+ * (`premake = 3`), entao na pratica ela ja existe e esta funcao nao faz nada. Ela
+ * continua aqui para o teste que grava numa data longe — criar particao que se
+ * sobrepoe a outra e erro do Postgres, e por isso a checagem vem antes.
+ *
+ * Dentro da transacao revertida o `create table` volta atras junto com o resto.
  */
 export async function garantirParticao(cliente: Client, data: Date): Promise<string> {
   const inicio = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), 1));
   const fim = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth() + 1, 1));
-  const nome = `tentativas_p${inicio.getUTCFullYear()}_${String(inicio.getUTCMonth() + 1).padStart(2, "0")}`;
+  const nome = nomeDaParticao(data);
 
   const { rows } = await cliente.query<{ existe: boolean }>(
     "select to_regclass('public.' || $1) is not null as existe",

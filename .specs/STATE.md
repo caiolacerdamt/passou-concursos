@@ -135,20 +135,30 @@
 ### Dívida aberta
 
 1. **Major — a SPEC 04 foi verificada pelo próprio autor.** O sensor rodou 4 mutações das 6, e uma
-   (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. **A SPEC 05
-   herda este schema** — vale rodar o Verifier sobre `5630e06..f2f1850` antes de apoiar `tentativas`
-   nele. Detalhe em `.specs/features/04-*/validation.md`.
-2. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
+   (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. Detalhe em
+   `.specs/features/04-*/validation.md`. ⚠️ **A SPEC 05 apoiou `tentativas` neste schema sem que o
+   Verifier de `5630e06..f2f1850` fosse rodado** — a recomendação continua de pé e agora tem uma
+   tabela em cima dela.
+2. **Minor — 6 gaps abertos da SPEC 05**, nenhum bloqueante, todos com evidência em
+   `.specs/features/05-log-de-tentativas/validation.md`: **G2** INFRA-04 AC3 provado no agendamento e
+   não no efeito (nenhum teste chama `run_maintenance_proc()`) · **G3** ALUNO-01 AC5 "recalculável do
+   zero" sem asserção — é propriedade das projeções, fecha na SPEC 06 · **G4** dedup testado só
+   sequencialmente, nunca com dois cliques concorrentes de verdade · **G7** a suíte valida o banco
+   aplicado, não o `.sql` versionado · **G8** `not.toMatch(/Seq Scan/)` é tautológico com
+   `enable_seqscan = off` · **G10** o contrato SQL↔TS da recusa é mantido por duas asserções
+   paralelas, e o teste unitário do mapeamento continua verde quando o banco muda a mensagem — evitar
+   esse padrão quando a SPEC 13 mapear mais motivos.
+3. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
    (`src/modules/observabilidade/saneamento.mjs:144`). A AD-087 tornou `reportarErro` transversal: a
    primeira spec que passar `{ causa: erro }` perde a informação sem erro e sem teste vermelho.
-3. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
+4. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
    `new Client()` construído dentro da função, sem ponto de injeção. O padrão que resolve está no
    mesmo diff (`advisors.mjs:105`, `buscar = fetch`).
-4. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
+5. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
    vez de `if: failure()` nos três. Job cancelado ou skipado não dispara `failure()`.
-5. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
-6. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
-7. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
+6. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
+7. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
+8. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
 
 ### Contratos vigentes que nenhuma spec pode contrariar
 

@@ -69,6 +69,18 @@ describe("boot do Sentry", () => {
     }
   });
 
+  it("todo runtime liga o ponto unico de reporte no Sentry", () => {
+    // Sem esta ligacao, `reportarErro` — inclusive a falha de configuracao da
+    // SPEC 02 — cairia so no console e o alerta nunca sairia da maquina.
+    for (const arquivo of INITS) {
+      const conteudo = fonte(arquivo);
+      expect(conteudo).toContain("definirDestinoDeErro((erro, contexto) => {");
+      expect(conteudo).toContain(
+        "Sentry.captureException(erro, { extra: contexto });",
+      );
+    }
+  });
+
   it("o servidor exporta onRequestError, que e o contexto de rota do AC1", () => {
     const conteudo = fonte("instrumentation.ts");
     expect(conteudo).toContain(

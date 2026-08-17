@@ -5,6 +5,7 @@ import {
   dsn,
   release,
 } from "@/modules/observabilidade/ambiente";
+import { definirDestinoDeErro } from "@/modules/observabilidade/reporte";
 import { sanearEventoSentry } from "@/modules/observabilidade/saneamento.mjs";
 
 /**
@@ -21,4 +22,15 @@ Sentry.init({
   tracesSampleRate: 0,
   dataCollection: { userInfo: false, httpBodies: [] },
   beforeSend: sanearEventoSentry,
+});
+
+/**
+ * Liga a ponta do ponto unico de reporte no Sentry.
+ *
+ * O nucleo em `src/modules/observabilidade` nao importa o SDK de proposito; e
+ * aqui, no boot, que ele ganha destino. Os tres runtimes fazem isto para nao
+ * sobrar caminho em que `reportarErro` cai so no console em silencio.
+ */
+definirDestinoDeErro((erro, contexto) => {
+  Sentry.captureException(erro, { extra: contexto });
 });

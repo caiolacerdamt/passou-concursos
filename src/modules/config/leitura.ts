@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 
 import { clienteDeServico } from "@/lib/db/servidor";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 
 import {
   CATALOGO,
@@ -24,8 +25,10 @@ export const JANELA_DE_CACHE_SEGUNDOS = 30;
 export const TAG_DE_CACHE = "configuracoes";
 
 // ── Reporte de erro ─────────────────────────────────────────────────────────
-// Ponto unico, injetavel. O Sentry entra aqui no INFRA-09; ate la o padrao e o
-// console, e o teste troca por um espiao para provar que foi chamado (T9).
+// Ponto unico, injetavel. A assinatura e a costura sao as mesmas publicadas pela
+// SPEC 02; o que mudou no INFRA-09 e o destino: em vez de morrer num
+// `console.error`, o padrao entrega ao ponto unico do projeto, que leva ao
+// Sentry (`src/modules/observabilidade`).
 
 export type ReporteDeErro = (
   erro: unknown,
@@ -33,7 +36,7 @@ export type ReporteDeErro = (
 ) => void;
 
 const REPORTE_PADRAO: ReporteDeErro = (erro, contexto) => {
-  console.error("[config]", contexto, erro);
+  reportarErro(erro, { modulo: "config", ...contexto });
 };
 
 let reportar: ReporteDeErro = REPORTE_PADRAO;

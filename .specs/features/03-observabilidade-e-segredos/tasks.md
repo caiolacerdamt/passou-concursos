@@ -129,7 +129,11 @@ ponto único `reportarErro`, com destino injetável e **sem nenhum import do Sen
       `[cpf]`, em objeto aninhado, dentro de array e dentro de string solta
 - [ ] `sanitizar()` não entra em laço infinito com referência circular e respeita teto de profundidade
 - [ ] `sanearEventoSentry()` apaga `user.email` e `user.ip_address` e saneia o resto do evento
-- [ ] `reportarErro()` saneia **antes** de chamar o destino — o destino nunca vê o valor cru
+- [ ] `reportarErro()` entrega o **contexto já saneado** ao destino, e a mensagem do erro sai saneada
+      em todo ponto onde vira texto (destino padrão de console e `sanearEventoSentry`). O objeto
+      `Error` em si segue cru até o destino de propósito: sem ele a pilha de chamada se perde
+- [ ] `reportarErro()` não deixa erro do próprio destino escapar — reportar erro não pode derrubar
+      a requisição que já estava com problema
 - [ ] Destino padrão escreve no `console.error`; `definirDestinoDeErro`/`restaurarDestinoPadrao` funcionam
 - [ ] Nenhum arquivo do módulo importa `@sentry/*` (teste confere lendo o próprio fonte)
 - [ ] Gate: `npm run test:unit`

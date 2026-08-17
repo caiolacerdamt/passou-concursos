@@ -140,6 +140,15 @@ painel do Supabase — o painel não deixa rastro no repositório e a próxima m
 Toda migration precisa ser aplicável em banco vazio e em banco com dado. Migration que apaga coluna
 usada por código em produção vira **duas** PRs: primeiro para de usar, depois apaga.
 
+**Quem aplica é a CI, não você.** O merge na `main` que toca `supabase/migrations/**` dispara
+`.github/workflows/migracao.yml`, que roda `npm run db:push`. Na sua máquina o `db:push` continua
+servindo para experimentar durante o desenvolvimento; o que vale para valer é o merge.
+
+Se o workflow falhar, **a `main` e o banco ficam em versões diferentes** — o alerta chega no Sentry
+com essa frase, e a correção é rodar o workflow de novo pelo `workflow_dispatch` depois de arrumar a
+migration. O script recusa aplicar em projeto diferente do declarado em `scripts/alvo-do-banco.mjs`:
+migração no banco errado não tem desfazer.
+
 ## Ambientes
 
 | | Vercel | Supabase |

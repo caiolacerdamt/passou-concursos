@@ -1,0 +1,68 @@
+name: Migração do banco
+
+# M9 §Assumptions — "migrações versionadas em git, aplicadas via GitHub Actions;
+# prod exige merge aprovado". INFRA-09 AC2 para a parte de alertar.
+#
+# Ninguém aplica migração clicando no painel do Supabase. O painel não deixa
+# rastro no repositório, e a próxima migração quebra em cima de um schema que o
+# git não conhece. O caminho é: PR → CI verde → merge na main → este workflow.
+#
+# Roda em paralelo com a CI do push, e isso é de propósito: o portão já foi o CI
+# do PR, que precisa estar verde antes do merge (docs/GITFLOW.md). Amarrar este
+# workflow ao resultado da CI da main custaria `workflow_run`, que não aceita
+# filtro por caminho de arquivo.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/**"
+  workflow_dispatch:
+
+# Dois merges seguidos não podem aplicar migração ao mesmo tempo.
+concurrency:
+  group: migracao-do-banco
+  cancel-in-progress: false
+
+jobs:
+  aplicar:
+    name: Aplicar migrações pendentes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # Diferente do teste de banco, que PULA sem credencial: migração que não
+      # aplica é um problema, não uma ausência. Silêncio aqui deixaria a `main`
+      # e o banco em versões diferentes sem ninguém saber.
+      - name: Exigir o segredo do banco
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "::error::segredo DATABASE_URL não está cadastrado no repositório. A migração NÃO foi aplicada e o banco está atrás da main. Ver docs/SEGREDOS.md."
+            exit 1
+          fi
+          echo "Segredo presente."
+
+      # `npm run db:push` confere para qual projeto a conexão aponta antes de
+      # aplicar (scripts/alvo-do-banco.mjs) e recusa qualquer outro — migração no
+      # banco errado não tem desfazer.
+      - name: Aplicar
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run db:push
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "a migração do banco não foi aplicada — main e banco estão em versões diferentes"
+        run: node scripts/jobs/reportar-falha.mjs

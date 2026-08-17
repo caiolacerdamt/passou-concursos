@@ -128,6 +128,15 @@ export const CATALOGO = {
     descricao:
       "Caderno de erros. Nasce ligada: faz parte de 'progresso', uma das 4 superficies do lancamento (AD-076).",
   }),
+
+  // ── M9 · infra e operacoes ────────────────────────────────────────────────
+  "flag.m9.rota_de_erro_proposital": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m9",
+    descricao:
+      "Libera /api/erro-proposital, que lanca de proposito para conferir se o erro chega ao Sentry com alerta (INFRA-09). Nasce desligada: com ela ligada, qualquer um derruba uma rota de producao.",
+  }),
 } as const;
 
 /** Toda chave que existe. Ler chave fora daqui e erro de compilacao. */

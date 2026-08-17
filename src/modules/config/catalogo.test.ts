@@ -21,9 +21,10 @@ describe("catalogo de chaves", () => {
     expect(reprovados).toEqual([]);
   });
 
-  it("declara as 10 chaves do M4 com dono, descricao e o mesmo padrao de chave do banco", () => {
-    expect(CHAVES).toHaveLength(10);
+  it("declara as chaves de cada modulo com dono, descricao e o mesmo padrao de chave do banco", () => {
+    expect(CHAVES).toHaveLength(11);
     expect(CHAVES.filter((c) => CATALOGO[c].moduloDono === "m4")).toHaveLength(10);
+    expect(CHAVES.filter((c) => CATALOGO[c].moduloDono === "m9")).toHaveLength(1);
 
     for (const chave of CHAVES) {
       // Mesmo padrao do CHECK chave_com_prefixo_valido da migracao: chave que
@@ -38,6 +39,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.diagnostico_adaptativo",
       "flag.m4.simulado_semanal",
       "flag.m4.caderno_erros",
+      "flag.m9.rota_de_erro_proposital",
     ];
     const parametros: ChaveParam[] = [
       "param.m4.algoritmo_revisao",

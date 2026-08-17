@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  type ContextoDeErro,
+  definirDestinoDeErro,
+  restaurarDestinoPadrao,
+} from "@/modules/observabilidade/reporte";
+
 import { CATALOGO, CHAVES, type Chave } from "./catalogo";
 import {
   JANELA_DE_CACHE_SEGUNDOS,
@@ -9,6 +15,7 @@ import {
   getParam,
   getParams,
   isFlagOn,
+  reportarFalhaDeConfig,
   restaurarLeitorPadrao,
   restaurarReportePadrao,
 } from "./leitura";
@@ -37,8 +44,16 @@ beforeEach(() => {
 afterEach(() => {
   restaurarLeitorPadrao();
   restaurarReportePadrao();
+  restaurarDestinoPadrao();
   vi.restoreAllMocks();
 });
+
+/** Espiao no ponto unico do projeto, um nivel abaixo do reporte do config. */
+function espiaoNoDestino() {
+  const recebidos: { erro: unknown; contexto: ContextoDeErro }[] = [];
+  definirDestinoDeErro((erro, contexto) => recebidos.push({ erro, contexto }));
+  return recebidos;
+}
 
 describe("getParam", () => {
   it("devolve o valor vigente do banco, tipado", async () => {
@@ -167,6 +182,64 @@ describe("fronteira da variavel de ambiente (AC2)", () => {
     ]) {
       expect(readFileSync(arquivo, "utf8")).not.toContain("process.env");
     }
+  });
+});
+
+describe("o alerta chega ao ponto unico do projeto (INFRA-09)", () => {
+  it("falha de leitura chega ao destino com o modulo identificado", async () => {
+    // Sem o espiao da SPEC 02 no caminho: queremos o padrao de verdade.
+    restaurarReportePadrao();
+    const recebidos = espiaoNoDestino();
+    definirLeitorDeConfig(leitorQueQuebra);
+
+    expect(await getParam("param.m4.minutos_por_questao")).toBe(2);
+
+    expect(recebidos).toHaveLength(1);
+    expect(recebidos[0].contexto).toEqual({
+      modulo: "config",
+      chaves: ["param.m4.minutos_por_questao"],
+      motivo: "falha ao ler a configuracao",
+    });
+    expect((recebidos[0].erro as Error).message).toBe("banco fora do ar");
+  });
+
+  it("flag ilegivel continua desligada E agora tambem alerta", async () => {
+    // O AC6 do INFRA-11 pedia as duas coisas; a SPEC 02 so entregou a primeira.
+    restaurarReportePadrao();
+    const recebidos = espiaoNoDestino();
+    definirLeitorDeConfig(leitorQueQuebra);
+
+    expect(await isFlagOn("flag.m4.caderno_erros")).toBe(false);
+    expect(recebidos).toHaveLength(1);
+    expect(recebidos[0].contexto.modulo).toBe("config");
+  });
+
+  it("dado pessoal no contexto do config chega saneado ao destino", async () => {
+    restaurarReportePadrao();
+    const recebidos = espiaoNoDestino();
+
+    reportarFalhaDeConfig(new Error("recusado"), {
+      email: "aluno@exemplo.com",
+      chave: "param.m4.minutos_por_questao",
+    });
+
+    expect(recebidos[0].contexto).toEqual({
+      modulo: "config",
+      email: "[removido]",
+      chave: "param.m4.minutos_por_questao",
+    });
+  });
+
+  it("definirReporteDeErro continua interceptando — a costura da SPEC 02 nao quebrou", async () => {
+    // O `beforeEach` ja instalou o espiao da SPEC 02 por `definirReporteDeErro`.
+    const noDestino = espiaoNoDestino();
+    definirLeitorDeConfig(leitorQueQuebra);
+
+    await getParam("param.m4.minutos_por_questao");
+
+    expect(reportes).toHaveLength(1);
+    // Quem sobrescreve o reporte curto-circuita o padrao: o destino nao ve nada.
+    expect(noDestino).toEqual([]);
   });
 });
 

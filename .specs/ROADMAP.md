@@ -45,7 +45,7 @@ daquele trabalho é refeito.
 | --- | --- | --- | --- | --- | --- | --- |
 | 01 | Fundação do projeto | Next.js + TypeScript, Vitest (`unit`/`db`), Supabase CLI, CI de build/lint/teste | — | 4 | Fácil | ✅ Concluída |
 | 02 | Configuração e feature flags | Tabela append-only `configuracoes`, catálogo em código, leitura com cache e queda segura, escrita com autor | 01 | 5 | Média | ✅ Concluída |
-| 03 | Observabilidade e segredos | Sentry ligado ao ponto único de reporte, falha de job visível, disciplina de segredo, migração aplicada por CI | 01, 02 | 8 | Média | ⬜ Não iniciada |
+| 03 | Observabilidade e segredos | Sentry ligado ao ponto único de reporte, falha de job visível, disciplina de segredo, migração aplicada por CI | 01, 02 | 10 | Média | ✅ Concluída |
 | 04 | Acervo — schema, taxonomia e proveniência | `provas`, `questoes` + versão, matérias/tópicos, enums, colunas de busca, trava de publicação sem proveniência | 02, 03 | 10 | Média | ⬜ Não iniciada |
 | 05 | Log de tentativas | `tentativas` particionada, snapshot congelado, trava de 3 camadas, RLS, sessões, `registrarTentativa` | 04 | 8 | Difícil | 🟨 Design e tasks prontos (T11–T15) |
 | 06 | Projeções, revisão espaçada e plano do dia | `dominio_topico`, `caderno_erros`, FSRS, `recalcula_projecoes()`, `gera_plano_do_dia()`, `pg_cron` | 05 | 10 | Difícil | 🟨 Design e tasks prontos (T16–T21) |
@@ -87,7 +87,7 @@ daquele trabalho é refeito.
 | 41 | Grupo 3 — sequência pseudonimizada | Código por aluno, tabela de correspondência separada, some no DELETE, LIA antes de ligar | 32, 35 | 7 | Média | ⬜ Não iniciada |
 | 42 | Tiers e mensalidade | Modelo de dados para mais de um plano sem migração destrutiva, decidido com dado do flywheel | 20, 35 | 6 | Média | ⬜ Não iniciada |
 
-**Total estimado:** ~389 tasks em 42 specs (média de 9,3 por spec). Nenhuma spec passa de 12 — e se a
+**Total estimado:** ~391 tasks em 42 specs (média de 9,3 por spec). Nenhuma spec passa de 12 — e se a
 fase Tasks desmentir para cima, a spec se divide antes de entrar em Execute.
 
 **Cobertura:** os 126 requisitos das specs temáticas estão citados nas specs numeradas, com uma
@@ -115,7 +115,7 @@ exceção declarada: **INFRA-08** (n8n) é fora de escopo por decisão registrad
 
 | Spec | O que falta antes de começar |
 | --- | --- |
-| 03 | conta no Sentry (plano gratuito basta) |
+| ~~03~~ | ~~conta no Sentry~~ — criada em 2026-08-16, região **EUA** (AD-087) |
 | 07, 08 | `OPENAI_API_KEY` provisionada |
 | 08 | **2–3 PDFs de prova oficial** na mão para o teste real |
 | 11 | chave da Cohere (preço do `embed-v4` ainda não confirmado) |
@@ -141,4 +141,4 @@ seção `Requirement Traceability` de cada spec numerada):
 | M6 — gamificação | GAM-01…14 | 28, 33 |
 | M7 — LGPD e flywheel | DADOS-01…15 | 30, 31, 32, 35, 41 |
 | M8 — negócio e pagamentos | PAG-01…17 | 17, 19, 20, 21, 24, 42 |
-| M9 — infra | INFRA-01…12 | 02 ✅, 03, 05, 06, 07, 16, 21, 29, 32 (INFRA-08 é fora de escopo declarado) |
+| M9 — infra | INFRA-01…12 | 02 ✅, 03 ✅, 05, 06, 07, 16, 21, 29, 32 (INFRA-08 é fora de escopo declarado) |

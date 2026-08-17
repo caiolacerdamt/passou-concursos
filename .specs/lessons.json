@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 4,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::script de linha de comando recebe o executor externo conexao fetch por parametro com default para o teste unit cobrir cada codigo de saida",
+      "text": "Script de linha de comando recebe o executor externo (conexao, fetch) por parametro com default, para o teste unit cobrir cada codigo de saida.",
+      "signal": "ac_gap",
+      "scope": "scripts",
+      "status": "candidate",
+      "features": [
+        "03-observabilidade-e-segredos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "scripts/jobs/vigia-de-jobs.mjs:113 (validation.md Gap 1) (scripts)"
+      ],
+      "created": "2026-08-17T12:40:18Z",
+      "last_seen": "2026-08-17T12:40:18Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::copia recursiva de objeto trata date error map e set explicitamente object entries os devolve como objeto vazio em silencio",
+      "text": "Copia recursiva de objeto trata Date, Error, Map e Set explicitamente; Object.entries os devolve como objeto vazio em silencio.",
+      "signal": "ac_gap",
+      "scope": "observabilidade",
+      "status": "candidate",
+      "features": [
+        "03-observabilidade-e-segredos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "src/modules/observabilidade/saneamento.mjs:144 (validation.md Gap 2) (observabilidade)"
+      ],
+      "created": "2026-08-17T12:40:18Z",
+      "last_seen": "2026-08-17T12:40:18Z"
+    },
+    {
+      "id": "L-003",
+      "key": "spec_deviation::implementacao que se afasta de um item do done when atualiza a tasks md ou deixa marcador spec deviation comentario no arquivo de codigo nao conta",
+      "text": "Implementacao que se afasta de um item do Done when atualiza a tasks.md ou deixa marcador SPEC_DEVIATION; comentario no arquivo de codigo nao conta.",
+      "signal": "spec_deviation",
+      "scope": "processo",
+      "status": "candidate",
+      "features": [
+        "03-observabilidade-e-segredos"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tasks.md T27 x .github/workflows/ci.yml:128 (validation.md Gap 3) (processo)"
+      ],
+      "created": "2026-08-17T12:40:18Z",
+      "last_seen": "2026-08-17T12:40:18Z"
+    }
+  ]
+}

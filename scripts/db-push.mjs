@@ -24,18 +24,22 @@ function morrer(mensagem) {
   process.exit(1);
 }
 
-if (!existsSync(CAMINHO_ENV)) {
-  morrer("nao achei o .env na raiz do projeto. Copie .env.example para .env e preencha DATABASE_URL.");
-}
 if (!existsSync(CAMINHO_CLI)) {
   morrer("nao achei o Supabase CLI em node_modules. Rode `npm install` antes.");
 }
 
-const doArquivo = lerEnv(readFileSync(CAMINHO_ENV, "utf8"));
-const databaseUrl = doArquivo.DATABASE_URL;
+// Na maquina o valor vem do `.env`; no GitHub Actions nao existe `.env` e o
+// valor vem do segredo do repositorio (INFRA-09, workflow de migracao). A ordem
+// nao muda: arquivo por cima do ambiente, pelo motivo registrado no topo.
+const doArquivo = existsSync(CAMINHO_ENV) ? lerEnv(readFileSync(CAMINHO_ENV, "utf8")) : {};
+const databaseUrl = doArquivo.DATABASE_URL || process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  morrer("DATABASE_URL esta vazia no .env. Pegue a string do Session pooler no painel do Supabase.");
+  morrer(
+    "DATABASE_URL nao esta definida. Na sua maquina: copie .env.example para .env e preencha " +
+      "com a string do Session pooler. Na CI: cadastre o segredo DATABASE_URL no repositorio " +
+      "(ver docs/SEGREDOS.md).",
+  );
 }
 
 const alvo = conferirAlvo(databaseUrl);

@@ -12,38 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Varre os arquivos versionados por prefixos de credencial conhecidos.
-      # Sem ação externa de propósito: nada de licença nem de versão pra quebrar.
-      # Quando houver build, dá pra trocar por `gitleaks git` (v8.19+ depreciou `detect`).
-      - name: Procurar credencial em arquivo versionado
-        run: |
-          set -uo pipefail
-          PADROES='sbp_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,}|sk_live_[A-Za-z0-9]{20,}|rk_live_[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{50,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AIza[0-9A-Za-z_-]{35}'
-          ACHOU=0
-          # .env.example documenta variáveis sem valor; é o único arquivo .env versionado.
-          for f in $(git ls-files); do
-            if grep -HnEI "$PADROES" "$f" >/dev/null 2>&1; then
-              echo "::error file=$f::credencial encontrada em arquivo versionado"
-              grep -HnEI "$PADROES" "$f" | sed 's/\(.\{80\}\).*/\1…/'
-              ACHOU=1
-            fi
-          done
-          if [ "$ACHOU" -eq 1 ]; then
-            echo ""
-            echo "Segredo no repositório. Rotacione a chave — remover o commit não basta,"
-            echo "ela já esteve no histórico. Depois mova o valor para o .env (ignorado)."
-            exit 1
-          fi
-          echo "Nenhuma credencial encontrada."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-      - name: Garantir que .env não foi versionado
-        run: |
-          set -uo pipefail
-          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
-            echo "::error::.env está versionado. Ele deve ficar apenas na máquina local."
-            exit 1
-          fi
-          echo ".env não está versionado."
+      # A regra saiu deste YAML e virou `scripts/varredura-de-segredos.mjs`, que
+      # tem teste. Regra de segurança sem teste é regra que ninguém sabe se ainda
+      # pega alguma coisa. O script só usa módulos nativos do Node — não precisa
+      # de `npm ci`. Ele também confere que o .env não está versionado.
+      - name: Procurar credencial em arquivo versionado
+        run: node scripts/varredura-de-segredos.mjs
 
   documentos:
     name: Integridade dos documentos

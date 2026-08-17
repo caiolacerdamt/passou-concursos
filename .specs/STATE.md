@@ -781,141 +781,119 @@
 - **Date**: 2026-08-16
 - **Status**: active
 
+### AD-086
+- **Decision**: A unidade de implementação do projeto deixa de ser o **módulo** (M1…M9) e passa a ser
+  a **spec numerada**, numa sequência única de **42 specs** registrada em `.specs/ROADMAP.md`. As 9
+  specs temáticas continuam existindo e continuam sendo a fonte do **texto** de cada requisito
+  (`BANCO-`, `IA-`, `TTS-`, `ALUNO-`, `RAIOX-`, `GAM-`, `DADOS-`, `PAG-`, `INFRA-`), mas mudam de
+  lugar — de `.specs/features/m*/` para `.specs/modulos/m*/` — e deixam de ser unidade de trabalho.
+  `.specs/features/` passa a conter só as specs numeradas `NN-<nome>/spec.md`, na ordem de
+  construção. **Regra dura: uma spec só depende dela mesma ou de spec de número menor**; dependência
+  para frente é bug do roadmap e exige AD nova, não improviso. Cada spec é dimensionada para caber
+  numa sessão — estimativa entre **6 e 12 tasks**, nenhuma acima de 12. Quando os dois documentos
+  discordarem: **conteúdo do requisito** vence o módulo; **em qual spec ele entra** vence o roadmap.
+  O requisito **SHALL NOT** ser copiado para os dois lugares. Nada do que já foi produzido é refeito:
+  os `design.md`, `tasks.md` e `validation.md` das rodadas 1 e 2 continuam válidos dentro de
+  `.specs/modulos/` e são apontados pelas specs numeradas que os herdam.
+- **Reason**: A ordem por módulo produziu uma primeira leva que misturou INFRA-11 (M9) com o M4 e
+  gerou **22 tasks num único documento** — pesado demais para uma sessão, e com uma dependência
+  invertida embutida: a T10 criava um **stub** de `questoes`/`materias`/`topicos` só porque o M4 vinha
+  antes do M1, quando o schema do acervo é dependência real do log de tentativas. O mesmo padrão
+  aparecia em outros pontos: a T22 fazia chamada de IA antes de o gateway do IA-02 existir; o M6 lê
+  `data_prova` do perfil de concurso, que é M5; o DELETE do DADOS-04 precisa que **todas** as tabelas
+  de grupo 1 já existam; nenhum módulo especificava a camada de interface, e a SPEC 01 registrou isso
+  ao criar o projeto sem camada de estilo. Ordenar por dependência técnica real, e não por tema,
+  elimina o stub, mata a inversão e torna verdadeira a frase "abra uma sessão e desenvolva a spec
+  seguinte". A separação `modulos/` × `features/` existe para que o requisito tenha **um** dono de
+  texto: duplicar o critério de aceite nas duas pastas garantiria divergência com o tempo.
+- **Trade-off**: São 42 documentos em vez de 9 — mais arquivo para manter, e o Design de cada spec
+  passa a ler **dois** documentos (a spec numerada e a seção do módulo que ela cita). Os números das
+  tasks da rodada 1 (T1…T22) deixam de formar uma sequência única do projeto e viram histórico de
+  duas specs. E a estimativa de tasks do roadmap é **estimativa**: a fase Tasks pode desmentir e, se
+  desmentir para cima de 12, a spec se divide — o que muda a numeração das seguintes.
+- **Scope**: `.specs/` inteiro. `README.md`, `AGENTS.md` e `CLAUDE.md` atualizados junto.
+  **SHALL NOT** alterar nenhuma AD anterior nem `docs/historico/`.
+- **Date**: 2026-08-16
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Fase **Execute**, rodada 1 — **INFRA-11** (configuração + feature flags) e **M4**
-  (coluna vertebral do aluno). Specify, Design e Tasks concluídos nas duas (AD-001…AD-083).
-- **Execute — fase 0 concluída (2026-08-16)**, branch `chore/esqueleto-projeto`, um commit por task:
-  | Task | Commit | O quê |
+- **Onde o projeto está**: a fase Specify está concluída nos 9 módulos (AD-001…AD-086) e a
+  **reorganização das specs foi feita em 2026-08-16 (AD-086)**. A unidade de trabalho agora é a
+  **spec numerada**: `.specs/ROADMAP.md` tem a sequência oficial de **42 specs**, cada uma com
+  dependências, estimativa de tasks, dificuldade e status. Para trabalhar: *"Desenvolva a SPEC XX
+  seguindo a `/tlc-spec-driven`"*.
+- **Estrutura depois da reorganização**:
+  | Pasta | O que é |
+  | --- | --- |
+  | `.specs/ROADMAP.md` | a sequência oficial 01 → 42 e as regras que valem para toda spec |
+  | `.specs/features/NN-<nome>/spec.md` | as specs numeradas — escopo, fronteira e dependências |
+  | `.specs/modulos/m*/` | as 9 specs temáticas (texto dos requisitos) + os documentos das rodadas já feitas |
+- **Concluído e verificado**:
+  | Spec | Tasks | Estado |
   | --- | --- | --- |
-  | T1 | `d3281a2` | Next.js 16.3.1 + React 19.2.8, App Router, TypeScript, **sem Tailwind** (nenhuma spec decidiu camada de estilo); pastas do design com `.gitkeep` |
-  | T2 | `5d34aee` | Vitest 4.1.10 com projetos `unit` e `db`; `db` sequencial; sem `DATABASE_URL` pula com aviso |
-  | T3 | `817fcf0` | Supabase CLI 2.114.0 como devDependency, `npm run db:push` sem Docker, `tests/db/conexao.ts` |
-  | T4 | `a075f4c` | job `app` da CI ativado: `npm ci`, build, lint, `test:unit`; `test:db` só com o segredo |
-  **Achados que valem para o resto do Execute:**
-  1. **`--env-file` do Node e `process.loadEnvFile()` NÃO sobrescrevem variável já existente no
-     sistema** (medido em 2026-08-16). O valor do shell vence o do arquivo. Como a variável global do
-     Windows guarda o token de outra conta, ler o `.env` não bastava: `scripts/db-push.mjs` lê o
-     arquivo e força o valor por cima, e `scripts/alvo-do-banco.mjs` recusa qualquer conexão que não
-     aponte para `kfpmetkmhjtmgwgaaerl`.
-  2. **Conexão direta (`db.<ref>.supabase.co`) não resolve nesta máquina** (sem IPv6). O que funciona
-     é o pooler. Use o **Session pooler, porta 5432** — o Transaction pooler (6543) conecta mas não
-     guarda estado de sessão, e migração precisa disso.
-  3. O **Vitest usa o reporter `minimal` quando detecta que roda dentro de um agente**, e ele esconde
-     `console.warn`. Ao depurar saída de teste por aqui, rodar com `--reporter=default`.
-  4. `next build` roda o TypeScript: **compilar já é o typecheck**, não existe script `typecheck`.
-  5. A contagem de testes prevista nas tasks está defasada a partir da T3: a T3 previa 3 no total, mas
-     os próprios critérios dela pedem dois testes novos. Total real ao fim da fase 0: **6**.
-- **Execute — fase 1 (INFRA-11) concluída (2026-08-16)**, branch `feat/m9-infra11-configuracao`:
-  | Task | Commit | O quê |
-  | --- | --- | --- |
-  | T5 | `7b924e3` | migração `configuracoes` append-only + view vigente + RLS + trava de 3 camadas |
-  | T6 | `a82d83a` | catálogo com as 10 chaves do M4; default amarrado ao tipo em compilação |
-  | T7 | `cd6e770` | `getParam`, `isFlagOn`, `getParams`; cache 30s; queda segura |
-  | T8 | `4904d42` | `setConfig` — INSERT com autor obrigatório, validação antes do banco |
-  | T9 | `63c1000` | Independent Test: config ilegível deixa a flag desligada |
-  | — | `61a2d92` | dois AC que a verificação achou sem teste (AC2 e AC4), fechados |
-  **Verificação independente**: `.specs/features/m9-infra/validation.md` — PASS, 8 de 8 AC com
-  evidência `file:line`, sensor de discriminação **4 mutantes injetados, 4 mortos**. Gate final:
-  build ✓ lint ✓ **41 testes**.
-  **Três achados que viraram código**, dois deles em AD nova:
-  1. **AD-084** — `anon`/`authenticated` ficavam com **TRUNCATE** e a RLS não governa TRUNCATE: a
-     tabela append-only podia ser esvaziada inteira. **A mesma lacuna está no design de `tentativas`
-     (AD-082) e precisa entrar na T12.**
-  2. **AD-085** — `unstable_cache` só vale dentro de uma requisição do Next; job e script rodam fora
-     e leriam o default do catálogo **em silêncio**. O leitor cai para leitura direta.
-  3. `revalidateTag` mudou de assinatura no Next 16: exige o perfil de cache como 2º argumento.
-- **Rodada 10 — Tasks de INFRA-11 + M4 (2026-08-16)**. Dois documentos escritos:
-  `.specs/features/m9-infra/tasks.md` (**T1…T9**) e
-  `.specs/features/m4-coluna-vertebral/tasks.md` (**T10…T22**). A numeração é **contínua entre os
-  dois arquivos** de propósito — T10 depende de T9. Uma AD nova:
-  1. **AD-083** — ferramenta e ambiente de teste: Vitest com dois projetos (`unit` paralelo, `db`
-     sequencial); teste de banco contra o próprio projeto Supabase de desenvolvimento; **sem
-     Docker**. Verificado na doc oficial do Supabase CLI que `db push` / `migration up --linked` não
-     exigem Docker (só `start`, `db diff` e `db pull` exigem).
-- **22 tasks, 6 fases, 6 branches** (o `docs/GITFLOW.md` limita a branch a ~10 commits / 3 dias):
-  | Branch | Tasks | O quê |
-  | --- | --- | --- |
-  | `chore/esqueleto-projeto` | T1–T4 | Next.js + Vitest + Supabase CLI + CI com build/lint/teste |
-  | `feat/m9-infra11-configuracao` | T5–T9 | tabela `configuracoes`, catálogo, leitura, escrita, queda |
-  | `feat/m4-p1-log-tentativas` | T10–T14 | enums, `tentativas` particionada, trava, partman, sessões |
-  | `feat/m4-p1-registrar-tentativa` | T15 | `registrarTentativa` com dedup |
-  | `feat/m4-p1-projecoes` | T16–T18 | projeções, `recalcula_projecoes()`, `agendarRevisao` (FSRS) |
-  | `feat/m4-p1-plano-do-dia` | T19–T22 | plano, motor de prioridade, pg_cron, frase do plano |
-- **Cobertura de requisito**: INFRA-11 com **8 de 8 AC** mapeados; INFRA-04 em T13; M4 com **12 de
-  12 requisitos** mapeados. **Duas lacunas declaradas** (AC sem componente no Design da rodada 1,
-  registradas em `m4-coluna-vertebral/tasks.md` §Lacunas): **ALUNO-05 AC2** (diagnóstico de ~20
-  questões adaptativas) e **ALUNO-05 AC3** (chamada de IA do "plano inicial pós-diagnóstico", tarefa
-  do gateway distinta da frase diária do ALUNO-12). As duas **dependem do M1** — sem acervo não há
-  questão para aplicar. **Nenhuma tela** entra nesta leva: o Design da rodada 1 não desenhou
-  superfície, só servidor.
-- **In-progress** (file:line): none
-- **Next step**: **T10** — início do M4, em `.specs/features/m4-coluna-vertebral/tasks.md`, na branch
-  `feat/m4-p1-log-tentativas`, depois de mergear o PR da fase 1. **A T12 tem de aplicar a AD-084**
-  (trava de 3 camadas, incluindo TRUNCATE) em `tentativas`, não a receita de 2 camadas do AD-082.
-  Depois do M4: **M1** (Design), caminho crítico de produto, que pede **2–3 PDFs de prova de
-  amostra** na mão.
-- **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json`
-  expande da variável de ambiente do **sistema operacional**; o bloco `env` de
-  `.claude/settings.local.json` **não** alimenta essa expansão (testado). A variável global do
-  Windows contém o token de **outra conta**, então o `.mcp.json` conectava na conta errada em
-  silêncio. Correção aplicada: o servidor `supabase-passou` foi registrado no **escopo local**
-  (`claude mcp add --scope local`), que vive em `~/.claude.json`, é privado, fica fora do git e
-  **vence** o `.mcp.json` no mesmo nome — é o que a doc do Claude Code recomenda para servidor com
-  credencial. O `.mcp.json` passou a pedir `${SUPABASE_PASSOU_TOKEN}`, que não existe globalmente:
-  sem escopo local o servidor falha de forma **visível** em vez de conectar na conta errada. **A
-  mesma armadilha valia para o Supabase CLI — resolvida na T3**, ver achado 1 acima. MCP verificado
-  respondendo (`list_tables` devolveu vazio) em 2026-08-16, antes do primeiro commit de código.
-- **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções),
-  AD-046 (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060
-  (anel por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 (trava do log,
-  **substituída pela AD-084**), **AD-083** (ambiente de teste), **AD-084** (trava de 3 camadas),
-  **AD-085** (cache da config fora de requisição).
-- **Decisões do Design que outros módulos herdam** (inalteradas): `raiox_peso_topico` nasce como
-  **view stub devolvendo 1.0** — o M5 a substitui mantendo a assinatura, sem tocar no M4 (T19). O M4
-  cria `materias`, `topicos` e uma `questoes` **mínima** (contrato AD-039/040) para poder ser testado
-  antes do M1 existir; o M1 as completa (T10). `tentativa_causa_simulado` recebe a causa do simulado
-  sem UPDATE no fato (T14, AD-043).
-- **A confirmar na primeira migração** (pergunta aberta que o Design registrou e o **T12** resolve):
-  gatilho `BEFORE UPDATE OR DELETE ... FOR EACH ROW` na tabela-pai propaga para as partições? O
-  Postgres suporta desde a 13 e o projeto roda 17.6, mas isso é afirmação a verificar aplicando. Se
-  não propagar, criar por partição via template do `pg_partman` e **registrar o achado aqui**.
-- **Blockers**: none para Execute — o MCP já responde e o `.env` local já tem `SUPABASE_ACCESS_TOKEN`
-  e `DATABASE_URL` preenchidos. **Pendência manual sua**: cadastrar o segredo `DATABASE_URL` em
-  Settings → Secrets and variables → Actions do repositório, senão os testes de banco pulam na CI
-  (não reprovam, mas também não protegem). Pendências que **não travam**: (a) *due diligence* — advogado (base legal das questões
-  AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base legal do evento pré-login **e** o
-  instrumento da transferência internacional para os EUA, art. 33 LGPD, AD-079) e contador
-  (CNPJ/regime); (b) contrato do Asaas — o que volta num estorno e o D+ do parcelado; (c) preço do
-  Cohere embed-v4 não confirmado; (d) **teste cego da voz** — trava o primeiro lote do M3,
-  ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume (AD-062/065); (e) reconfirmar
-  preços de TTS em fonte oficial; (f) **free tier do PostHog em fonte primária** antes de ligar
-  (AD-079); (g) duas chamadas de IA fora da lista fechada do IA-02 — pré-diagnóstico de questão
-  suspeita (M7) e extração do programa do edital (M5, RAIOX-09); (h) **critério de morte do produto**
-  — decisão de sócios; (i) calibrações registradas como assumptions, agora com default em config
-  (tabela de chaves no design do M4).
-- **Riscos registrados que precisam de decisão futura**: o **peso do Raio-X fica em 1.0** até o M5
-  entrar — como o AD-076 exige a conta do Raio-X ligada desde o dia 1, **o M5 precisa entrar antes do
-  lançamento**, não em sexto na fila de Design. E a conversão "percentual do bloco → nota 1–4 do
-  FSRS" é adaptação registrada (AD-072): `revisao_evento` guarda percentual **e** nota justamente
-  para permitir recalibrar depois olhando o histórico (T16/T18).
-- **Documentos anteriores que ficaram desatualizados** (aplicar quando tocar neles):
-  - `AGENTS.md` — diz "AD-001…AD-079"; passou a ser **AD-001…AD-083**; a seção de estado ainda diz
-    "Design/Tasks/Execute não começaram" e "**Não existe código de aplicação ainda**" — **as duas
-    afirmações já são falsas**: o Execute começou e o esqueleto existe desde o commit `d3281a2`.
-  - `PRD.md` **§4.1** substituído por AD-076 · **§4.2** tutor e Raio-X saem de "no MVP" para
-    "construídos, ligados depois" · **§4.3** app nativo vira decisão registrada (AD-077) · **§M6**
-    critério "resposta rápida demais não conta" revogado por AD-060 · **§M3** áudio narra questão +
-    explicação (AD-063) e é fast-follow (AD-064) · **§8** matriz de modelos migrada (AD-073/080).
-  - `AD-009` — "~10 anos × 3 bancas" deixou de ser pré-requisito de lançamento (AD-076).
-  - `docs/historico/` — **congelado de propósito**. Nunca é reescrito.
-- **Branch**: fase 1 do Execute em `feat/m9-infra11-configuracao`, por PR (a fase 0 entrou pelo PR #9).
-  `main` protegida só pelo hook local
-  `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano Free) —
-  ativar por clone com `git config core.hooksPath .githooks`. PRs #5 e #6 mergeados.
-- **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
-  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free, **ACTIVE_HEALTHY, banco
-  vazio** — é o ambiente de desenvolvimento (AD-083). Vercel, OpenAI, Cohere e Sentry ainda **não**
-  provisionados; nenhum deles trava T1…T21. **T22 precisa de `OPENAI_API_KEY`.** Conexão de teste
-  confirmada em 2026-08-16 pelo pooler `aws-0-sa-east-1.pooler.supabase.com`.
+  | **01 — Fundação do projeto** | T1–T4 (`d3281a2`, `5d34aee`, `817fcf0`, `a075f4c`) | ✅ build, lint, teste e CI de pé |
+  | **02 — Configuração e feature flags** | T5–T9 (`7b924e3`, `a82d83a`, `cd6e770`, `4904d42`, `63c1000`, `61a2d92`) | ✅ **PASS** na verificação independente — 8/8 AC com evidência `file:line`, sensor 4/4 mutantes mortos, **41 testes**, build ✓ lint ✓ |
+- **Next step**: **SPEC 03 — Observabilidade e segredos** (`.specs/features/03-observabilidade-e-segredos/spec.md`).
+  Entra direto em **Design** — a spec já existe. Pré-requisito: criar a conta no Sentry (free).
+  A SPEC 04 (acervo) é independente da 03; se a conta demorar, dá para inverter as duas sem violar
+  nenhuma dependência — qualquer outra troca de ordem, não.
+- **Trabalho planejado que não foi executado e continua valendo** (não refazer):
+  `.specs/modulos/m4-coluna-vertebral/design.md` e `tasks.md` cobrem **T10…T22**. Redistribuição:
+  T11–T15 → **SPEC 05**; T16–T21 → **SPEC 06**; T22 (frase do plano) → **SPEC 07**, porque é chamada
+  de IA e precisa do gateway. **T10 morreu**: o stub de `questoes`/`materias`/`topicos` virou a
+  **SPEC 04** inteira, com o schema de verdade — o log passa a apontar para tabela real.
+- **Duas correções obrigatórias sobre o material da rodada 1**:
+  1. A trava de `tentativas` é de **3 camadas** (**AD-084**, substitui a receita de 2 do AD-082):
+     `REVOKE`+RLS, gatilho, **e retirar o TRUNCATE** de `anon`/`authenticated` — RLS não governa
+     TRUNCATE. Vale para a SPEC 05.
+  2. `unstable_cache` só vale dentro de requisição do Next (**AD-085**): job e script leem direto.
+- **Pergunta aberta que a SPEC 05 resolve aplicando**: gatilho `BEFORE UPDATE OR DELETE ... FOR EACH
+  ROW` na tabela-pai propaga para as partições? O Postgres suporta desde a 13 e o projeto roda 17.6,
+  mas é afirmação a verificar. Se não propagar: criar por partição via template do `pg_partman` e
+  registrar o achado aqui.
+- **Lacuna de Specify declarada**: a **SPEC 15 (Fundação da interface)** é a única sem requisito
+  numerado de origem — nenhum dos 9 módulos decide camada de estilo, shell ou estados de tela. Ela
+  precisa rodar **Specify** (curto) antes do Design, criando requisitos `UI-NN`, e registrar a
+  escolha da camada de estilo como AD nova.
+- **Duas chamadas de IA ainda fora da lista fechada do IA-02**, cada uma travando o Design da sua
+  spec até virar decisão registrada: pré-diagnóstico de questão suspeita (**SPEC 35**) e extração do
+  programa do edital (**SPEC 34**).
+- **In-progress** (file:line): none.
 - **Uncommitted files**: none.
+- **Branch**: `docs/reorganizacao-das-specs`. `main` protegida pelo hook local `.githooks/pre-push`
+  (proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
+  `git config core.hooksPath .githooks`. PRs #5, #6, #9 e #10 mergeados.
+- **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
+  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free. Vercel, Sentry, OpenAI,
+  Cohere, Asaas e PostHog **não** provisionados — cada um trava a spec indicada na tabela de
+  pendências externas do `ROADMAP.md`.
+- **Pendência manual sua**: cadastrar o segredo `DATABASE_URL` em Settings → Secrets and variables →
+  Actions do repositório, senão os testes de banco pulam na CI (não reprovam, mas também não protegem).
+- **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json` expande
+  da variável de ambiente do **sistema operacional**; o bloco `env` de `.claude/settings.local.json`
+  **não** alimenta essa expansão (testado). A variável global do Windows contém o token de **outra
+  conta**. Correção: o servidor `supabase-passou` foi registrado no **escopo local**
+  (`claude mcp add --scope local`), que vive em `~/.claude.json`, fica fora do git e vence o
+  `.mcp.json` no mesmo nome. O `.mcp.json` pede `${SUPABASE_PASSOU_TOKEN}`, que não existe
+  globalmente: sem escopo local o servidor falha de forma **visível** em vez de conectar na conta
+  errada. A mesma armadilha valia para o Supabase CLI — resolvida na T1–T4.
+- **Achados de ambiente que continuam valendo**: (1) `--env-file` e `process.loadEnvFile()` não
+  sobrescrevem variável já existente no sistema; (2) conexão direta `db.<ref>.supabase.co` não
+  resolve nesta máquina — usar o **Session pooler, porta 5432**; (3) o Vitest usa reporter `minimal`
+  dentro de agente e esconde `console.warn` — depurar com `--reporter=default`; (4) `next build` já é
+  o typecheck, não existe script `typecheck`.
+- **Contratos de schema a respeitar**: AD-039/040 (questão), AD-042/043/044 (log e projeções), AD-046
+  (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060 (anel por
+  bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 **substituído pela AD-084**, AD-083
+  (ambiente de teste), AD-085 (cache fora de requisição), **AD-086 (ordem das specs)**.
+- **Pendências que não travam o começo** (a tabela completa, por spec, está no `ROADMAP.md`):
+  advogado (base legal das questões AD-003; janela de 24m AD-045; LIA antes do flywheel AD-026; base
+  legal do evento pré-login **e** o instrumento da transferência internacional para os EUA, art. 33
+  LGPD, AD-079) · contador (CNPJ/regime) · contrato do Asaas · preço do Cohere embed-v4 · **teste cego
+  da voz** (trava a SPEC 39, ferramenta em `experiments/tts-comparacao/`, incluir Inworld e Hume) ·
+  free tier do PostHog em fonte primária · critério de morte do produto (decisão de sócios) ·
+  calibrações registradas como assumptions, todas com default no catálogo de configuração.
+- **Documentos que a reorganização deixou coerentes**: `README.md`, `AGENTS.md` e `CLAUDE.md` foram
+  atualizados junto. `docs/historico/` continua **congelado de propósito** e ainda cita caminhos
+  antigos — é registro, não fonte.

@@ -5,12 +5,14 @@
 > contexto de continuidade = `docs/historico/HANDOFF.md`; munição de oferta =
 > `docs/EVIDENCIAS-CIENTIFICAS.md`.
 >
-> **A fonte da verdade viva das decisões é `.specs/STATE.md` (AD-001…AD-072)** — os documentos em
+> **A fonte da verdade viva das decisões é `.specs/STATE.md` (AD-001…AD-086)** — os documentos em
 > `docs/historico/` são registro congelado e podem conter pontos já revogados por ADs posteriores.
 >
-> **Objetivo deste PRD:** ser insumo direto para a skill `/tlc-spec-driven`, que trabalha com dois
-> artefatos — (1) `.specs/STATE.md` = log de decisões `AD-NNN` (ver **§11**, mapeia D1–D35 um-para-um);
-> (2) `.specs/features/[feature]/spec.md` = uma spec por módulo (sementes em **§5**).
+> **Objetivo deste PRD:** ser insumo direto para a skill `/tlc-spec-driven`, que trabalha com
+> (1) `.specs/STATE.md` = log de decisões `AD-NNN` (ver **§11**, mapeia D1–D35 um-para-um);
+> (2) `.specs/modulos/m*/spec.md` = os requisitos por módulo (sementes em **§5**); e
+> (3) `.specs/ROADMAP.md` + `.specs/features/NN-*/spec.md` = a ordem de construção em 42 specs
+> numeradas (**AD-086**, 2026-08-16), que é a unidade de trabalho desde então.
 >
 > **Regras deste documento:** linguagem de leigo, sem analogias; todo termo técnico vem com o que
 > significa em concreto. Números voláteis (preço, modelo de IA, taxa) estão marcados **[provisório]** ou

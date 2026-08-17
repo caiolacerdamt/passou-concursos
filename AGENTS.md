@@ -6,15 +6,18 @@ adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a
 
 ## Estado
 
-Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-083`). **Design e Tasks concluídos** para
-**INFRA-11** e **M4** — ver `.specs/features/m9-infra/tasks.md` (T1…T9) e
-`.specs/features/m4-coluna-vertebral/tasks.md` (T10…T22). **Execute não começou: ainda não existe
-código de aplicação** (a T1 é o esqueleto do Next.js).
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-086`). O trabalho foi **reorganizado em 42
+specs numeradas** (AD-086): a unidade de implementação é a **spec**, não o módulo.
+**Já existe código de aplicação** — as specs 01 (fundação) e 02 (configuração e feature flags) estão
+concluídas e verificadas.
 
-Ordem de Design definida no handoff do `.specs/STATE.md`: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
-Ressalva registrada no Design do M4: como o AD-076 exige a conta do Raio-X ligada desde o dia 1,
-**o M5 precisa entrar antes do lançamento**, não em sexto lugar.
-M3 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não estiver perto de ligar (AD-064).
+**A ordem oficial está em `.specs/ROADMAP.md`.** Regra dura: **uma spec só depende dela mesma ou de
+spec de número menor**. Dependência para frente é bug do roadmap — vira AD nova, não improviso.
+Para trabalhar: *"Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`"*. Próxima: **SPEC 03**.
+
+O AD-076 exige a conta do Raio-X ligada desde o dia 1 — por isso as specs 26 e 27 são
+**pré-lançamento**. As specs 39 e 40 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não
+estiver perto de ligar (AD-064).
 
 O lançamento separa **construído × ligado** (AD-076): tudo é construído (exceto M3, congelado), mas só
 4 superfícies nascem ligadas — plano do dia, sessão de questões, progresso, conta. O resto (tutor,
@@ -27,7 +30,10 @@ nem PWA** no lançamento (AD-077).
 Quando dois documentos discordam, **o de cima vence**:
 
 1. **`.specs/STATE.md`** — log append-only de decisões `AD-NNN`. AD mais alto vence AD mais baixo.
-2. **`.specs/features/<modulo>/spec.md`** — requisitos numerados e critérios de aceite.
+2. **`.specs/modulos/m*/spec.md`** — requisitos numerados e critérios de aceite (**o quê**).
+   **`.specs/ROADMAP.md`** + **`.specs/features/NN-*/spec.md`** — ordem, fronteira e escopo
+   (**quando** e **em qual spec**). Discordância sobre o conteúdo do requisito → vence o módulo;
+   sobre em qual spec ele entra → vence o roadmap. Requisito nunca é copiado para os dois lugares.
 3. **`PRD.md`** — contrato de produto.
 4. **`docs/historico/`** — congelado. Registro de como se chegou aqui. **Pode conter ponto já
    revogado.** Nunca é fonte para decidir; nunca é reescrito.
@@ -117,7 +123,9 @@ com o requisito e a AD no corpo, um commit atômico por task, merge `--no-ff` vi
 ```
 PRD.md                     contrato de produto
 .specs/STATE.md            log de decisões AD-NNN  ← fonte da verdade
-.specs/features/m*/spec.md requisitos por módulo
+.specs/ROADMAP.md          a sequência oficial das 42 specs  ← por onde começar
+.specs/features/NN-*/      specs numeradas: o que construir, em que ordem
+.specs/modulos/m*/spec.md  requisitos por módulo (texto dos AC) + rodadas já feitas
 docs/GITFLOW.md            como trabalhar no git
 docs/EVIDENCIAS-*.md       estudos que embasam o método (oferta/marketing)
 docs/historico/            congelado — como se chegou aqui

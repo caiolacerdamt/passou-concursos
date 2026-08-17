@@ -1,4 +1,11 @@
 export {
+  ambienteDeExecucao,
+  dsn,
+  release,
+  sentryLigado,
+} from "./ambiente";
+
+export {
   CHAVES_SENSIVEIS,
   PROFUNDIDADE_MAXIMA,
   chaveEhSensivel,

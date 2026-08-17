@@ -190,6 +190,27 @@ descreveComBanco("registrar_tentativa — dedup do duplo-clique", () => {
     });
   });
 
+  it("item marcado sem tentativa gravada grita com nome, em vez de devolver nada", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const sessao = await criarSessao(cliente, aluno);
+      const item = await criarItemDeSessao(cliente, sessao, questao);
+
+      // Estado que a atomicidade da funcao deveria impedir, forcado a mao: item
+      // respondido e nenhuma tentativa. Sem a guarda, a funcao devolve zero
+      // linha e o chamador estoura lendo `undefined`.
+      await cliente.query(
+        "update public.sessao_itens set respondido_em = now() where id = $1",
+        [item],
+      );
+
+      await expect(
+        registrar(cliente, { userId: aluno, itemId: item }),
+      ).rejects.toThrow(/item_sem_tentativa/);
+    });
+  });
+
   it("errar no treino sem causa e recusado com nome proprio, ANTES do INSERT (ALUNO-03 AC1)", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = novoAluno();

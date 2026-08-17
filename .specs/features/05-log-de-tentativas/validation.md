@@ -1,6 +1,7 @@
 # SPEC 05 — Log de tentativas · Validação
 
-**Veredito: PASS com dívida `Major` aberta.**
+**Veredito: PASS.** (Rodada 1 fechou em *PASS com dívida `Major`*; a correção `90cb569` fechou o
+`Major` — ver §8.)
 
 **Ritual A** (AD-090) — verificação AC por AC com sensor de mutação, feita por agente que não
 escreveu o código. Regra aplicada: **evidência-ou-zero** — nenhum AC recebeu PASS sem `arquivo:linha`
@@ -8,12 +9,16 @@ que o prove.
 
 | | |
 | --- | --- |
-| **Faixa de diff verificada** | `efe4a87..ok2422956` (branch `feat/m4-p1-log-tentativas`, 8 commits, T41–T47) |
-| **Suíte na linha de base** | `npx vitest run` → **333 PASS / 0 FAIL** (unit 152 + db 181) |
-| **Lint** | `npm run lint` → sem apontamento |
+| **Faixa de diff verificada** | **`efe4a87..90cb569`** — rodada 1 verificou `efe4a87..2422956` (8 commits, T41–T47); a **rodada 2** verificou `2422956..90cb569` (`fix(m4): poe a exigencia da causa no caminho de escrita real`) |
+| **Suíte na linha de base** | rodada 1: **333 PASS / 0 FAIL** · rodada 2: **338 PASS / 0 FAIL** |
+| **Lint** | `npm run lint` → sem apontamento nas duas rodadas |
 | **Banco** | projeto Supabase de desenvolvimento `kfpmetkmhjtmgwgaaerl`, Postgres 17.6, pg_partman 5.3.1, `public.tentativas` com 8 partições e 0 linhas |
-| **Mutações** | 9 aplicadas, **9 mortas, 0 sobreviventes**; 2 planejadas não puderam ser aplicadas (ver §Não verificado) |
-| **Estado do banco ao fim** | restaurado; suíte reexecutada em 333/333 depois da última restauração |
+| **Mutações** | **14 aplicadas no total: 13 mortas, 1 sobrevivente** (rodada 1: 9/9 mortas; rodada 2: 5 aplicadas, 4 mortas, 1 sobrevivente). 2 planejadas não puderam ser aplicadas (ver §6) |
+| **Estado do banco ao fim** | restaurado; suíte reexecutada em **338/338** depois da última restauração |
+
+> **Nota sobre as seções 1–7:** são o texto da rodada 1 e ficam como estão, como registro do que foi
+> medido naquele momento. O que a correção mudou está consolidado na **§8**, que é a seção que vale
+> para os gaps G1, G5 e G6.
 
 ---
 
@@ -289,3 +294,153 @@ entre alunos, dependência para frente, chave órfã nem nome de modelo em códi
   `anon`/`authenticated` voltaram a `INSERT, REFERENCES, SELECT, TRIGGER`, as 8 partições continuam com
   2 gatilhos cada, e `endurecer_particoes_de_tentativas()` foi executada uma última vez (devolveu 8).
 - `npx vitest run` após a restauração: **333 PASS / 0 FAIL**. `npm run lint`: sem apontamento.
+
+---
+
+## 8. Rodada 2 — reverificação da correção `90cb569`
+
+Escopo desta rodada: **só** os gaps G1, G5 e G6. Os demais AC e Success Criteria não foram
+reverificados; o que os sustenta continua sendo a §1 e a §2. Mesma régua: evidência-ou-zero.
+
+Diff olhado: `git diff 2422956..90cb569` — 1 migração nova
+(`supabase/migrations/20260817126000_registrar_tentativa_causa_obrigatoria.sql`, 148 linhas),
+`src/modules/aluno/tentativas/registrar.ts` (+33/−11), 3 arquivos de teste (+102).
+Linha de base: **338 PASS / 0 FAIL**, lint limpo.
+
+### 8.1 G1 — **RESOLVIDO**
+
+A exigência da causa entrou no caminho de escrita real, dentro de
+`public.registrar_tentativa`, **depois** de `v_correta` ser calculado e **antes** do INSERT:
+
+- Recusa nomeada: `supabase/migrations/20260817126000_registrar_tentativa_causa_obrigatoria.sql:115–119`
+  (`if p_contexto = 'treino' and not v_correta and p_causa is null then raise exception
+  'causa_obrigatoria: ...'`), posicionada logo após `v_correta := ...` (`:109`).
+- Tradução para motivo nomeado no módulo: `src/modules/aluno/tentativas/registrar.ts:49–55`
+  (`error.message.includes("causa_obrigatoria")` → `TentativaRecusada("causa_obrigatoria", …)`),
+  com a mensagem que diz ao aluno que "não sei dizer" vale.
+- Prova de que a recusa vem da **função** e não do `CHECK`: `tests/db/registrar-tentativa.test.ts:193–224`
+  afirma `/causa_obrigatoria:/` — com os dois-pontos, que só a mensagem da função tem; o nome da
+  constraint é `causa_obrigatoria_no_treino`, sem dois-pontos. A asserção discrimina.
+- Prova de que a exigência é **só no erro** e **só no treino**: `:226–241` (acertar no treino sem causa
+  passa) e `:243–259` (errar sem causa em `diagnostico` e `simulado` passa).
+- Prova do lado TypeScript: `src/modules/aluno/tentativas/registrar.test.ts:218–239`.
+
+**Julgamento do argumento do autor.** Ele está certo, e a correção está no lugar certo. O módulo não
+pode saber que o aluno "errou no treino" sem conhecer o gabarito, e conhecê-lo violaria a invariante
+nº4 — logo, o único ponto do sistema que pode fazer a recusa **antes do INSERT e com nome próprio** é
+o instante seguinte à comparação, dentro da função. `validarResposta()` foi corretamente rebaixada a
+conveniência da tela, e o comentário em `registrar.ts:115–127` documenta isso sem prometer garantia.
+O ALUNO-03 AC1 e o **Success Criteria nº4 passam a PASS** — a atualização vale para as tabelas das §1
+e §2.
+
+Efeito colateral verificado: a atomicidade continua provada. A recusa acontece **depois** do dedup ter
+marcado o item, e o rollback devolve o item a não respondido — `tests/db/registrar-tentativa.test.ts:261–298`,
+verde na linha de base. A asserção daquele teste foi afrouxada de `/causa_obrigatoria_no_treino/` para
+`/causa_obrigatoria/` (`:277`), o que a faz casar tanto com a função quanto com o `CHECK`. Conferi por
+mutação que isso **não** cegou o `CHECK`: ver mutação **a2**.
+
+### 8.2 G5 — **RESOLVIDO**
+
+`tests/db/tentativas-trava.test.ts:82` passou de `/permission denied/` para
+`/permission denied for table tentativas/`.
+
+Prova por mutação, não por leitura: sob a mutação **h2** (`grant truncate` em `tentativas` **e** em
+`tentativa_causa_simulado`, que era exatamente o cenário em que a asserção antiga sobrevivia por causa
+do `cascade`), o teste `recusa TRUNCATE da tabela, inclusive para o service_role` **agora falha**. Na
+rodada 1, com a mutação equivalente, ele passava. Gap fechado.
+
+### 8.3 G6 — **PARCIALMENTE RESOLVIDO** (o defeito sumiu; a guarda nova não é testada)
+
+Duas metades, com veredito diferente:
+
+- **O defeito original está corrigido e provado.** `src/modules/aluno/tentativas/registrar.ts:66–80`
+  passou a tipar a linha como possivelmente `undefined` e a levantar erro nomeado em vez de acessar
+  propriedade de `undefined`. Provado em `src/modules/aluno/tentativas/registrar.test.ts:241–245`
+  (`data: []` → `rejects.toThrow(/linha nenhuma/)`). O `TypeError` que eu apontei não existe mais.
+- **A guarda nova no SQL é dead code do ponto de vista da suíte.** O
+  `raise exception 'item_sem_tentativa: ...'`
+  (`20260817126000_registrar_tentativa_causa_obrigatoria.sql:75–81`) **não tem teste nenhum**: a
+  mutação **m3** removeu esse bloco inteiro e a suíte completa continuou em **338/338**. Nada a
+  exercita. Vira o gap **G9**.
+
+### 8.4 Mutações da rodada 2
+
+| # | Mutação | Suíte ficou vermelha? | Quem pegou |
+| --- | --- | --- | --- |
+| **m1** | Bloco `if p_contexto = 'treino' and not v_correta and p_causa is null then raise ...` removido da função | **Sim — 1 falha** | **Só o teste novo**: `tests/db/registrar-tentativa.test.ts:193` (`errar no treino sem causa e recusado com nome proprio, ANTES do INSERT`). Era a pergunta: **quem pega é o teste novo, não o do `CHECK`** — o teste do `CHECK` (`tentativas-schema.test.ts:239`) nem é exercitado por este caminho, e o teste de atomicidade continuou verde porque o `CHECK` da tabela assume a recusa e a asserção `/causa_obrigatoria/` casa com o nome da constraint |
+| **m2** | Prefixo da mensagem trocado de `causa_obrigatoria:` para `falta_motivo:` | **Sim — 2 falhas** | `registrar-tentativa.test.ts:193` e `:261`. **O teste unitário do mapeamento NÃO falhou** — ele usa mock com a string copiada à mão (`registrar.test.ts:224–228`), então não vê o SQL. O contrato SQL↔TS é preservado por **duas asserções paralelas**, não por um teste de ponta a ponta. Ver gap **G10** |
+| **m3** | `raise exception 'item_sem_tentativa: ...'` removido (a função volta a devolver zero linhas) | **NÃO — 338/338 verde** | **Mutação sobrevivente.** Nenhum teste exercita esse ramo |
+| **h2** *(re-teste do G5)* | `grant truncate` em `tentativas` e em `tentativa_causa_simulado` | **Sim — 3 falhas** | `tentativas-trava.test.ts:74` (**esta é a que sobrevivia na rodada 1** — G5 confirmado fechado), `:97` e `sessoes.test.ts:259` |
+| **a2** *(re-teste do `CHECK`)* | `causa_obrigatoria_no_treino` trocado por `check (true)` | **Sim — 1 falha** | `tentativas-schema.test.ts:239`. Confirma que o afrouxamento da asserção em `:277` **não** cegou a rede do banco: o `CHECK` continua sensível, agora por um teste em vez de dois |
+
+**Placar da rodada 2: 4 mortas, 1 sobrevivente.** Acumulado das duas rodadas: **13 mortas, 1
+sobrevivente**.
+
+### 8.5 Situação dos gaps depois da correção
+
+| Gap | Severidade original | Situação |
+| --- | --- | --- |
+| **G1** | `Major` | **Resolvido.** Recusa nomeada antes do INSERT, no caminho real, provada por teste e por mutação (m1) |
+| **G5** | `Minor` | **Resolvido.** Asserção passou a discriminar; provado por mutação (h2) |
+| **G6** | `Minor` | **Parcial.** O `TypeError` sumiu e está testado; a guarda `item_sem_tentativa` no SQL não é testada → vira **G9** |
+| **G2** | `Minor` | **Aberto.** INFRA-04 AC3 continua provado no agendamento, não no efeito |
+| **G3** | `Minor` | **Aberto.** ALUNO-01 AC5 "recalculável do zero" continua sem asserção |
+| **G4** | `Minor` | **Aberto.** Dedup continua testado só sequencialmente |
+| **G7** | `Minor` | **Aberto.** A suíte continua validando o banco aplicado, não o `.sql` versionado |
+| **G8** | `Minor` | **Aberto.** `not.toMatch(/Seq Scan/)` continua tautológico |
+
+### 8.6 Gaps novos desta rodada
+
+**G9 `Minor` — a guarda `item_sem_tentativa` não é exercitada por nada.**
+`20260817126000_registrar_tentativa_causa_obrigatoria.sql:75–81`. Mutação **m3** sobreviveu à suíte
+inteira. O estado que ela pega (item marcado como respondido sem tentativa correspondente) é
+inalcançável pelo caminho sancionado, o que é justamente o argumento do comentário do autor — mas
+então a linha é uma promessa não verificada. Um teste que marque `sessao_itens.respondido_em` à mão e
+chame a função fecharia o buraco em 6 linhas. Baixa consequência: o pior caso hoje é o
+`item_sem_tentativa` estar quebrado e o chamador cair no erro genérico de `registrar.ts:74–78`, que já
+é testado. Não bloqueia.
+
+**G10 `Minor` — o contrato SQL↔TS da recusa é mantido por convenção, não por teste de ponta a ponta.**
+O prefixo `causa_obrigatoria:` é afirmado no SQL por `registrar-tentativa.test.ts:211` e no TypeScript
+por `registrar.test.ts:224–228`, este último contra um **mock** com a string copiada à mão. A mutação
+**m2** mostrou o efeito: trocar a mensagem no banco derruba os testes de banco, mas o teste do
+mapeamento continua verde afirmando um acordo que o banco não cumpre mais. Não é falso-positivo
+perigoso — a suíte fica vermelha de qualquer jeito —, mas o teste unitário sozinho não prova o que o
+nome dele sugere. Vale registrar como padrão a evitar quando a SPEC 13 mapear mais motivos.
+
+**Observação, não gap:** `item_sem_tentativa` não tem tradução em `registrar.ts` — cai no
+`throw error` de `:56`. Está certo: é defeito interno, não recusa que a tela deva tratar. Só não é o
+mesmo tratamento que `item_inexistente` e `causa_obrigatoria` recebem, e quem ler o `MotivoDaRecusa`
+(`contrato.ts:67–73`) não descobre isso.
+
+### 8.7 Estado deixado ao fim da rodada 2
+
+- Nada commitado, nada consertado. Única alteração na árvore: este `validation.md`.
+- Banco restaurado: `public.registrar_tentativa` recriada com o corpo literal de
+  `20260817126000_registrar_tentativa_causa_obrigatoria.sql` (mais `revoke`/`grant`), a constraint
+  `causa_obrigatoria_no_treino` recriada com a definição original, e os privilégios de `anon`/
+  `authenticated` de volta a `INSERT, REFERENCES, SELECT, TRIGGER` em `tentativas` e
+  `DELETE, INSERT, REFERENCES, SELECT, TRIGGER, UPDATE` em `tentativa_causa_simulado`.
+- `npx vitest run` após a última restauração: **338 PASS / 0 FAIL**. `npm run lint`: sem apontamento.
+
+
+---
+
+## Rodada 3 — fechamento do G9 (feita pelo autor, declarada como tal)
+
+O gap **G9** era o único mutante sobrevivente das duas rodadas: a guarda
+`item_sem_tentativa` da função SQL não tinha teste nenhum.
+
+| | |
+| --- | --- |
+| **O que entrou** | `tests/db/registrar-tentativa.test.ts:193–212` — força o estado que a atomicidade deveria impedir (item com `respondido_em` preenchido e nenhuma tentativa) e afirma a recusa nomeada |
+| **Sensor** | mesma mutação **m3** (o `raise` trocado por `return;`, aplicado direto no banco): suíte do arquivo ficou **1 failed / 13 passed**. Antes do teste, a mesma mutação passava verde |
+| **Restauração** | função reaplicada a partir do arquivo de migração; `npm test` → **339 PASS / 0 FAIL** |
+| **Acumulado do sensor** | **14 mutações, 14 mortas, 0 sobreviventes** |
+
+**Quem escreveu este trecho foi o autor, não o verificador.** Está registrado assim de propósito: é
+autoverificação de um gap `Minor` já diagnosticado por terceiro, com a medição descrita para poder
+ser refeita — não substitui a independência das rodadas 1 e 2, que continuam sendo a verificação
+desta spec.
+
+**Continuam abertos:** G2, G3, G4, G7, G8, G10 — todos `Minor`, nenhum bloqueia.

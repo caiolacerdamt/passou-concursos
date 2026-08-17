@@ -79,6 +79,38 @@
 - **Date**: 2026-08-17
 - **Status**: active
 
+### AD-091
+- **Decision**: Em **tabela particionada append-only**, a trava de três camadas do AD-084 **não
+  basta** — ela protege a tabela-pai e deixa cada partição aberta. Toda tabela particionada do
+  projeto passa a exigir mais três peças, aplicadas **por partição**: (1) `revoke all` de
+  `anon`/`authenticated`; (2) `enable row level security` sem policy nenhuma; (3) o gatilho
+  `before truncate for each statement`. Como partição nova nasce a cada mês, isso vira uma **função
+  idempotente** (`public.endurecer_particoes_de_tentativas()`, `security definer`, `search_path`
+  vazio) chamada em dois lugares: no fim da migração que cria o particionamento e no job de
+  `pg_cron`, **logo depois** de `partman.run_maintenance_proc()`, na mesma transação do job. No
+  `part_config`, `inherit_privileges = true`. O acesso legítimo não é afetado: o Postgres checa
+  privilégio **na tabela-pai**, então revogar tudo na partição fecha só a porta dos fundos.
+- **Reason**: Medido no banco de desenvolvimento, com a trava do AD-084 aplicada só no pai:
+  `update` e `delete` são bloqueados tanto via pai quanto direto na partição (o Postgres **clona**
+  gatilho de linha — era a pergunta aberta que o design do M4 deixou), mas **`truncate` direto na
+  partição passou**: gatilho de statement não é clonado. Pior que isso, partição criada em `public`
+  nasce com os privilégios do `alter default privileges` do Supabase (`arwdDxtm` para `anon` e
+  `authenticated`) e **sem RLS**, porque RLS não se herda — e o PostgREST expõe tudo que está em
+  `public`. Ou seja: cada partição era uma cópia de `tentativas` legível inteira, de todos os alunos,
+  por qualquer aluno autenticado, por fora de toda policy. Não é risco teórico e não é regressão
+  futura: era o estado da tabela no minuto em que ela nasceu.
+- **Trade-off**: Sobra uma **janela**: partição criada fora do job (por `create_parent` numa migração
+  nova, ou à mão) fica sem RLS e sem gatilho até a próxima manutenção. O `inherit_privileges` já
+  entrega o `revoke` no instante da criação, que é a metade que mais importa, mas a janela existe e
+  está aceita conscientemente — fechá-la de vez exigiria um **event trigger** em `CREATE TABLE`, que
+  é peça global e cara para o tamanho de hoje. Se o risco crescer, a SPEC 16 a fecha. Segundo custo:
+  o linter do Supabase passa a reportar `rls_enabled_no_policy` (nível INFO) em cada partição — é o
+  desenho, não um defeito, e quem "corrigir" criando policy reabre o buraco.
+- **Scope**: `tentativas` (SPEC 05) e toda tabela particionada futura. Complementa o AD-084, não o
+  substitui.
+- **Date**: 2026-08-17
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -92,28 +124,41 @@
   | **02 — Configuração e flags** | T5–T9 | ✅ **PASS** independente — 8/8 AC, sensor 4/4, 41 testes |
   | **03 — Observabilidade e segredos** | T23–T32 | ✅ **PASS** independente — sensor 6/6, 143 testes, 7 gaps não bloqueantes |
   | **04 — Acervo: schema, taxonomia e proveniência** | T33–T40 | ✅ **PASS** — 9/9 AC + 4 Success Criteria com evidência, **251 testes**. **Verificação NÃO independente** |
-- **Next step**: **SPEC 05 — Log de tentativas** (`.specs/features/05-log-de-tentativas/spec.md`).
-  **Ritual A.** Entra direto em Execute: `design.md` e `tasks.md` de
-  `.specs/modulos/m4-coluna-vertebral/` cobrem **T11–T15** e continuam valendo. **T10 morreu** —
-  virou a SPEC 04, e o log aponta para tabela real.
+  | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
+- **Next step**: **SPEC 06 — Projeções, revisão espaçada e plano do dia**
+  (`.specs/features/06-projecoes-revisao-e-plano/spec.md`). **Ritual B.** O `design.md` e o
+  `tasks.md` de `.specs/modulos/m4-coluna-vertebral/` cobrem **T16–T21** e continuam valendo. Ela
+  acrescenta `plano_dia_id` a `sessoes` (a SPEC 05 deixou a coluna de fora de propósito: `plano_dia`
+  é dela) e é onde entram as chaves `param.m4.*` — a SPEC 05 não declarou nenhuma, para não deixar
+  chave órfã.
 
 ### Dívida aberta
 
 1. **Major — a SPEC 04 foi verificada pelo próprio autor.** O sensor rodou 4 mutações das 6, e uma
-   (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. **A SPEC 05
-   herda este schema** — vale rodar o Verifier sobre `5630e06..f2f1850` antes de apoiar `tentativas`
-   nele. Detalhe em `.specs/features/04-*/validation.md`.
-2. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
+   (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. Detalhe em
+   `.specs/features/04-*/validation.md`. ⚠️ **A SPEC 05 apoiou `tentativas` neste schema sem que o
+   Verifier de `5630e06..f2f1850` fosse rodado** — a recomendação continua de pé e agora tem uma
+   tabela em cima dela.
+2. **Minor — 6 gaps abertos da SPEC 05**, nenhum bloqueante, todos com evidência em
+   `.specs/features/05-log-de-tentativas/validation.md`: **G2** INFRA-04 AC3 provado no agendamento e
+   não no efeito (nenhum teste chama `run_maintenance_proc()`) · **G3** ALUNO-01 AC5 "recalculável do
+   zero" sem asserção — é propriedade das projeções, fecha na SPEC 06 · **G4** dedup testado só
+   sequencialmente, nunca com dois cliques concorrentes de verdade · **G7** a suíte valida o banco
+   aplicado, não o `.sql` versionado · **G8** `not.toMatch(/Seq Scan/)` é tautológico com
+   `enable_seqscan = off` · **G10** o contrato SQL↔TS da recusa é mantido por duas asserções
+   paralelas, e o teste unitário do mapeamento continua verde quando o banco muda a mensagem — evitar
+   esse padrão quando a SPEC 13 mapear mais motivos.
+3. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
    (`src/modules/observabilidade/saneamento.mjs:144`). A AD-087 tornou `reportarErro` transversal: a
    primeira spec que passar `{ causa: erro }` perde a informação sem erro e sem teste vermelho.
-3. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
+4. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
    `new Client()` construído dentro da função, sem ponto de injeção. O padrão que resolve está no
    mesmo diff (`advisors.mjs:105`, `buscar = fetch`).
-4. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
+5. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
    vez de `if: failure()` nos três. Job cancelado ou skipado não dispara `failure()`.
-5. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
-6. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
-7. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
+6. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
+7. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
+8. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
 
 ### Contratos vigentes que nenhuma spec pode contrariar
 
@@ -134,7 +179,12 @@
 8. **`matricula` é a chave única** do conteúdo pago (SPEC 07). Nenhuma spec inventa outro caminho.
 9. **Toda tabela com `user_id` estende a rotina de apagamento da SPEC 14 e o teste dela na mesma
    task** — tabela nova não registrada tem que fazer o teste falhar, não passar em silêncio.
-10. Schema: AD-039/040 (questão, **implementados**), AD-042/043/044 (log e projeções), AD-046
+10. **Tabela particionada nova obedece ao AD-091**: `revoke all` + RLS + gatilho de TRUNCATE em cada
+    partição, por função idempotente chamada também pelo job de manutenção. `endurecer_particoes_de_
+    tentativas()` é o molde. Quem só copiar o AD-084 deixa a tabela aberta.
+11. `registrar_tentativa(...)` é o **único** caminho de escrita em `tentativas`. `security invoker`:
+    a RLS vale dentro dela. Quem gravar por INSERT direto (SPEC 09/13) repete o snapshot na mão.
+12. Schema: AD-039/040 (questão, **implementados**), AD-042/043/044 (log e projeções), AD-046
     (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060 (anel
     por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 **substituído pela AD-084**,
     AD-083 (ambiente de teste), AD-085 (cache fora de requisição), AD-086 **substituído pela AD-089**.
@@ -160,9 +210,10 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
 
 ### Perguntas abertas que a próxima spec resolve aplicando
 
-- **SPEC 05**: gatilho `BEFORE UPDATE OR DELETE ... FOR EACH ROW` na tabela-pai propaga para as
-  partições? Postgres suporta desde a 13 e o projeto roda 17.6, mas é afirmação a verificar. Se não
-  propagar: criar por partição via template do `pg_partman` e registrar o achado aqui.
+- ~~**SPEC 05**: o gatilho de linha propaga para as partições?~~ **Respondida medindo: propaga.** O
+  Postgres clona `BEFORE UPDATE OR DELETE ... FOR EACH ROW` para cada partição, presente e futura, e
+  atacar a partição direto também é bloqueado. O que **não** propaga é o gatilho de `TRUNCATE`, e daí
+  saiu a **AD-091**.
 - **SPEC 07**: é a única spec sem requisito numerado de origem. Precisa de **Specify curto** criando
   requisitos `UI-NN`, e a escolha da camada de estilo vira **AD nova**.
 - **Duas chamadas de IA fora da lista fechada do IA-02**, cada uma travando o Design da sua spec:

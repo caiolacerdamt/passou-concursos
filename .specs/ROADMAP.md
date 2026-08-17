@@ -97,7 +97,7 @@ trabalho é refeito.
 | 02 | Configuração e feature flags | tabela append-only `configuracoes`, catálogo em código, leitura com cache e queda segura | 01 | 5 | — | ✅ Concluída |
 | 03 | Observabilidade e segredos | Sentry no ponto único de reporte, falha de job visível, migração aplicada por CI | 01, 02 | 10 | — | ✅ Concluída |
 | 04 | Acervo — schema, taxonomia e proveniência | `provas`, `questoes` + versão, matérias/tópicos, enums, colunas de busca, trava de publicação | 02, 03 | 8 | — | ✅ Concluída (verificação **não independente**) |
-| 05 | Log de tentativas | `tentativas` particionada, snapshot congelado, trava de 3 camadas, RLS, `registrarTentativa` | 04 | 8 | **A** | 🟨 Design e tasks prontos (T11–T15) |
+| 05 | Log de tentativas | `tentativas` particionada, snapshot congelado, trava de 3 camadas **+ endurecimento por partição (AD-091)**, RLS, `registrarTentativa` | 04 | 7 | **A** | ✅ Concluída (T41–T47) |
 | 06 | Projeções, revisão espaçada e plano do dia | `dominio_topico`, `caderno_erros`, FSRS, `recalcula_projecoes()`, `gera_plano_do_dia()`, `pg_cron` | 05 | 10 | B | 🟨 Design e tasks prontos (T16–T21) |
 | 07 | **Interface, conta e deploy** | camada de estilo, shell responsivo, 4 estados, login e-mail+Google, `matricula` como chave única, Vercel no ar | 03 | 12 | B | ⬜ Não iniciada |
 | 08 | Gateway de IA | `tarefa → modelo/esforço/batch/cache/fallback` por configuração, dedup, alerta de gasto; 1ª tarefa real = frase do plano | 02, 03, 06 | 9 | B | ⬜ Não iniciada |
@@ -109,7 +109,7 @@ trabalho é refeito.
 | 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ⬜ Não iniciada |
 | — | 🚀 **LANÇAMENTO** | — | — | — | — | — |
 
-**Restam ~107 tasks em 10 specs** para lançar.
+**Restam ~100 tasks em 9 specs** para lançar.
 
 ## Depois do lançamento — specs 15 a 36
 

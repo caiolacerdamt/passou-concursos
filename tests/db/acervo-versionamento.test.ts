@@ -267,10 +267,16 @@ descreveComBanco("versionamento de questao", () => {
       }
 
       // RLS nao governa TRUNCATE (AD-084) e o service_role tem o privilegio.
+      //
+      // O `cascade` nao e conveniencia: desde a SPEC 05 existe FK de
+      // `tentativas` para `questoes`, e sem ele o Postgres recusa antes de
+      // chegar ao gatilho ("cannot truncate a table referenced in a foreign key
+      // constraint"). O teste passaria pelo motivo errado — a FK, e nao a trava.
+      // Com `cascade` o comando chega ao gatilho, que e o que este teste afirma.
       await cliente.query("savepoint truncagem_servico");
       await cliente.query("set local role service_role");
       await expect(
-        cliente.query("truncate table public.questoes"),
+        cliente.query("truncate table public.questoes cascade"),
       ).rejects.toThrow(/nao aceita TRUNCATE/);
       await cliente.query("rollback to savepoint truncagem_servico");
     });

@@ -11,14 +11,14 @@ discrimination sensor).
 
 ---
 
-**Design**: `.specs/features/m9-infra/design.md`
-**Spec**: `.specs/features/m9-infra/spec.md`
+**Design**: `.specs/modulos/m9-infra/design.md`
+**Spec**: `.specs/modulos/m9-infra/spec.md`
 **Status**: Draft
 **Escopo**: **INFRA-11** (configuração + feature flags) + o esqueleto do projeto que ela exige.
-A parte do **INFRA-04** (partição de `tentativas`) fica em `.specs/features/m4-coluna-vertebral/tasks.md`,
+A parte do **INFRA-04** (partição de `tentativas`) fica em `.specs/modulos/m4-coluna-vertebral/tasks.md`,
 junto da tabela que ela particiona.
 
-> **Continua em** `.specs/features/m4-coluna-vertebral/tasks.md` (T10…T22). A numeração é contínua
+> **Continua em** `.specs/modulos/m4-coluna-vertebral/tasks.md` (T10…T22). A numeração é contínua
 > entre os dois arquivos de propósito: T13 do M4 depende de T7 daqui.
 
 ---

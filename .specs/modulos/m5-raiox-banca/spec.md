@@ -1,5 +1,11 @@
 ﻿# M5 — Raio-X da Banca · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M5 → specs **26, 27, 34, 38**. As specs 26 e 27 são **pré-lançamento** (AD-076 exige a conta do
+> Raio-X ligada desde o dia 1).
+
 > Fonte: `PRD.md` §M5, §4.1, §7.3, §9, §10 (riscos 1 e 11); `docs/historico/DECISOES-TECNICAS.md` D19–D22.
 > Decisões: AD-019, AD-020, AD-021, AD-022. Herda contratos: **AD-039/AD-040** (questão:
 > `origem`, `status`, `anulada`, `materia_id`/`topico_id`, `fonte_citacao` com banca/ano —

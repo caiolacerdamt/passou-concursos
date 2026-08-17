@@ -1,5 +1,11 @@
 ﻿# M4 — Coluna Vertebral do Aluno · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M4 → specs **05, 06, 07, 22, 24, 25, 38**. O `design.md` e o `tasks.md` desta pasta são da rodada 1
+> e continuam válidos: as specs 05 e 06 os aproveitam (T11–T21). **A T10 foi absorvida pela spec 04.**
+
 > Fonte: `PRD.md` §M4, §4.1, §7.2, §9; `docs/historico/DECISOES-TECNICAS.md` D15–D18. Decisões: AD-015,
 > AD-016, AD-017, AD-018. Herda contratos: AD-039/AD-040 (questão: id+versão, enums,
 > dificuldade), AD-035/AD-036 (pg_cron/partição, fábrica). Contratos fixados nesta rodada:
@@ -299,7 +305,7 @@ nenhum agendamento.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 12 requisitos, **12 mapeados a tasks** (`.specs/features/m4-coluna-vertebral/tasks.md`),
+**Coverage:** 12 requisitos, **12 mapeados a tasks** (`.specs/modulos/m4-coluna-vertebral/tasks.md`),
 0 sem cobertura de story. **2 AC ficaram sem componente no design** e estão listados como lacunas no
 tasks.md: ALUNO-05 AC2 (diagnóstico adaptativo) e ALUNO-05 AC3 (chamada de IA do plano inicial).
 

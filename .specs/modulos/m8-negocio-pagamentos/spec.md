@@ -1,5 +1,10 @@
 ﻿# M8 — Negócio, Pagamentos & Onboarding · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M8 → specs **17, 19, 20, 21, 24, 42**.
+
 > Fonte: `PRD.md` §M8, §4.1 (item 4), §7.4, §9, §10 (abertas 3, 5, 9). Decisões: AD-031, AD-032,
 > AD-033, AD-034. Herda contratos: **AD-017/AD-044** (diagnóstico pulável → plano do 1º dia; a IA que
 > escreve o plano inicial é 1 chamada e sua falha não derruba o plano), **AD-051** (tutor entra no MVP —

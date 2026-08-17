@@ -1,5 +1,10 @@
 # M2 — Camada de IA · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M2 → specs **07, 08, 12, 13, 14, 29, 36**.
+
 > Fonte: `PRD.md` §M2, §4.1, §4.2, §6, §8, §9 (invariantes 4, 7, 11, 12), §10 (abertas 8 e 11).
 > Decisões: AD-007, AD-010, AD-011, AD-012, AD-013. Herda contratos: **AD-039** (questão: `id` +
 > `questao_versao`, correção = nova versão; enums), **AD-040** (formato de dados da questão:

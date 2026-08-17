@@ -1,5 +1,12 @@
 # M9 — Infra & Operações · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M9 → INFRA-11 na spec **02 ✅**; INFRA-09/10 na **03**; INFRA-04 na **05**; INFRA-03 na **06**;
+> INFRA-02 na **07**; INFRA-01/07 na **16**; INFRA-12 na **21**; INFRA-05 na **29**; INFRA-06 na **32**.
+> O `design.md`, o `tasks.md` (T1–T9) e o `validation.md` desta pasta são das specs 01 e 02.
+
 > Fonte: `PRD.md` §M9, §6, §7, §8, §9. Decisões: AD-035 (com dependências em AD-002,
 > AD-004, AD-010, AD-015, AD-018, AD-029). Refinamentos desta rodada: AD-036 (fábrica),
 > AD-037 (observabilidade), AD-038 (backup 7d).
@@ -337,7 +344,7 @@ confirmar que a flag da superfície logada está desligada.
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
 **Coverage:** 12 requisitos, **2 mapeados a tasks** (INFRA-11 e INFRA-04 — ver
-`.specs/features/m9-infra/tasks.md`), 0 sem cobertura de story ⚠️ (todos ligados a uma story ou ao
+`.specs/modulos/m9-infra/tasks.md`), 0 sem cobertura de story ⚠️ (todos ligados a uma story ou ao
 Out of Scope). Os outros 10 entram em Design junto do módulo que os consome (design.md §Escopo).
 
 ---

@@ -1,8 +1,8 @@
 # M4 — Coluna Vertebral do Aluno · Design
 
-**Spec**: `.specs/features/m4-coluna-vertebral/spec.md`
+**Spec**: `.specs/modulos/m4-coluna-vertebral/spec.md`
 **Status**: Draft
-**Depende de**: `.specs/features/m9-infra/design.md` (INFRA-11, configuração; INFRA-04, partição)
+**Depende de**: `.specs/modulos/m9-infra/design.md` (INFRA-11, configuração; INFRA-04, partição)
 
 ---
 

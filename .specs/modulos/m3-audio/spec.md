@@ -1,5 +1,10 @@
 ﻿# M3 — Áudio / TTS das Explicações · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M3 → specs **39, 40** — **congeladas** enquanto a flag de áudio não estiver perto de ligar (AD-064).
+
 > Fonte: `PRD.md` §M3, §4.2, §7.1, §10 (risco 4); `docs/historico/DECISOES-TECNICAS.md` D14 (partes A e B).
 > Decisões: AD-014. Herda contratos: **AD-052/IA-09** (explicação amarrada a `questao_versao`,
 > com versão e `status` próprios; mudança **substantiva** invalida, **cosmética** não),

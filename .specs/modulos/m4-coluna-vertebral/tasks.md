@@ -11,10 +11,10 @@ discrimination sensor).
 
 ---
 
-**Design**: `.specs/features/m4-coluna-vertebral/design.md`
-**Spec**: `.specs/features/m4-coluna-vertebral/spec.md`
+**Design**: `.specs/modulos/m4-coluna-vertebral/design.md`
+**Spec**: `.specs/modulos/m4-coluna-vertebral/spec.md`
 **Status**: Draft
-**Depende de**: `.specs/features/m9-infra/tasks.md` — **T1…T9 precisam estar prontas**. T10 não começa
+**Depende de**: `.specs/modulos/m9-infra/tasks.md` — **T1…T9 precisam estar prontas**. T10 não começa
 sem T9: o M4 lê 10 chaves da configuração e não existe `package.json` antes de T1.
 
 > A numeração continua a do M9 de propósito. Aqui vão **T10…T22**.
@@ -23,7 +23,7 @@ sem T9: o M4 lê 10 chaves da configuração e não existe `package.json` antes 
 
 ## Test Coverage Matrix
 
-> Idêntica à de `.specs/features/m9-infra/tasks.md` — a matriz é do projeto, não da feature.
+> Idêntica à de `.specs/modulos/m9-infra/tasks.md` — a matriz é do projeto, não da feature.
 > Diretrizes encontradas: `AGENTS.md`, `CLAUDE.md`, `docs/GITFLOW.md`. Nenhuma configuração de runner
 > existia antes de T2, então os defaults fortes do skill se aplicam.
 

@@ -1,5 +1,10 @@
 ﻿# M6 — Gamificação de Hábito · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M6 → specs **28, 33**.
+
 > Fonte: `PRD.md` §M6, §4.2, §9 (invariantes de honestidade), §10 (risco 11);
 > `docs/historico/DECISOES-TECNICAS.md` D23–D25. Decisões: AD-023, AD-024, AD-025.
 > Herda contratos: **AD-042** (log `tentativas` — o hábito é **projeção** sobre ele, o M6

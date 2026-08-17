@@ -11,7 +11,7 @@
 
 ## 1. Cobertura ancorada na spec
 
-Os critérios vêm de `.specs/features/m9-infra/spec.md` §"P1: Configuração e feature flags sem
+Os critérios vêm de `.specs/modulos/m9-infra/spec.md` §"P1: Configuração e feature flags sem
 deploy". Cada linha cita o `file:line` da asserção — sem citação, o critério conta como **não
 coberto**.
 

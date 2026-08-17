@@ -1,5 +1,10 @@
 # M1 — Banco de Questões & Pipeline de Ingestão · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M1 → specs **04, 08, 09, 10, 11, 18, 37**.
+
 > Fonte: `PRD.md` §M1, §4.1, §7.1, §9. Decisões: AD-003, AD-004, AD-005, AD-006, AD-008,
 > AD-009 (+ AD-035/AD-036 p/ onde a fábrica roda). Contratos fixados nesta rodada:
 > AD-039 (versionamento/enums de `questoes`), AD-040 (formato de dados da questão),

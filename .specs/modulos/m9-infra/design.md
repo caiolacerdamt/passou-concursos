@@ -1,6 +1,6 @@
 # M9 — Infra · Design
 
-**Spec**: `.specs/features/m9-infra/spec.md`
+**Spec**: `.specs/modulos/m9-infra/spec.md`
 **Status**: Draft
 **Rodada**: 1 — cobre **INFRA-11** (configuração + feature flags) e a parte do **INFRA-04**
 (particionamento de `tentativas`) que o M4 consome na primeira história.

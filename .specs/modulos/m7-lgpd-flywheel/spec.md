@@ -1,5 +1,10 @@
 # M7 — LGPD & Flywheel de Dados · Especificação
 
+> 🧭 **Spec temática — fonte de requisito, não unidade de implementação.** A ordem de construção é a
+> de [`.specs/ROADMAP.md`](../../ROADMAP.md); estes requisitos são construídos pelas specs numeradas
+> em `.specs/features/NN-*/`. Aqui mora o **texto** do requisito; lá mora **quando** ele entra.
+> M7 → specs **30, 31, 32, 35, 41**.
+
 > Fonte: `PRD.md` §M7, §6 (LGPD/Segurança), §7.5, §9 (invariantes 8/9/10/13), §10 (aberta nº10).
 > Decisões: AD-026, AD-027, AD-028, AD-029, AD-030. Herda contratos: **AD-042** (log `tentativas`:
 > só-INSERT, DELETE por `user_id` permitido, snapshot congelado, particionada por mês), **AD-043**

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 02 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 02 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · ✅ concluída |
 | **Depende de** | SPEC 01 |
 | **Habilita** | todas — todo parâmetro que as specs mandam para "configuração" mora aqui |
 | **Tasks** | 5 (T5–T9) |

@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 01 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 01 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · ✅ concluída |
 | **Depende de** | — |
 | **Habilita** | todas |
 | **Tasks** | 4 (T1–T4) |
@@ -19,7 +19,7 @@ de migração e CI que reprove o que quebra.
 
 | Task | Commit | O quê |
 | --- | --- | --- |
-| T1 | `d3281a2` | Next.js 16.3.1 + React 19.2.8, App Router, TypeScript, **sem Tailwind** (a camada de estilo é decisão da SPEC 15); pastas do design com `.gitkeep` |
+| T1 | `d3281a2` | Next.js 16.3.1 + React 19.2.8, App Router, TypeScript, **sem Tailwind** (a camada de estilo é decisão da SPEC 07); pastas do design com `.gitkeep` |
 | T2 | `5d34aee` | Vitest 4.1.10 com projetos `unit` (paralelo) e `db` (sequencial); sem `DATABASE_URL` o `db` pula com aviso (AD-083) |
 | T3 | `817fcf0` | Supabase CLI 2.114.0 como devDependency, `npm run db:push` sem Docker, `tests/db/conexao.ts` |
 | T4 | `a075f4c` | job `app` da CI: `npm ci`, build, lint, `test:unit`; `test:db` só com o segredo |

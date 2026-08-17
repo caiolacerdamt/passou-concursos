@@ -2,10 +2,11 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 06 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 06 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** |
 | **Depende de** | SPEC 05 |
-| **Habilita** | SPEC 07 (frase do plano), 22, 24, 25, 27, 28 |
+| **Habilita** | SPEC 08 (frase do plano), 11, 13, 14, 19, 20 |
 | **Tasks (estimativa)** | ~10 |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | 🟨 **Design e tasks já escritos** (rodada 1) — Execute não começou |
 | **Requisitos** | **ALUNO-02**, **ALUNO-05** (AC1), **ALUNO-06** (parcial), **ALUNO-07**, **ALUNO-08**, **ALUNO-09**, **ALUNO-10**, **ALUNO-11**, **INFRA-03** |
@@ -24,7 +25,7 @@ do zero, sem uma linha de IA decidindo o que o aluno estuda (invariante nº6).
 | `.specs/modulos/m4-coluna-vertebral/design.md` | §Projeções · §`recalcula_projecoes()` · §`agendarRevisao` · §Plano · §`perfil_estudo` · §`gera_plano_do_dia()` · §Contrato com o M5 · §Fluxos/Madrugada |
 | `.specs/modulos/m4-coluna-vertebral/tasks.md` | **T16** (tabelas de projeção e agenda), **T17** (`recalcula_projecoes()`), **T18** (`agendarRevisao` FSRS), **T19** (plano + view stub), **T20** (`gera_plano_do_dia()`), **T21** (`pg_cron`) |
 
-**T22 (frase do plano) saiu daqui** — é chamada de IA e precisa do gateway: virou escopo da SPEC 07.
+**T22 (frase do plano) saiu daqui** — é chamada de IA e precisa do gateway: virou escopo da SPEC 08.
 
 ## Escopo
 
@@ -37,27 +38,27 @@ do zero, sem uma linha de IA decidindo o que o aluno estuda (invariante nº6).
 | ALUNO-07 | nota do tópico = peso do Raio-X × fraqueza × devendo revisão; escolha **só regra/SQL** | §P1: Plano diário |
 | ALUNO-08 | blocos Revisar / Avançar / Treinar cabendo no tempo declarado, com `motivo` | §P1: Plano diário |
 | ALUNO-11 | dois níveis por plano: `piso` (só as revisões devidas) e `meta_cheia` | §P1: Plano diário (AC4) |
-| ALUNO-06 (parcial) | `dominio_topico` alimenta a calibração — a calibração em si é a SPEC 35 | §P1: Projeções |
+| ALUNO-06 (parcial) | `dominio_topico` alimenta a calibração — a calibração em si é a SPEC 29 | §P1: Projeções |
 | INFRA-03 | os dois jobs em `pg_cron` (06:00 e 06:30 UTC), com guarda de reentrância | m9 §P1: Cada carga no seu lar (AC2) |
 
 ## Out of Scope
 
 | O que | Onde entra |
 | --- | --- |
-| Frase de abertura escrita por IA (ALUNO-12) | SPEC 07 |
-| Peso real do Raio-X | SPEC 27 — aqui a view `raiox_peso_topico` devolve **1.0** e é substituída depois **mantendo a assinatura** |
-| Diagnóstico adaptativo de ~20 questões (ALUNO-05 AC2) e a chamada de IA do plano inicial (AC3) | SPEC 24 — precisam de acervo e de tela |
-| Qualquer tela | SPEC 22, 24, 25 |
-| Anel do dia e sequência | SPEC 28 (o plano só **emite** piso e meta cheia) |
-| Bloco de simulado ligado | SPEC 38 (`flag.m4.simulado_semanal` nasce desligada) |
+| Frase de abertura escrita por IA (ALUNO-12) | SPEC 08 |
+| Peso real do Raio-X | SPEC 20 — aqui a view `raiox_peso_topico` devolve **1.0** e é substituída depois **mantendo a assinatura** |
+| Diagnóstico adaptativo de ~20 questões (ALUNO-05 AC2) e a chamada de IA do plano inicial (AC3) | SPEC 13 — precisam de acervo e de tela |
+| Qualquer tela | SPEC 13, 14 |
+| Anel do dia e sequência | SPEC 19 (o plano só **emite** piso e meta cheia) |
+| Bloco de simulado ligado | SPEC 32 (`flag.m4.simulado_semanal` nasce desligada) |
 
 ## Contratos que esta spec fixa para as próximas
 
-- **`raiox_peso_topico`** é a fronteira com o Raio-X: a SPEC 27 troca o corpo da view sem tocar no
+- **`raiox_peso_topico`** é a fronteira com o Raio-X: a SPEC 20 troca o corpo da view sem tocar no
   motor do plano.
 - O contrato exposto ao motor pela revisão é só **"está devendo revisão ou não"** — trocar FSRS por
   régua fixa não muda o plano.
-- `plano_bloco` com `nivel ∈ {piso, meta_cheia}` é o que a gamificação (SPEC 28) consome.
+- `plano_bloco` com `nivel ∈ {piso, meta_cheia}` é o que a gamificação (SPEC 19) consome.
 
 ## Assumptions & Open Questions
 

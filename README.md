@@ -8,32 +8,36 @@ Repositório privado.
 
 ## Estado
 
-**Specify concluída nos 9 módulos. Specs reorganizadas em 42 specs numeradas (AD-086).
-Duas concluídas: 01 (fundação) e 02 (configuração e feature flags). Próxima: SPEC 03.**
+**Specify concluída nos 9 módulos. Trabalho recortado em 36 specs numeradas (AD-089), das quais
+as 01–14 são o MVP. Quatro concluídas: 01, 02, 03 e 04. Próxima: SPEC 05.**
 
-A ordem oficial de construção está em **[`.specs/ROADMAP.md`](.specs/ROADMAP.md)** — 42 specs, cada
-uma dependendo só de specs anteriores e dimensionada para uma sessão. Para trabalhar numa delas:
+A ordem oficial de construção está em **[`.specs/ROADMAP.md`](.specs/ROADMAP.md)** — 36 specs, cada
+uma dependendo só de specs anteriores e dimensionada para uma sessão. **O lançamento é o fim da
+SPEC 14**; da 15 em diante é evolução. Para trabalhar numa delas:
 
 > "Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`."
 
 | Marco | Specs | O que existe ao fim |
 |---|---|---|
-| Fundação | 01–03 | projeto, configuração/flags, erro visível |
-| Espinha do aluno | 04–06 | acervo modelado, log imutável, projeções, plano do dia |
-| Acervo real e IA | 07–14 | gateway, provas ingeridas, gabarito conferido, explicação com fonte |
-| Interface, conta e dinheiro | 15–21 | UI, deploy, login, checkout, página de vendas |
-| Superfícies do aluno | 22–25 | as 4 telas que nascem ligadas (AD-076) |
-| Raio-X e hábito | 26–29 | "quanto cai" real no plano, 4 sinais, tutor |
-| LGPD | 30–32 | grupos, auditoria, esquecimento e retenção → **lançamento** |
-| Fast-follow | 33–42 | perdão, atualidade, flywheel, inéditas, simulado, áudio |
+| Fundação | 01–04 ✅ | projeto, configuração/flags, erro visível, acervo modelado |
+| Espinha do aluno | 05–06 | log imutável, projeções, FSRS, plano do dia por regra |
+| A primeira tela | 07 | site no ar, login, paywall testável |
+| Acervo real | 08–10 | gateway de IA, 1º lote ingerido, gabarito conferido, explicação com fonte |
+| A oferta | 11 | Raio-X calculado, pesando o plano e visível na tela |
+| Dinheiro | 12 | página de vendas, checkout Asaas, ativação automática |
+| O loop | 13–14 | onboarding, plano, sessão, explicação, progresso, sequência → 🚀 **lançamento** |
+| Operação e lei | 15–18 | painel do operador, LGPD completa |
+| Retenção e profundidade | 19–24 | 4 sinais, Raio-X completo, verificações, busca, tutor |
+| Evolução | 25–36 | staging, notificação, flywheel, inéditas, simulado, tiers, áudio |
 
 ## Onde está o quê
 
 | Arquivo | O que é |
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | Regras do projeto — invariantes, stack, convenções. Leia primeiro. |
-| [`.specs/STATE.md`](.specs/STATE.md) | Log de decisões `AD-001`…`AD-086`. **Fonte da verdade.** |
-| [`.specs/ROADMAP.md`](.specs/ROADMAP.md) | A sequência oficial das 42 specs |
+| [`.specs/STATE.md`](.specs/STATE.md) | Handoff, contratos vigentes e decisões novas. **Fonte da verdade.** |
+| [`.specs/STATE-ARQUIVO.md`](.specs/STATE-ARQUIVO.md) | Log histórico `AD-001`…`AD-088`. Consulta pontual |
+| [`.specs/ROADMAP.md`](.specs/ROADMAP.md) | A sequência oficial das 36 specs (01–14 = MVP) |
 | [`.specs/features/`](.specs/features/) | As specs numeradas — o que construir e em que ordem |
 | [`.specs/modulos/`](.specs/modulos/) | As 9 specs temáticas — o texto dos requisitos (`BANCO-`, `IA-`, `ALUNO-`…) |
 | [`PRD.md`](PRD.md) | Contrato de produto |

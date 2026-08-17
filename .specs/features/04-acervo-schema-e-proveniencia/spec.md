@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 04 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 04 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · ✅ concluída |
 | **Depende de** | SPEC 02, SPEC 03 |
-| **Habilita** | SPEC 05 (o log referencia questão), 08, 09, 10, 11, 26 |
+| **Habilita** | SPEC 05 (o log referencia questão), 09, 10, 11, 23 |
 | **Tasks (estimativa)** | ~10 |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
@@ -13,8 +13,8 @@
 
 ## Problem Statement
 
-`tentativas` (SPEC 05) referencia questão, tópico e matéria; o Raio-X (SPEC 26) conta questão por
-banca e por ano; a fábrica de explicação (SPEC 13) escreve por `(questao_id, questao_versao)`. Todos
+`tentativas` (SPEC 05) referencia questão, tópico e matéria; o Raio-X (SPEC 11) conta questão por
+banca e por ano; a fábrica de explicação (SPEC 10) escreve por `(questao_id, questao_versao)`. Todos
 esses contratos são de **estrutura**, não de pipeline. Modelar o acervo primeiro elimina o stub que
 a rodada 1 do M4 previa (T10) e faz o log nascer apontando para tabelas de verdade.
 
@@ -24,7 +24,7 @@ a rodada 1 do M4 previa (T10) e faz o log nascer apontando para tabelas de verda
 - [ ] Nenhuma questão real chega a `publicada` sem `fonte_citacao` — a trava é do banco, não do job.
 - [ ] Matéria/tópico existem como taxonomia editável, com candidato a tópico novo separado do canônico.
 - [ ] `provas` registra o catálogo-alvo (banca/ano/órgão/cargo) e o estado da ingestão.
-- [ ] As colunas e índices de busca (`embedding` HNSW, `fts` PT) existem — **preencher é a SPEC 11**.
+- [ ] As colunas e índices de busca (`embedding` HNSW, `fts` PT) existem — **preencher é a SPEC 23**.
 
 ## Escopo
 
@@ -40,12 +40,12 @@ a rodada 1 do M4 previa (T10) e faz o log nascer apontando para tabelas de verda
 
 | O que | Onde entra |
 | --- | --- |
-| Extração de PDF, imagens no Storage, `precisa_ocr` preenchido | SPEC 08 |
+| Extração de PDF, imagens no Storage, `precisa_ocr` preenchido | SPEC 09 |
 | Cruzamento de gabarito e classificação por IA | SPEC 09 |
 | Fila de revisão, amostra de QA, porta de publicação operada | SPEC 10 |
-| Geração de embedding e busca híbrida de fato | SPEC 11 |
-| Tela de curadoria da taxonomia (BANCO-10) | SPEC 18 |
-| Explicações (`explicacoes`) | SPEC 13 |
+| Geração de embedding e busca híbrida de fato | SPEC 23 |
+| Tela de curadoria da taxonomia (BANCO-10) | SPEC 15 |
+| Explicações (`explicacoes`) | SPEC 10 |
 
 ## Dependências técnicas
 
@@ -54,7 +54,7 @@ Só precisa de banco e configuração. **Não** depende de IA: nenhuma chamada d
 ## Contratos que esta spec fixa para as próximas
 
 - O snapshot da SPEC 05 lê **desta** tabela: mudar coluna de `questoes` depois é mudar contrato.
-- A frequência do Raio-X (SPEC 26) conta `origem='real'` **e** `status='publicada'` — os dois campos
+- A frequência do Raio-X (SPEC 11) conta `origem='real'` **e** `status='publicada'` — os dois campos
   nascem aqui.
 - Versão nova de questão nunca reescreve a anterior (base do AD-042 e do IA-09).
 
@@ -62,7 +62,7 @@ Só precisa de banco e configuração. **Não** depende de IA: nenhuma chamada d
 
 | Assumption | Default | Confirmado? |
 | --- | --- | --- |
-| Escala de `dificuldade` | `smallint` 1–5, estimada pela IA; calibra com uso (SPEC 35) | y (AD-040) |
+| Escala de `dificuldade` | `smallint` 1–5, estimada pela IA; calibra com uso (SPEC 29) | y (AD-040) |
 | Piso de `confianca_ia` para rotear revisão | em configuração, conservador no início | n (calibra) |
 | Dimensão do embedding | a do Cohere `embed-v4` — confirmar no Design com Context7 antes de fixar a coluna | n |
 

@@ -2,10 +2,11 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 05 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 05 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** |
 | **Depende de** | SPEC 04 |
-| **Habilita** | SPEC 06, 22, 26 (indireto), 30, 32 |
+| **Habilita** | SPEC 06, 11 (indireto), 13, 16, 18 |
 | **Tasks (estimativa)** | ~8 |
+| **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
 | **Dificuldade** | Difícil |
 | **Status** | 🟨 **Design e tasks já escritos** (rodada 1) — Execute não começou |
 | **Requisitos** | **ALUNO-01**, **ALUNO-03** (servidor), **ALUNO-04**, **INFRA-04** |
@@ -49,16 +50,16 @@ O Design e as Tasks da rodada 1 cobrem esta spec quase inteira. **Não refazer**
 | O que | Onde entra |
 | --- | --- |
 | Projeções, caderno, agenda de revisão, plano | SPEC 06 |
-| Qualquer tela (responder questão, escolher causa) | SPEC 22 |
-| DELETE-por-esquecimento operado de fato | SPEC 32 — aqui só a **porta** existe |
-| Classificação de grupo LGPD e auditoria | SPEC 30 |
+| Qualquer tela (responder questão, escolher causa) | SPEC 13 |
+| DELETE-por-esquecimento operado de fato | SPEC 18 — aqui só a **porta** existe |
+| Classificação de grupo LGPD e auditoria | SPEC 16 |
 
 ## Contratos que esta spec fixa para as próximas
 
 - **Invariante nº1:** `tentativas` só recebe INSERT. Correção = linha nova ou tabela vizinha.
-- O DELETE por `user_id` passa pela porta nomeada `app.esquecimento_user_id` — a SPEC 32 usa **essa**
+- O DELETE por `user_id` passa pela porta nomeada `app.esquecimento_user_id` — a SPEC 18 usa **essa**
   porta, não um privilégio genérico de administrador.
-- O snapshot é congelado: reclassificar assunto na SPEC 09/18 não desloca histórico nenhum.
+- O snapshot é congelado: reclassificar assunto na SPEC 09/15 não desloca histórico nenhum.
 
 ## Assumptions & Open Questions
 

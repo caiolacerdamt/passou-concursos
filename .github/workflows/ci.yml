@@ -55,17 +55,26 @@ jobs:
         run: |
           set -uo pipefail
           FALTOU=0
-          for f in AGENTS.md CLAUDE.md PRD.md .specs/STATE.md docs/GITFLOW.md; do
+          for f in AGENTS.md CLAUDE.md PRD.md .specs/STATE.md .specs/ROADMAP.md docs/GITFLOW.md; do
             if [ ! -f "$f" ]; then
               echo "::error::$f não existe"
               FALTOU=1
             fi
           done
+          # Specs temáticas: o texto dos requisitos (AD-086 as moveu para modulos/).
           for m in m1-banco-questoes m2-camada-ia m3-audio m4-coluna-vertebral \
                    m5-raiox-banca m6-gamificacao m7-lgpd-flywheel \
                    m8-negocio-pagamentos m9-infra; do
-            if [ ! -f ".specs/features/$m/spec.md" ]; then
+            if [ ! -f ".specs/modulos/$m/spec.md" ]; then
               echo "::error::spec do módulo $m não existe"
+              FALTOU=1
+            fi
+          done
+          # Specs numeradas: toda pasta de .specs/features/ precisa da própria spec.md.
+          for d in .specs/features/*/; do
+            [ -d "$d" ] || continue
+            if [ ! -f "$d/spec.md" ]; then
+              echo "::error::${d} não tem spec.md"
               FALTOU=1
             fi
           done

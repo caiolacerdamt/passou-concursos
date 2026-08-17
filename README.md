@@ -8,28 +8,34 @@ Repositório privado.
 
 ## Estado
 
-**Specify concluída para os 9 módulos. Design não começou. Ainda não há código de aplicação.**
+**Specify concluída nos 9 módulos. Specs reorganizadas em 42 specs numeradas (AD-086).
+Duas concluídas: 01 (fundação) e 02 (configuração e feature flags). Próxima: SPEC 03.**
 
-| Módulo | O que é | Spec |
+A ordem oficial de construção está em **[`.specs/ROADMAP.md`](.specs/ROADMAP.md)** — 42 specs, cada
+uma dependendo só de specs anteriores e dimensionada para uma sessão. Para trabalhar numa delas:
+
+> "Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`."
+
+| Marco | Specs | O que existe ao fim |
 |---|---|---|
-| M1 | Banco de questões e pipeline de ingestão | [spec](.specs/features/m1-banco-questoes/spec.md) |
-| M2 | Camada de IA (extração, explicação, tutor) | [spec](.specs/features/m2-camada-ia/spec.md) |
-| M3 | Áudio (TTS) — fast-follow, atrás de flag | [spec](.specs/features/m3-audio/spec.md) |
-| M4 | Coluna vertebral (log de tentativas + plano diário) | [spec](.specs/features/m4-coluna-vertebral/spec.md) |
-| M5 | Raio-X da banca | [spec](.specs/features/m5-raiox-banca/spec.md) |
-| M6 | Gamificação | [spec](.specs/features/m6-gamificacao/spec.md) |
-| M7 | LGPD e flywheel de dados | [spec](.specs/features/m7-lgpd-flywheel/spec.md) |
-| M8 | Negócio, auth e pagamentos | [spec](.specs/features/m8-negocio-pagamentos/spec.md) |
-| M9 | Infraestrutura | [spec](.specs/features/m9-infra/spec.md) |
-
-Ordem de Design: **M4 → M1 → M2 → M8 → M7 → M5 → M6 → M3.**
+| Fundação | 01–03 | projeto, configuração/flags, erro visível |
+| Espinha do aluno | 04–06 | acervo modelado, log imutável, projeções, plano do dia |
+| Acervo real e IA | 07–14 | gateway, provas ingeridas, gabarito conferido, explicação com fonte |
+| Interface, conta e dinheiro | 15–21 | UI, deploy, login, checkout, página de vendas |
+| Superfícies do aluno | 22–25 | as 4 telas que nascem ligadas (AD-076) |
+| Raio-X e hábito | 26–29 | "quanto cai" real no plano, 4 sinais, tutor |
+| LGPD | 30–32 | grupos, auditoria, esquecimento e retenção → **lançamento** |
+| Fast-follow | 33–42 | perdão, atualidade, flywheel, inéditas, simulado, áudio |
 
 ## Onde está o quê
 
 | Arquivo | O que é |
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | Regras do projeto — invariantes, stack, convenções. Leia primeiro. |
-| [`.specs/STATE.md`](.specs/STATE.md) | Log de decisões `AD-001`…`AD-072`. **Fonte da verdade.** |
+| [`.specs/STATE.md`](.specs/STATE.md) | Log de decisões `AD-001`…`AD-086`. **Fonte da verdade.** |
+| [`.specs/ROADMAP.md`](.specs/ROADMAP.md) | A sequência oficial das 42 specs |
+| [`.specs/features/`](.specs/features/) | As specs numeradas — o que construir e em que ordem |
+| [`.specs/modulos/`](.specs/modulos/) | As 9 specs temáticas — o texto dos requisitos (`BANCO-`, `IA-`, `ALUNO-`…) |
 | [`PRD.md`](PRD.md) | Contrato de produto |
 | [`docs/GITFLOW.md`](docs/GITFLOW.md) | Como trabalhar no git |
 | [`docs/EVIDENCIAS-CIENTIFICAS.md`](docs/EVIDENCIAS-CIENTIFICAS.md) | Estudos que embasam o método |

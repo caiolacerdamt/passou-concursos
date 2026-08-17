@@ -19,6 +19,17 @@ async function criarMateria(cliente: Client, nome: string): Promise<string> {
   return rows[0].id;
 }
 
+/**
+ * Operador de mentira, criado dentro da transacao. Some no rollback.
+ * `decidido_por` aponta para quem cura a taxonomia, nunca para o aluno.
+ */
+async function criarOperador(cliente: Client): Promise<string> {
+  const { rows } = await cliente.query<{ id: string }>(
+    "insert into auth.users (id) values (gen_random_uuid()) returning id",
+  );
+  return rows[0].id;
+}
+
 /** Nome unico por execucao: a unicidade e global e o banco e compartilhado. */
 function nomeUnico(prefixo: string): string {
   return `${prefixo}-${Math.random().toString(36).slice(2, 10)}`;
@@ -192,7 +203,7 @@ descreveComBanco("taxonomia materia -> topico", () => {
     });
   });
 
-  it("e invisivel e nao-escrivel para anon e authenticated", async () => {
+  it("e invisivel e nao-escrivel para anon e authenticated (materias/topicos)", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const nome = nomeUnico("Fechada");
       const materia = await criarMateria(cliente, nome);
@@ -232,6 +243,159 @@ descreveComBanco("taxonomia materia -> topico", () => {
           cliente.query("truncate table public.topicos"),
         ).rejects.toThrow(/permission denied/);
         await cliente.query("rollback to savepoint truncagem");
+
+        await cliente.query("rollback to savepoint navegador");
+      }
+    });
+  });
+});
+
+descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
+  const INSERIR = `
+    insert into public.topico_candidato
+      (nome_sugerido, materia_id, status, ocorrencias, topico_id, decidido_em, decidido_por)
+    values ($1, $2, $3, $4, $5, $6, $7)
+    returning id
+  `;
+
+  /** Candidato pendente, o unico estado em que a IA pode deixar a linha. */
+  function pendente(nome: string, materia: string | null = null) {
+    return [nome, materia, "pendente", 1, null, null, null];
+  }
+
+  it("nasce pendente, com uma ocorrencia e sem topico canonico", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { rows } = await cliente.query<{
+        status: string;
+        ocorrencias: number;
+        topico_id: string | null;
+        decidido_por: string | null;
+      }>(
+        `insert into public.topico_candidato (nome_sugerido)
+         values ('Open Finance')
+         returning status, ocorrencias, topico_id, decidido_por`,
+      );
+
+      expect(rows[0].status).toBe("pendente");
+      expect(rows[0].ocorrencias).toBe(1);
+      expect(rows[0].topico_id).toBeNull();
+      expect(rows[0].decidido_por).toBeNull();
+    });
+  });
+
+  it("aceita sugestao sem palpite de materia", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { rowCount } = await cliente.query(INSERIR, pendente("Sem Materia"));
+      expect(rowCount).toBe(1);
+    });
+  });
+
+  it("recusa candidato aprovado sem topico canonico", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const autor = await criarOperador(cliente);
+
+      await expect(
+        cliente.query(INSERIR, [
+          "Aprovado no Vazio",
+          null,
+          "aprovado",
+          1,
+          null,
+          new Date(),
+          autor,
+        ]),
+      ).rejects.toThrow(/candidato_aprovado_aponta_topico/);
+    });
+  });
+
+  it("recusa candidato pendente que ja aponta para um topico", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const materia = await criarMateria(cliente, nomeUnico("Materia"));
+      const { rows } = await cliente.query<{ id: string }>(
+        "insert into public.topicos (materia_id, nome) values ($1, 'Ja Existe') returning id",
+        [materia],
+      );
+
+      // O caminho pelo qual um topico nasceria sem ninguem decidir nada.
+      await expect(
+        cliente.query(INSERIR, [
+          "Atalho",
+          materia,
+          "pendente",
+          1,
+          rows[0].id,
+          null,
+          null,
+        ]),
+      ).rejects.toThrow(/candidato_aprovado_aponta_topico/);
+    });
+  });
+
+  it("recusa decisao sem autor e sem data", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      // Rejeitado nao precisa de topico, mas precisa de quem rejeitou.
+      await expect(
+        cliente.query(INSERIR, ["Rejeitado Anonimo", null, "rejeitado", 1, null, null, null]),
+      ).rejects.toThrow(/candidato_decidido_tem_autor/);
+    });
+  });
+
+  it("aceita o caminho completo: pendente -> aprovado com topico e autor", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const autor = await criarOperador(cliente);
+      const materia = await criarMateria(cliente, nomeUnico("Materia"));
+
+      const { rows: candidato } = await cliente.query<{ id: string }>(
+        INSERIR,
+        pendente("Open Finance", materia),
+      );
+
+      // O operador aprova: cria o topico canonico e amarra as duas linhas.
+      const { rows: topico } = await cliente.query<{ id: string }>(
+        "insert into public.topicos (materia_id, nome) values ($1, 'Open Finance') returning id",
+        [materia],
+      );
+
+      const { rowCount } = await cliente.query(
+        `update public.topico_candidato
+            set status = 'aprovado', topico_id = $2, decidido_em = now(), decidido_por = $3
+          where id = $1`,
+        [candidato[0].id, topico[0].id, autor],
+      );
+      expect(rowCount).toBe(1);
+    });
+  });
+
+  it("recusa ocorrencias zero ou negativa", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      for (const quantas of [0, -1]) {
+        await cliente.query("savepoint tentativa");
+        await expect(
+          cliente.query(INSERIR, ["Contagem Invalida", null, "pendente", quantas, null, null, null]),
+        ).rejects.toThrow(/ocorrencias_check|violates check constraint/);
+        await cliente.query("rollback to savepoint tentativa");
+      }
+    });
+  });
+
+  it("e invisivel e nao-escrivel para anon e authenticated", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await cliente.query(INSERIR, pendente("Fechada"));
+
+      for (const papel of ["anon", "authenticated"]) {
+        await cliente.query("savepoint navegador");
+        await cliente.query(`set local role ${papel}`);
+
+        const leitura = await cliente.query("select 1 from public.topico_candidato");
+        expect(leitura.rowCount).toBe(0);
+
+        await cliente.query("savepoint escrita");
+        await expect(
+          cliente.query(
+            "insert into public.topico_candidato (nome_sugerido) values ('invasao')",
+          ),
+        ).rejects.toThrow(/permission denied|row-level security/);
+        await cliente.query("rollback to savepoint escrita");
 
         await cliente.query("rollback to savepoint navegador");
       }

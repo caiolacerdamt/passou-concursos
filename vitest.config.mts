@@ -34,6 +34,14 @@ export default defineConfig({
           setupFiles: ["tests/db/setup.ts"],
           fileParallelism: false,
           environment: "node",
+          // O default de 5s e curto para teste de banco **na CI**, e nao por
+          // lentidao do teste: o runner do GitHub fica longe de sa-east-1, e cada
+          // ida e volta ao Postgres custa dezenas de milissegundos. Um teste que
+          // faz varios `savepoint` em laco acumula isso e estoura — a suite
+          // inteira levou 215s na CI contra ~40s na maquina do desenvolvedor.
+          // Timeout maior nao esconde teste lento; o que esconderia seria rodar
+          // so onde a rede e curta.
+          testTimeout: 30_000,
           env: {
             DATABASE_URL: env.DATABASE_URL ?? "",
             NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL ?? "",

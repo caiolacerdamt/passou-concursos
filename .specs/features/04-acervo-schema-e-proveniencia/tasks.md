@@ -160,7 +160,9 @@ identidade e DELETE.
 - [ ] `UPDATE` que muda `id` ou `questao_versao` é **recusado**
 - [ ] `UPDATE` legítimo em versão vigente (preencher `resposta_correta`, mudar `status`) **passa** —
       a tabela não é append-only
-- [ ] `DELETE` em `questoes` é **recusado**
+- [ ] `DELETE` em `questoes` é **recusado**; `TRUNCATE` também (AD-084: RLS não governa TRUNCATE)
+- [ ] O mesmo gatilho carimba `atualizada_em = now()` por cima do que o chamador mandou — coluna que
+      ninguém atualiza é coluna que mente
 - [ ] Teste do Success Criteria nº2 da spec: criar versão nova e ler a anterior **intacta** campo por
       campo (enunciado, resposta, status)
 - [ ] Contagem: **+9** testes (total ≥ 183)

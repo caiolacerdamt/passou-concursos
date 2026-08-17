@@ -1,0 +1,43 @@
+name: Advisors do Supabase
+
+# INFRA-09 AC3 — advisors como fonte complementar ao Sentry.
+#
+# O Sentry conta o que quebrou. O advisor conta o que está errado e ainda não
+# quebrou: tabela com RLS ligada e sem policy, função com search_path mutável,
+# índice faltando. São perguntas diferentes, e por isso as duas coisas existem.
+#
+# Semanal: o schema muda por migração, e migração passa pela CI. Rodar todo dia
+# gastaria cota de Actions para reler o mesmo resultado.
+
+on:
+  schedule:
+    # Segunda-feira, 09:00 UTC = 06:00 em São Paulo.
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  advisors:
+    name: Ler os advisors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Consultar segurança e desempenho
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: npm run advisors
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "advisors do Supabase acharam algo de gravidade ERROR, ou não deu para consultar"
+        run: node scripts/jobs/reportar-falha.mjs

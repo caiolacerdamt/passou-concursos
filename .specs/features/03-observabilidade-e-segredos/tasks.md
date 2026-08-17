@@ -125,22 +125,22 @@ ponto único `reportarErro`, com destino injetável e **sem nenhum import do Sen
 
 **Done when**:
 
-- [ ] `sanitizar()` troca o valor de chave sensível por `[removido]`, e-mail por `[email]`, CPF por
+- [x] `sanitizar()` troca o valor de chave sensível por `[removido]`, e-mail por `[email]`, CPF por
       `[cpf]`, em objeto aninhado, dentro de array e dentro de string solta
-- [ ] `sanitizar()` não entra em laço infinito com referência circular e respeita teto de profundidade
-- [ ] `sanearEventoSentry()` apaga `user.email` e `user.ip_address` e saneia o resto do evento
-- [ ] `reportarErro()` entrega o **contexto já saneado** ao destino, e a mensagem do erro sai saneada
+- [x] `sanitizar()` não entra em laço infinito com referência circular e respeita teto de profundidade
+- [x] `sanearEventoSentry()` apaga `user.email` e `user.ip_address` e saneia o resto do evento
+- [x] `reportarErro()` entrega o **contexto já saneado** ao destino, e a mensagem do erro sai saneada
       em todo ponto onde vira texto (destino padrão de console e `sanearEventoSentry`). O objeto
       `Error` em si segue cru até o destino de propósito: sem ele a pilha de chamada se perde
-- [ ] `reportarErro()` não deixa erro do próprio destino escapar — reportar erro não pode derrubar
+- [x] `reportarErro()` não deixa erro do próprio destino escapar — reportar erro não pode derrubar
       a requisição que já estava com problema
-- [ ] Destino padrão escreve no `console.error`; `definirDestinoDeErro`/`restaurarDestinoPadrao` funcionam
-- [ ] Nenhum arquivo do módulo importa `@sentry/*` (teste confere lendo o próprio fonte)
-- [ ] Gate: `npm run test:unit`
-- [ ] Contagem de testes: ≥ 41 (os 41 que já existem) + os novos, todos verdes
+- [x] Destino padrão escreve no `console.error`; `definirDestinoDeErro`/`restaurarDestinoPadrao` funcionam
+- [x] Nenhum arquivo do módulo importa `@sentry/*` (teste confere lendo o próprio fonte)
+- [x] Gate: `npm run test:unit`
+- [x] Contagem de testes: ≥ 41 (os 41 que já existem) + os novos, todos verdes
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): cria o ponto único de reporte com saneamento de dado pessoal`
+**Commit**: `feat(m9): cria o ponto único de reporte com saneamento de dado pessoal` — `f8ef737` ✅
 
 ---
 
@@ -159,22 +159,22 @@ ponto único `reportarErro`, com destino injetável e **sem nenhum import do Sen
 
 **Done when**:
 
-- [ ] `release()` cai em cascata `NEXT_PUBLIC_SENTRY_RELEASE` → `VERCEL_GIT_COMMIT_SHA` →
+- [x] `release()` cai em cascata `NEXT_PUBLIC_SENTRY_RELEASE` → `VERCEL_GIT_COMMIT_SHA` →
       `GITHUB_SHA` → `"desenvolvimento"`, com teste para cada degrau
-- [ ] `sentryLigado()` é `false` com DSN ausente, vazio ou só espaço
-- [ ] Os três `Sentry.init` recebem `beforeSend: sanearEventoSentry` e
+- [x] `sentryLigado()` é `false` com DSN ausente, vazio ou só espaço
+- [x] Os três `Sentry.init` recebem `beforeSend: sanearEventoSentry` e
       `dataCollection: { userInfo: false, httpBodies: [] }`
-- [ ] Nenhum `Sentry.init` liga replay nem tracing (`tracesSampleRate: 0`) — teste lê o fonte e falha
+- [x] Nenhum `Sentry.init` liga replay nem tracing (`tracesSampleRate: 0`) — teste lê o fonte e falha
       se `replayIntegration` aparecer
-- [ ] `instrumentation.ts` exporta `onRequestError = Sentry.captureRequestError`
-- [ ] `src/app/global-error.tsx` existe e chama `Sentry.captureException`
-- [ ] `next.config.ts` embrulhado em `withSentryConfig`
-- [ ] `.env.example` documenta `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`,
+- [x] `instrumentation.ts` exporta `onRequestError = Sentry.captureRequestError`
+- [x] `src/app/global-error.tsx` existe e chama `Sentry.captureException`
+- [x] `next.config.ts` embrulhado em `withSentryConfig`
+- [x] `.env.example` documenta `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`,
       `NEXT_PUBLIC_SENTRY_RELEASE` **sem valor**
-- [ ] Gate: `npm run build && npm run lint && npm run test:unit`
+- [x] Gate: `npm run build && npm run lint && npm run test:unit`
 
 **Tests**: unit (para `ambiente.ts` e para a proibição de replay) · **Gate**: build
-**Commit**: `feat(m9): liga o Sentry no front, no servidor e no edge`
+**Commit**: `feat(m9): liga o Sentry no front, no servidor e no edge` — `4bfa0e8` ✅
 
 ---
 
@@ -192,17 +192,17 @@ assinatura** publicada pela SPEC 02.
 
 **Done when**:
 
-- [ ] `definirReporteDeErro`, `restaurarReportePadrao` e `reportarFalhaDeConfig` mantêm exatamente a
+- [x] `definirReporteDeErro`, `restaurarReportePadrao` e `reportarFalhaDeConfig` mantêm exatamente a
       mesma assinatura (teste de tipo + os testes da SPEC 02 continuam passando sem edição)
-- [ ] Com o destino de observabilidade espionado, uma falha de leitura de config chega nele com o
+- [x] Com o destino de observabilidade espionado, uma falha de leitura de config chega nele com o
       contexto `{ modulo: "config" }`
-- [ ] Um contexto de config que contenha e-mail chega saneado ao destino
-- [ ] `sentry.server.config.ts` chama `definirDestinoDeErro` no boot
-- [ ] Gate: `npm run test:unit`
-- [ ] Contagem de testes: nenhum teste da SPEC 02 removido ou enfraquecido
+- [x] Um contexto de config que contenha e-mail chega saneado ao destino
+- [x] `sentry.server.config.ts` chama `definirDestinoDeErro` no boot
+- [x] Gate: `npm run test:unit`
+- [x] Contagem de testes: nenhum teste da SPEC 02 removido ou enfraquecido
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `fix(m9): faz a falha de configuração alertar, não só logar`
+**Commit**: `fix(m9): faz a falha de configuração alertar, não só logar` — `7879e17` ✅
 
 ---
 
@@ -220,15 +220,15 @@ configuração do M9 como porteiro.
 
 **Done when**:
 
-- [ ] `flag.m9.rota_de_erro_proposital` declarada no catálogo com default `false` e dono `m9`
-- [ ] A chave passa no teste de padrão de nome já existente (`PADRAO_DA_CHAVE`)
-- [ ] Flag desligada ⇒ a rota responde `404` e **não** lança
-- [ ] Flag ligada ⇒ a rota lança, e o erro tem mensagem reconhecível
-- [ ] O teste cobre os dois lados chamando o handler direto, sem subir servidor
-- [ ] Gate: `npm run test:unit`
+- [x] `flag.m9.rota_de_erro_proposital` declarada no catálogo com default `false` e dono `m9`
+- [x] A chave passa no teste de padrão de nome já existente (`PADRAO_DA_CHAVE`)
+- [x] Flag desligada ⇒ a rota responde `404` e **não** lança
+- [x] Flag ligada ⇒ a rota lança, e o erro tem mensagem reconhecível
+- [x] O teste cobre os dois lados chamando o handler direto, sem subir servidor
+- [x] Gate: `npm run test:unit`
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): rota de erro proposital atrás de flag para conferir o alerta`
+**Commit**: `feat(m9): rota de erro proposital atrás de flag para conferir o alerta` — `e6c6fee` ✅
 
 ---
 
@@ -246,16 +246,16 @@ passo `if: failure()`.
 
 **Done when**:
 
-- [ ] `iniciarSentry()` não inicializa nada com DSN vazio e devolve `false`
-- [ ] `reportar()` com DSN vazio não lança e escreve no `console.error` (visibilidade nunca depende do Sentry)
-- [ ] `montarMensagem()` produz uma linha com workflow, job e URL da execução, e é testada com
+- [x] `iniciarSentry()` não inicializa nada com DSN vazio e devolve `false`
+- [x] `reportar()` com DSN vazio não lança e escreve no `console.error` (visibilidade nunca depende do Sentry)
+- [x] `montarMensagem()` produz uma linha com workflow, job e URL da execução, e é testada com
       entrada faltando campo
-- [ ] O evento carrega tag do workflow e do job — nenhum dado de aluno
-- [ ] Os três jobs do `ci.yml` ganham passo `if: failure()` chamando o CLI
-- [ ] Gate: `npm run test:unit`
+- [x] O evento carrega tag do workflow e do job — nenhum dado de aluno
+- [x] Os três jobs do `ci.yml` ganham passo `if: failure()` chamando o CLI
+- [x] Gate: `npm run test:unit`
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): reporta falha de workflow do GitHub Actions no Sentry`
+**Commit**: `feat(m9): reporta falha de workflow do GitHub Actions no Sentry` — `804a8e1` ✅
 
 ---
 
@@ -272,15 +272,15 @@ passo `if: failure()`.
 
 **Done when**:
 
-- [ ] `create extension if not exists pg_cron` aplicado; `cron.job_run_details` existe
-- [ ] View `public.jobs_falhados` devolve execução com `status` de falha e **não** devolve execução bem-sucedida
-- [ ] A view é `security_invoker` e `anon`/`authenticated` não conseguem ler
-- [ ] `npm run db:push` aplica em banco limpo sem erro (migração idempotente no `create extension`)
-- [ ] `get_advisors` de segurança não ganha achado novo por causa desta migração
-- [ ] Gate: `npm test`
+- [x] `create extension if not exists pg_cron` aplicado; `cron.job_run_details` existe
+- [x] View `public.jobs_falhados` devolve execução com `status` de falha e **não** devolve execução bem-sucedida
+- [x] A view é `security_invoker` e `anon`/`authenticated` não conseguem ler
+- [x] `npm run db:push` aplica em banco limpo sem erro (migração idempotente no `create extension`)
+- [x] `get_advisors` de segurança não ganha achado novo por causa desta migração
+- [x] Gate: `npm test`
 
 **Tests**: integration (banco) · **Gate**: full
-**Commit**: `feat(m9): instala pg_cron e expõe as execuções que falharam`
+**Commit**: `feat(m9): instala pg_cron e expõe as execuções que falharam` — `c9d51d8` ✅
 
 ---
 
@@ -298,16 +298,16 @@ diário que o executa.
 
 **Done when**:
 
-- [ ] `JANELA_HORAS = 26` é constante em código, com o motivo escrito no arquivo
-- [ ] `resumirFalhas()` transforma linhas da view em mensagens, é testada com lista vazia, com uma
+- [x] `JANELA_HORAS = 26` é constante em código, com o motivo escrito no arquivo
+- [x] `resumirFalhas()` transforma linhas da view em mensagens, é testada com lista vazia, com uma
       falha e com `return_message` contendo e-mail (que sai saneado)
-- [ ] Sem `DATABASE_URL`, o script sai com código ≠ 0 e mensagem explícita — nunca "nada a reportar"
-- [ ] Nenhuma falha na janela ⇒ código de saída 0
-- [ ] Workflow com `schedule` diário + `workflow_dispatch`, com passo `if: failure()`
-- [ ] Gate: `npm run test:unit`
+- [x] Sem `DATABASE_URL`, o script sai com código ≠ 0 e mensagem explícita — nunca "nada a reportar"
+- [x] Nenhuma falha na janela ⇒ código de saída 0
+- [x] Workflow com `schedule` diário + `workflow_dispatch`, com passo `if: failure()`
+- [x] Gate: `npm run test:unit`
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): vigia diário que alerta falha de job do pg_cron`
+**Commit**: `feat(m9): vigia diário que alerta falha de job do pg_cron` — `521fbb4` ✅
 
 ---
 
@@ -324,15 +324,15 @@ diário que o executa.
 
 **Done when**:
 
-- [ ] `classificar()` separa `ERROR` de `WARN`/`INFO` e é testada com as três severidades
-- [ ] Resposta em formato inesperado ⇒ erro explícito, **nunca** "nenhum achado"
-- [ ] Sem `SUPABASE_ACCESS_TOKEN` ⇒ sai com código ≠ 0 e diz o que falta
-- [ ] Presença de `ERROR` ⇒ código de saída ≠ 0; só `WARN`/`INFO` ⇒ código 0 com a lista impressa
-- [ ] Workflow semanal + `workflow_dispatch`
-- [ ] Gate: `npm run test:unit`
+- [x] `classificar()` separa `ERROR` de `WARN`/`INFO` e é testada com as três severidades
+- [x] Resposta em formato inesperado ⇒ erro explícito, **nunca** "nenhum achado"
+- [x] Sem `SUPABASE_ACCESS_TOKEN` ⇒ sai com código ≠ 0 e diz o que falta
+- [x] Presença de `ERROR` ⇒ código de saída ≠ 0; só `WARN`/`INFO` ⇒ código 0 com a lista impressa
+- [x] Workflow semanal + `workflow_dispatch`
+- [x] Gate: `npm run test:unit`
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): roda os advisors do Supabase como fonte complementar`
+**Commit**: `feat(m9): roda os advisors do Supabase como fonte complementar` — `20d2d3c` ✅
 
 ---
 
@@ -350,17 +350,17 @@ padrões novos, e escrever o inventário de onde cada segredo vive.
 
 **Done when**:
 
-- [ ] `encontrarSegredos(texto)` acha cada padrão da lista — teste com um caso positivo por padrão
-- [ ] Padrões novos: `sntrys_` (token do Sentry), `sb_secret_` (chave secreta do Supabase), string de
+- [x] `encontrarSegredos(texto)` acha cada padrão da lista — teste com um caso positivo por padrão
+- [x] Padrões novos: `sntrys_` (token do Sentry), `sb_secret_` (chave secreta do Supabase), string de
       conexão `postgres(ql)://usuario:senha@host`
-- [ ] O DSN público do Sentry **não** é tratado como segredo (é público por desenho) — teste negativo
-- [ ] `.env.example` não dispara a varredura (teste com o conteúdo real do arquivo)
-- [ ] O job `segredos` do `ci.yml` chama o script em vez do bloco `grep` inline, e continua reprovando
-- [ ] `docs/SEGREDOS.md` lista cada segredo: onde vive, quem usa, o que fazer se vazar
-- [ ] Gate: `npm run test:unit`
+- [x] O DSN público do Sentry **não** é tratado como segredo (é público por desenho) — teste negativo
+- [x] `.env.example` não dispara a varredura (teste com o conteúdo real do arquivo)
+- [x] O job `segredos` do `ci.yml` chama o script em vez do bloco `grep` inline, e continua reprovando
+- [x] `docs/SEGREDOS.md` lista cada segredo: onde vive, quem usa, o que fazer se vazar
+- [x] Gate: `npm run test:unit`
 
 **Tests**: unit · **Gate**: quick
-**Commit**: `feat(m9): varredura de segredos testável e inventário de onde cada um vive`
+**Commit**: `feat(m9): varredura de segredos testável e inventário de onde cada um vive` — `05f9bcd` ✅
 
 ---
 
@@ -378,17 +378,17 @@ prod exige merge aprovado") · INFRA-09 AC2 (falha da migração também alerta)
 
 **Done when**:
 
-- [ ] Workflow dispara só em `push` na `main` com mudança em `supabase/migrations/**`,
+- [x] Workflow dispara só em `push` na `main` com mudança em `supabase/migrations/**`,
       mais `workflow_dispatch`
-- [ ] Sem o segredo `DATABASE_URL` o workflow **falha** (diferente do teste de banco, que pula):
+- [x] Sem o segredo `DATABASE_URL` o workflow **falha** (diferente do teste de banco, que pula):
       migração que não aplica é problema, não ausência de credencial
-- [ ] Usa `npm run db:push`, que já recusa banco diferente do projeto declarado
-- [ ] Passo `if: failure()` reporta no Sentry
-- [ ] `docs/GITFLOW.md` diz que migração entra por merge, não por painel
-- [ ] Gate: `npm run build && npm run lint && npm test`
+- [x] Usa `npm run db:push`, que já recusa banco diferente do projeto declarado
+- [x] Passo `if: failure()` reporta no Sentry
+- [x] `docs/GITFLOW.md` diz que migração entra por merge, não por painel
+- [x] Gate: `npm run build && npm run lint && npm test`
 
 **Tests**: none (YAML — gate de build) · **Gate**: build
-**Commit**: `ci(m9): aplica migração no merge da main, nunca por clique`
+**Commit**: `ci(m9): aplica migração no merge da main, nunca por clique` — `462750a` ✅
 
 ---
 

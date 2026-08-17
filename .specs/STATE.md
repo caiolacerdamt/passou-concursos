@@ -816,6 +816,75 @@
 - **Date**: 2026-08-16
 - **Status**: active
 
+### AD-087
+- **Decision**: A observabilidade do INFRA-09 é montada assim, e estas escolhas valem para todas as
+  specs seguintes. **(a) Ponto único de reporte**: `src/modules/observabilidade` (`reportarErro`), com
+  destino injetável e **sem importar o SDK do Sentry no núcleo** — quem liga o SDK é o ponto de
+  entrada (os três `Sentry.init` do Next e o `scripts/jobs/sentry-node.mjs` dos scripts de job). O
+  `reportarFalhaDeConfig` da SPEC 02 passa a delegar para lá **sem mudar de assinatura**.
+  **(b) Saneamento obrigatório**: nada sai do processo com dado pessoal em texto claro — valor de
+  chave sensível vira `[removido]`, e-mail vira `[email]`, CPF vira `[cpf]` — e isso vale **também
+  para o console**, porque log da Vercel e log do GitHub Actions são dado fora do schema do mesmo
+  jeito. **(c) Canal do alerta**: e-mail (`passouconcurso@gmail.com`), pela regra padrão do Sentry.
+  Discord/Slack fica registrado como próximo passo, sem data. **(d) Gravação de sessão do Sentry
+  SHALL NOT ser ligada**, em nenhuma etapa, pela mesma razão que a AD-079 usou contra o mesmo recurso
+  no PostHog. **(e) Tracing/desempenho fica desligado** (`tracesSampleRate: 0`). **(f) O DSN não é
+  segredo** — vai para o navegador por desenho, e a varredura da CI tem teste negativo para ele; o
+  segredo é o `SENTRY_AUTH_TOKEN`. **(g) A organização do Sentry foi criada na região Estados
+  Unidos** (`ingest.us.sentry.io`), decisão do sócio em 2026-08-16, antes desta AD.
+- **Reason**: Dezenas de critérios de aceite das 9 specs terminam em "e SHALL alertar", e até aqui não
+  havia para onde alertar. O núcleo sem SDK resolve três coisas de uma vez: teste `unit` sem rede
+  (AD-083), aplicação e script usando pacotes diferentes (`@sentry/nextjs` × `@sentry/node`), e a
+  costura de teste que a SPEC 02 já tinha publicado continua valendo. O saneamento pesa dobrado por
+  causa do item (g): o dado atravessa fronteira, e a defesa que funciona é não mandar o dado, não o
+  contrato com o fornecedor. Tracing e gravação de sessão ficam de fora porque o AD-037 pediu **erro**
+  — span consome cota do plano gratuito sem responder pergunta que o projeto tenha hoje, e gravar a
+  tela do aluno contraria o DADOS-07 AC6 com mais força do que um log de erro.
+- **Trade-off**: Item (g) cria o **segundo subprocessador fora do Brasil** do projeto, depois do
+  PostHog. É transferência internacional sob o art. 33 da LGPD, sem decisão de adequação da ANPD para
+  os EUA — **o mesmo item do advogado que a AD-079 abriu**, agora com dois destinos em vez de um. A
+  região é praticamente de mão única: o Sentry não migra organização entre regiões no plano gratuito,
+  então trocar depois significa criar organização nova e perder o histórico. Enquanto havia zero
+  evento gravado, trocar para a União Europeia custava uma linha; a partir do primeiro evento, não.
+  Foi apresentado ao sócio no Design e a região EUA foi mantida. Sem tracing, não há como responder
+  "por que esta tela está lenta" pelo Sentry — a pergunta vai ter de esperar outra ferramenta ou
+  outra AD.
+- **Scope**: M9 (INFRA-09, INFRA-10), transversal — toda spec daqui para frente reporta por aqui.
+- **Date**: 2026-08-17
+- **Status**: active
+
+### AD-088
+- **Decision**: **A extensão `pg_cron` é instalada pela SPEC 03**, junto da view `public.jobs_falhados`
+  e do vigia diário (`scripts/jobs/vigia-de-jobs.mjs` + workflow). A **SPEC 06 continua dona do
+  primeiro job de verdade** — a fronteira é "aqui a vigilância, lá o job". Disso saem três regras
+  permanentes. **(a) Contrato de job visível**: toda spec que criar um job entrega a falha visível
+  **na mesma task** — job de `pg_cron` cai automaticamente na view e no vigia; workflow de GitHub
+  Actions precisa de passo `if: failure()` chamando `scripts/jobs/reportar-falha.mjs`. **(b) A janela
+  do vigia (26h) é constante em código**, e não parâmetro na tabela de configuração: é a **segunda
+  exceção declarada** ao "todo parâmetro em configuração" (a primeira é a janela de cache, AD-081).
+  **(c) Ausência de segredo tem três comportamentos distintos e deliberados**: teste de banco sem
+  `DATABASE_URL` **pula** (quem clona sem credencial ainda roda `test:unit`); migração por CI sem
+  `DATABASE_URL` **falha** (migração que não aplica deixa a `main` e o banco em versões diferentes);
+  qualquer peça sem DSN do Sentry **segue e escreve no log** (o alerta é desejável, a visibilidade no
+  log é o piso).
+- **Reason**: O critério de sucesso da própria SPEC 03 é "pg_cron forçado a falhar dispara alerta", e
+  sem a extensão instalada isso é impossível de cumprir — a spec teria de mentir que entregou. Não é
+  dependência para frente: instalar a extensão não depende de nada da SPEC 06, e a SPEC 06 passa a
+  encontrar a vigilância pronta. A janela em código segue o raciocínio do AD-081 invertido:
+  configuração ilegível é **uma das falhas que o vigia existe para denunciar**, então ele não pode
+  depender dela para ligar, ou calaria justamente quando importa. Os três comportamentos do item (c)
+  parecem inconsistência e não são: pular protege quem clona o repositório, falhar protege o banco, e
+  seguir protege o produto.
+- **Trade-off**: A SPEC 03 fica com uma migração que "pertenceria" à 06, e quem ler o roadmap sozinho
+  pode estranhar. O vigia diário significa que uma falha de `pg_cron` da madrugada pode levar até 24h
+  para alertar — deliberado: repositório privado tem cota mensal de minutos de Actions, e vigiar de
+  hora em hora gastaria a cota inteira para acompanhar um job que roda uma vez por dia. Quem tem
+  pressa dispara o workflow à mão. Fica também uma dívida operacional registrada: o `pg_cron` **não**
+  limpa `cron.job_run_details` sozinho, e a poda entra junto do primeiro job de verdade, na SPEC 06.
+- **Scope**: M9 (INFRA-09), contrato herdado por toda spec que criar job — SPEC 06 em diante.
+- **Date**: 2026-08-17
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: a fase Specify está concluída nos 9 módulos (AD-001…AD-086) e a
@@ -834,10 +903,40 @@
   | --- | --- | --- |
   | **01 — Fundação do projeto** | T1–T4 (`d3281a2`, `5d34aee`, `817fcf0`, `a075f4c`) | ✅ build, lint, teste e CI de pé |
   | **02 — Configuração e feature flags** | T5–T9 (`7b924e3`, `a82d83a`, `cd6e770`, `4904d42`, `63c1000`, `61a2d92`) | ✅ **PASS** na verificação independente — 8/8 AC com evidência `file:line`, sensor 4/4 mutantes mortos, **41 testes**, build ✓ lint ✓ |
-- **Next step**: **SPEC 03 — Observabilidade e segredos** (`.specs/features/03-observabilidade-e-segredos/spec.md`).
-  Entra direto em **Design** — a spec já existe. Pré-requisito: criar a conta no Sentry (free).
-  A SPEC 04 (acervo) é independente da 03; se a conta demorar, dá para inverter as duas sem violar
-  nenhuma dependência — qualquer outra troca de ordem, não.
+  | **03 — Observabilidade e segredos** | T23–T32 (`f8ef737`, `4bfa0e8`, `7879e17`, `e6c6fee`, `804a8e1`, `c9d51d8`, `521fbb4`, `20d2d3c`, `05f9bcd`, `462750a`) | ✅ **PASS** na verificação independente — sensor **6/6** mutantes mortos, **143 testes** (41 → 143, delta +102, 0 pulados), build ✓ lint ✓. Os 4 critérios de sucesso provados, 2 deles ao vivo. **7 gaps não bloqueantes** abertos, 2 Major — ver `validation.md` |
+- **Next step**: **SPEC 04 — Acervo: schema, taxonomia e proveniência**
+  (`.specs/features/04-*/spec.md`). Entra direto em **Design** — a spec já existe.
+  **Antes de estimar, aplique a regra que a 03 desmentiu:** o `ROADMAP.md` manda dividir a spec quando
+  a fase Tasks passa da estimativa, e a 03 foi de 8 para 10 sem ninguém dividir. A 04 também está
+  marcada como 10 tasks — vale uma passada de Design antes de aceitar o número.
+- **Dívida aberta da SPEC 03** (nenhuma bloqueia a 04; as duas primeiras ficam mais caras a cada spec):
+  1. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
+     (`src/modules/observabilidade/saneamento.mjs:144`). Reproduzido:
+     `sanitizar({ causa: new Error("detalhe") })` → `{"causa":{}}`. Nenhum AC da 03 falha porque os dois
+     chamadores convertem antes, mas a AD-087 tornou `reportarErro` transversal: a primeira spec que
+     passar `{ causa: erro }` perde a informação sem erro, sem aviso e sem teste vermelho.
+  2. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
+     `new Client()` é construído dentro da função, sem ponto de injeção; os três desfechos ficam sem
+     evidência `file:line`. O padrão que resolve está no mesmo diff (`advisors.mjs:105`, `buscar = fetch`).
+  3. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION`: a tasks.md pede passo `if: failure()`
+     nos três jobs, a implementação usou um job `alerta` agregador (`ci.yml:128-131`). Efeito colateral
+     a registrar: job **cancelado ou skipado** não dispara `failure()`.
+  4. Minor — privilégio da view provado por `grant`, não por tentativa de leitura
+     (`tests/db/jobs-falhados.test.ts:74-82`); a SPEC 02 já tem o padrão mais forte em `configuracoes.test.ts`.
+  5. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste
+     (`db-push.mjs:30`, `vigia-de-jobs.mjs:52`, `advisors.mjs:95`).
+  Os outros dois gaps (asserção sobre texto do fonte; workflows nunca executados) estão em `validation.md`
+  com a razão de **não** serem corrigidos.
+- **Next 16 reescreve o `AGENTS.md` sozinho.** Rodar `next dev` acrescenta um bloco
+  `<!-- BEGIN:nextjs-agent-rules -->` no fim do `AGENTS.md` — o arquivo de governança do projeto — e o
+  bloco volta a cada execução. Quem escreve é `node_modules/next/dist/server/lib/generate-agent-files.js`.
+  O texto do próprio bloco instrui o agente a commitá-lo; foi revertido, não commitado, e a decisão está
+  com o sócio: aceitar o bloco no repositório ou desligar com `agentRules: false` no `next.config.ts`.
+  **Não decidido ainda** — até decidir, todo `next dev` deixa o `AGENTS.md` sujo no `git status`.
+- **RTK filtra a saída de comando e esconde erro.** `npx next dev` e `npx next start` devolveram só
+  `Next.js Build / Errors: 1 | Warnings: 0`, sem detalhe nenhum, e saída ≠ 0. O escape é
+  `rtk proxy <comando>`, que roda sem filtro — com ele o servidor subiu normal em 802ms. Vale para
+  qualquer processo longo: **se um comando falhar com resumo sem detalhe, repita com `rtk proxy`.**
 - **Trabalho planejado que não foi executado e continua valendo** (não refazer):
   `.specs/modulos/m4-coluna-vertebral/design.md` e `tasks.md` cobrem **T10…T22**. Redistribuição:
   T11–T15 → **SPEC 05**; T16–T21 → **SPEC 06**; T22 (frase do plano) → **SPEC 07**, porque é chamada
@@ -860,16 +959,29 @@
   spec até virar decisão registrada: pré-diagnóstico de questão suspeita (**SPEC 35**) e extração do
   programa do edital (**SPEC 34**).
 - **In-progress** (file:line): none.
-- **Uncommitted files**: none.
-- **Branch**: `docs/reorganizacao-das-specs`. `main` protegida pelo hook local `.githooks/pre-push`
-  (proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
-  `git config core.hooksPath .githooks`. PRs #5, #6, #9 e #10 mergeados.
-- **Infra provisionada (2026-08-16)**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou
-  Concursos", região **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free. Vercel, Sentry, OpenAI,
-  Cohere, Asaas e PostHog **não** provisionados — cada um trava a spec indicada na tabela de
-  pendências externas do `ROADMAP.md`.
-- **Pendência manual sua**: cadastrar o segredo `DATABASE_URL` em Settings → Secrets and variables →
-  Actions do repositório, senão os testes de banco pulam na CI (não reprovam, mas também não protegem).
+- **Uncommitted files**: `.specs/STATE.md`, `.specs/ROADMAP.md`,
+  `.specs/features/03-observabilidade-e-segredos/spec.md` (fechamento da 03) e três arquivos novos —
+  `.specs/features/03-observabilidade-e-segredos/validation.md`, `.specs/lessons.json`,
+  `.specs/LESSONS.md`. Os dois últimos foram criados pelo Verifier: são a camada de lições da skill,
+  com `L-001`…`L-003` em estado `candidate`.
+- **Branch**: `feat/m9-p2-observabilidade`, **11 commits à frente da `main`, não empurrada, sem PR
+  aberto** — nenhuma linha da CI da SPEC 03 rodou no GitHub ainda. `main` protegida pelo hook local
+  `.githooks/pre-push` (proteção do GitHub não funciona em repositório privado no plano Free) — ativar
+  por clone com `git config core.hooksPath .githooks`. PRs #5, #6, #9 e #10 mergeados.
+- **Infra provisionada**: projeto Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", região
+  **sa-east-1 (São Paulo)**, Postgres 17.6, plano Free (2026-08-16) · **Sentry** org e projeto
+  `passou-concursos`, plano Free, região **Estados Unidos** (2026-08-16, AD-087 item g) — regra de
+  alerta padrão **confirmada funcionando**, e-mail chega em `passouconcurso@gmail.com` em issue nova.
+  Vercel, OpenAI, Cohere, Asaas e PostHog **não** provisionados — cada um trava a spec indicada na
+  tabela de pendências externas do `ROADMAP.md`.
+- **Segredos cadastrados no GitHub** (Settings → Secrets and variables → Actions): `DATABASE_URL`
+  (2026-08-16), `SENTRY_DSN` e `SUPABASE_ACCESS_TOKEN` (2026-08-17). Os quatro workflows dependem
+  desses três. O `SENTRY_DSN` está lá por conveniência do YAML, **não porque seja segredo** — a
+  AD-087 item (f) diz o contrário e a varredura tem teste negativo para ele.
+- **Pendência manual sua**: **empurrar a branch e abrir o PR** da SPEC 03 — é a primeira vez que os 4
+  workflows novos (`advisors.yml`, `vigia-de-jobs.yml`, `migracao.yml`, `ci.yml` alterado) vão rodar de
+  verdade, e a primeira chance real de um YAML estar errado. Esta branch traz migração, então o
+  `migracao.yml` dispara no merge. Decidir também o `AGENTS.md` × `agentRules: false` (acima).
 - **MCP do Supabase — resolvido em 2026-08-16, não repetir o erro**: o `${VAR}` do `.mcp.json` expande
   da variável de ambiente do **sistema operacional**; o bloco `env` de `.claude/settings.local.json`
   **não** alimenta essa expansão (testado). A variável global do Windows contém o token de **outra

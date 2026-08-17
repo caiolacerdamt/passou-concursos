@@ -2,13 +2,13 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 03 de 42 · [ROADMAP](../../ROADMAP.md) |
+| **Ordem** | 03 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · ✅ concluída |
 | **Depende de** | SPEC 01, SPEC 02 |
 | **Habilita** | todas — a partir daqui "SHALL alertar" deixa de ser promessa |
 | **Tasks (estimativa)** | ~8 → **10 na prática** (T23–T32) |
 | **Dificuldade** | Média |
 | **Status** | ✅ Concluída — ver `design.md`, `tasks.md` e `validation.md` |
-| **Requisitos** | **INFRA-09**, **INFRA-10** (segredos; a verificação do webhook do Asaas é da SPEC 19) |
+| **Requisitos** | **INFRA-09**, **INFRA-10** (segredos; a verificação do webhook do Asaas é da SPEC 12) |
 | **Fonte dos requisitos** | `.specs/modulos/m9-infra/spec.md` §P2: Erro visível e alertável · §Edge Cases (segredo) |
 
 ## Problem Statement
@@ -37,10 +37,10 @@ madrugada morre em silêncio. Construir mais oito specs em cima disso é acumula
 
 | O que | Onde entra |
 | --- | --- |
-| Preview por branch, branch do Supabase, deploy na Vercel (INFRA-01/07) | SPEC 16 |
-| Analytics de produto / PostHog (INFRA-12) | SPEC 21 — erro ≠ comportamento (AD-079) |
-| Trilha de auditoria da LGPD (DADOS-07) | SPEC 30 — é outra coisa: acesso a dado pessoal, não defeito |
-| Streaming e Vercel Pro (INFRA-05) | SPEC 29 |
+| Preview por branch, branch do Supabase, deploy na Vercel (INFRA-01/07) | SPEC 25 |
+| Analytics de produto / PostHog (INFRA-12) | SPEC 12 — erro ≠ comportamento (AD-079) |
+| Trilha de auditoria da LGPD (DADOS-07) | SPEC 16 — é outra coisa: acesso a dado pessoal, não defeito |
+| Streaming e Vercel Pro (INFRA-05) | SPEC 24 |
 
 ## Dependências técnicas
 
@@ -73,7 +73,7 @@ de reporte a ser plugado nasceu lá (`definirReporteDeErro`).
 
 | Critério | Prova |
 | --- | --- |
-| nº1 | Ao vivo em 2026-08-17, servidor local com DSN real: a rota lançou (`HTTP 500`) e o SDK registrou `Captured error event` → `Flushing events` → `Done flushing events`. **O porteiro da flag foi contornado por edição local revertida**, porque ligar a flag exige linha em `configuracoes`, que exige usuário em `auth.users`, que só nasce na SPEC 17. Os dois lados do porteiro têm teste `unit`; o que ficou sem prova ao vivo é a flag, não o caminho até o Sentry. |
+| nº1 | Ao vivo em 2026-08-17, servidor local com DSN real: a rota lançou (`HTTP 500`) e o SDK registrou `Captured error event` → `Flushing events` → `Done flushing events`. **O porteiro da flag foi contornado por edição local revertida**, porque ligar a flag exige linha em `configuracoes`, que exige usuário em `auth.users`, que só nasce na SPEC 07. Os dois lados do porteiro têm teste `unit`; o que ficou sem prova ao vivo é a flag, não o caminho até o Sentry. |
 | nº2 | Ao vivo em 2026-08-16: job `teste-falha-spec03` quebrado de propósito → view `public.jobs_falhados` → vigia → e-mail `PASSOU-CONCURSOS-2` recebido. Job e execuções removidos depois. |
 | nº3 | Teste `unit` em `src/modules/config/leitura.test.ts` (flag continua desligada) somado ao destino de observabilidade espionado recebendo o contexto `{ modulo: "config" }`. |
 | nº4 | Ao vivo pelo Verifier, em repositório git descartável: segredo plantado ⇒ saída ≠ 0; limpo ⇒ 0; `.env` versionado ⇒ ≠ 0; DSN no `.env.example` **não** dispara. |

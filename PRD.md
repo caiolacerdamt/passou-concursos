@@ -9,10 +9,14 @@
 > `docs/historico/` são registro congelado e podem conter pontos já revogados por ADs posteriores.
 >
 > **Objetivo deste PRD:** ser insumo direto para a skill `/tlc-spec-driven`, que trabalha com
-> (1) `.specs/STATE.md` = log de decisões `AD-NNN` (ver **§11**, mapeia D1–D35 um-para-um);
+> (1) `.specs/STATE.md` = handoff e decisões `AD-NNN` novas, com o histórico `AD-001`…`AD-088` em
+> `.specs/STATE-ARQUIVO.md` (ver **§11**, mapeia D1–D35 um-para-um);
 > (2) `.specs/modulos/m*/spec.md` = os requisitos por módulo (sementes em **§5**); e
-> (3) `.specs/ROADMAP.md` + `.specs/features/NN-*/spec.md` = a ordem de construção em 42 specs
-> numeradas (**AD-086**, 2026-08-16), que é a unidade de trabalho desde então.
+> (3) `.specs/ROADMAP.md` + `.specs/features/NN-*/spec.md` = a ordem de construção em **36 specs
+> numeradas, das quais as 01–14 são o MVP** (**AD-089**, 2026-08-17, substitui a AD-086), que é a
+> unidade de trabalho desde então. **§4.1 abaixo descreve o MVP do PRD original** — a AD-090 cortou
+> dele o tutor, o Raio-X completo, a gamificação além da sequência e a LGPD formal; onde discordarem,
+> vence a AD.
 >
 > **Regras deste documento:** linguagem de leigo, sem analogias; todo termo técnico vem com o que
 > significa em concreto. Números voláteis (preço, modelo de IA, taxa) estão marcados **[provisório]** ou

@@ -6,18 +6,25 @@ adaptativo com revisão espaçada e Raio-X da banca. O fosso é o acervo, não a
 
 ## Estado
 
-Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-086`). O trabalho foi **reorganizado em 42
-specs numeradas** (AD-086): a unidade de implementação é a **spec**, não o módulo.
-**Já existe código de aplicação** — as specs 01 (fundação) e 02 (configuração e feature flags) estão
-concluídas e verificadas.
+Fase **Specify concluída** para os 9 módulos (`AD-001`…`AD-090`). O trabalho é **recortado em 36 specs
+numeradas** (AD-089): a unidade de implementação é a **spec**, não o módulo.
+**Já existe código de aplicação** — as specs **01 a 04** estão concluídas.
 
-**A ordem oficial está em `.specs/ROADMAP.md`.** Regra dura: **uma spec só depende dela mesma ou de
-spec de número menor**. Dependência para frente é bug do roadmap — vira AD nova, não improviso.
-Para trabalhar: *"Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`"*. Próxima: **SPEC 03**.
+**As specs 01–14 são o MVP; o lançamento é o fim da 14.** Da 15 em diante é evolução — nada ali
+bloqueia o lançamento. **A ordem oficial está em `.specs/ROADMAP.md`.** Regra dura: **uma spec só
+depende dela mesma ou de spec de número menor**. Dependência para frente é bug do roadmap — vira AD
+nova, não improviso. Para trabalhar: *"Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`"*, no
+**Ritual** declarado no cabeçalho da spec (A/B/C — AD-090). Próxima: **SPEC 05**.
 
-O AD-076 exige a conta do Raio-X ligada desde o dia 1 — por isso as specs 26 e 27 são
-**pré-lançamento**. As specs 39 e 40 (áudio) SHALL NOT entrar em Design enquanto a flag de áudio não
-estiver perto de ligar (AD-064).
+O AD-076 exige a conta do Raio-X ligada desde o dia 1 — por isso a **SPEC 11** é pré-lançamento e
+entrega frequência real, peso no plano e tela. As specs 35 e 36 (áudio) SHALL NOT entrar em Design
+enquanto a flag de áudio não estiver perto de ligar (AD-064).
+
+O que ficou **fora do MVP** está listado com destino no `ROADMAP.md` §"O que o MVP corta". O item de
+maior risco: **a LGPD formal (grupos, auditoria, canal do titular, retenção automática) é pós-
+lançamento** — no dia 1 o pedido de exclusão é atendido por procedimento manual documentado, com a
+rotina de apagamento já testada na SPEC 14. Defensável com dezenas de alunos, **não** com milhares
+(AD-090).
 
 O lançamento separa **construído × ligado** (AD-076): tudo é construído (exceto M3, congelado), mas só
 4 superfícies nascem ligadas — plano do dia, sessão de questões, progresso, conta. O resto (tutor,
@@ -29,7 +36,9 @@ nem PWA** no lançamento (AD-077).
 
 Quando dois documentos discordam, **o de cima vence**:
 
-1. **`.specs/STATE.md`** — log append-only de decisões `AD-NNN`. AD mais alto vence AD mais baixo.
+1. **`.specs/STATE.md`** — handoff vivo, contratos vigentes e decisões `AD-NNN` novas. AD mais alto
+   vence AD mais baixo. O log histórico `AD-001`…`AD-088` está em **`.specs/STATE-ARQUIVO.md`**, que
+   é **consulta pontual, não leitura de rotina** (AD-090).
 2. **`.specs/modulos/m*/spec.md`** — requisitos numerados e critérios de aceite (**o quê**).
    **`.specs/ROADMAP.md`** + **`.specs/features/NN-*/spec.md`** — ordem, fronteira e escopo
    (**quando** e **em qual spec**). Discordância sobre o conteúdo do requisito → vence o módulo;
@@ -122,9 +131,10 @@ com o requisito e a AD no corpo, um commit atômico por task, merge `--no-ff` vi
 
 ```
 PRD.md                     contrato de produto
-.specs/STATE.md            log de decisões AD-NNN  ← fonte da verdade
-.specs/ROADMAP.md          a sequência oficial das 42 specs  ← por onde começar
-.specs/features/NN-*/      specs numeradas: o que construir, em que ordem
+.specs/STATE.md            handoff + contratos + decisões novas  ← fonte da verdade
+.specs/STATE-ARQUIVO.md    log histórico AD-001…AD-088  ← consulta pontual, não leitura de rotina
+.specs/ROADMAP.md          a sequência oficial das 36 specs (01–14 = MVP)  ← por onde começar
+.specs/features/NN-*/      specs numeradas: o que construir, em que ordem, em qual ritual
 .specs/modulos/m*/spec.md  requisitos por módulo (texto dos AC) + rodadas já feitas
 docs/GITFLOW.md            como trabalhar no git
 docs/EVIDENCIAS-*.md       estudos que embasam o método (oferta/marketing)
@@ -132,10 +142,17 @@ docs/historico/            congelado — como se chegou aqui
 experiments/tts-comparacao ferramenta do teste cego de voz (trava o 1º lote do M3)
 ```
 
-## Pendências que não travam o Design
+## Pendências externas
 
-Advogado (base legal das questões, janela de 24m, LIA antes do flywheel, **e o instrumento da
-transferência internacional para os EUA** — art. 33 LGPD, sem decisão de adequação da ANPD, AD-079) ·
-contador (CNPJ/regime) · contrato do Asaas (o que volta num estorno, D+ do parcelado) · preço do
-Cohere embed-v4 · **free tier do PostHog em fonte primária** antes de ligar (AD-079) ·
-**teste cego da voz** (trava o 1º lote do M3) · calibrações registradas como assumptions nas specs.
+**Travam o MVP — resolver em paralelo com o código, não depois:**
+**CNPJ + conta Asaas + contrato lido** (sem isso não existe checkout — é o prazo mais longo) ·
+`OPENAI_API_KEY` (SPEC 08/09) · **3–4 PDFs de prova oficial na mão** (é o caminho crítico do acervo) ·
+conta na Vercel (SPEC 07) · free tier do PostHog em fonte primária antes de ligar (AD-079).
+
+**Não travam o MVP:** advogado (base legal das questões, janela de 24m, LIA antes do flywheel, o
+instrumento da transferência internacional para os EUA — art. 33 LGPD, AD-079 — e o texto da
+política, que sobe com redação própria e é revisado depois) · preço do Cohere embed-v4 (SPEC 23) ·
+Vercel Pro (SPEC 24) · Supabase Pro (SPEC 25) · **teste cego da voz** (trava a SPEC 35) ·
+calibrações registradas como assumptions nas specs.
+
+A tabela completa, spec por spec, está em `.specs/ROADMAP.md`.

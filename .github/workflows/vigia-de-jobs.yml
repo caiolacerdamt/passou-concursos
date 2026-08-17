@@ -1,0 +1,49 @@
+name: Vigia de jobs
+
+# INFRA-09 AC2 · AD-035/AD-036
+#
+# Job de pg_cron roda dentro do Postgres e falha dentro do Postgres — a linha
+# entra em cron.job_run_details e ninguém recebe nada. Este workflow é o único
+# caminho entre aquela linha e o e-mail do time.
+#
+# Diário, não de hora em hora: repositório privado tem cota mensal de minutos de
+# Actions, e 24 execuções por dia consumiriam a cota inteira para vigiar um job
+# que roda uma vez por dia. Quem tem pressa usa o disparo manual.
+
+on:
+  schedule:
+    # 09:00 UTC = 06:00 em São Paulo. O cron do GitHub é sempre UTC.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  vigia:
+    name: Procurar falha de pg_cron
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Olhar as últimas 26h
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: npm run jobs:vigia
+
+      # O vigia sai vermelho quando acha falha, e também quando não consegue
+      # olhar. Nos dois casos o alerta já saiu; este passo é o segundo sinal,
+      # independente de o Sentry estar de pé.
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "vigia-de-jobs terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs

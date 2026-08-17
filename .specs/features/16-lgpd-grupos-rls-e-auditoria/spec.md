@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 05, SPEC 12, SPEC 14 |
 | **Habilita** | SPEC 17, 18, 29, 33 |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **DADOS-02**, **DADOS-07**, **DADOS-08** |

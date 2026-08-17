@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 06, SPEC 07, SPEC 10 |
 | **Habilita** | SPEC 14, 19, 20, 27, 31, 32 |
 | **Tasks (estimativa)** | ~11 |
-| **Ritual** | **B — normal** |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **RAIOX-08**, **RAIOX-01**, **RAIOX-04**, **RAIOX-05**, **RAIOX-11**, **RAIOX-12**, **RAIOX-03** (porteiro do edital), **RAIOX-14** |
 | **Fonte dos requisitos** | `.specs/modulos/m5-raiox-banca/spec.md` |

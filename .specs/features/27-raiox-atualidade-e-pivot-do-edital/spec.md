@@ -5,7 +5,7 @@
 | **Ordem** | 27 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 15, SPEC 20 |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **RAIOX-07**, **RAIOX-10**, e a **tela do Raio-X** (atrás de flag, AD-076) |

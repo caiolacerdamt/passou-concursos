@@ -5,7 +5,7 @@
 | **Ordem** | 32 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 08, SPEC 13, SPEC 20 |
 | **Tasks (estimativa)** | ~12 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **ALUNO-08** (bloco simulado), **RAIOX-09**, **ALUNO-05** (AC2, AC3, AC4) |

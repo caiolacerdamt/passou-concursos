@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 10 |
 | **Habilita** | SPEC 35 |
 | **Tasks (estimativa)** | ~9 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **IA-09**, **IA-07** |

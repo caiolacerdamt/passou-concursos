@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 06, SPEC 11 |
 | **Habilita** | SPEC 27, 32; e reordena a fila da base de referência da SPEC 10 |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **RAIOX-12**, **RAIOX-02**, **RAIOX-03**, **RAIOX-06**, **RAIOX-13**, **RAIOX-15** |

@@ -5,7 +5,7 @@
 | **Ordem** | 35 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 21, SPEC 16 |
 | **Tasks (estimativa)** | ~11 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | 🧊 **Congelada** — SHALL NOT entrar em Design enquanto a flag de áudio não estiver perto de ligar (AD-064) |
 | **Requisitos** | **TTS-06**, **TTS-02**, **TTS-01**, **TTS-05**, **TTS-09**, **TTS-10** |

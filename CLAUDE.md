@@ -12,9 +12,14 @@ numerado de origem e precisa de Specify curto antes do Design.
 
 | Ritual | O que produzir |
 | --- | --- |
-| **A — completo** | `design.md` + `tasks.md` + `validation.md` + **Verificador independente** com sensor de mutação. Só nas specs 05, 12, 14, 18, 24, 28, 33 |
-| **B — normal** | `tasks.md` com uma seção curta de decisões de design no topo; ao fim, autoverificação contra os *Success Criteria* com evidência `file:line`. **Sem `design.md` separado** |
-| **C — leve** | `tasks.md` direto |
+| **A — completo** | `design.md` + `tasks.md` + `validation.md` + **Verificador independente completo** (AC por AC + sensor de mutação). Só nas specs 05, 12, 14, 18, 24, 28, 33 |
+| **B — normal** | `tasks.md` com o design embutido no topo. **Sem `design.md` separado.** Ao fim, **Verificador independente curto**: só os *Success Criteria*, evidência `file:line`, **sem sensor de mutação**, relatório como seção no fim do `tasks.md` |
+| **C — leve** | `tasks.md` direto + autoverificação do autor |
+
+**`autor ≠ verificador` não cai em nenhum ritual** — a SPEC 04 se verificou sozinha e abriu dívida
+`Major`. O Ritual B corta o **escopo** do verificador, não a independência. A skill roda o Verificador
+completo por padrão; **o ritual da spec substitui esse padrão** (as regras do projeto vencem as da
+skill). Diga qual ritual está seguindo antes de começar.
 
 `tasks.md` é **checklist**: teto de ~10 linhas por task. **Meta numérica de teste é proibida** — nada
 de "+8 testes (total ≥ 151)". Testa-se o que quebra.

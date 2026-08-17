@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 05 |
 | **Habilita** | SPEC 08 (frase do plano), 11, 13, 14, 19, 20 |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | 🟨 **Design e tasks já escritos** (rodada 1) — Execute não começou |
 | **Requisitos** | **ALUNO-02**, **ALUNO-05** (AC1), **ALUNO-06** (parcial), **ALUNO-07**, **ALUNO-08**, **ALUNO-09**, **ALUNO-10**, **ALUNO-11**, **INFRA-03** |

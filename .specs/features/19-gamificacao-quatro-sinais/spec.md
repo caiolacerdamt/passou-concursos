@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 11, SPEC 13, SPEC 14 |
 | **Habilita** | SPEC 26 |
 | **Tasks (estimativa)** | ~12 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **GAM-01**, **GAM-02**, **GAM-03**, **GAM-04**, **GAM-07**, **GAM-11**, **GAM-12**, **GAM-13**, **GAM-14**, **GAM-08** |

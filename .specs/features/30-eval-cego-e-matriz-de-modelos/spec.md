@@ -5,7 +5,7 @@
 | **Ordem** | 30 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 08, SPEC 10 |
 | **Tasks (estimativa)** | ~8 |
-| **Ritual** | **C — leve** (tasks direto, sem documento de design separado) |
+| **Ritual** | **C — leve** (`tasks.md` direto + autoverificação do autor contra os Success Criteria) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **IA-03**, **IA-11** |

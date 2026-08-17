@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 06, SPEC 11, SPEC 13 |
 | **Habilita** | SPEC 16, 19 |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente) |
+| **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente com sensor de mutação) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **ALUNO-10** (superfície), **ALUNO-02** (AC2), **GAM-02**, **GAM-08**, **DADOS-04** (parte), **DADOS-01** (parte) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m6-gamificacao/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` |

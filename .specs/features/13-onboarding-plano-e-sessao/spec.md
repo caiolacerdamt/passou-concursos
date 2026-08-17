@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 06, SPEC 07, SPEC 10, SPEC 12 |
 | **Habilita** | SPEC 14, 19, 21, 24, 32 |
 | **Tasks (estimativa)** | ~12 |
-| **Ritual** | **B — normal** |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **PAG-14**, **ALUNO-08** (superfície), **ALUNO-11** (superfície), **ALUNO-03** (superfície), **ALUNO-01** (superfície), **BANCO-01** (AC2), **IA-04** (superfície), **IA-09** (AC5) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m2-camada-ia/spec.md` · `.specs/modulos/m1-banco-questoes/spec.md` |

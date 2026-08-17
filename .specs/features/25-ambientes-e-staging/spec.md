@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 03, SPEC 07 |
 | **Habilita** | — (endurece o ambiente que a SPEC 07 entregou) |
 | **Tasks (estimativa)** | ~8 |
-| **Ritual** | **C — leve** (tasks direto, sem documento de design separado) |
+| **Ritual** | **C — leve** (`tasks.md` direto + autoverificação do autor contra os Success Criteria) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **INFRA-01**, **INFRA-07** |

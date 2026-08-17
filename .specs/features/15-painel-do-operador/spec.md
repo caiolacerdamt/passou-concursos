@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 10, SPEC 07 |
 | **Habilita** | SPEC 27, 29 (as telas de curadoria delas herdam este painel) |
 | **Tasks (estimativa)** | ~10 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **BANCO-10**, **BANCO-07** (superfície), **INFRA-11** (tela de administração da configuração) |

@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 08, SPEC 10 |
 | **Habilita** | — (fecha o critério de conta que a SPEC 10 deixou para a fila humana) |
 | **Tasks (estimativa)** | ~9 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **IA-06**, **IA-15** |

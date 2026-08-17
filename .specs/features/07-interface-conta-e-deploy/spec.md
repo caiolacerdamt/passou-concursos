@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 03 |
 | **Habilita** | SPEC 11, 12, 13, 14, 15, 25 |
 | **Tasks (estimativa)** | ~12 |
-| **Ritual** | **B — normal** (`design` como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **PAG-07**, **PAG-01**, **PAG-04**, **PAG-06** (parte: `matricula`), **INFRA-01**, `UI-NN` (a criar) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` |

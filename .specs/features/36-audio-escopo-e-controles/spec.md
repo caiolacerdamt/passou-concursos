@@ -5,7 +5,7 @@
 | **Ordem** | 36 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 35 |
 | **Tasks (estimativa)** | ~9 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
 | **Status** | 🧊 **Congelada** (AD-064) |
 | **Requisitos** | **TTS-04**, **TTS-07**, **TTS-03**, **TTS-08**, **TTS-11** |

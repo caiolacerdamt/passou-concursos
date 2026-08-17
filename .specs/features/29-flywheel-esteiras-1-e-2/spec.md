@@ -5,7 +5,7 @@
 | **Ordem** | 29 de 36 · [ROADMAP](../../ROADMAP.md) · pós-lançamento |
 | **Depende de** | SPEC 15, SPEC 16, SPEC 17 (base legal e LIA antes de ligar) |
 | **Tasks (estimativa)** | ~11 |
-| **Ritual** | **B — normal** (design como seção do `tasks.md`, autoverificação com evidência) |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **DADOS-06**, **DADOS-05**, **DADOS-12**, **ALUNO-06** (fecha a calibração) |

@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 12, SPEC 16 |
 | **Habilita** | SPEC 18, 26 (notificação fora do app exige consentimento), 29 |
 | **Tasks (estimativa)** | ~8 |
-| **Ritual** | **C — leve** (tasks direto, sem documento de design separado) |
+| **Ritual** | **C — leve** (`tasks.md` direto + autoverificação do autor contra os Success Criteria) |
 | **Dificuldade** | Média |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **DADOS-01**, **DADOS-09**, **DADOS-14**, **DADOS-11** (parte declaratória) |

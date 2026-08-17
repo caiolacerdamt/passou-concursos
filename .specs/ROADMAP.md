@@ -32,9 +32,14 @@ Não é mais. Cada spec declara o seu ritual no cabeçalho:
 
 | Ritual | O que produz | Quando |
 | --- | --- | --- |
-| **A — completo** | `design.md` próprio + `tasks.md` + `validation.md` + **Verificador independente** com sensor de mutação | dinheiro, dado imutável e apagamento irreversível. **Só 6 specs das 36** |
-| **B — normal** | `tasks.md` com uma seção curta de decisões de design no topo + autoverificação contra os *Success Criteria* com evidência `file:line` | o caso comum |
-| **C — leve** | `tasks.md` direto, sem documento de design separado | mudança mecânica, configuração, ambiente |
+| **A — completo** | `design.md` próprio + `tasks.md` + `validation.md` + **Verificador independente completo**: AC por AC, com **sensor de mutação** | dinheiro, dado imutável e apagamento irreversível. **7 specs das 36** |
+| **B — normal** | `tasks.md` com o design embutido numa seção curta no topo + **Verificador independente curto**: só os *Success Criteria*, com evidência `file:line`, **sem sensor de mutação**, relatório como seção no fim do `tasks.md` | o caso comum |
+| **C — leve** | `tasks.md` direto + autoverificação do próprio autor contra os *Success Criteria* | mudança mecânica, configuração, ambiente |
+
+**O que nunca cai, em nenhum ritual: autor ≠ verificador.** É a propriedade que pega erro de
+verdade — a SPEC 04 se verificou sozinha e abriu dívida `Major` no mesmo dia. O que o Ritual B corta
+é o **escopo** do verificador (Success Criteria em vez de todo AC, sem sensor de mutação), não a
+independência dele. O Ritual C só é aceitável onde não há comportamento novo a quebrar.
 
 Regras que valem para os três:
 
@@ -44,6 +49,9 @@ Regras que valem para os três:
 3. **Um PR por spec**, merge `--no-ff`, um commit atômico por task (`docs/GITFLOW.md`).
 4. Ritual A **não** é negociável para baixo. Ritual B pode subir para A se o Design revelar risco novo
    — vira AD.
+5. **A skill `tlc-spec-driven` roda o Verificador completo por padrão.** O ritual declarado na spec
+   **substitui** esse padrão (as regras do projeto vencem as da skill, AD-090). Quem executar precisa
+   dizer, em voz alta, qual ritual está seguindo antes de começar.
 
 ## Como os documentos se dividem
 

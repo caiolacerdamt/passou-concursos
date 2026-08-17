@@ -42,10 +42,14 @@
 ### AD-090
 - **Decision**: Três mudanças de método, válidas de agora em diante. **(a) Ritual proporcional ao
   risco.** Cada spec declara `Ritual` no cabeçalho: **A** (design.md próprio + tasks + validation +
-  Verificador independente com sensor de mutação) só para dinheiro, dado imutável e apagamento
-  irreversível — são 6 das 36 (05, 12, 14, 18, 24, 28, 33); **B** (design como seção curta do
-  tasks.md + autoverificação com evidência `file:line`) é o caso comum; **C** (tasks direto) para
-  mudança mecânica. `tasks.md` tem teto de ~10 linhas por task, e **meta numérica de teste está
+  **Verificador independente completo**, AC por AC com sensor de mutação) só para dinheiro, dado
+  imutável e apagamento irreversível — são 7 das 36 (05, 12, 14, 18, 24, 28, 33); **B** (design
+  embutido no tasks.md + **Verificador independente curto**: só os Success Criteria, com evidência
+  `file:line`, **sem sensor de mutação**) é o caso comum; **C** (tasks direto + autoverificação do
+  autor) para mudança mecânica. **`autor ≠ verificador` não cai em nenhum ritual** — o que o B corta
+  é o escopo do verificador, não a independência dele. A skill `tlc-spec-driven` roda o Verificador
+  completo por padrão; **o ritual declarado na spec substitui esse padrão**, porque as regras do
+  projeto vencem as da skill. `tasks.md` tem teto de ~10 linhas por task, e **meta numérica de teste está
   proibida** — nada de `+8 testes (total ≥ 151)`. **(b) O `STATE.md` foi cortado em dois**: handoff e
   decisões novas ficam aqui; `AD-001…AD-088` foram para `.specs/STATE-ARQUIVO.md`, que **não** é
   leitura de rotina. **(c) Cortes de escopo do MVP**, cada um com o destino registrado: tutor → 24;
@@ -65,11 +69,12 @@
   **procedimento manual documentado** (a rotina de apagamento existe e é testada na SPEC 14; o que
   falta é o canal formal com prazo de 15 dias, a exportação, a auditoria e a retenção automática).
   Isso é defensável com dezenas de alunos e **deixa de ser** com milhares — a SPEC 18 vira urgente
-  antes disso, e a política sobe com redação própria porque o advogado ainda não respondeu. Ritual B
-  significa **verificação pelo próprio autor** na maioria das specs: a SPEC 04 já mostrou o que isso
-  custa (4 de 6 mutações medidas, uma contada por raciocínio). Aceito conscientemente fora dos
-  caminhos de dinheiro e de dado. Cortar o tutor tira da página de vendas o argumento mais vistoso —
-  **a página SHALL NOT prometê-lo**.
+  antes disso, e a política sobe com redação própria porque o advogado ainda não respondeu.
+  Em segundo lugar, o **Ritual B abre mão do sensor de mutação** na maioria das specs: sem sensor
+  sobra teste que passa sem provar nada, e foi exatamente isso que a SPEC 04 mostrou (4 de 6 mutações
+  medidas, uma contada por raciocínio). O verificador continua independente, mas confere menos
+  superfície — aceito conscientemente fora dos caminhos de dinheiro e de dado. Em terceiro, cortar o
+  tutor tira da página de vendas o argumento mais vistoso — **a página SHALL NOT prometê-lo**.
 - **Scope**: transversal — método de trabalho e escopo do lançamento.
 - **Date**: 2026-08-17
 - **Status**: active

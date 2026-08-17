@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 04, SPEC 08 |
 | **Habilita** | SPEC 10, 11, 15, 22, 23, 31 |
 | **Tasks (estimativa)** | ~12 |
-| **Ritual** | **B — normal** |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **BANCO-03**, **BANCO-11**, **BANCO-12**, **IA-17**, **BANCO-04**, **BANCO-13** (comportamento), **BANCO-05** (parte: classificação) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m2-camada-ia/spec.md` (IA-17) |

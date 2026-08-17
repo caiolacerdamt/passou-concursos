@@ -6,7 +6,7 @@
 | **Depende de** | SPEC 02, SPEC 03, SPEC 06 |
 | **Habilita** | SPEC 09, 10, 13, 22, 24, 30, 31, 35 |
 | **Tasks (estimativa)** | ~9 |
-| **Ritual** | **B — normal** |
+| **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Status** | ⬜ Não iniciada |
 | **Requisitos** | **IA-02**, **IA-16**, **IA-14**, **IA-13** (mecanismo), **IA-12**, **IA-01** (parte), **INFRA-02**, **ALUNO-12** |
 | **Fonte dos requisitos** | `.specs/modulos/m2-camada-ia/spec.md` · `.specs/modulos/m4-coluna-vertebral/spec.md` (ALUNO-12) |

@@ -46,7 +46,7 @@ daquele trabalho é refeito.
 | 01 | Fundação do projeto | Next.js + TypeScript, Vitest (`unit`/`db`), Supabase CLI, CI de build/lint/teste | — | 4 | Fácil | ✅ Concluída |
 | 02 | Configuração e feature flags | Tabela append-only `configuracoes`, catálogo em código, leitura com cache e queda segura, escrita com autor | 01 | 5 | Média | ✅ Concluída |
 | 03 | Observabilidade e segredos | Sentry ligado ao ponto único de reporte, falha de job visível, disciplina de segredo, migração aplicada por CI | 01, 02 | 10 | Média | ✅ Concluída |
-| 04 | Acervo — schema, taxonomia e proveniência | `provas`, `questoes` + versão, matérias/tópicos, enums, colunas de busca, trava de publicação sem proveniência | 02, 03 | 10 | Média | ⬜ Não iniciada |
+| 04 | Acervo — schema, taxonomia e proveniência | `provas`, `questoes` + versão, matérias/tópicos, enums, colunas de busca, trava de publicação sem proveniência | 02, 03 | **8** | Média | ✅ Concluída (verificação **não independente** — ver `validation.md`) |
 | 05 | Log de tentativas | `tentativas` particionada, snapshot congelado, trava de 3 camadas, RLS, sessões, `registrarTentativa` | 04 | 8 | Difícil | 🟨 Design e tasks prontos (T11–T15) |
 | 06 | Projeções, revisão espaçada e plano do dia | `dominio_topico`, `caderno_erros`, FSRS, `recalcula_projecoes()`, `gera_plano_do_dia()`, `pg_cron` | 05 | 10 | Difícil | 🟨 Design e tasks prontos (T16–T21) |
 | 07 | Gateway de IA | `tarefa → modelo/esforço/batch/cache/fallback` por configuração, chave de dedup, versão de prompt, alerta de gasto; 1ª tarefa real = frase do plano | 02, 03, 06 | 11 | Difícil | ⬜ Não iniciada |

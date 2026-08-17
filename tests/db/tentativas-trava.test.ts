@@ -76,9 +76,12 @@ descreveComBanco("tentativas — a trava do so-INSERT (ALUNO-01 AC1)", () => {
       for (const papel of ["anon", "authenticated"]) {
         await cliente.query("savepoint truncar");
         await cliente.query(`set local role ${papel}`);
+        // Nomeia a tabela: `/permission denied/` sozinho passaria por negacao
+        // de qualquer outro objeto arrastado pelo `cascade`, e o teste diria
+        // menos do que afirma.
         await expect(
           cliente.query("truncate table public.tentativas cascade"),
-        ).rejects.toThrow(/permission denied/);
+        ).rejects.toThrow(/permission denied for table tentativas/);
         await cliente.query("rollback to savepoint truncar");
       }
 

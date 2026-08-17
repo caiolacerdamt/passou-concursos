@@ -46,6 +46,14 @@ export async function registrarTentativa(
   });
 
   if (error) {
+    // A funcao SQL levanta as recusas com prefixo nomeado justamente para que a
+    // tela receba um motivo, e nao o texto de um erro de banco.
+    if (error.message.includes("causa_obrigatoria")) {
+      throw new TentativaRecusada(
+        "causa_obrigatoria",
+        "Diga por que errou antes de seguir. 'Nao sei dizer' vale como resposta.",
+      );
+    }
     if (error.message.includes("item_inexistente")) {
       throw new TentativaRecusada(
         "item_inexistente",
@@ -55,12 +63,22 @@ export async function registrarTentativa(
     throw error;
   }
 
-  const linha = (Array.isArray(data) ? data[0] : data) as {
-    tentativa_id: string;
-    respondida_em: string;
-    correta: boolean;
-    duplicada: boolean;
-  };
+  const linha = (Array.isArray(data) ? data[0] : data) as
+    | {
+        tentativa_id: string;
+        respondida_em: string;
+        correta: boolean;
+        duplicada: boolean;
+      }
+    | undefined;
+
+  if (!linha) {
+    // A funcao SQL sempre devolve uma linha ou levanta excecao. Chegar aqui e
+    // defeito nosso, e vale gritar em vez de estourar com `undefined` adiante.
+    throw new Error(
+      "registrar_tentativa nao devolveu linha nenhuma — estado inesperado do banco.",
+    );
+  }
 
   return {
     tentativaId: linha.tentativa_id,
@@ -97,12 +115,16 @@ export function validar(entrada: EntradaTentativa): void {
 }
 
 /**
- * Recusa a resposta que o aluno mandou antes de tentar grava-la.
+ * Checagem **otimista** da tela, antes de mandar a resposta ao servidor.
  *
- * Precisa do tipo da questao (para saber quais letras existem) e de se a
- * resposta esta certa (para saber se a causa e obrigatoria) — dois dados que so
- * a tela tem antes do envio. Por isso e uma funcao a parte: quem monta a sessao
- * ja carrega o tipo, e a tela ja sabe o que o aluno marcou.
+ * Precisa do tipo da questao e de se a resposta esta certa — dois dados que a
+ * tela pode ter em maos, mas que `registrarTentativa` **nao** tem: o gabarito e
+ * do banco (invariante nº4), e "errou no treino" so se sabe depois de comparar.
+ *
+ * Por isso ela e conveniencia, e nao a garantia: quem obriga a causa antes do
+ * INSERT e a propria `public.registrar_tentativa`, que levanta
+ * `causa_obrigatoria` no instante seguinte a calcular se acertou. Chamar esta
+ * funcao poupa uma ida ao servidor; nao chamar nao abre buraco nenhum.
  */
 export function validarResposta(
   entrada: EntradaTentativa,

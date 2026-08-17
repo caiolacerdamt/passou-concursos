@@ -215,6 +215,35 @@ describe("registrarTentativa — o que sai e o que entra", () => {
     expect(JSON.stringify(rpc.mock.calls[0][1])).not.toMatch(/correta|gabarito/);
   });
 
+  it("traduz a recusa da funcao SQL em `causa_obrigatoria` (ALUNO-03 AC1)", async () => {
+    // O modulo nao conhece o gabarito (invariante nº4), entao quem sabe que o
+    // aluno errou no treino e a funcao SQL. O papel daqui e transformar a
+    // excecao dela em motivo nomeado, para a tela pedir a causa em vez de
+    // mostrar erro de banco.
+    const rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: {
+        message:
+          'causa_obrigatoria: diga por que errou antes de seguir; "nao sei dizer" vale como resposta (ALUNO-03 AC1)',
+      },
+    });
+
+    try {
+      await registrarTentativa(entrada(), { rpc } as never);
+      expect.unreachable("deveria ter recusado");
+    } catch (erro) {
+      expect(erro).toBeInstanceOf(TentativaRecusada);
+      expect((erro as TentativaRecusada).motivo).toBe("causa_obrigatoria");
+      expect((erro as TentativaRecusada).message).toMatch(/nao sei dizer/i);
+    }
+  });
+
+  it("nao estoura com `undefined` quando a funcao devolve linha nenhuma", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [], error: null });
+    await expect(registrarTentativa(entrada({ contexto: "plano" }), { rpc } as never))
+      .rejects.toThrow(/linha nenhuma/);
+  });
+
   it("traduz o item inexistente em recusa nomeada, nao em erro de banco", async () => {
     const rpc = vi.fn().mockResolvedValue({
       data: null,

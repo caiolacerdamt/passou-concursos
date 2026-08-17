@@ -190,6 +190,75 @@ descreveComBanco("registrar_tentativa — dedup do duplo-clique", () => {
     });
   });
 
+  it("errar no treino sem causa e recusado com nome proprio, ANTES do INSERT (ALUNO-03 AC1)", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const sessao = await criarSessao(cliente, aluno, "treino");
+      const item = await criarItemDeSessao(cliente, sessao, questao);
+
+      await cliente.query("savepoint sem_causa");
+      // A recusa e da funcao, com motivo nomeado — **nao** do CHECK da tabela.
+      // Se fosse o CHECK, a tela receberia 'causa_obrigatoria_no_treino', que e
+      // nome de constraint do Postgres e nao mensagem para o aluno.
+      await expect(
+        registrar(cliente, {
+          userId: aluno,
+          itemId: item,
+          contexto: "treino",
+          resposta: "A",
+        }),
+      ).rejects.toThrow(/causa_obrigatoria:/);
+      await cliente.query("rollback to savepoint sem_causa");
+
+      // E com a causa, passa.
+      const registro = await registrar(cliente, {
+        userId: aluno,
+        itemId: item,
+        contexto: "treino",
+        resposta: "A",
+        causa: "nao_sei_dizer",
+      });
+      expect(registro.correta).toBe(false);
+      expect(registro.duplicada).toBe(false);
+    });
+  });
+
+  it("acertar no treino sem causa passa — a exigencia e so no erro", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const sessao = await criarSessao(cliente, aluno, "treino");
+      const item = await criarItemDeSessao(cliente, sessao, questao);
+
+      const registro = await registrar(cliente, {
+        userId: aluno,
+        itemId: item,
+        contexto: "treino",
+        resposta: "C",
+      });
+      expect(registro.correta).toBe(true);
+    });
+  });
+
+  it("errar sem causa fora do treino passa — diagnostico e simulado nao interrompem", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const sessao = await criarSessao(cliente, aluno, "simulado");
+      for (const [i, contexto] of (["diagnostico", "simulado"] as const).entries()) {
+        const questao = await questaoParaResponder(cliente);
+        const item = await criarItemDeSessao(cliente, sessao, questao, i + 1);
+        const registro = await registrar(cliente, {
+          userId: aluno,
+          itemId: item,
+          contexto,
+          resposta: "A",
+        });
+        expect(registro.correta).toBe(false);
+      }
+    });
+  });
+
   it("um INSERT recusado devolve o item ao estado de nao respondido", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = novoAluno();
@@ -197,9 +266,9 @@ descreveComBanco("registrar_tentativa — dedup do duplo-clique", () => {
       const sessao = await criarSessao(cliente, aluno, "treino");
       const item = await criarItemDeSessao(cliente, sessao, questao);
 
-      // Erro no treino sem causa: o CHECK da tabela recusa. Se o dedup e o
-      // INSERT nao fossem atomicos, o item ficaria respondido para sempre e o
-      // aluno perderia a questao.
+      // Erro no treino sem causa: a funcao recusa depois de ja ter marcado o
+      // item. Se o dedup e a recusa nao fossem atomicos, o item ficaria
+      // respondido para sempre e o aluno perderia a questao.
       await cliente.query("savepoint recusa");
       await expect(
         registrar(cliente, {
@@ -208,7 +277,7 @@ descreveComBanco("registrar_tentativa — dedup do duplo-clique", () => {
           contexto: "treino",
           resposta: "A",
         }),
-      ).rejects.toThrow(/causa_obrigatoria_no_treino/);
+      ).rejects.toThrow(/causa_obrigatoria/);
       await cliente.query("rollback to savepoint recusa");
 
       const { rows } = await cliente.query<{ respondido_em: string | null }>(

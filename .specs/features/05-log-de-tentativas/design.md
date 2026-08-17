@@ -280,9 +280,15 @@ faz parte da PK, então a referência precisa dos dois campos.
   de partição, e `(sessao_id, questao_id, respondida_em)` deixaria passar dois cliques com
   milissegundos de diferença. O `UPDATE ... where respondido_em is null` é atômico e não depende de
   índice nenhum.
-- **Transação**: passos 2–4 numa transação só. Se o INSERT falhar, o `respondido_em` volta atrás e o
-  aluno pode responder de novo — senão o duplo-clique de uma tentativa **falha** deixaria o item
-  marcado como respondido para sempre.
+- **Atomicidade dos passos 2–4** — ⚠️ **desvio assumido em Execute.** O design dizia "uma transação no
+  TypeScript". O cliente do Supabase **não abre transação**, então os passos 2–4 foram implementados
+  como a função SQL `public.registrar_tentativa(...)`, que é atômica por ser uma instrução só. O
+  módulo TypeScript ficou com o passo 1 (a validação em memória, que é o que o ALUNO-03 AC1 exige que
+  aconteça antes do banco) e com a tradução do erro em `TentativaRecusada`. A função é
+  `security invoker`, então a RLS continua valendo dentro dela; um `security definer` aqui seria um
+  caminho para gravar no nome de outro aluno. Registrado no commit como `SPEC_DEVIATION`.
+  A propriedade que o design queria está preservada e testada: INSERT recusado devolve o item ao
+  estado de não respondido, e o aluno consegue responder de novo.
 
 ### `tests/db/aluno.ts`
 

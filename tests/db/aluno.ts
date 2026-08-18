@@ -218,3 +218,69 @@ export async function criarItemDeSessao(
   );
   return rows[0].id;
 }
+
+// ── Ajudantes da SPEC 06 (projecoes, revisao e plano) ───────────────────────
+
+/** Declara a porta nomeada do esquecimento (AD-029) para `userId` nesta transacao. */
+export async function abrirPortaDoEsquecimento(
+  cliente: Client,
+  userId: string,
+): Promise<void> {
+  await cliente.query("select set_config('app.esquecimento_user_id', $1, true)", [
+    userId,
+  ]);
+}
+
+/**
+ * Roda `uso` como `authenticated` com `auth.uid()` valendo `userId`, e desfaz o
+ * papel no fim. Savepoint proprio: sem ele, uma consulta recusada pela RLS
+ * aborta a transacao inteira do teste.
+ */
+export async function comoAluno(
+  cliente: Client,
+  userId: string,
+  uso: () => Promise<void>,
+): Promise<void> {
+  await cliente.query("savepoint como_aluno");
+  await cliente.query("select set_config('request.jwt.claims', $1, true)", [
+    JSON.stringify({ sub: userId, role: "authenticated" }),
+  ]);
+  await cliente.query("set local role authenticated");
+  try {
+    await uso();
+  } finally {
+    await cliente.query("rollback to savepoint como_aluno");
+  }
+}
+
+/**
+ * Espera que `acao` seja recusada com uma mensagem que casa com `padrao`, sem
+ * derrubar a transacao do teste.
+ *
+ * Statement que falha aborta a transacao inteira no Postgres, e todo comando
+ * seguinte volta como "current transaction is aborted" — o que faz o teste
+ * seguinte falhar pela razao errada. O savepoint isola a recusa.
+ */
+export async function recusa(
+  cliente: Client,
+  acao: () => Promise<unknown>,
+  padrao: RegExp,
+): Promise<void> {
+  const nome = `recusa_${Math.random().toString(36).slice(2, 10)}`;
+  await cliente.query(`savepoint ${nome}`);
+  let erro: unknown;
+  try {
+    await acao();
+  } catch (capturado) {
+    erro = capturado;
+  } finally {
+    await cliente.query(`rollback to savepoint ${nome}`);
+  }
+  if (erro === undefined) {
+    throw new Error(`esperava recusa casando com ${padrao}, mas a operacao passou`);
+  }
+  const mensagem = erro instanceof Error ? erro.message : String(erro);
+  if (!padrao.test(mensagem)) {
+    throw new Error(`esperava recusa casando com ${padrao}, veio: ${mensagem}`);
+  }
+}

@@ -45,3 +45,19 @@ describe("notaDoPercentual (ALUNO-09 AC2)", () => {
     expect(notaDoPercentual(0.85, exigente)).toBe(NOTA.dificil);
   });
 });
+
+describe("a fronteira do modulo (ALUNO-09 AC3)", () => {
+  it("so `due`, `nota` e `algoritmo` saem daqui — nada do estado interno do FSRS", async () => {
+    // O contrato exposto ao motor de prioridade e "esta devendo revisao ou nao".
+    // Se `Card`, estabilidade ou dificuldade vazassem por esta fronteira, trocar
+    // o algoritmo deixaria de ser trocar uma chave de configuracao.
+    const publico = await import("./index");
+    expect(Object.keys(publico).sort()).toEqual([
+      "ALGORITMOS",
+      "NOTA",
+      "RevisaoRecusada",
+      "agendarRevisao",
+      "notaDoPercentual",
+    ]);
+  });
+});

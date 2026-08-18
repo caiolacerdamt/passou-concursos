@@ -328,6 +328,37 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
     });
   });
 
+  it("a semente do nivel E a fraqueza: iniciante prioriza topico virgem, avancado nao", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const iniciante = novoAluno();
+      const avancado = novoAluno();
+      const virgem = await topicoComQuestao(cliente);
+      const conhecido = await topicoComQuestao(cliente);
+      await criarPerfil(cliente, iniciante, 120, "iniciante");
+      await criarPerfil(cliente, avancado, 120, "avancado");
+      // Dominio medio no topico conhecido: fraqueza 0.5 para os dois alunos.
+      await dominio(cliente, iniciante, conhecido, 0.5);
+      await dominio(cliente, avancado, conhecido, 0.5);
+
+      await gerar(cliente, iniciante);
+      await gerar(cliente, avancado);
+
+      const primeiro = async (aluno: string) =>
+        (await blocosDe(cliente, aluno)).filter((b) => b.nivel === "meta_cheia")[0]
+          .topico_id;
+
+      // A semente do iniciante e 0.9 (fraco em tudo que nunca viu) e ganha do
+      // 0.5 do topico conhecido; a do avancado e 0.35 e perde.
+      //
+      // A versao anterior invertia a semente (`1 - coalesce(score, semente)`) e
+      // dava exatamente o contrario. O teste de ordenacao antigo nao pegava
+      // porque semeava dominio nos DOIS topicos comparados — nunca comparou
+      // topico com historico contra topico virgem.
+      expect(await primeiro(iniciante)).toBe(virgem);
+      expect(await primeiro(avancado)).toBe(conhecido);
+    });
+  });
+
   it("aluno sem perfil nao ganha plano nenhum", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = novoAluno();

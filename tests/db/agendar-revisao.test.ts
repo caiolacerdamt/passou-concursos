@@ -9,7 +9,7 @@ import {
 } from "@/modules/config/leitura";
 
 import { criarTopico } from "./acervo";
-import { novoAluno } from "./aluno";
+import { comoAluno, novoAluno, recusa } from "./aluno";
 import { comTransacaoRevertida } from "./conexao";
 import { descreveComBanco } from "./setup";
 import { supabaseNaTransacao } from "./supabase-na-transacao";
@@ -281,6 +281,52 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
       // O percentual cru fica guardado: sem ele, recalibrar as faixas depois
       // seria impossivel (o risco registrado no AD-072).
       expect(Number(rows[0].percentual)).toBeCloseTo(0.62, 4);
+    });
+  });
+
+  it("um aluno autenticado NAO grava revisao no nome de outro (G1)", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const vitima = novoAluno();
+      const topico = await criarTopico(cliente);
+
+      // `registrar_revisao` e `security definer` e esta concedida a
+      // `authenticated`: sem a amarra ao `auth.uid()`, o aluno gravaria uma linha
+      // no log APPEND-ONLY de outro — e ninguem a apaga depois.
+      await comoAluno(cliente, aluno, async () => {
+        await recusa(
+          cliente,
+          () =>
+            cliente.query(
+              `select * from public.registrar_revisao(
+                 $1, $2, 'fsrs', current_date + 3, 3::smallint, 0.8::numeric)`,
+              [vitima, topico],
+            ),
+          /aluno_alheio/,
+        );
+      });
+
+      const { rows } = await cliente.query(
+        "select 1 from public.revisao_evento where user_id = $1",
+        [vitima],
+      );
+      expect(rows).toHaveLength(0);
+    });
+  });
+
+  it("o job, sem sessao, continua podendo agendar por qualquer aluno", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const topico = await criarTopico(cliente);
+
+      // `auth.uid()` nulo = job ou script (AD-035). A amarra do G1 nao pode
+      // fechar este caminho, que e o legitimo do recalculo e da SPEC 13.
+      const { rows } = await cliente.query<{ due: string }>(
+        `select due from public.registrar_revisao(
+           $1, $2, 'fsrs', current_date + 3, 3::smallint, 0.8::numeric)`,
+        [aluno, topico],
+      );
+      expect(rows).toHaveLength(1);
     });
   });
 

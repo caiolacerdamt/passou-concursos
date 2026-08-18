@@ -22,9 +22,11 @@ describe("catalogo de chaves", () => {
   });
 
   it("declara as chaves de cada modulo com dono, descricao e o mesmo padrao de chave do banco", () => {
-    expect(CHAVES).toHaveLength(11);
-    expect(CHAVES.filter((c) => CATALOGO[c].moduloDono === "m4")).toHaveLength(10);
-    expect(CHAVES.filter((c) => CATALOGO[c].moduloDono === "m9")).toHaveLength(1);
+    // Sem contagem fixa de proposito: toda spec nova declara chaves, e um
+    // numero cravado aqui so obrigaria a edita-lo — provando nada. O que
+    // importa e que nao ha chave repetida e que cada uma esta bem formada.
+    expect(new Set(CHAVES).size).toBe(CHAVES.length);
+    expect(CHAVES.length).toBeGreaterThan(0);
 
     for (const chave of CHAVES) {
       // Mesmo padrao do CHECK chave_com_prefixo_valido da migracao: chave que
@@ -49,6 +51,11 @@ describe("catalogo de chaves", () => {
       "param.m4.dias_sem_repetir_questao",
       "param.m4.peso_devendo_revisao",
       "param.m4.fsrs_limiar_otimizacao",
+      "param.m4.fsrs_passos_curtos",
+      "param.m4.regua_fixa_dias",
+      "param.m4.questoes_por_bloco",
+      "param.m4.fraqueza_por_nivel",
+      "param.m4.retencao_historico_cron_dias",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 

@@ -1,4 +1,15 @@
+import { types } from "pg";
 import { beforeAll, describe } from "vitest";
+
+/**
+ * `date` volta como **texto**, nao como `Date` do JS.
+ *
+ * E o que o codigo de aplicacao ve: o `supabase-js` fala PostgREST, que entrega
+ * JSON, e la um `date` e a string `YYYY-MM-DD`. O driver `pg` converteria para
+ * `Date` no fuso local — e um teste que passasse com `Date` esconderia o bug que
+ * so aparece em producao, onde o valor e string.
+ */
+types.setTypeParser(types.builtins.DATE, (valor) => valor);
 
 /**
  * Setup do projeto `db` do Vitest.

@@ -74,6 +74,45 @@ export const CATALOGO = {
     descricao:
       "Converte percentual de acerto do bloco em Rating 1-4 do FSRS. Adaptacao registrada na AD-072; recalibravel olhando revisao_evento.",
   }),
+  "param.m4.fsrs_passos_curtos": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m4",
+    descricao:
+      "Passos de aprendizado em minutos do FSRS. Desligado (AD-092): a unidade aqui e o topico, visto no maximo 1x/dia, e um `due` de 10 minutos faria todo topico revisado nascer vencido no mesmo dia.",
+  }),
+  "param.m4.regua_fixa_dias": chave({
+    tipo: z.array(z.number().int().positive()).min(1),
+    padrao: [1, 3, 7, 14, 30],
+    moduloDono: "m4",
+    descricao:
+      "Os degraus da regua fixa, o plano B do ALUNO-09 AC4. Em configuracao para nao existir numero solto em codigo.",
+  }),
+  "param.m4.questoes_por_bloco": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m4",
+    descricao:
+      "Quantas questoes tem um bloco do plano do dia. Multiplicado por `minutos_por_questao` da o tempo estimado do bloco.",
+  }),
+  "param.m4.fraqueza_por_nivel": chave({
+    tipo: z.object({
+      iniciante: z.number().min(0).max(1),
+      intermediario: z.number().min(0).max(1),
+      avancado: z.number().min(0).max(1),
+    }),
+    padrao: { iniciante: 0.9, intermediario: 0.6, avancado: 0.35 },
+    moduloDono: "m4",
+    descricao:
+      "Semente do retrato frio: a fraqueza que vale enquanto o aluno nao tem historico no topico. E o que faz o plano do 1o dia existir para quem pulou o diagnostico (ALUNO-05 AC1).",
+  }),
+  "param.m4.retencao_historico_cron_dias": chave({
+    tipo: z.number().int().positive(),
+    padrao: 30,
+    moduloDono: "m4",
+    descricao:
+      "Por quantos dias `cron.job_run_details` e guardado. O pg_cron nao poda esse historico sozinho e ele cresceria para sempre.",
+  }),
   "param.m4.minutos_por_questao": chave({
     tipo: z.number().positive(),
     padrao: 2,

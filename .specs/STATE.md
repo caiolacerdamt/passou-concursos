@@ -111,6 +111,26 @@
 - **Date**: 2026-08-17
 - **Status**: active
 
+### AD-092
+- **Decision**: O **FSRS roda com `enable_short_term: false`** — sem os passos de aprendizado em
+  minutos. Continua sendo FSRS com os 21 pesos padrão da biblioteca desde o dia 1 (AD-072); o que se
+  desliga é o passo de minutos, não o algoritmo. O valor mora em `param.m4.fsrs_passos_curtos`, para
+  o dia em que a unidade da revisão deixar de ser o tópico.
+- **Reason**: Medido nesta rodada com `ts-fsrs@5.4.1`: com o default da biblioteca, um cartão novo
+  avaliado `Good` volta a vencer **10 minutos depois**. É correto para flashcard, que é o que o FSRS
+  foi desenhado para agendar. Aqui a unidade é **tópico** (AD-018/AD-072) e o aluno o vê no máximo
+  uma vez por dia — um `due` de 10 minutos faria todo tópico recém-revisado nascer "devendo revisão"
+  no mesmo dia, e o motor de prioridade do plano nunca sairia do lugar. Com o passo curto desligado,
+  os intervalos da primeira revisão saem em dias: `Again` 1 · `Hard` 2 · `Good` 3 · `Easy` 8.
+- **Trade-off**: Perde-se o reforço no mesmo dia para o assunto que o aluno acabou de errar feio — com
+  `Again`, o mínimo passa a ser amanhã. É aceito porque o caderno de erros e o bloco Revisar do dia
+  seguinte já cobrem esse caso, e porque um `due` no mesmo dia colidiria com o plano diário, que é
+  gerado uma vez por dia por `pg_cron`.
+- **Scope**: `src/modules/aluno/revisao` (SPEC 06). Complementa a AD-072, não a substitui.
+- **Date**: 2026-08-17
+- **Status**: active
+
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -125,12 +145,13 @@
   | **03 — Observabilidade e segredos** | T23–T32 | ✅ **PASS** independente — sensor 6/6, 143 testes, 7 gaps não bloqueantes |
   | **04 — Acervo: schema, taxonomia e proveniência** | T33–T40 | ✅ **PASS** — 9/9 AC + 4 Success Criteria com evidência, **251 testes**. **Verificação NÃO independente** |
   | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
-- **Next step**: **SPEC 06 — Projeções, revisão espaçada e plano do dia**
-  (`.specs/features/06-projecoes-revisao-e-plano/spec.md`). **Ritual B.** O `design.md` e o
-  `tasks.md` de `.specs/modulos/m4-coluna-vertebral/` cobrem **T16–T21** e continuam valendo. Ela
-  acrescenta `plano_dia_id` a `sessoes` (a SPEC 05 deixou a coluna de fora de propósito: `plano_dia`
-  é dela) e é onde entram as chaves `param.m4.*` — a SPEC 05 não declarou nenhuma, para não deixar
-  chave órfã.
+  | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
+- **Next step**: **SPEC 07 — Interface, conta e deploy**
+  (`.specs/features/07-interface-conta-e-deploy/spec.md`). **Ritual B**, mas é a **única spec sem
+  requisito numerado de origem**: precisa de **Specify curto** criando requisitos `UI-NN` antes do
+  Design, e a escolha da camada de estilo vira **AD nova**. Ela depende só da SPEC 03 — não espera
+  acervo. O que a SPEC 06 deixou pronto para ela: `perfil_estudo` (a tela que o aluno preenche ao
+  entrar), `plano_dia`/`plano_bloco` (o que a tela do plano vai ler) e `sessoes.plano_dia_id`.
 
 ### Dívida aberta
 
@@ -159,6 +180,20 @@
 6. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
 7. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
 8. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
+9. **Minor — default de configuração duplicado entre catálogo e SQL, sem trava contra deriva**
+   (gap G6 da SPEC 06). `gera_plano_do_dia()` e `podar_historico_de_jobs()` repetem em `coalesce`
+   os defaults que vivem em `src/modules/config/catalogo.ts`. Mudar um lado não quebra teste nenhum.
+   É transversal a toda função SQL que lê configuração, não só a estas duas — fecha na **SPEC 15**,
+   junto da tela de configuração.
+10. **Lição da SPEC 06 — teste de ordenação que semeia os dois lados não testa o caso frio.** O gap
+   `Major` G2 (semente do retrato frio invertida) sobreviveu a dois testes de ordenação porque os
+   dois semeavam `dominio_topico` nos dois tópicos comparados. Quando a regra tem um ramo de
+   ausência (`coalesce`, `left join`, default), o teste tem que comparar **presente contra ausente**.
+11. **Lição da SPEC 06 — função `security definer` concedida a `authenticated` precisa amarrar o
+   titular.** O gap `Major` G1 deixou um aluno gravar no log append-only de outro. A SPEC 05 já
+   resolvia isso em `registrar_tentativa` amarrando ao dono da sessão; a SPEC 06 repetiu a forma
+   (`security definer` + `grant`) sem repetir a defesa. Toda função nova nesse molde SHALL checar
+   `auth.uid()` ou não ser concedida a `authenticated`.
 
 ### Contratos vigentes que nenhuma spec pode contrariar
 
@@ -182,9 +217,17 @@
 10. **Tabela particionada nova obedece ao AD-091**: `revoke all` + RLS + gatilho de TRUNCATE em cada
     partição, por função idempotente chamada também pelo job de manutenção. `endurecer_particoes_de_
     tentativas()` é o molde. Quem só copiar o AD-084 deixa a tabela aberta.
-11. `registrar_tentativa(...)` é o **único** caminho de escrita em `tentativas`. `security invoker`:
+11. `registrar_revisao(...)` é o único caminho de escrita em `revisao_agenda`/`revisao_evento`, e
+    amarra `auth.uid()` ao `p_user_id` quando há sessão. Toda função `security definer` concedida a
+    `authenticated` repete essa amarra.
+12. **`raiox_peso_topico` tem assinatura `(topico_id, peso)`** e há teste que quebra se a SPEC 11
+    renomear ou acrescentar coluna. Trocar o **corpo** é o caminho previsto; trocar a forma não é.
+13. **`plano_bloco.nivel ∈ {piso, meta_cheia}`** é o contrato que a SPEC 19 consome. `piso` contém
+    só as revisões devidas e **não** é cortado pelo tempo declarado; o corte vale para Avançar e
+    Treinar.
+14. `registrar_tentativa(...)` é o **único** caminho de escrita em `tentativas`. `security invoker`:
     a RLS vale dentro dela. Quem gravar por INSERT direto (SPEC 09/13) repete o snapshot na mão.
-12. Schema: AD-039/040 (questão, **implementados**), AD-042/043/044 (log e projeções), AD-046
+15. Schema: AD-039/040 (questão, **implementados**), AD-042/043/044 (log e projeções), AD-046
     (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060 (anel
     por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 **substituído pela AD-084**,
     AD-083 (ambiente de teste), AD-085 (cache fora de requisição), AD-086 **substituído pela AD-089**.
@@ -214,6 +257,8 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
   Postgres clona `BEFORE UPDATE OR DELETE ... FOR EACH ROW` para cada partição, presente e futura, e
   atacar a partição direto também é bloqueado. O que **não** propaga é o gatilho de `TRUNCATE`, e daí
   saiu a **AD-091**.
+- ~~**SPEC 06**: FSRS por tópico produz intervalo utilizável?~~ **Respondida medindo: só com
+  `enable_short_term: false`** (AD-092). Com o default, `Good` num tópico novo devolve 10 minutos.
 - **SPEC 07**: é a única spec sem requisito numerado de origem. Precisa de **Specify curto** criando
   requisitos `UI-NN`, e a escolha da camada de estilo vira **AD nova**.
 - **Duas chamadas de IA fora da lista fechada do IA-02**, cada uma travando o Design da sua spec:
@@ -222,7 +267,7 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
 ### Ambiente
 
 - **In-progress** (file:line): none.
-- **Branch**: `chore/roadmap-mvp-14-specs`. `main` protegida pelo hook local `.githooks/pre-push` (a
+- **Branch**: `feat/m4-p1-projecoes-plano` (SPEC 06, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
   proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
   `git config core.hooksPath .githooks`.
 - **Infra provisionada**: Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", **sa-east-1

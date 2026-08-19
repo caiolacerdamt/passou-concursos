@@ -20,7 +20,11 @@ export default defineConfig({
         test: {
           // Teste unit: mora junto do codigo, nunca toca banco nem rede.
           name: "unit",
-          include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
+          include: [
+            "src/**/*.test.ts",
+            "src/**/*.test.tsx",
+            "scripts/**/*.test.ts",
+          ],
           environment: "node",
         },
       },

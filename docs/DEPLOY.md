@@ -63,6 +63,13 @@ Em *Authentication → Providers → Google*:
 
 Em *Authentication → Providers → Email*: manter "Confirm email" **ligado**.
 
+⚠️ **Não desligue "Confirm email" para encurtar o funil.** É dela que depende o
+Success Criteria "entrar por e-mail+senha e por Google com o mesmo e-mail leva à
+mesma conta" (PAG-07 AC1): com a confirmação desligada, o Supabase cria um
+**segundo** usuário quando a mesma pessoa entra pelo Google, e o aluno perde o
+histórico sem nenhum erro aparecer. Nada no repositório acusa isso — é opção de
+painel, e o preço dela aparece semanas depois, no suporte.
+
 ⚠️ Enquanto o provedor do Google não estiver ligado no painel, o botão "Entrar
 com Google" existe na tela e devolve o aviso de "não foi possível continuar com
 o Google". É o comportamento correto — a tela não some, ela degrada.

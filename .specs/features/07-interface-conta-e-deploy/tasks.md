@@ -181,5 +181,121 @@ Link mágico (SPEC 25) · preview por branch (SPEC 25) · checkout e criação d
 
 ## Verificador independente (curto — Ritual B)
 
-Preenchido por agente que **não** escreveu o código, contra os *Success Criteria* da `spec.md`,
-com evidência `file:line`. Sem sensor de mutação (AD-090).
+Verificado em **2026-08-19** por agente que **não** escreveu o código, contra os *Success Criteria*
+da `spec.md`. Sem sensor de mutação (AD-090). Onde deu para medir, foi medido: `npm run test:unit`,
+`npm run test:db`, `npm run lint`, e o app subido em `npm run dev` com o navegador em 360 px.
+
+### Veredito geral: **PASS**
+
+Cinco critérios PASS, dois PARCIAL. Os dois PARCIAL (nº 3 e nº 7) dependem de conta em painel de
+terceiro que **a própria spec declara como pendência externa** — não há como fechá-los no
+repositório. Nenhum gap `Major`. Seis gaps `Minor`, todos registrados abaixo.
+
+### Success Criteria
+
+| # | Success Criterion | Veredito | Evidência | Observação |
+| --- | --- | --- | --- | --- |
+| 1 | Uma página funciona de 360px a desktop sem rolagem horizontal | **PASS** | `src/modules/ui/shell.tsx:40,46` (`max-w-leitura` + `px-4 sm:px-6`) · `src/app/globals.css:47` (`--container-leitura: 44rem`) · `src/modules/ui/shell.test.tsx:49` | **Medido**, não inferido. App em `npm run dev`, viewport 360×800: em `/`, `/entrar`, `/assinar` e `/recuperar-senha` a varredura de `getBoundingClientRect()` sobre todo `body *` devolveu **0 elementos** ultrapassando `innerWidth`, e `documentElement.scrollWidth = 360`. Em 1280 px, idem (`scrollWidth = 1280`, 0 elementos). Tailwind confirmado ativo no navegador (`getComputedStyle(main).maxWidth = 704px`) — o teste não rodou contra HTML sem estilo |
+| 2 | Os quatro estados têm componente único e teste | **PASS** | `src/modules/ui/estado.tsx:19-23` (união discriminada) · `src/modules/ui/estado.test.tsx:19-73` (um caso por AC + o caso que prova que os quatro saem do mesmo componente) | O tipo do estado `erro` **não tem** campo de mensagem (`estado.tsx:21`) — o AC4 vira erro de compilação, não convenção. Ressalva no gap G4 |
+| 3 | Entrar por e-mail+senha e por Google com o mesmo e-mail leva à mesma conta | **PARCIAL** | `src/app/entrar/acoes.ts:20,37` (os dois caminhos existem) · `src/app/auth/callback/route.ts:21` (`exchangeCodeForSession`) · `docs/DEPLOY.md:56-64` | **Falta prova, e a prova não cabe no repositório.** A vinculação por e-mail é do Supabase Auth (`auth.users.email` único), como o próprio `acoes.ts:14-17` declara. Mas ela **só vale se "Confirm email" estiver ligado no painel** — com ele desligado o Supabase cria um segundo usuário para o login do Google e o critério quebra em produção. Hoje: provedor Google não configurado, nenhum teste, nenhuma sessão real trocada. Ver gap G1 |
+| 4 | Usuário sem matrícula válida não vê conteúdo pago — nem parcial | **PASS** | `supabase/migrations/20260819100000_matricula.sql:217-231` (policies do acervo condicionadas a `tem_matricula_ativa()`) · `tests/db/matricula.test.ts:54-107` · `src/modules/conta/matricula.ts:76-80` | A trava é RLS, não código de tela: sem matrícula o banco devolve **zero** linha (`matricula.test.ts:64`), e com matrícula devolve (`:79`) — o par presente×ausente é o que impede o teste de ser tautológico. O ramo frio da lição da SPEC 06 está coberto: matrícula que **existe mas venceu** fecha igual (`:89-107`). Também medido ao vivo: `GET /app` sem sessão devolve `307 → /entrar?proximo=%2Fapp` |
+| 5 | Aluno A não lê dado do aluno B (RLS) | **PASS** | `tests/db/conta.ts:80-83` (`set local role authenticated` + `request.jwt.claims`) · `tests/db/conexao.ts:34` (`begin`, o que faz o `set local` valer) · `tests/db/matricula.test.ts:123-137` | O helper **faz o que diz**: troca o papel para `authenticated` e injeta o `sub`, dentro de transação. Sem isso a consulta rodaria como dono do banco e a policy não seria exercida. `tem_matricula_ativa()` é `security definer` **sem argumento** (migração `:166-180`), e há teste que lê `pg_get_function_identity_arguments` e exige lista vazia (`matricula.test.ts:165-176`) — contrato nº 11 do `STATE.md` amarrado por mecanismo, não por comentário |
+| 6 | Erro não tratado na interface aparece no Sentry | **PASS** | `src/app/error.tsx:27-29` e `src/app/app/error.tsx:21-23` (`reportarErro`) · `src/instrumentation-client.ts:46` (`definirDestinoDeErro` → SDK) · `src/modules/ui/fronteiras-de-erro.test.ts:28-58` | A corrente está inteira e cada elo tem teste. Confirmado no navegador que o SDK carrega de verdade (`window.__SENTRY__.version = 10.70.0`). **Não** foi observado um evento chegando ao Sentry: sem DSN nesta máquina o destino cai no console de propósito (`reporte.ts:28`). O teste das fronteiras varre **todo** `error.tsx` da árvore (`:17-23`), então fronteira nova criada pela SPEC 13 sem `reportarErro` faz o teste cair |
+| 7 | `main` mergeada publica sozinha no domínio próprio | **PARCIAL** | `vercel.json:3` (`"regions": ["gru1"]`) · `src/modules/conta/deploy.test.ts:18-25` · `docs/DEPLOY.md:10-46` | **Pronto no repositório**: região SP fixada e testada, `framework: nextjs`, `.env.example` separando público de segredo (`:53-120`), `docs/DEPLOY.md` com o passo a passo do painel. **Pendente**: a conta Vercel não existe, o repositório não está importado, `Production Branch = main` não foi marcado, o domínio não foi registrado, `NEXT_PUBLIC_SITE_URL` não foi preenchida e as URLs de redirecionamento do Supabase Auth não foram configuradas. Nada disso é verificável daqui, e a `spec.md:72` já declarava "Pendência externa: conta na Vercel" |
+
+### Gaps
+
+Nenhum `Major`. Seis `Minor`.
+
+**G1 · `Minor` · A vinculação "mesmo e-mail = mesma conta" depende de um passo de painel cujo motivo não está escrito.**
+`docs/DEPLOY.md:64` manda manter "Confirm email" **ligado**, mas como item solto, sem dizer que é
+dele que depende o Success Criterion nº 3. Quem desligar a confirmação de e-mail amanhã (para
+encurtar o funil da SPEC 12, por exemplo) quebra a vinculação de conta e **nada** no repositório
+acusa. Correção barata: uma linha no `DEPLOY.md` amarrando a opção ao critério.
+
+**G2 · `Minor` · `body { overflow-x: hidden }` mascara regressões do UI-01 AC1.**
+`src/app/globals.css:75`. O comentário assume que é "rede de segurança", e para o aluno é. Mas o
+`overflow-x` do `body` propaga para o viewport: a partir dele, `documentElement.scrollWidth` **nunca**
+denuncia estouro, e o critério nº 1 deixa de ser mensurável pelo caminho óbvio. Hoje não há dano — a
+varredura por `getBoundingClientRect()` mostrou 0 elementos estourando nas quatro rotas —, mas a
+tela da SPEC 13 com tabela larga vai cortar conteúdo em silêncio em vez de falhar. O substituto no
+teste (`shell.test.tsx:49`, proibir `w-[NNNpx]`) cobre só uma das causas de estouro; não cobre
+`min-width`, `white-space: nowrap`, grid com coluna fixa, nem `<img>` sem `max-width`.
+
+**G3 · `Minor` · O ramo de redirecionamento de `exigirMatriculaAtiva()` não tem teste.**
+`src/modules/conta/matricula.ts:76-80`. A T61 prometeu "a guarda redireciona sem matrícula, deixa
+passar com matrícula". O que existe é (a) `matriculaAtiva()` testada com cliente de mentira
+(`matricula.test.ts:35-69`) e (b) a varredura que exige a guarda em toda página sob `/app`
+(`:92-101`) — as duas boas. O `if (!matricula) redirect("/assinar")` em si nunca é executado por
+teste nenhum. São três linhas, mas é o ponto onde "conteúdo parcial" apareceria.
+
+**G4 · `Minor` · `/entrar` monta a sua própria apresentação de erro, e nada impede a próxima tela de fazer o mesmo.**
+`src/app/entrar/page.tsx:33-41` renderiza um `<p role="alert">` em vez do `<Estado tipo="erro">`. A
+justificativa no comentário (`:27-32`) é boa e eu concordo com ela: credencial errada não é falha do
+sistema. O problema é que o contrato da spec — "tela posterior que inventar o seu próprio reprova" —
+**não tem sensor**, ao contrário do paywall, que ganhou varredura de diretório
+(`matricula.test.ts:92`). A primeira exceção já existe no dia 1 e não está marcada como exceção em
+lugar nenhum.
+
+**G5 · `Minor` · A T59 prometeu teste da "mensagem de erro fixa" e ele não existe.**
+`CREDENCIAL_INVALIDA` (`src/modules/conta/mensagens.ts:13`) não é referenciada por nenhum teste. A
+outra metade da T59 (sanitização do `proximo`) está bem coberta em `rotas.test.ts:66-80`, inclusive
+`//host` e `/\host`. Desvio do `tasks.md` sem marcação.
+
+**G6 · `Minor` · Observação para a SPEC 13, não defeito de hoje: existe código de aluno rodando com a chave de serviço.**
+`src/modules/aluno/tentativas/registrar.ts:34` e `src/modules/aluno/revisao/agendar.ts:29` usam
+`clienteDeServico()`, que passa por cima da RLS. **Não é o segundo mecanismo de liberação que a
+PAG-01 proíbe** — nenhuma rota ou página os alcança hoje (o único `route.ts` sob `src/app/api` é o
+`erro-proposital`, e ele fica atrás do proxy). Mas no dia em que a SPEC 13 expuser a sessão de
+questões por esses módulos, a matrícula deixa de ser verificada pelo banco naquele caminho. Fica
+registrado aqui para não ser descoberto tarde.
+
+### Números reais
+
+| Medição | Resultado |
+| --- | --- |
+| `npm run test:unit` | **25 arquivos, 193 testes, todos passando** (1,60 s) |
+| `npm run test:db` | **30 arquivos, 266 testes, todos passando** (93,75 s), contra o projeto Supabase de dev |
+| `npm run lint` | **`ESLint: No issues found`** |
+| `npm run build` | **verde** — compila em 1,7 s, TypeScript sem erro, 9 rotas geradas, `Proxy (Middleware)` reconhecido |
+| Rolagem horizontal a 360 px | `/`, `/entrar`, `/assinar`, `/recuperar-senha`: **0 elementos** além do viewport; `scrollWidth = 360` |
+| Rolagem horizontal a 1280 px | `/entrar`: **0 elementos**; `scrollWidth = 1280` |
+| Rota privada sem sessão | `/app` → `307 /entrar?proximo=%2Fapp` · `/definir-senha` → `307` · `/api/erro-proposital` → `307` |
+| Segredo commitado | **nenhum**. `.env.example` traz só chaves vazias; `.gitignore:20-22` ignora `.env` e `.env.*` com exceção do `.example` |
+
+### O que eu **não** consegui verificar, e por quê
+
+1. **Login real por Google** (critério 3). O provedor não está configurado no painel do Supabase
+   (`docs/DEPLOY.md:56-63` descreve o que falta) e não há credencial OAuth. Consequência: a
+   vinculação de identidade nunca foi exercida — nem manual, nem por teste.
+2. **Login real por e-mail+senha.** Não criei usuário com senha no projeto de dev: exigiria escrever
+   em `auth.users` fora da transação revertida dos testes, o que sujaria o banco compartilhado.
+3. **Evento chegando ao Sentry** (critério 6). Sem `NEXT_PUBLIC_SENTRY_DSN` nesta máquina o SDK não
+   transmite — estado válido e suportado por desenho (`.env.example:71-73`). Verifiquei a corrente
+   elo por elo e a presença do SDK no navegador, não o evento no painel.
+4. **Deploy publicando sozinho** (critério 7). A conta Vercel não existe. Verifiquei só o que é
+   código: `vercel.json`, o teste da região e o `docs/DEPLOY.md`.
+5. **A afirmação de contraste ≥ 4,5:1** (UI-03 AC3). Os números em `src/app/globals.css:12-18` estão
+   escritos como medidos; recalculei o par principal por amostragem (`#16191d` sobre `#ffffff`) e
+   bate, mas não conferi os seis pares um a um com ferramenta de contraste.
+6. **Comportamento em navegador antigo ou com JavaScript desligado.** Fora do escopo declarado da
+   spec, mas registro que não foi testado.
+
+---
+
+## Correções pós-verificação (mesma rodada)
+
+Três dos seis `Minor` foram fechados na hora, porque eram desvio do que este próprio `tasks.md`
+prometeu. Os outros três ficam registrados como dívida, com destino.
+
+| Gap | Estado | O que foi feito |
+| --- | --- | --- |
+| **G1** | ✅ fechado | `docs/DEPLOY.md:66-71` amarra "Confirm email" ao Success Criteria nº 3 e diz o que quebra ao desligar |
+| **G3** | ✅ fechado | `src/modules/conta/guarda.test.ts` — o `redirect("/assinar")` é executado por teste, com o mock **lançando** como o Next faz: um mock que só retornasse deixaria passar um código que renderiza a tela paga em produção |
+| **G5** | ✅ fechado | `src/modules/conta/mensagens.test.ts` — prova a **ausência de ramo** (não existe "e-mail não cadastrado") e que a tela lê da constante em vez de ter texto próprio |
+| **G2** | ⏳ dívida | `overflow-x: hidden` no `body` mascara `scrollWidth`. A rede fica; o que falta é sensor melhor que a proibição de `w-[NNNpx]`. Fecha na **SPEC 13**, junto da primeira tela com tabela larga |
+| **G4** | ⏳ dívida aceita | `/entrar` monta a própria apresentação de erro de credencial. A decisão está certa (credencial errada não é falha do sistema) e agora está declarada; o que falta é sensor do contrato "quatro estados, componente único". Fecha na **SPEC 13**, quando houver mais de uma tela para varrer |
+| **G6** | ⏳ registrado | `registrar.ts:34` e `agendar.ts:29` usam a chave de serviço. Não é defeito hoje — nenhuma rota os alcança. Vira bloqueio da **SPEC 13**: expor a sessão de questões por esses módulos sem trocar para o cliente de sessão criaria caminho sem RLS |
+
+Reverificado depois das correções: `test:unit` **27 arquivos / 199 testes**, `test:db` **30 arquivos /
+266 testes**, `lint` limpo, `build` verde.

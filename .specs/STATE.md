@@ -167,12 +167,14 @@
   | **04 — Acervo: schema, taxonomia e proveniência** | T33–T40 | ✅ **PASS** — 9/9 AC + 4 Success Criteria com evidência, **251 testes**. **Verificação NÃO independente** |
   | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
-- **Next step**: **SPEC 07 — Interface, conta e deploy**
-  (`.specs/features/07-interface-conta-e-deploy/spec.md`). **Ritual B**, mas é a **única spec sem
-  requisito numerado de origem**: precisa de **Specify curto** criando requisitos `UI-NN` antes do
-  Design, e a escolha da camada de estilo vira **AD nova**. Ela depende só da SPEC 03 — não espera
-  acervo. O que a SPEC 06 deixou pronto para ela: `perfil_estudo` (a tela que o aluno preenche ao
-  entrar), `plano_dia`/`plano_bloco` (o que a tela do plano vai ler) e `sessoes.plano_dia_id`.
+  | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
+- **Next step**: **SPEC 08 — Gateway de IA**
+  (`.specs/features/08-gateway-de-ia/spec.md`). **Ritual B**. Depende das specs 02, 03 e 06 — todas
+  concluídas. A 1ª tarefa real do gateway é a **frase do plano** (T22 do material do M4, que continua
+  valendo). ⚠️ **Trava externa**: `OPENAI_API_KEY` não está provisionada.
+  O que a SPEC 07 deixou pronto: `matriculas` como chave única com paywall por RLS, sessão do
+  Supabase pelo `src/proxy.ts`, `<Shell>` e `<Estado>` como a camada de UI de toda tela, e
+  `src/modules/lgpd/grupo-1.ts` como inventário das tabelas de aluno.
 
 ### Dívida aberta
 
@@ -216,6 +218,17 @@
    (`security definer` + `grant`) sem repetir a defesa. Toda função nova nesse molde SHALL checar
    `auth.uid()` ou não ser concedida a `authenticated`.
 
+12. **Minor (SPEC 07) — `overflow-x: hidden` no `body` mascara `scrollWidth`**
+    (`src/app/globals.css:75`). A rede protege o aluno e impede a medição: tela nova com tabela larga
+    vai **cortar** conteúdo em silêncio em vez de falhar. O sensor de hoje proíbe `w-[NNNpx]` e não
+    alcança `min-width`, `nowrap`, grid de coluna fixa nem `<img>` sem `max-width`. Fecha na SPEC 13.
+13. **Minor (SPEC 07) — o contrato "quatro estados, componente único" não tem sensor.** O paywall
+    ganhou varredura de diretório; este não. A primeira exceção já existe (`src/app/entrar/page.tsx`
+    monta a própria apresentação de erro de credencial, com motivo declarado). Fecha na SPEC 13.
+14. **Bloqueio da SPEC 13 — `registrar.ts:34` e `agendar.ts:29` usam a chave de serviço**, que passa
+    por cima da RLS. Não é defeito hoje: nenhuma rota os alcança. Mas expor a sessão de questões por
+    eles sem trocar para `clienteDaSessao()` criaria caminho de leitura **sem** matrícula.
+
 ### Contratos vigentes que nenhuma spec pode contrariar
 
 1. `tentativas` (SPEC 05) referencia `questoes (id, questao_versao)` — é a PK. Matéria e rótulo do
@@ -252,6 +265,17 @@
     (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060 (anel
     por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 **substituído pela AD-084**,
     AD-083 (ambiente de teste), AD-085 (cache fora de requisição), AD-086 **substituído pela AD-089**.
+16. **Sessão e paywall são perguntas diferentes** (SPEC 07). `src/proxy.ts` decide sessão; a
+    matrícula é decidida por `exigirMatriculaAtiva()` na tela e pela policy de `select` do acervo no
+    banco. Toda página sob `src/app/app/` SHALL chamar `exigirMatriculaAtiva()` — há varredura de
+    diretório que falha se uma nascer sem ela.
+17. **A camada de UI é `<Shell>` + `<Estado>`** (SPEC 07, AD-093). Tela nova não monta o próprio
+    shell nem o próprio estado de carga/erro/vazio/degradado. Estilo é Tailwind v4, tokens no
+    `@theme` de `src/app/globals.css`.
+18. **`src/modules/lgpd/grupo-1.ts` é o inventário das tabelas de aluno.** Tabela nova com `user_id`
+    que não entrar lá **faz `tests/db/grupo-1.test.ts` falhar** — é o contrato nº 9 com mecanismo.
+    Exceção ao apagamento (`pagamentos`/`faturas` da SPEC 12) vai em `EXCECOES_DO_APAGAMENTO`, com
+    motivo escrito.
 
 ### Armadilhas de Postgres que já foram pagas (não repetir)
 
@@ -288,13 +312,13 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
 ### Ambiente
 
 - **In-progress** (file:line): none.
-- **Branch**: `feat/m4-p1-projecoes-plano` (SPEC 06, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
+- **Branch**: `feat/m8-p1-interface-conta-deploy` (SPEC 07, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
   proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
   `git config core.hooksPath .githooks`.
 - **Infra provisionada**: Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", **sa-east-1
   (SP)**, Postgres 17.6, plano Free · extensões: `pg_cron` (SPEC 03) e `vector` 0.8.2 (SPEC 04) ·
   **Sentry** org e projeto `passou-concursos`, Free, região **EUA** (AD-087g), alerta por e-mail
-  funcionando. **Não provisionados**: Vercel (SPEC 07), OpenAI (SPEC 08/09), Asaas + CNPJ (SPEC 12),
+  funcionando. **Não provisionados**: **Vercel — agora é o gargalo: o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, OpenAI (SPEC 08/09), Asaas + CNPJ (SPEC 12),
   PostHog (SPEC 12), Cohere (SPEC 23) — tabela completa no `ROADMAP.md`.
 - **Segredos no GitHub**: `DATABASE_URL`, `SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`. O `SENTRY_DSN` está
   lá por conveniência do YAML, **não porque seja segredo** (AD-087f, com teste negativo na varredura).

@@ -1,0 +1,46 @@
+/**
+ * O inventario do **grupo 1** — dado pessoal identificado (AD-027).
+ *
+ * Por que existe agora, e nao na SPEC 14 junto da rotina de apagamento: o
+ * contrato nº 9 do `STATE.md` diz que **tabela nova com `user_id` tem que fazer
+ * um teste falhar**, não passar em silêncio. Uma lista que nasce junto da
+ * rotina nasce tarde — as oito tabelas abaixo já existiam antes de alguém
+ * escrever a primeira linha de apagamento, e é exatamente nesse intervalo que
+ * uma tabela some do radar.
+ *
+ * Isto é um **inventário**, não a rotina. Quem apaga é a SPEC 14; o que este
+ * arquivo garante é que ela não vai ter o que descobrir sozinha.
+ */
+
+/** Tabelas com `user_id` próprio. A rotina da SPEC 14 varre cada uma por ele. */
+export const TABELAS_GRUPO_1 = [
+  "caderno_erros",
+  "dominio_topico",
+  "matriculas",
+  "perfil_estudo",
+  "plano_dia",
+  "revisao_agenda",
+  "revisao_evento",
+  "sessoes",
+  "tentativa_causa_simulado",
+  "tentativas",
+] as const;
+
+/**
+ * Tabelas que **não** têm `user_id` e mesmo assim guardam dado de uma pessoa
+ * só, alcançadas por quem as referencia. Ficam listadas à parte porque a
+ * varredura automática não as encontra — e uma rotina que só siga `user_id`
+ * deixaria as duas para trás.
+ */
+export const TABELAS_GRUPO_1_INDIRETAS = [
+  { tabela: "plano_bloco", alcancada_por: "plano_dia.id" },
+] as const;
+
+/**
+ * Tabelas com `user_id` que **não** entram no apagamento, cada uma com o
+ * motivo escrito. Lista vazia hoje, e a forma importa: quando a SPEC 12 criar
+ * `pagamentos` e `faturas`, elas entram aqui — o PAG-06 AC9 manda retê-las pelo
+ * prazo fiscal, e elas SHALL sobreviver ao DELETE-por-esquecimento (DADOS-04).
+ * Sem este campo, a única saída seria esquecer de listá-las.
+ */
+export const EXCECOES_DO_APAGAMENTO: { tabela: string; motivo: string }[] = [];

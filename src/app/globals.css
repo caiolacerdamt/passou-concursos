@@ -37,8 +37,14 @@
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
 
-  /* Largura de leitura do shell (UI-01 AC3). Em `rem`, nunca em px fixo. */
-  --spacing-leitura: 44rem;
+  /*
+   * Largura de leitura do shell (UI-01 AC3). Em `rem`, nunca em px fixo — e o
+   * que faz a coluna acompanhar o tamanho de fonte do aluno.
+   *
+   * Vai no namespace `--container-*` e nao em `--spacing-*` porque e dele que o
+   * Tailwind v4 gera `max-w-leitura`.
+   */
+  --container-leitura: 44rem;
 }
 
 /*

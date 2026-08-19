@@ -104,12 +104,30 @@ continuam funcionando — mas os corretos para este projeto são os de cima.
 O `CNAME` aparece no painel com **ponto final** (`...vercel-dns-017.com.`). Cole
 **sem** o ponto na Hostinger.
 
-Estado do DNS antes da mudança (medido em 2026-08-19, para saber o que apagar):
-**dois** registros `A` em `@` (`91.108.127.250` e `89.116.213.214`, o parking da
-Hostinger) e um `CNAME` em `www` para `www.passouconcursos.com.cdn.hstgr.net`.
-São **três** para remover — deixar um `A` do parking faz o site responder de
-forma intermitente. **Nenhum registro `MX`**: não há e-mail neste domínio, então
-não há o que preservar.
+Estado do DNS antes da mudança (2026-08-19), e **o que precisa ser apagado antes
+de adicionar**:
+
+| Tipo | Nome | Conteúdo | Ação |
+| --- | --- | --- | --- |
+| `ALIAS` | `@` | `...cdn.hstgr.net` | **apagar primeiro** |
+| `CNAME` | `www` | `www.passouconcursos.com.cdn.hstgr.net` | apagar |
+
+⚠️ **Consultar o DNS de fora não mostra o que a zona contém.** Um `nslookup` em
+`passouconcursos.com` devolvia dois IPs (`91.108.127.250` e `89.116.213.214`), o
+que parece dois registros `A` — mas a zona tinha **um `ALIAS`**, e aqueles IPs
+eram o resultado dele já resolvido. A diferença importa porque a Hostinger recusa
+o `A` novo com
+
+```
+DNS record validation error : RRset passouconcursos.com IN ALIAS
+must not be used with A on the same name.
+```
+
+`ALIAS` e `A` não coexistem no mesmo nome. Apagar o `ALIAS` destrava.
+
+**Nenhum registro `MX`**: não há e-mail neste domínio, então não há o que
+preservar. Se um dia houver, os `MX` e o `TXT` de SPF **não** são tocados por
+nada disto.
 
 Detalhes da Hostinger que costumam atrapalhar:
 

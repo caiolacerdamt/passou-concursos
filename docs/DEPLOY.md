@@ -89,6 +89,28 @@ seção **Registros DNS**.
 | `A` | `@` | o IP que **o cartão da Vercel mostrar** | 3600 (ou o menor disponível) |
 | `CNAME` | `www` | o alvo que **o cartão da Vercel mostrar** | 3600 |
 
+Os valores que a Vercel entregou para **este** projeto em 2026-08-19 — anotados
+para conferência, **não** para copiar sem olhar o cartão:
+
+| Tipo | Nome | Valor |
+| --- | --- | --- |
+| `A` | `@` | `216.198.79.1` |
+| `CNAME` | `www` | `b7aa9575f84c94a9.vercel-dns-017.com` |
+
+Repare que o IP **não** é o `76.76.21.21` que circula em tutorial, e o CNAME não
+é `cname.vercel-dns.com`. O próprio painel da Vercel diz que os dois antigos
+continuam funcionando — mas os corretos para este projeto são os de cima.
+
+O `CNAME` aparece no painel com **ponto final** (`...vercel-dns-017.com.`). Cole
+**sem** o ponto na Hostinger.
+
+Estado do DNS antes da mudança (medido em 2026-08-19, para saber o que apagar):
+**dois** registros `A` em `@` (`91.108.127.250` e `89.116.213.214`, o parking da
+Hostinger) e um `CNAME` em `www` para `www.passouconcursos.com.cdn.hstgr.net`.
+São **três** para remover — deixar um `A` do parking faz o site responder de
+forma intermitente. **Nenhum registro `MX`**: não há e-mail neste domínio, então
+não há o que preservar.
+
 Detalhes da Hostinger que costumam atrapalhar:
 
 - **`@` é o domínio raiz.** Alguns campos da Hostinger já completam o domínio

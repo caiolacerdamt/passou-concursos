@@ -36,16 +36,43 @@ descreveComBanco("privilegios do acervo", () => {
     });
   });
 
-  it("nenhuma delas tem policy: o acervo nao vai para o navegador", async () => {
+  it("a unica policy do acervo e a da matricula (SPEC 07 · PAG-01)", async () => {
     await comTransacaoRevertida(async (cliente) => {
-      const { rows } = await cliente.query<{ tablename: string; policyname: string }>(
-        "select tablename, policyname from pg_policies where schemaname = 'public' and tablename = any($1)",
+      const { rows } = await cliente.query<{
+        tablename: string;
+        cmd: string;
+        roles: string;
+        qual: string | null;
+      }>(
+        `select tablename, cmd, roles::text as roles, qual
+           from pg_policies
+          where schemaname = 'public' and tablename = any($1)
+          order by tablename`,
         [TABELAS],
       );
 
-      // RLS ligada com policy permissiva seria pior que RLS desligada: pareceria
-      // fechada no inventario e estaria aberta.
-      expect(rows).toEqual([]);
+      // Ate a SPEC 07 este teste exigia ZERO policy — nao havia matricula nem
+      // tela para escrever uma policy honesta. Agora ha exatamente uma por
+      // tabela de conteudo, e ela e a mesma pergunta: `tem_matricula_ativa()`.
+      // `topico_candidato` continua sem nenhuma: e fila de curadoria, nao
+      // conteudo do aluno.
+      expect(rows.map((l) => l.tablename)).toEqual([
+        "materias",
+        "provas",
+        "questoes",
+        "topicos",
+      ]);
+
+      for (const linha of rows) {
+        // RLS ligada com policy permissiva seria pior que RLS desligada:
+        // pareceria fechada no inventario e estaria aberta. A trava e o `qual`.
+        expect({ tabela: linha.tablename, cmd: linha.cmd, roles: linha.roles }).toEqual({
+          tabela: linha.tablename,
+          cmd: "SELECT",
+          roles: "{authenticated}",
+        });
+        expect(linha.qual).toContain("tem_matricula_ativa");
+      }
     });
   });
 

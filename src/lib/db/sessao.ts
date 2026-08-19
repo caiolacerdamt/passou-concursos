@@ -13,8 +13,19 @@ import { chavesPublicas } from "./chaves";
  * cliente de servico enxergaria tudo e o paywall viraria decoracao.
  */
 export async function clienteDaSessao() {
-  const { url, chave } = chavesPublicas();
+  /*
+   * `cookies()` vem ANTES de ler as variaveis de ambiente, e a ordem e o
+   * conserto de um defeito que so aparece na CI.
+   *
+   * `cookies()` sinaliza ao Next que a rota depende do pedido. Enquanto esse
+   * sinal nao chega, o Next tenta **pre-renderizar** a pagina no build — e ali
+   * nao ha `.env`. Com a leitura das chaves na frente, o build morria em
+   * `Error occurred prerendering page "/app"` numa maquina sem credencial, e
+   * passava na maquina do desenvolvedor, que tem `.env`. Invertida a ordem, a
+   * rota e marcada como dinamica antes de qualquer coisa poder falhar.
+   */
   const cookieStore = await cookies();
+  const { url, chave } = chavesPublicas();
 
   return createServerClient(url, chave, {
     cookies: {

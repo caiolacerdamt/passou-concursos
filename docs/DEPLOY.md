@@ -23,27 +23,109 @@ lançamento (AD-076).
 
 ## 2. Vercel — variáveis de ambiente
 
-Em *Settings → Environment Variables*, para o ambiente **Production**:
+Em *Settings → Environment Variables*, marcando **Production** (e Preview, se
+quiser que os preview builds funcionem).
 
-| Variável | Valor | É segredo? |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto `kfpmetkmhjtmgwgaaerl` | não |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | chave `sb_publishable_...` | não |
-| `SUPABASE_SECRET_KEY` | chave `sb_secret_...` | **sim** |
-| `NEXT_PUBLIC_SENTRY_DSN` | DSN do projeto `passou-concursos` | não (AD-087f) |
-| `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | `production` | não |
-| `SENTRY_AUTH_TOKEN` | token de upload de source map | **sim** |
-| `NEXT_PUBLIC_SITE_URL` | `https://<domínio próprio>` | não |
+São **6 obrigatórias** e 1 opcional. As quatro `NEXT_PUBLIC_` vão para o
+navegador de propósito — não são segredo, e não adianta escondê-las.
 
-O `NEXT_PUBLIC_SITE_URL` **não é opcional em produção**: sem ele, o link de
-"defina sua senha" é montado a partir do cabeçalho `Host` do pedido, que é
-escrito por quem chama. Ver `src/modules/conta/origem.ts`.
+| # | Variável | Valor | Onde pegar | Segredo? |
+| --- | --- | --- | --- | --- |
+| 1 | `NEXT_PUBLIC_SUPABASE_URL` | `https://kfpmetkmhjtmgwgaaerl.supabase.co` | já é este | não |
+| 2 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_...` | Supabase → *Project Settings → API Keys → Publishable key* | não |
+| 3 | `SUPABASE_SECRET_KEY` | `sb_secret_...` | Supabase → *Project Settings → API Keys → Secret keys* | **SIM** |
+| 4 | `NEXT_PUBLIC_SENTRY_DSN` | o DSN do projeto `passou-concursos` (está no seu `.env` local) | Sentry → *Settings → Client Keys (DSN)* | não (AD-087f) |
+| 5 | `NEXT_PUBLIC_SENTRY_ENVIRONMENT` | `production` | valor literal | não |
+| 6 | `NEXT_PUBLIC_SITE_URL` | `https://www.passouconcursos.com` | **só depois** que o domínio responder — ver seção 3 | não |
+| 7 | `SENTRY_AUTH_TOKEN` | token de upload de source map | Sentry → *Settings → Auth Tokens* | **SIM** |
 
-## 3. Domínio próprio
+**Ordem**: 1 a 5 podem entrar agora, antes do domínio. A **6** só faz sentido
+depois do passo 3, e exige **redeploy** — variável de ambiente não vale para
+build já feito.
 
-1. Registrar o domínio e apontar o DNS conforme *Settings → Domains* da Vercel.
-2. Depois que o domínio responder, preencher `NEXT_PUBLIC_SITE_URL` com ele e
-   **redeployar** — variável de ambiente só entra em build novo.
+Sobre a **7**: é a única opcional. Sem ela o build passa e o Sentry funciona; o
+que se perde é o *source map*, ou seja, o erro aparece apontando para o código
+minificado em vez do arquivo original. Vale a pena, mas não trava o deploy.
+
+⚠️ `NEXT_PUBLIC_SITE_URL` **não é opcional em produção** (por isso está na lista
+das obrigatórias, e não junto da 7): sem ela, o link de "defina sua senha" é
+montado a partir do cabeçalho `Host` do pedido, que é escrito por quem faz o
+pedido. Ver `src/modules/conta/origem.ts`.
+
+⚠️ **`DATABASE_URL` não vai para a Vercel.** Ela é a conexão direta do Postgres,
+usada por migração e por teste — o site fala com o banco pelo Supabase, não por
+ela. Colocá-la lá seria expor a senha do banco sem nenhum ganho.
+
+## 3. Domínio próprio — `passouconcursos.com`, DNS na Hostinger
+
+O domínio está registrado na **Hostinger**. A escolha aqui é manter o DNS **na
+Hostinger** e só apontar dois registros para a Vercel — em vez de trocar os
+nameservers. Trocar nameservers moveria *todo* o DNS do domínio para a Vercel, e
+qualquer registro de e-mail que exista hoje (MX) precisaria ser recriado lá. Dois
+registros resolvem, e o e-mail não é tocado.
+
+### Passo 1 — pedir os valores à Vercel (antes de mexer na Hostinger)
+
+Na Vercel: *Settings → Domains → Add Domain* → `passouconcursos.com`. Ela vai
+sugerir acrescentar `www.passouconcursos.com` — **aceite**, é a configuração
+recomendada.
+
+A Vercel então mostra um cartão por domínio com os valores exatos.
+**Copie de lá, não daqui.**
+
+⚠️ **Não use valor decorado da internet.** O IP do registro A e o alvo do CNAME
+são **por projeto**: o `76.76.21.21` e o `cname.vercel-dns.com` que aparecem em
+tutoriais antigos valem para projetos antigos. Projeto novo recebe endereço de um
+pool, e o CNAME tem forma de `d1d4fc829fe7bc7c.vercel-dns-017.com`. Usar o valor
+errado dá domínio que não verifica, sem mensagem clara do porquê.
+
+### Passo 2 — criar os registros na Hostinger
+
+No painel da Hostinger: *Domínios → passouconcursos.com → **DNS / Nameservers*** →
+seção **Registros DNS**.
+
+| Tipo | Nome (Host) | Aponta para | TTL |
+| --- | --- | --- | --- |
+| `A` | `@` | o IP que **o cartão da Vercel mostrar** | 3600 (ou o menor disponível) |
+| `CNAME` | `www` | o alvo que **o cartão da Vercel mostrar** | 3600 |
+
+Detalhes da Hostinger que costumam atrapalhar:
+
+- **`@` é o domínio raiz.** Alguns campos da Hostinger já completam o domínio
+  sozinhos — se o painel mostrar `@.passouconcursos.com`, o campo espera só `@`
+  mesmo. O mesmo vale para `www`: escreva `www`, não `www.passouconcursos.com`.
+- **Apague o registro que já existe.** Domínio novo da Hostinger nasce com um `A`
+  em `@` apontando para o parking dela, e às vezes um `CNAME` em `www`. Dois
+  registros `A` no mesmo nome fazem o tráfego alternar entre a Vercel e a página
+  de parking — o sintoma é "às vezes funciona".
+- **Não mexa nos registros `MX`** nem no `TXT` de SPF, se houver. Eles são de
+  e-mail e não têm relação com o site.
+- **Propagação**: minutos na maioria das vezes, até 24–48h no pior caso. A Vercel
+  troca o status do domínio para *Valid Configuration* sozinha quando enxergar.
+
+### Passo 3 — apex ou www como principal
+
+Deixe **`www.passouconcursos.com` como Primary** na Vercel e o apex
+(`passouconcursos.com`) redirecionando para ele. É o que a Vercel recomenda, e o
+motivo é prático: `www` é um `CNAME`, então o endereço por trás pode mudar sem
+você tocar no DNS; o apex é um `A` com IP fixo.
+
+Se preferir o apex como principal — é uma escolha legítima e o endereço fica mais
+curto —, inverta o redirecionamento na Vercel. **O que não pode é os dois
+responderem sem redirecionar um para o outro**: o mesmo conteúdo em dois
+endereços divide o Google e, mais concreto aqui, faz a sessão do aluno valer num
+endereço e não no outro, porque o cookie é gravado por domínio.
+
+### Passo 4 — só depois que o domínio responder
+
+Preencher `NEXT_PUBLIC_SITE_URL` na Vercel com o endereço **principal, com
+`https://` e sem barra no fim** (ex.: `https://www.passouconcursos.com`) e
+**redeployar** — variável de ambiente só entra em build novo.
+
+Depois disso, voltar ao Supabase e acrescentar `https://www.passouconcursos.com`
+como *Site URL* e `https://www.passouconcursos.com/auth/callback` nas *Redirect
+URLs* (seção 4 abaixo). Enquanto isso não for feito, o login por Google volta
+para o endereço errado.
 
 ## 4. Supabase Auth — o que precisa ser configurado no painel
 

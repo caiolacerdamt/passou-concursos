@@ -131,6 +131,27 @@
 - **Status**: active
 
 
+### AD-093
+- **Decision**: A camada de estilo do produto e o **Tailwind CSS v4**, sem biblioteca de componentes.
+  Os tokens (paleta, fonte, largura de leitura) moram num unico bloco `@theme` em
+  `src/app/globals.css` — a v4 nao tem `tailwind.config.js`. O foco visivel e regra **global** no
+  mesmo arquivo, nao decisao de cada componente. Tema claro/escuro fica fora do lancamento.
+- **Reason**: O requisito duro da SPEC 07 e **mobile-first sem rolagem horizontal de 360px a
+  desktop** (UI-01 AC1/AC2). O Tailwind e mobile-first por construcao: `sm:`/`md:` acrescentam e
+  nunca desfazem, que e literalmente o que o AC2 exige. Some-se: zero runtime no cliente, um lugar
+  so para token, e nenhum design system para manter antes de existir aluno pagante.
+- **Trade-off**: O estilo passa a viver no `className` do JSX — diff de componente fica mais
+  ruidoso, e quem le CSS separado estranha. Descartados: **CSS Modules puro**, que obrigaria
+  escrever a mao a escala de breakpoints, os tokens e o reset (trabalho que nao e o do produto), e
+  **shadcn/ui + Radix**, que traz um design system inteiro e ~20 dependencias para 5 telas. Se o
+  produto ganhar um design system de verdade, a troca custa reescrever o `className` das telas —
+  aceito, porque sao poucas.
+- **Scope**: `src/app/globals.css`, `postcss.config.mjs`, todo componente de UI. Fecha a linha
+  "Camada de estilo — em aberto" das Assumptions da SPEC 07.
+- **Date**: 2026-08-19
+- **Status**: active
+
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a

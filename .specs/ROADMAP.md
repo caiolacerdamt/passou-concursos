@@ -99,7 +99,7 @@ trabalho é refeito.
 | 04 | Acervo — schema, taxonomia e proveniência | `provas`, `questoes` + versão, matérias/tópicos, enums, colunas de busca, trava de publicação | 02, 03 | 8 | — | ✅ Concluída (verificação **não independente**) |
 | 05 | Log de tentativas | `tentativas` particionada, snapshot congelado, trava de 3 camadas **+ endurecimento por partição (AD-091)**, RLS, `registrarTentativa` | 04 | 7 | **A** | ✅ Concluída (T41–T47) |
 | 06 | Projeções, revisão espaçada e plano do dia | `dominio_topico`, `caderno_erros`, FSRS, `recalcula_projecoes()`, `gera_plano_do_dia()`, `pg_cron` | 05 | **6** | B | ✅ Concluída (T48–T53) |
-| 07 | **Interface, conta e deploy** | camada de estilo, shell responsivo, 4 estados, login e-mail+Google, `matricula` como chave única, Vercel no ar | 03 | 12 | B | ⬜ Não iniciada |
+| 07 | **Interface, conta e deploy** | camada de estilo, shell responsivo, 4 estados, login e-mail+Google, `matricula` como chave única, Vercel no ar | 03 | **11** | B | ✅ Concluída (T54–T64) |
 | 08 | Gateway de IA | `tarefa → modelo/esforço/batch/cache/fallback` por configuração, dedup, alerta de gasto; 1ª tarefa real = frase do plano | 02, 03, 06 | 9 | B | ⬜ Não iniciada |
 | 09 | **Ingestão do primeiro lote** | PDF → questão estruturada + gabarito cruzado + classificação no tópico, por script em GitHub Actions | 04, 08 | 12 | B | ⬜ Não iniciada |
 | 10 | **Publicação e explicações** | piso de confiança, fila humana única, porta de publicação, fábrica de explicação com citação conferida por código | 09 | 11 | B | ⬜ Não iniciada |
@@ -109,7 +109,7 @@ trabalho é refeito.
 | 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ⬜ Não iniciada |
 | — | 🚀 **LANÇAMENTO** | — | — | — | — | — |
 
-**Restam ~94 tasks em 8 specs** para lançar.
+**Restam ~83 tasks em 7 specs** para lançar.
 
 ## Depois do lançamento — specs 15 a 36
 

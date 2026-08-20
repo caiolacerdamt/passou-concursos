@@ -56,6 +56,9 @@ describe("catalogo de chaves", () => {
       "param.m4.questoes_por_bloco",
       "param.m4.fraqueza_por_nivel",
       "param.m4.retencao_historico_cron_dias",
+      "param.m2.matriz_de_modelos",
+      "param.m2.precos_por_modelo",
+      "param.m2.teto_gasto_mensal_usd",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 

@@ -51,6 +51,38 @@ function chave<T extends z.ZodType>(definicao: Definicao<T>): Definicao<T> {
   return definicao;
 }
 
+/**
+ * Um lado de uma chamada de IA: qual modelo, em que versao, com quanto esforco.
+ *
+ * **Nenhum valor aqui e conhecido pelo codigo** — sao `string` porque o codigo
+ * repassa o que a configuracao mandar. Fixar `z.enum([...])` com os nomes de
+ * hoje seria exatamente o acoplamento que o IA-02 AC1 proibe.
+ */
+const DESTINO_DE_IA = z.object({
+  modelo: z.string().min(1),
+  /** Versao **fixada**, nunca apelido flutuante (IA-02 AC4). */
+  versao: z.string().min(1),
+  esforco: z.string().min(1),
+});
+
+const PERFIL_DE_TAREFA = DESTINO_DE_IA.extend({
+  /** `true` = a tarefa vai para a Batch API; chamada sincrona e recusada. */
+  batch: z.boolean(),
+  /** Prompt caching no trecho estavel do pedido (IA-02 AC9). */
+  cache: z.boolean(),
+  /** Para onde ir quando o principal falha (IA-02 AC5). `null` = nao ha para onde. */
+  fallback: DESTINO_DE_IA.nullable(),
+  /** Teto de tokens de saida. Ausente = o que o provedor decidir. */
+  teto_de_saida: z.number().int().positive().optional(),
+});
+
+/** Preco em USD por 1 milhao de tokens. */
+const PRECO_DE_MODELO = z.object({
+  entrada: z.number().nonnegative(),
+  saida: z.number().nonnegative(),
+  entrada_cacheada: z.number().nonnegative().optional(),
+});
+
 export const CATALOGO = {
   // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
   // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da
@@ -166,6 +198,37 @@ export const CATALOGO = {
     moduloDono: "m4",
     descricao:
       "Caderno de erros. Nasce ligada: faz parte de 'progresso', uma das 4 superficies do lancamento (AD-076).",
+  }),
+
+  // ── M2 · camada de IA ─────────────────────────────────────────────────────
+  // **Os tres defaults abaixo sao vazios de proposito** e isso e o desenho, nao
+  // esquecimento (SPEC 08). O `AGENTS.md` proibe nome de modelo em codigo; o
+  // AD-078 exige default declarado em codigo. Os dois so cabem juntos se o
+  // default for "nao ha matriz": a matriz de verdade e linha na tabela
+  // `configuracoes`, e trocar de modelo nunca encosta em codigo (IA-02 AC1).
+  // Tarefa sem perfil e recusa visivel do gateway, nunca um modelo adivinhado.
+  // Os valores vigentes hoje estao escritos em `docs/IA.md` — documento pode
+  // citar o default (AD-068).
+  "param.m2.matriz_de_modelos": chave({
+    tipo: z.record(z.string(), PERFIL_DE_TAREFA),
+    padrao: {},
+    moduloDono: "m2",
+    descricao:
+      "tarefa -> (modelo, versao fixada, esforco, batch, cache, fallback). E a unica fonte do nome do modelo em todo o projeto (IA-02 AC1, AD-073). Vazia = nenhuma tarefa de IA roda, e o produto continua de pe sem elas.",
+  }),
+  "param.m2.precos_por_modelo": chave({
+    tipo: z.record(z.string(), PRECO_DE_MODELO),
+    padrao: {},
+    moduloDono: "m2",
+    descricao:
+      "modelo -> preco em USD por 1 milhao de tokens (entrada, saida, entrada cacheada). Serve so para somar o gasto (IA-12); preco ausente nao impede a chamada.",
+  }),
+  "param.m2.teto_gasto_mensal_usd": chave({
+    tipo: z.number().positive(),
+    padrao: 60,
+    moduloDono: "m2",
+    descricao:
+      "Acima disto o time e alertado uma vez no mes. SHALL NOT desligar nada sozinho (IA-12 / decisao de 2026-07-23).",
   }),
 
   // ── M9 · infra e operacoes ────────────────────────────────────────────────

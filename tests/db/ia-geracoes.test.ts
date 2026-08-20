@@ -60,9 +60,16 @@ descreveComBanco("ia_geracoes — dedup, auditoria e gasto", () => {
       await inserir(cliente, { tarefa: "frase_do_plano" });
       await inserir(cliente, { tarefa: "frase_do_plano" });
 
+      // Filtra pelo modelo de mentira, e nao so pela tarefa: a tabela e
+      // compartilhada e ja tem linha de verdade de `frase_do_plano` sem chave
+      // de dedup — foi assim que este teste ficou vermelho na primeira chamada
+      // real ao provedor. Contagem global num banco compartilhado nao mede o
+      // que o teste inseriu.
       const { rows } = await cliente.query<{ n: string }>(
         `select count(*)::text as n from public.ia_geracoes
-          where tarefa = 'frase_do_plano' and chave_dedup is null`,
+          where tarefa = 'frase_do_plano'
+            and chave_dedup is null
+            and modelo = 'modelo-de-teste'`,
       );
       expect(Number(rows[0].n)).toBe(2);
     });

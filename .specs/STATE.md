@@ -375,13 +375,17 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
 ### Ambiente
 
 - **In-progress** (file:line): none.
-- **Branch**: `feat/m2-p1-gateway-de-ia` (SPEC 08, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
+- **Branch**: `main` (a SPEC 08 foi mergeada; nada em andamento). `main` protegida pelo hook local `.githooks/pre-push` (a
   proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
   `git config core.hooksPath .githooks`.
 - **Infra provisionada**: Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", **sa-east-1
   (SP)**, Postgres 17.6, plano Free · extensões: `pg_cron` (SPEC 03) e `vector` 0.8.2 (SPEC 04) ·
   **Sentry** org e projeto `passou-concursos`, Free, região **EUA** (AD-087g), alerta por e-mail
-  funcionando. **Não provisionados**: **Vercel — o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, **OpenAI — agora trava a SPEC 09: o gateway está de pé e sem `OPENAI_API_KEY` + a matriz de `docs/IA.md` nenhuma tarefa de IA roda**, Asaas + CNPJ (SPEC 12),
+  funcionando · **OpenAI provisionada em 2026-08-20**: `OPENAI_API_KEY` no `.env`, matriz e preços
+  inseridos em `configuracoes` com **`gpt-5.6-luna` nas 9 tarefas** (decisão de 2026-08-20, substitui
+  a Terra no refaz do AD-073 — o refaz escala só o esforço, `high` → `max`). Cadeia conferida de
+  ponta a ponta com chamada real: `frase_do_plano` respondeu, custo US$ 0,000032 registrado em
+  `ia_geracoes`. `npm run ia:matriz` mostra o vigente. **Não provisionados**: **Vercel — o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, Asaas + CNPJ (SPEC 12),
   PostHog (SPEC 12), Cohere (SPEC 23) — tabela completa no `ROADMAP.md`.
 - **Segredos no GitHub**: `DATABASE_URL`, `SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`. O `SENTRY_DSN` está
   lá por conveniência do YAML, **não porque seja segredo** (AD-087f, com teste negativo na varredura).

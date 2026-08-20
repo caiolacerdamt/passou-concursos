@@ -62,6 +62,12 @@ function repositorioComMemoria() {
         });
       }
     },
+    async gastoDoPeriodo() {
+      return 0;
+    },
+    async registrarAlerta() {
+      return true;
+    },
   });
 
   return { memoria, gravadas };

@@ -7,6 +7,12 @@ import {
   tetoDeSaidaDe,
 } from "./adaptador-openai";
 import {
+  type ContadorDeGasto,
+  calcularCusto,
+  conferirGasto,
+  precosVigentes,
+} from "./gasto";
+import {
   type DestinoDeIa,
   type PerfilDeTarefa,
   fallbackDe,
@@ -57,21 +63,26 @@ export type GeracaoGuardada = {
  * lugares diferentes: o **job**, que so tem a conexao `pg` do `DATABASE_URL`
  * (AD-036), e a **aplicacao**, que tem o cliente do Supabase.
  */
-export type RepositorioDeIa = {
+export type RepositorioDeIa = ContadorDeGasto & {
   buscarPorChave(chave: string): Promise<GeracaoGuardada | null>;
   gravar(registro: RegistroDeGeracao): Promise<void>;
 };
 
+const SEM_REPOSITORIO =
+  "nenhum repositorio de IA foi configurado: chame definirRepositorioDeIa antes de usar o gateway";
+
 const REPOSITORIO_AUSENTE: RepositorioDeIa = {
   async buscarPorChave() {
-    throw new Error(
-      "nenhum repositorio de IA foi configurado: chame definirRepositorioDeIa antes de usar o gateway",
-    );
+    throw new Error(SEM_REPOSITORIO);
   },
   async gravar() {
-    throw new Error(
-      "nenhum repositorio de IA foi configurado: chame definirRepositorioDeIa antes de usar o gateway",
-    );
+    throw new Error(SEM_REPOSITORIO);
+  },
+  async gastoDoPeriodo() {
+    throw new Error(SEM_REPOSITORIO);
+  },
+  async registrarAlerta() {
+    throw new Error(SEM_REPOSITORIO);
   },
 };
 
@@ -272,6 +283,8 @@ export async function executarTarefa(
     }
   }
 
+  const custoUsd = calcularCusto(await precosVigentes(), destinoUsado.modelo, resposta);
+
   await repositorio.gravar({
     chaveDedup,
     tarefa,
@@ -285,17 +298,21 @@ export async function executarTarefa(
     tokensEntrada: resposta.tokensEntrada,
     tokensCacheados: resposta.tokensCacheados,
     tokensSaida: resposta.tokensSaida,
-    custoUsd: null,
+    custoUsd,
     // Sem chave de dedup nao ha o que reaproveitar, entao guardar o texto so
     // criaria uma segunda copia de dado de aluno fora do inventario do grupo 1.
     resultado: chaveDedup === null ? null : (resposta.estruturado ?? resposta.texto),
   });
+
+  // Depois de gravar, nunca antes: a soma do mes tem que enxergar a linha que
+  // acabou de nascer, senao o alerta sai sempre um passo atras.
+  await conferirGasto(repositorio);
 
   return {
     texto: resposta.texto,
     estruturado: resposta.estruturado,
     reaproveitada: false,
     usouFallback,
-    custoUsd: null,
+    custoUsd,
   };
 }

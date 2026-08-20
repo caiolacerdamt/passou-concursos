@@ -82,6 +82,12 @@ beforeEach(() => {
       return null;
     },
     async gravar() {},
+    async gastoDoPeriodo() {
+      return 0;
+    },
+    async registrarAlerta() {
+      return true;
+    },
   });
 });
 

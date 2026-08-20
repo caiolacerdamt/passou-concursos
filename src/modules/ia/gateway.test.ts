@@ -57,6 +57,13 @@ function repositorioFalso(guardadas: Record<string, unknown> = {}) {
     async gravar(registro) {
       gravadas.push(registro);
     },
+    // O gasto tem teste proprio; aqui ele so nao pode atrapalhar.
+    async gastoDoPeriodo() {
+      return 0;
+    },
+    async registrarAlerta() {
+      return true;
+    },
   });
   return gravadas;
 }
@@ -140,6 +147,44 @@ describe("caminho feliz", () => {
 
     expect(gravadas[0].chaveDedup).toBeNull();
     expect(gravadas[0].resultado).toBeNull();
+  });
+});
+
+describe("custo da geracao (IA-12)", () => {
+  it("grava o custo calculado a partir dos precos da configuracao", async () => {
+    definirLeitorDeConfig(async () => ({
+      "param.m2.matriz_de_modelos": { explicacao: perfilBase },
+      "param.m2.precos_por_modelo": {
+        "principal-de-teste": { entrada: 1, saida: 2, entrada_cacheada: 0 },
+      },
+    }));
+    adaptadorFalso({ "principal-de-teste": "responde" });
+    const gravadas = repositorioFalso();
+
+    const resultado = await executarTarefa({
+      tarefa: "explicacao",
+      pedido: { instrucao: "i", entrada: "e" },
+    });
+
+    // 80 tokens cheios x US$1 + 20 cacheados x US$0 + 50 de saida x US$2,
+    // tudo por milhao.
+    const esperado = (80 * 1 + 20 * 0 + 50 * 2) / 1_000_000;
+    expect(resultado.custoUsd).toBeCloseTo(esperado, 10);
+    expect(gravadas[0].custoUsd).toBeCloseTo(esperado, 10);
+  });
+
+  it("sem preco na configuracao o custo fica null, e a geracao acontece assim mesmo", async () => {
+    comMatriz({ explicacao: perfilBase });
+    adaptadorFalso({ "principal-de-teste": "responde" });
+    const gravadas = repositorioFalso();
+
+    const resultado = await executarTarefa({
+      tarefa: "explicacao",
+      pedido: { instrucao: "i", entrada: "e" },
+    });
+
+    expect(resultado.texto).toBe("resposta de principal-de-teste");
+    expect(gravadas[0].custoUsd).toBeNull();
   });
 });
 

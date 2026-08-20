@@ -12,7 +12,9 @@
     "test:db": "vitest run --project db",
     "db:push": "node scripts/db-push.mjs",
     "jobs:vigia": "node scripts/jobs/vigia-de-jobs.mjs",
-    "advisors": "node scripts/advisors.mjs"
+    "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
+    "advisors": "node scripts/advisors.mjs",
+    "ia:matriz": "node scripts/matriz-de-modelos.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.70.0",
@@ -21,6 +23,7 @@
     "@supabase/supabase-js": "^2.112.3",
     "@tailwindcss/postcss": "^4.3.3",
     "next": "16.3.1",
+    "openai": "^7.5.0",
     "postcss": "^8.5.26",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -37,6 +40,7 @@
     "eslint-config-next": "16.3.1",
     "pg": "^8.23.0",
     "supabase": "^2.114.0",
+    "tsx": "^4.23.12",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

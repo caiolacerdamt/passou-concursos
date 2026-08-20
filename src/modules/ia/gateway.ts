@@ -178,6 +178,26 @@ function questaoDoAlvo(alvo: AlvoDaTarefa): {
   return { questaoId: null, questaoVersao: null };
 }
 
+/**
+ * Devolve uma geracao que ja existia, na mesma forma de uma recem-feita.
+ *
+ * `custoUsd: 0` nao e "de graca por descuido": e a afirmacao de que esta
+ * chamada nao gastou nada, e e o que faz a soma do mes nao contar duas vezes o
+ * que foi pago uma.
+ */
+function reaproveitar(guardada: GeracaoGuardada): ResultadoDaTarefa {
+  const bruto = guardada.resultado;
+  const ehTexto = typeof bruto === "string";
+
+  return {
+    texto: ehTexto ? bruto : JSON.stringify(bruto),
+    estruturado: ehTexto ? undefined : bruto,
+    reaproveitada: true,
+    usouFallback: guardada.usouFallback,
+    custoUsd: 0,
+  };
+}
+
 /** Uma tentativa contra um destino. Nao trata erro: quem trata e o caminho. */
 async function tentar(
   destino: DestinoDeIa,
@@ -207,6 +227,15 @@ export async function executarTarefa(
   if (perfil.batch) throw new TarefaEhDeLote(tarefa);
 
   const chaveDedup = montarChaveDeDedup(tarefa, alvo);
+
+  // IA-14: rerodar o job **nao** regera nem cobra de novo. Esta consulta vem
+  // antes de qualquer coisa que custe dinheiro — e o ponto inteiro do AD-036,
+  // que exige job retomavel: uma fabrica interrompida no meio recomeça do zero
+  // e so paga pelo que ainda nao existia.
+  if (chaveDedup !== null) {
+    const guardada = await repositorio.buscarPorChave(chaveDedup);
+    if (guardada !== null) return reaproveitar(guardada);
+  }
 
   let destinoUsado = principalDe(perfil);
   let usouFallback = false;

@@ -12,6 +12,7 @@
     "test:db": "vitest run --project db",
     "db:push": "node scripts/db-push.mjs",
     "jobs:vigia": "node scripts/jobs/vigia-de-jobs.mjs",
+    "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
     "advisors": "node scripts/advisors.mjs"
   },
   "dependencies": {
@@ -38,6 +39,7 @@
     "eslint-config-next": "16.3.1",
     "pg": "^8.23.0",
     "supabase": "^2.114.0",
+    "tsx": "^4.23.12",
     "typescript": "^5",
     "vitest": "^4.1.10"
   }

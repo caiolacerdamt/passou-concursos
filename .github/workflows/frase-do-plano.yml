@@ -1,0 +1,55 @@
+name: Frase do plano do dia
+
+# ALUNO-12 · AD-036 · AD-080 · INFRA-02
+#
+# A frase de abertura de cada plano do dia. Roda **aqui**, e nao numa funcao da
+# Vercel, porque trabalho longo do produto nunca roda em serverless (AD-036) — e
+# porque este job varre todos os alunos do dia, o que nao cabe num timeout de
+# funcao.
+#
+# 07:00 UTC = 04:00 em Sao Paulo, e a ordem importa: as projecoes rodam as 06:00
+# e o plano as 06:30, os dois por pg_cron. A frase e a ultima da fila porque ela
+# descreve o plano — sem o plano pronto, nao ha o que descrever.
+#
+# **Nao roda em PR de proposito.** Ele escreve no banco de verdade e gasta
+# dinheiro de verdade; um PR que o disparasse pagaria por frase de aluno que ja
+# tem frase.
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+jobs:
+  frase:
+    name: Escrever a frase de abertura
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # Sem OPENAI_API_KEY o job sai **verde** dizendo que nao escreveu nada: o
+      # plano ja foi entregue pelo SQL e vale sem frase (invariante nº7). Sair
+      # vermelho pintaria de falha o estado normal de quem ainda nao provisionou
+      # a chave.
+      - name: Escrever as frases de hoje
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: npm run jobs:frase-do-plano
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "frase-do-plano terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs

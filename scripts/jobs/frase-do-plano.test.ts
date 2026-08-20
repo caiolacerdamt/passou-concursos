@@ -53,6 +53,7 @@ function comMatriz(): void {
 function bancoFalso(
   planos: Record<string, unknown>[],
   blocos: Record<string, unknown>[] = [],
+  linhasDoUpdate = 1,
 ) {
   const atualizacoes: { frase: string; id: string }[] = [];
 
@@ -62,8 +63,10 @@ function bancoFalso(
       if (texto === CONSULTA_DOS_BLOCOS) return { rows: blocos };
       if (texto.includes("update public.plano_dia")) {
         const [frase, id] = valores as [string, string];
-        atualizacoes.push({ frase, id });
-        return { rows: [] };
+        // `linhasDoUpdate` e o que o `and frase is null` devolveria: 0 quando
+        // outra execucao escreveu no meio.
+        if (linhasDoUpdate > 0) atualizacoes.push({ frase, id });
+        return { rows: [], rowCount: linhasDoUpdate };
       }
       if (texto.includes("configuracoes_vigentes")) {
         return {
@@ -253,6 +256,21 @@ describe("escreverFrases (ALUNO-12, ALUNO-05 AC4)", () => {
     expect(update).toContain("and frase is null");
   });
 
+  it("frase que outra execucao ja escreveu nao entra na conta de escritas", async () => {
+    comMatriz();
+    adaptadorQueQuebraEm();
+    repositorioSilencioso();
+    // 0 linhas afetadas = o `and frase is null` barrou o UPDATE.
+    const { cliente, atualizacoes } = bancoFalso([], [], 0);
+
+    const resumo = await escreverFrases(cliente, [
+      { id: "p1", minutosPorDia: 30, blocos: [] },
+    ]);
+
+    expect(resumo).toEqual({ escritas: 0, falhadas: 1, total: 1 });
+    expect(atualizacoes).toEqual([]);
+  });
+
   it("resposta vazia do modelo nao grava frase vazia", async () => {
     comMatriz();
     const falso: Adaptador = async () => ({
@@ -293,8 +311,13 @@ describe("motivoDeParada", () => {
 });
 
 describe("executar", () => {
-  it("IA fora do ar: sai limpo, sem escrever nada", async () => {
-    const codigo = await executar({ DATABASE_URL: "postgres://x" });
+  it("sem chave, sai limpo sem nem abrir conexao com o banco", async () => {
+    // O nome antigo deste teste ("IA fora do ar: sem escrever nada") prometia
+    // mais do que o corpo entregava: ele nao escrevia nada porque nao chegava a
+    // lugar nenhum. Agora isso e **asserção**: abrir conexao aqui e falha.
+    const codigo = await executar({ DATABASE_URL: "postgres://x" }, () => {
+      throw new Error("nao devia ter aberto conexao");
+    });
     expect(codigo).toBe(0);
   });
 

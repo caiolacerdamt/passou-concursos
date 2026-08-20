@@ -216,7 +216,7 @@
   | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
-  | **08 — Gateway de IA** | T65–T74 | ✅ **557 testes** (283 unit + 274 db). Ritual B — ⚠️ **verificação independente ainda não rodada** |
+  | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
 - **Next step**: **SPEC 09 — Ingestão do primeiro lote**
   (`.specs/features/09-ingestao-do-primeiro-lote/spec.md`). **Ritual B**. Depende das specs 04 e 08 —
   as duas concluídas. ⚠️ **Duas travas externas**: `OPENAI_API_KEY` continua não provisionada, e o
@@ -233,10 +233,14 @@
 
 ### Dívida aberta
 
-0. **Major (SPEC 08) — a verificação independente não foi rodada.** O Ritual B exige verificador
-   independente curto (só os *Success Criteria*, com evidência `file:line`) e ele **não** aconteceu
-   nesta rodada: o código foi escrito e autoverificado pelo mesmo autor. É a mesma dívida que a SPEC
-   04 abriu, e agora a SPEC 09 vai se apoiar neste gateway. Rodar antes de entrar na SPEC 09.
+0. **Minor (SPEC 08) — `npm run test:db` é instável contra o banco de desenvolvimento.** Medido na
+   verificação independente: três execuções seguidas deram 2 falhas, 1 falha e 0 falhas, em
+   `tests/db/gera-plano.test.ts` e `tests/db/tentativas-particao-endurecida.test.ts` — arquivos que a
+   SPEC 08 não toca e que **passam quando rodados isolados**. Não é regressão desta spec; é o banco
+   compartilhado. Vai morder a CI da **SPEC 09**, que é quem escreve muito no banco. Um ponto cego
+   sobrou aberto de propósito no sensor de nome de modelo: `git ls-files` só enxerga arquivo
+   rastreado, então arquivo novo sem `git add` escapa localmente (fecha no stage; a CI sempre roda
+   sobre árvore commitada).
 1. **Major — a SPEC 04 foi verificada pelo próprio autor.** O sensor rodou 4 mutações das 6, e uma
    (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. Detalhe em
    `.specs/features/04-*/validation.md`. ⚠️ **A SPEC 05 apoiou `tentativas` neste schema sem que o

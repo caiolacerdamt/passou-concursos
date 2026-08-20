@@ -299,3 +299,103 @@ o script de semeadura da matriz, `ROADMAP.md` e `STATE.md`.
    agora é também como um job injeta a leitura por `pg` sem duplicar o default em SQL (AD-085).
 5. **A verificação independente não foi rodada nesta sessão** — fica como pendência declarada, não
    como omissão silenciosa.
+
+---
+
+## Verificação independente (Ritual B)
+
+Verificador: sessão separada, não escreveu o código. Escopo do Ritual B: **só os Success Criteria**,
+evidência `file:line`, sem sensor de mutação. Branch `feat/m2-p1-gateway-de-ia`, `main..HEAD`
+(12 commits, 34 arquivos).
+
+| Success Criterion | Veredito | Evidência (file:line) | Observação |
+| --- | --- | --- | --- |
+| 1. Trocar o modelo na config muda o comportamento sem alterar código | **PASS** | código: `src/modules/config/catalogo.ts:212` (default `{}`), `src/modules/ia/matriz.ts:47-62`, `src/modules/ia/adaptador-openai.ts:59` · teste: `src/modules/ia/matriz.test.ts:72-80`, `src/modules/ia/adaptador-openai.test.ts:29-33`, `src/modules/ia/gateway.test.ts:107-120` | Cadeia em três elos (config → perfil → `model` do pedido); nenhum teste único cobre a ponta a ponta. O id que vai ao provedor é `versao`, não `modelo` (`adaptador-openai.ts:59`): trocar só `modelo` muda preço e auditoria sem trocar a chamada. Está documentado em `docs/IA.md:85`, mas nada valida a coerência dos dois campos. |
+| 2. Mudar o esforço de **uma** tarefa não afeta as demais | **PASS** | código: `src/modules/ia/matriz.ts:52`, `src/modules/ia/gateway.ts:251`, `src/modules/ia/adaptador-openai.ts:68` · teste: `src/modules/ia/matriz.test.ts:82-92`, `src/modules/ia/adaptador-openai.test.ts:36-38` | O teste semeia três tarefas com esforços diferentes e confere as três — não é o caso do "semeia os dois lados e não testa a ausência". O esforço é repassado sem interpretação. |
+| 3. Derrubar o principal faz o fallback assumir, com registro | **PASS** | código: `src/modules/ia/gateway.ts:255-284` · teste: `src/modules/ia/gateway.test.ts:192-219` (fallback assume, 1 reporte, linha gravada com `usouFallback: true`), `:221-238` (fallback também falha → `GatewayParou`, `gravadas` vazio), `:240-253` (sem fallback, a falha do principal já é a parada) · coluna no banco: `tests/db/ia-geracoes.test.ts:71-93` | Registro provado nos dois lugares: Sentry e linha de `ia_geracoes`. O ramo "sem fallback configurado" tem teste próprio. |
+| 4. Rerodar o job da frase não regera frase já escrita nem cobra de novo | **PASS** (com dívida de teste) | código: `scripts/jobs/frase-do-plano.mts:90-97` (`pd.frase is null`), `:172-175` (UPDATE com `and frase is null`) · teste: `scripts/jobs/frase-do-plano.test.ts:192-198`, `:238-254`, `:301-322` | **A prova é estrutural, não comportamental** — ver gap G1. O mecanismo genérico de dedup (`dedup.test.ts:101-124`) **não** é o que segura este job: a frase roda com `alvo: null` e por desenho nunca reaproveita (`gateway.test.ts:138-150`, `dedup.test.ts:157-166`). As duas metades do critério dependem da mesma cláusula SQL: sem plano na consulta, não há chamada e portanto não há custo. |
+| 5. IA fora do ar: o plano continua saindo, sem frase | **PASS** | código: `scripts/jobs/frase-do-plano.mts:209-228` (sem chave → `parar: false`), `:154-187` (try por aluno), `:264-268` (sai 0) · teste: `scripts/jobs/frase-do-plano.test.ts:324-341` (adapter quebra → código 0, `atualizacoes` vazio, 1 reporte), `:282-286`, `:217-236` | O teste que se chama "IA fora do ar" (`:296-299`) prova **só** que o código de saída é 0 — ele retorna em `motivoDeParada` antes de abrir conexão, sem tocar em plano nenhum. Quem prova o critério de verdade é `:324-341`. Ver gap G3. |
+| 6. Nenhum teste automatizado cita nome de modelo | **PASS** | sensor: `src/modules/ia/sem-nome-de-modelo.test.ts:17-71` · alcance: `vitest.config.mts` inclui teste só de `src/**` e `scripts/**`, e não há `*.test.ts` rastreado fora de `src/`, `scripts/`, `tests/` | Para o critério **literal** (teste) o alcance é completo. O sensor tem pontos cegos para a proibição mais ampla do `AGENTS.md` — ver gap G2. O auto-teste de `:67-71` impede sensor cego, e `:39-41` exige mais de 50 arquivos varridos. |
+
+**Veredito geral: PASS.** Nenhum dos 6 critérios falha. 1 gap `Major`, 4 `Minor`.
+
+### Gaps
+
+**G1 · `Major` · `scripts/jobs/frase-do-plano.test.ts:301-322` (e `:192-198`)** — o Success Criterion 4
+não tem teste comportamental. O único teste que toca a idempotência do job por comportamento usa
+`bancoFalso([])`, que devolve as linhas que recebeu **qualquer que seja a consulta**
+(`frase-do-plano.test.ts:60-79`): apagar `pd.frase is null` de `CONSULTA_DOS_PLANOS` deixa esse teste
+verde. O que sobra como prova é a asserção de substring em `:195` — ela trava o texto contra remoção
+acidental, mas não executa a cláusula. É o padrão dos gaps G2/G8 da SPEC 05 (lição 10 do `STATE.md`).
+Importa porque este é o critério que protege dinheiro, e porque existe harness de banco vivo com
+`plano_dia` (`tests/db/gera-plano.test.ts`, `tests/db/plano-schema.test.ts`) onde um teste de ~10
+linhas — dois planos de hoje, um com frase e um sem, rodar `CONSULTA_DOS_PLANOS`, esperar um só —
+fecharia as duas metades do critério. O risco residual hoje é baixo (li a consulta e ela está
+correta), mas o critério está **assumido**, não provado.
+
+**G2 · `Minor` · `src/modules/ia/sem-nome-de-modelo.test.ts:26,31`** — o que a varredura não alcança:
+(a) `git ls-files` só lista arquivo **rastreado** — um teste novo ainda não `git add`ado passa verde
+localmente e só quebra depois do stage; (b) `PASTAS_VARRIDAS` cobre `src/`, `scripts/` e `tests/`, e
+deixa de fora `.github/workflows/*.yml`, `supabase/migrations/*.sql` e a raiz — nome de modelo
+hardcodado numa migração ou num workflow passa (não fere o SC6, que fala de teste, mas fere a
+proibição do `AGENTS.md`); (c) `\bgpt-` exige o hífen: `gpt5`, `GPT_5` ou concatenação escapam.
+Nenhum desses é violação hoje — conferido em `git ls-files` com a árvore limpa.
+
+**G3 · `Minor` · `scripts/jobs/frase-do-plano.test.ts:296-299`** — o teste chamado "IA fora do ar: sai
+limpo, sem escrever nada" não escreve nada porque **não chega a abrir conexão**: `executar` volta em
+`motivoDeParada` (`frase-do-plano.mts:236-241`). Ele não observa plano nenhum, então o "sem escrever
+nada" do nome não é asserção, é consequência de o teste não ter ido a lugar algum. O nome promete
+mais do que o corpo entrega; a prova real do critério 5 está em `:324-341`.
+
+**G4 · `Minor` · `npm run test:db`** — a suíte de banco é **instável** contra o projeto de
+desenvolvimento compartilhado. Três execuções seguidas nesta verificação deram resultados diferentes
+(números abaixo). Os arquivos que falharam não são tocados por esta spec e passam quando rodados
+isolados, então não atribuo a falha à SPEC 08 — mas o gate `npm test` de T73/T74 não é
+reprodutivelmente verde, e isso vai morder a SPEC 09 na CI.
+
+**G5 · `Minor` · `scripts/jobs/frase-do-plano.mts:176`** — `escritas += 1` acontece sem olhar
+`rowCount`. Quando o `and frase is null` do UPDATE barra a escrita (outra execução escreveu no meio),
+o resumo do log conta a frase como escrita. É só relatório, não corrompe dado — mas é o número que
+alguém vai olhar para decidir se o job está funcionando.
+
+### Desvios registrados — a justificativa se sustenta?
+
+1. **`.mts` em vez de `.ts`** — sustenta. `npm run build` e `npm run lint` passam, o teste importa
+   `./frase-do-plano.mts` (`frase-do-plano.test.ts:30`) e o `allowImportingTsExtensions` do
+   `tsconfig.json` é o que torna isso possível. Registrado como AD-095.
+2. **`tsx` como dependência de desenvolvimento** — sustenta. O job importa `@/modules/ia` e
+   `@/modules/config`; nenhum `.mjs` alcança isso sem reescrever o módulo.
+3. **Envio/colheita do lote não construídos** — sustenta, e é o que o `Out of Scope` da spec já dizia
+   (SPEC 09). `montarLinhaDeLote` reusa `corpoDoPedido`, então a linha de lote e a chamada síncrona
+   não podem divergir (`adaptador-openai.ts:105-117`).
+4. **`definirLeitorDeConfig` público** — sustenta. É o que evita duplicar a leitura da configuração
+   em SQL solto dentro do job (`frase-do-plano.mts:249`).
+5. **"A verificação independente não foi rodada"** — **resolvido por este relatório.** A dívida
+   `Major` nº 0 do `## Dívida aberta` do `STATE.md` pode ser fechada; entra no lugar dela a G1.
+
+### Comandos rodados (números reais)
+
+| Comando | Resultado |
+| --- | --- |
+| `npm run test:unit` | **38 arquivos, 283 testes, 283 passando**, 0 falhas (3,20s) |
+| `npm run test:db` (1ª execução) | **2 falhas** — `tests/db/gera-plano.test.ts` ("os edge cases da spec" e "aluno sem perfil nao ganha plano nenhum") |
+| `npm run test:db` (2ª execução) | **1 falha** — `tests/db/tentativas-particao-endurecida.test.ts` > "rodar duas vezes nao erra e nao duplica gatilho"; 273/274 |
+| `npm run test:db` (3ª execução) | **31 arquivos, 274 testes, 274 passando**, 0 falhas |
+| `npx vitest run --project db` nos 2 arquivos que falharam, isolados | **26 passando, 0 falhas** |
+| `npm run lint` | `ESLint: No issues found` |
+| `npm run build` | verde, 9 rotas geradas |
+
+Os testes de banco desta spec (`tests/db/ia-geracoes.test.ts`) passaram nas três execuções.
+
+
+### Correção dos gaps (autor, depois do relatório)
+
+| Gap | O que foi feito | Onde |
+| --- | --- | --- |
+| **G1 `Major`** | **Fechado.** A consulta do job passou a ter teste **contra o banco de verdade**: dois planos de hoje, um com frase e um sem, e a consulta tem que trazer um só. Conferido por mutação — trocar `pd.frase is null` por `true` deixa o teste vermelho. Cobre também "não é de hoje", o `left join` do perfil e o corte por `meta_cheia` na consulta dos blocos | `tests/db/frase-do-plano-consulta.test.ts` |
+| **G2 `Minor`** | **Fechado em duas das três pontas.** A varredura passou a cobrir `.github/` e `supabase/`, e o padrão da OpenAI virou `gpt[-_ ]?\d`, que alcança `gpt5` e `GPT_5`. **Continua aberto**: `git ls-files` só enxerga arquivo rastreado, então um arquivo novo ainda não `git add`ado escapa localmente. Fecha no `git add`, e a CI sempre roda sobre árvore commitada | `src/modules/ia/sem-nome-de-modelo.test.ts:17,26-38` |
+| **G3 `Minor`** | **Fechado.** O teste foi renomeado para o que ele prova (`sem chave, sai limpo sem nem abrir conexao`) e ganhou a asserção que faltava: o abridor de conexão injetado **levanta erro** se for chamado | `scripts/jobs/frase-do-plano.test.ts` |
+| **G4 `Minor`** | **Não fechado — não é desta spec.** A instabilidade é do banco de desenvolvimento compartilhado, em arquivos que a SPEC 08 não toca. Registrado como dívida no `STATE.md` para a SPEC 09, que é quem vai sentir na CI | — |
+| **G5 `Minor`** | **Fechado.** `escritas` só conta quando o UPDATE afetou linha (`rowCount`); linha barrada pelo `and frase is null` conta como não escrita. `ClienteSql` passou a expor `rowCount`, e o banco falso do teste unitário passou a devolvê-lo | `scripts/jobs/frase-do-plano.mts`, `src/modules/ia/repositorio-pg.ts:16` |
+
+Gate depois das correções: `test:unit` **284/284**, `test:db` **278/278**, `lint` limpo, `build` verde.

@@ -169,10 +169,19 @@ export async function escreverFrases(
 
       // `frase is null` de novo aqui: se outra execucao escreveu no meio, a
       // dela vale. Duas execucoes simultaneas nao produzem duas frases.
-      await cliente.query(
+      const escrita = await cliente.query(
         `update public.plano_dia set frase = $1 where id = $2 and frase is null`,
         [frase, plano.id],
       );
+
+      // Contar sem olhar `rowCount` inflaria o resumo justamente no caso que o
+      // `and frase is null` existe para tratar: a linha nao foi escrita porque
+      // outra execucao chegou antes. `null`/`undefined` = o cliente nao informou,
+      // e ai nao da para afirmar que nao escreveu.
+      if (escrita.rowCount === 0) {
+        falhadas += 1;
+        continue;
+      }
       escritas += 1;
     } catch (erro) {
       falhadas += 1;

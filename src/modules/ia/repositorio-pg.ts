@@ -13,7 +13,7 @@ export type ClienteSql = {
   query(
     texto: string,
     valores?: unknown[],
-  ): Promise<{ rows: Record<string, unknown>[] }>;
+  ): Promise<{ rows: Record<string, unknown>[]; rowCount?: number | null }>;
 };
 
 export function repositorioPorPg(cliente: ClienteSql): RepositorioDeIa {

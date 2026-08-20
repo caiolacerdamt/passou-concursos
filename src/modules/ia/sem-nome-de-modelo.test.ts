@@ -15,15 +15,28 @@ import { describe, expect, it } from "vitest";
  * variante da OpenAI sem que este arquivo precise escrever o nome de nenhuma.
  */
 const FAMILIAS = [
-  { nome: "OpenAI", regex: /\bgpt-/i },
+  // `gpt[-_ ]?\d` e nao `gpt-`: `gpt5` e `GPT_5` escapariam da exigencia do hifen.
+  { nome: "OpenAI", regex: /\bgpt[-_ ]?\d/i },
   { nome: "Anthropic", regex: /\bclaude-\d/i },
   { nome: "Google", regex: /\bgemini-/i },
   { nome: "Meta", regex: /\bllama-/i },
   { nome: "raciocinio da OpenAI", regex: /\bo[134]-(?:mini|pro)\b/i },
 ];
 
-/** So codigo. `docs/`, `.specs/` e `README` ficam de fora de proposito. */
-const PASTAS_VARRIDAS = ["src/", "scripts/", "tests/"];
+/**
+ * So codigo. `docs/`, `.specs/` e `README` ficam de fora de proposito.
+ *
+ * `.github/` e `supabase/` entram porque a proibicao do `AGENTS.md` e mais
+ * ampla que o Success Criterion: nome de modelo hardcodado numa migracao ou
+ * num workflow tambem e nome de modelo em codigo.
+ */
+const PASTAS_VARRIDAS = [
+  "src/",
+  "scripts/",
+  "tests/",
+  ".github/",
+  "supabase/",
+];
 
 const ESTE_ARQUIVO = "src/modules/ia/sem-nome-de-modelo.test.ts";
 
@@ -67,6 +80,8 @@ describe("nenhum nome de modelo em codigo ou teste (IA-02 AC1, AD-068)", () => {
   it("o sensor enxerga: um texto com nome de modelo casa com o padrao", () => {
     const familiaDaOpenAI = FAMILIAS[0].regex;
     expect(familiaDaOpenAI.test("modelo: gpt-9.9-qualquer")).toBe(true);
+    expect(familiaDaOpenAI.test("modelo: gpt9")).toBe(true);
+    expect(familiaDaOpenAI.test("modelo: GPT_9")).toBe(true);
     expect(familiaDaOpenAI.test("modelo: modelo-de-teste")).toBe(false);
   });
 });

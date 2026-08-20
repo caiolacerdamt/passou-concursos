@@ -152,6 +152,54 @@
 - **Status**: active
 
 
+### AD-094
+- **Decision**: A **matriz de modelos nasce vazia no catálogo de configuração**
+  (`param.m2.matriz_de_modelos` e `param.m2.precos_por_modelo` têm default `{}`), e os valores reais
+  vivem **só** como linha na tabela `configuracoes`, provisionada por uma pessoa com o SQL de
+  `docs/IA.md`. Tarefa sem perfil na matriz é **parada visível** (`TarefaSemPerfil`), nunca um modelo
+  adivinhado. Um sensor de varredura (`src/modules/ia/sem-nome-de-modelo.test.ts`) falha se qualquer
+  arquivo de `src/`, `scripts/` ou `tests/` citar família de modelo — `gpt-`, `claude-N`, `gemini-`,
+  `llama-`, `oN-mini/pro`. Documento continua podendo citar (AD-068).
+- **Reason**: O `AGENTS.md` proíbe nome de modelo em código e o AD-078 exige default declarado em
+  código. Os dois só cabem juntos se o default for "não há matriz". Qualquer outra saída — default
+  com o nome de hoje, `z.enum` com os modelos conhecidos, constante de fallback — reintroduziria o
+  acoplamento que o IA-02 AC1 existe para impedir, e o teste que o proíbe é o que faz a regra durar
+  depois desta sessão.
+- **Trade-off**: Banco novo (dev, preview, produção no dia 1) sobe com **nenhuma tarefa de IA
+  funcionando** até alguém rodar o INSERT — é um passo manual a mais em toda instalação, e ele não
+  falha ruidosamente: o produto simplesmente não escreve frase, não extrai PDF e não explica. Pior:
+  **um perfil malformado invalida a matriz inteira**, não só a linha errada, porque a validação é do
+  valor `jsonb` completo. Queda segura, mas um erro de digitação derruba toda a IA de uma vez —
+  `npm run ia:matriz` existe para conferir depois de trocar. Se isso incomodar quando houver mais
+  tarefas, a saída é validar perfil a perfil e descartar só o inválido, o que exige AD nova.
+- **Scope**: `src/modules/config/catalogo.ts`, `src/modules/ia/**`, `docs/IA.md`. Aplica o AD-068 e o
+  AD-073; não substitui nenhum.
+- **Date**: 2026-08-20
+- **Status**: active
+
+### AD-095
+- **Decision**: **Job da fábrica é TypeScript rodado por `tsx`**, com extensão **`.mts`**. O primeiro
+  é `scripts/jobs/frase-do-plano.mts`. Os `.mjs` que já existem (vigia, db-push, advisors,
+  varredura) continuam como estão — não há reescrita. O job lê configuração injetando o próprio
+  leitor por `definirLeitorDeConfig` (que passa a ser público) por cima da conexão `pg` do
+  `DATABASE_URL`, em vez de reimplementar a leitura em SQL solto.
+- **Reason**: A partir da SPEC 08 todo job da fábrica precisa importar módulo do `src/` — o gateway,
+  o repositório, o catálogo de configuração. `.mjs` com JSDoc não alcança isso sem reescrever o
+  módulo inteiro fora do TypeScript. `node --experimental-strip-types` foi medido e descartado: não
+  resolve o atalho `@/` do `tsconfig`. O `.mts` (em vez de `.ts`) é obrigatório porque o pacote não é
+  `type: module`: com `.ts`, o `tsx` compila como CommonJS e o `await` de topo — o padrão de todos os
+  scripts do projeto — não compila.
+- **Trade-off**: Uma dependência de desenvolvimento a mais (`tsx`, que traz o esbuild) e **duas
+  convenções de script convivendo** no mesmo diretório — quem abrir `scripts/jobs/` vai ver `.mjs` e
+  `.mts` lado a lado sem regra óbvia. O `tsconfig.json` também ganhou
+  `allowImportingTsExtensions`, para o teste importar o `.mts` pelo nome real. Aceito porque
+  reescrever os quatro `.mjs` existentes seria mexer em código testado e estável para ganhar
+  uniformidade e nada mais.
+- **Scope**: `scripts/jobs/**`, `package.json`, `tsconfig.json`, `src/modules/config/index.ts`.
+- **Date**: 2026-08-20
+- **Status**: active
+
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -168,16 +216,27 @@
   | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
-- **Next step**: **SPEC 08 — Gateway de IA**
-  (`.specs/features/08-gateway-de-ia/spec.md`). **Ritual B**. Depende das specs 02, 03 e 06 — todas
-  concluídas. A 1ª tarefa real do gateway é a **frase do plano** (T22 do material do M4, que continua
-  valendo). ⚠️ **Trava externa**: `OPENAI_API_KEY` não está provisionada.
+  | **08 — Gateway de IA** | T65–T74 | ✅ **557 testes** (283 unit + 274 db). Ritual B — ⚠️ **verificação independente ainda não rodada** |
+- **Next step**: **SPEC 09 — Ingestão do primeiro lote**
+  (`.specs/features/09-ingestao-do-primeiro-lote/spec.md`). **Ritual B**. Depende das specs 04 e 08 —
+  as duas concluídas. ⚠️ **Duas travas externas**: `OPENAI_API_KEY` continua não provisionada, e o
+  caminho crítico do acervo são **3–4 PDFs de prova oficial na mão**.
+  O que a SPEC 08 deixou pronto: `executarTarefa()` em `src/modules/ia` é o **único** caminho até um
+  modelo; tarefa nova = nome em `TAREFAS` + linha na matriz de configuração, nunca um cliente novo.
+  `montarLinhaDeLote()` já produz o JSONL de `/v1/responses` — **o envio e a colheita do lote são da
+  SPEC 09**. Job da fábrica é `.mts` rodado por `tsx` (AD-095), com
+  `scripts/jobs/frase-do-plano.mts` como molde: conexão `pg`, `definirLeitorDeConfig` +
+  `definirRepositorioDeIa`, falha de um item não derruba os outros.
   O que a SPEC 07 deixou pronto: `matriculas` como chave única com paywall por RLS, sessão do
   Supabase pelo `src/proxy.ts`, `<Shell>` e `<Estado>` como a camada de UI de toda tela, e
   `src/modules/lgpd/grupo-1.ts` como inventário das tabelas de aluno.
 
 ### Dívida aberta
 
+0. **Major (SPEC 08) — a verificação independente não foi rodada.** O Ritual B exige verificador
+   independente curto (só os *Success Criteria*, com evidência `file:line`) e ele **não** aconteceu
+   nesta rodada: o código foi escrito e autoverificado pelo mesmo autor. É a mesma dívida que a SPEC
+   04 abriu, e agora a SPEC 09 vai se apoiar neste gateway. Rodar antes de entrar na SPEC 09.
 1. **Major — a SPEC 04 foi verificada pelo próprio autor.** O sensor rodou 4 mutações das 6, e uma
    (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. Detalhe em
    `.specs/features/04-*/validation.md`. ⚠️ **A SPEC 05 apoiou `tentativas` neste schema sem que o
@@ -291,7 +350,7 @@
 ### Trabalho planejado que continua valendo (não refazer)
 
 `.specs/modulos/m4-coluna-vertebral/design.md` e `tasks.md` cobrem **T11–T22**: T11–T15 → **SPEC 05**;
-T16–T21 → **SPEC 06**; T22 (frase do plano) → **SPEC 08**. **T10 morreu** (virou a SPEC 04).
+T16–T21 → **SPEC 06**; T22 (frase do plano) → **SPEC 08, feita**. **T10 morreu** (virou a SPEC 04).
 Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` é de **3 camadas**
 (AD-084, substitui a receita de 2 do AD-082) — `REVOKE`+RLS, gatilho de linha, e gatilho de TRUNCATE;
 (b) `unstable_cache` só vale dentro de requisição do Next (AD-085) — job e script leem direto.
@@ -312,13 +371,13 @@ Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` 
 ### Ambiente
 
 - **In-progress** (file:line): none.
-- **Branch**: `feat/m8-p1-interface-conta-deploy` (SPEC 07, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
+- **Branch**: `feat/m2-p1-gateway-de-ia` (SPEC 08, PR aberto contra `main`). `main` protegida pelo hook local `.githooks/pre-push` (a
   proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
   `git config core.hooksPath .githooks`.
 - **Infra provisionada**: Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", **sa-east-1
   (SP)**, Postgres 17.6, plano Free · extensões: `pg_cron` (SPEC 03) e `vector` 0.8.2 (SPEC 04) ·
   **Sentry** org e projeto `passou-concursos`, Free, região **EUA** (AD-087g), alerta por e-mail
-  funcionando. **Não provisionados**: **Vercel — agora é o gargalo: o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, OpenAI (SPEC 08/09), Asaas + CNPJ (SPEC 12),
+  funcionando. **Não provisionados**: **Vercel — o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, **OpenAI — agora trava a SPEC 09: o gateway está de pé e sem `OPENAI_API_KEY` + a matriz de `docs/IA.md` nenhuma tarefa de IA roda**, Asaas + CNPJ (SPEC 12),
   PostHog (SPEC 12), Cohere (SPEC 23) — tabela completa no `ROADMAP.md`.
 - **Segredos no GitHub**: `DATABASE_URL`, `SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`. O `SENTRY_DSN` está
   lá por conveniência do YAML, **não porque seja segredo** (AD-087f, com teste negativo na varredura).

@@ -13,7 +13,8 @@
     "db:push": "node scripts/db-push.mjs",
     "jobs:vigia": "node scripts/jobs/vigia-de-jobs.mjs",
     "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
-    "advisors": "node scripts/advisors.mjs"
+    "advisors": "node scripts/advisors.mjs",
+    "ia:matriz": "node scripts/matriz-de-modelos.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.70.0",

@@ -280,3 +280,22 @@ o script de semeadura da matriz, `ROADMAP.md` e `STATE.md`.
 - [ ] Gate: `npm run build && npm run lint && npm test`
 
 **Commit**: `docs(m2): registra a matriz vigente e fecha a spec 08`
+
+
+---
+
+## Desvios registrados (o que saiu diferente do que este documento previa)
+
+1. **`scripts/jobs/frase-do-plano.mts`, não `.ts`.** O `package.json` não é `type: module`, então o
+   `tsx` trata `.ts` como CommonJS e o `await` de topo não compila. A extensão `.mts` resolve sem
+   mexer no resto do projeto. Consequência: `tsconfig.json` ganhou `allowImportingTsExtensions`, para
+   o teste importar o script pelo nome real.
+2. **`tsx` entrou como dependência de desenvolvimento.** A partir daqui todo job da fábrica importa
+   módulo do `src/`, e os `.mjs` de hoje não conseguem. `node --experimental-strip-types` foi
+   descartado: não resolve o atalho `@/`.
+3. **Envio e colheita do lote não foram construídos** — só a montagem da linha JSONL. Está no design
+   acima e repetido em `docs/IA.md`: quem tem volume para exercitá-los é a SPEC 09.
+4. **`definirLeitorDeConfig` virou público** em `src/modules/config/index.ts`. Era seam de teste;
+   agora é também como um job injeta a leitura por `pg` sem duplicar o default em SQL (AD-085).
+5. **A verificação independente não foi rodada nesta sessão** — fica como pendência declarada, não
+   como omissão silenciosa.

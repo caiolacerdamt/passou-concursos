@@ -33,21 +33,29 @@ insert into public.configuracoes (chave, valor, modulo_dono, alterado_por, motiv
 values (
   'param.m2.matriz_de_modelos',
   '{
-    "extracao_pdf":                {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":true, "cache":true, "fallback":null},
-    "explicacao":                  {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":true, "cache":true, "fallback":null},
-    "classificacao_topico":        {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":true, "cache":true, "fallback":null},
-    "verificacao_quantitativa":    {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"max", "batch":true, "cache":true, "fallback":null},
-    "reprocessamento_verificacao": {"modelo":"gpt-5.6-terra","versao":"gpt-5.6-terra","esforco":"max","batch":false,"cache":true, "fallback":null},
-    "plano_inicial":               {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":false,"cache":true, "fallback":null},
-    "frase_do_plano":              {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":false,"cache":true, "fallback":null},
-    "tutor":                       {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"medium","batch":false,"cache":true,"fallback":null},
-    "rascunho_inedita":            {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high","batch":true, "cache":true, "fallback":null}
+    "extracao_pdf":                {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "explicacao":                  {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "classificacao_topico":        {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "verificacao_quantitativa":    {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "reprocessamento_verificacao": {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"max",   "batch":false,"cache":true, "fallback":null},
+    "plano_inicial":               {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":false,"cache":true, "fallback":null},
+    "frase_do_plano":              {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":false,"cache":true, "fallback":null},
+    "tutor":                       {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"medium","batch":false,"cache":true, "fallback":null},
+    "rascunho_inedita":            {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null}
   }'::jsonb,
   'm2',
   'SEU_USER_ID',
-  'matriz inicial do AD-073 (SPEC 08)'
+  'matriz inicial: Luna em todas as tarefas (decisao de 2026-08-20)'
 );
 ```
+
+> **Por que Luna em tudo, e o que isso custa.** A AD-073 previa `gpt-5.6-terra` no refaz 1× da
+> verificação quantitativa. A decisão de 2026-08-20 foi usar **só a Luna**, que é a mais barata. A
+> consequência é que a segunda tentativa não troca de modelo — ela troca **só de esforço**
+> (`high` → `max`), e é por isso que a primeira tentativa desceu de `max` para `high`: sem essa
+> diferença, o refaz repetiria exatamente a mesma chamada e daria exatamente o mesmo erro. Quem
+> revisita isso com dado medido é a **SPEC 22**, que é quem constrói a verificação quantitativa; se a
+> taxa de acerto na segunda tentativa for baixa, a Terra volta ao refaz — e é uma linha no banco.
 
 **3. Os preços** (só para somar o gasto; ausência não impede chamada):
 
@@ -56,15 +64,16 @@ insert into public.configuracoes (chave, valor, modulo_dono, alterado_por, motiv
 values (
   'param.m2.precos_por_modelo',
   '{
-    "gpt-5.6-luna":  {"entrada": 0.20, "saida": 1.20, "entrada_cacheada": 0.02},
-    "gpt-5.6-terra": {"entrada": 1.25, "saida": 10.00, "entrada_cacheada": 0.125}
+    "gpt-5.6-luna": {"entrada": 0.20, "saida": 1.20, "entrada_cacheada": 0.02}
   }'::jsonb,
   'm2', 'SEU_USER_ID', 'precos vigentes em 2026-08 (AD-073)'
 );
 ```
 
-> Os preços da Terra ainda **não** foram conferidos em fonte primária nesta rodada. Enquanto não
-> forem, a soma do mês pode subestimar o refaz 1×. Conferir antes da SPEC 22, que é quem usa a Terra.
+> Só a Luna está precificada porque só ela está na matriz. Os números vieram do recálculo da AD-073
+> (04/08/2026) e **não foram reconferidos em fonte primária** nesta rodada — o efeito de estarem
+> errados é a soma do mês ficar torta, nunca uma chamada deixar de acontecer. Reconferir antes de a
+> ingestão do acervo rodar em volume (SPEC 09).
 
 Para ver o que está valendo: `npm run ia:matriz`.
 

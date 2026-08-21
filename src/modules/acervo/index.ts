@@ -88,3 +88,12 @@ export {
   marcarProva,
   registrarBlocos,
 } from "./ingestao";
+
+export {
+  type Gabarito,
+  GabaritoInvalido,
+  type ItemDoGabarito,
+  type ResumoDoCruzamento,
+  cruzarGabarito,
+  lerGabarito,
+} from "./gabarito";

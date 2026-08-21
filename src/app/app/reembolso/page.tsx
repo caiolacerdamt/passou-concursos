@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { clienteDeServico } from "@/lib/db/servidor";
 import { clienteDaSessao } from "@/lib/db/sessao";
+import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { obterPrecosPublicos } from "@/modules/pagamentos/preco";
 import {
   calcularGarantia,
@@ -45,6 +46,7 @@ export default async function Reembolso({
 }: {
   searchParams: Promise<{ resultado?: string }>;
 }) {
+  await exigirMatriculaAtiva();
   const sessao = await clienteDaSessao();
   const {
     data: { user },
@@ -52,11 +54,7 @@ export default async function Reembolso({
   const parametros = await searchParams;
   const precos = await obterPrecosPublicos();
 
-  if (!user) {
-    return (
-      <Shell><h1 className="text-2xl font-semibold">Entre para consultar a garantia</h1></Shell>
-    );
-  }
+  if (!user) return null;
 
   const pagamento = await criarRepositorioDePagamentos(clienteDeServico()).buscarUltimoPagamentoDoUsuario(user.id);
   if (!pagamento) {

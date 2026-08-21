@@ -387,3 +387,56 @@ Escopo: os 8 *Success Criteria* da spec, com evidência `file:line`. Sem sensor 
 | `npm run lint` | `ESLint: No issues found` |
 | `npm run build` | verde, 9 rotas |
 | `npx tsc --noEmit` | `No errors found` |
+
+
+---
+
+## Verificação independente (Ritual B) — rodada em sessão separada
+
+Verificador: sessão separada, não escreveu o código. Escopo do Ritual B: **só os Success Criteria**,
+evidência `file:line`, sem sensor de mutação. Gates que ele rodou: `npm run test:unit` (408 testes,
+0 falhas) e `npm run lint` (limpo). Ele **não** rodou `test:db` (banco compartilhado) — e disse isso.
+
+**Veredito geral: aprovado.** Os 8 critérios cumpridos. 1 gap `Major`, 4 `Minor`.
+
+Ele confirmou o que a autoverificação já dizia (SC1 é parcial: "prova real" não era verificável no
+momento em que ele rodou) e **discordou num ponto** — encontrou um buraco operacional que a
+autoverificação não viu:
+
+| Gap | O que era | O que foi feito |
+| --- | --- | --- |
+| **G1 `Major`** — bloco `falhou` fica preso (`ingestao-de-prova.mts:249`) | `enviar` não remonta (a linha já existe) e `colher` não enxerga (só olha `enviado`); como fechar a prova exige todos `colhido`, a prova **nunca fechava**. A saída seria editar o banco na mão | **Fechado.** `blocosParaEnviar()` devolve `montado` **e** `falhou`; o reenvio limpa o `erro`. Teste: `ingestao-de-prova.test.ts` (`bloco que falhou volta a ser enviado`) |
+| **G2 `Minor`** — teste com nome que promete medir token e não mede | "prova longa vira mais de um bloco **e nenhum passa do teto**" só assertava contagem de bloco | **Fechado.** Renomeado para o que ele afirma, com o ponteiro para onde o teto é provado de verdade |
+| **G3 `Minor`** — o teto media o bloco, não o pedido | a instrução estável + o schema (~3 mil tokens) viajam em toda linha do lote e não entravam na conta | **Fechado.** `fatiarEmBlocos(..., custoFixo)`, descontado do teto útil. Dois testes, incluindo o contrafactual |
+| **G4 `Minor`** — SC5/SC6 sem cobertura em `test:unit` | a regra do BANCO-04 vive em plpgsql e só é exercida em `test:db` | **Não fechado, aceito.** Reimplementar a regra em TS para ter teste unitário criaria duas fontes da mesma verdade. A CI roda `test:db` (`ci.yml:117`) |
+| **G5 `Minor`** — dedup de questão, no unitário, é decidida pelo dublê | `bancoFalso({questaoJaExiste:true})` devolve `[]` por decreto | **Não fechado, aceito.** A dedup real é provada em `tests/db/ingestao-questoes.test.ts`, contra o banco. O verificador conferiu à mão que o predicado do índice casa com o do `on conflict` |
+
+---
+
+## O primeiro lote real — medido, não estimado
+
+Rodado nesta mesma rodada, com as 3 provas do BB 2021 (Cesgranrio) e a chave da OpenAI provisionada.
+
+| | Prova A |
+| --- | --- |
+| Páginas / blocos | 17 / 5 |
+| Questões inseridas | **70 de 70**, 0 recusadas |
+| `status` | 69 `rascunho`, 1 `em_revisao` (figura), **0 `publicada`** |
+| Gabarito | 70 preenchidas, 0 anuladas, 0 retificadas |
+| `confianca_ia` | 0,91 a 0,99 |
+| Candidatos a tópico abertos | 70 · **0 tópicos canônicos criados** |
+| Custo | **US$ 0,045** (21.051 tokens de entrada, 34.083 de saída, Batch) |
+
+O que o PDF real mudou no código, e que nenhum teste sintético teria pego:
+
+1. **A prova inteira cabia num pedido só** — 19 mil tokens contra um teto útil de 218 mil. O teto de
+   tokens **nunca** corta uma prova real, e o BANCO-03 AC2 estava sendo cumprido por acaso. Entrou
+   `param.m1.paginas_por_bloco`.
+2. **Quatro `getParam` em `Promise.all`** são quatro consultas concorrentes na mesma conexão `pg`,
+   que o driver deprecou. Virou um `getParams`.
+3. **A instrução subiu para a v2**: hífen de quebra de linha, cabeçalho repetido em toda página,
+   números de linha do texto de apoio, e a ordem de copiar o texto-base em cada questão que depende
+   dele. Sem a última, as 10 primeiras questões de Língua Portuguesa seriam impossíveis de responder
+   fora da prova.
+4. **O gabarito oficial veio como imagem (PNG)**, não como texto. Transcrito à mão para CSV, um
+   arquivo por caderno, conferido linha a linha. Não há OCR no MVP.

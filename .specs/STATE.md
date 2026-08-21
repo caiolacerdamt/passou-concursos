@@ -258,29 +258,31 @@
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
-  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ Ritual B. PDF → questões, Batch API, gabarito cruzado. **Verificação independente pendente** — ver `## Dívida aberta` |
+  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **412 unit + 306 db**. Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 2 `Minor` fechados na rodada. **Rodou com prova real**: 70/70 questões da Prova A do BB 2021, US$ 0,045 |
 - **Next step**: **SPEC 10 — Publicação e explicações**
-  (`.specs/features/10-publicacao-e-explicacoes/spec.md`). **Ritual B**. Depende da SPEC 09, agora
-  concluída. ⚠️ **As duas travas externas da SPEC 09 continuam de pé e agora bloqueiam valor real**:
-  `OPENAI_API_KEY` não provisionada e **nenhum PDF de prova oficial na mão** — o pipeline está
-  construído e testado ponta a ponta com PDF sintético e cliente duplo, mas **nenhuma questão real
-  existe no banco**.
-  O que a SPEC 09 deixou pronto: `scripts/jobs/ingestao-de-prova.mts` (`enviar`/`colher`) e
-  `scripts/jobs/cruzar-gabarito.mts`, os dois em `.github/workflows/ingestao.yml` por disparo manual;
-  `src/modules/acervo` passou a ser o pipeline inteiro (`pdf`, `fatiamento`, `extracao`,
-  `classificacao`, `ingestao`, `gabarito`); `src/modules/ia/lote.ts` é o envio e a colheita da Batch
-  API que a SPEC 08 tinha deixado para cá. Toda questão nasce `rascunho` ou `em_revisao` — **a porta
-  de publicação é da SPEC 10**, e é ela que vai ler `confianca_ia` e a fila de revisão. Passo a passo
-  do operador em `docs/INGESTAO.md`.
+  (`.specs/features/10-publicacao-e-explicacoes/spec.md`). **Ritual B**. Depende da SPEC 09, concluída.
+  **As duas travas externas caíram**: `OPENAI_API_KEY` provisionada, bucket `questoes` criado, matriz
+  colada em `configuracoes`, e **as 3 provas do BB 2021 (Cesgranrio) estão ingeridas**.
+  **O acervo existe.** A Prova A entrou inteira: 70 questões, todas com gabarito oficial cruzado,
+  69 `rascunho` + 1 `em_revisao`, **nenhuma `publicada`** — porque a porta de publicação é da SPEC 10.
+  Custo medido: **US$ 0,045 por prova** de 70 questões, via Batch.
+  Duas coisas que a SPEC 10 herda e vai precisar tratar: (a) há **70 candidatos a tópico pendentes** e
+  **zero tópico canônico** — nenhuma questão tem `topico_id`, então nenhuma entra em plano nenhum
+  antes de a taxonomia ser preenchida (a tela é da SPEC 15, mas o `insert` mínimo não depende dela);
+  (b) o enunciado das questões de interpretação carrega o **texto-base inteiro** (~3 mil caracteres),
+  por decisão da instrução v2 — a tela da sessão de questões (SPEC 13) vai receber blocos grandes.
+  Os PDFs e os gabaritos transcritos vivem em `provas/` e **não entram no git**. Passo a passo do
+  operador em `docs/INGESTAO.md`.
 
 ### Dívida aberta
 
-0. **Major (SPEC 09) — a verificação independente ainda não foi rodada.** O autor rodou a
-   autoverificação contra os 8 *Success Criteria* e registrou o resultado no fim de
-   `.specs/features/09-*/tasks.md`, mas `autor ≠ verificador` **não** foi cumprido nesta rodada. É a
-   mesma dívida que a SPEC 04 abriu e a SPEC 08 fechou; fica declarada, não silenciosa. O que mais
-   precisa de olho de fora: o leitor de PDF (`src/modules/acervo/pdf.ts`), que é código novo sem
-   nenhum PDF real para conferir, e o `cruzar_gabarito()`, que mexe em dado imutável.
+0. ~~**Major (SPEC 09) — a verificação independente ainda não foi rodada.**~~ **Fechada.** Rodou em
+   sessão separada, veredito **PASS** nos 8 Success Criteria. Achou 1 `Major` que a autoverificação
+   não viu — bloco `falhou` ficava preso e a prova nunca fechava — e ele foi corrigido na mesma
+   rodada. Relatório completo no fim de `.specs/features/09-*/tasks.md`. Ficam abertos dois `Minor`
+   aceitos: **G4** o BANCO-04 vive em plpgsql e só tem cobertura em `test:db` (reimplementar em TS
+   criaria duas fontes da mesma verdade); **G5** a dedup de questão, no teste unitário, é decidida
+   pelo dublê — a prova real está em `tests/db/ingestao-questoes.test.ts`.
 
 0b. **Minor (SPEC 08) — `npm run test:db` é instável contra o banco de desenvolvimento.** Medido na
    verificação independente: três execuções seguidas deram 2 falhas, 1 falha e 0 falhas, em

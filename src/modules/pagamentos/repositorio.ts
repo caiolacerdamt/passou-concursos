@@ -126,6 +126,50 @@ export function criarRepositorioDePagamentos(
       return buscarPagamentoCom(cliente, "asaas_cobranca_id", cobrancaId);
     },
 
+    async buscarUltimoPagamentoDoUsuario(userId: string) {
+      const { data, error } = await cliente
+        .from("pagamentos")
+        .select(COLUNAS_PAGAMENTO_OPERACIONAL)
+        .eq("user_id", userId)
+        .in("estado", ["pendente", "confirmada", "ativada", "expirada", "reembolsada"])
+        .order("criado_em", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as PagamentoOperacional | null;
+    },
+
+    async registrarSolicitacaoReembolso(
+      pagamentoId: string,
+      userId: string,
+      meio: MeioDePagamento,
+      quando: string,
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("pagamentos")
+        .update({
+          reembolso_solicitado_por: userId,
+          reembolso_solicitado_em: quando,
+          reembolso_meio: meio,
+        })
+        .eq("id", pagamentoId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+
+    async marcarMatriculaReembolsada(
+      matriculaId: string,
+      userId: string,
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("matriculas")
+        .update({ estado: "reembolsada" })
+        .eq("id", matriculaId)
+        .eq("user_id", userId)
+        .eq("estado", "ativa");
+      if (error) throw error;
+    },
+
     async registrarEvento(input: {
       eventoId: string;
       tipo: string;

@@ -440,3 +440,39 @@ O que o PDF real mudou no código, e que nenhum teste sintético teria pego:
    fora da prova.
 4. **O gabarito oficial veio como imagem (PNG)**, não como texto. Transcrito à mão para CSV, um
    arquivo por caderno, conferido linha a linha. Não há OCR no MVP.
+
+---
+
+## O que o primeiro lote real ensinou (rodada de correção)
+
+As três provas foram ingeridas de verdade. **Cinco defeitos apareceram, e nenhum deles teria
+aparecido em teste sintético.** Todos foram corrigidos com teste nesta mesma rodada.
+
+| # | O que quebrou | Causa | Correção |
+| --- | --- | --- | --- |
+| 1 | A prova inteira ia num pedido só | 19 mil tokens contra teto útil de 218 mil: o teto de tokens **nunca** corta uma prova real, e o BANCO-03 AC2 estava sendo cumprido por acaso | `param.m1.paginas_por_bloco` (default 4) — a trava que sempre corta |
+| 2 | Aviso do driver `pg` | quatro `getParam` em `Promise.all` são quatro consultas concorrentes na mesma conexão, o que o `pg` deprecou | um `getParams` |
+| 3 | Bloco de 17 questões perdido no INSERT | `unsupported Unicode escape sequence`: o modelo devolveu 8 bytes nulos, e o `jsonb` os recusa | `semCaracteresDeControle` na colheita, antes de qualquer gravação |
+| 4 | Bloco cortado pelo provedor, sempre no mesmo lugar | a instrução v2 mandava o modelo **repetir o texto-base em cada questão**; numa página de Língua Inglesa com 5 questões sobre uma reportagem, o filtro de conteúdo disparou | instrução **v3**: `textos_base` é campo próprio e a junção é código nosso |
+| 5 | Mesmo bloco continuou falhando com a v3 | as quatro páginas juntas ainda disparam, embora **cada uma passe sozinha** — medido | reenvio vai **uma página por linha**; `juntarPaginas` remonta |
+
+Dois erros meus foram encontrados no meio do conserto, e também estão corrigidos: subir a versão
+do prompt quebraria a correspondência da colheita (a `chave_dedup` gravada ficaria na versão
+antiga), e a decisão de `precisa_ocr` só perguntava se saiu *alguma coisa* — um PDF com fonte de
+codificação própria sai cheio de texto ilegível e passaria pela porta.
+
+### Três comandos que faltavam, e por quê
+
+| Comando | Existe porque |
+| --- | --- |
+| `--acao inspecionar` | as duas primeiras provas foram enviadas sem que ninguém tivesse olhado o texto extraído. Roda sem banco, sem chave e sem gastar |
+| `--acao estado` | as duas falhas do primeiro lote foram descobertas **escrevendo SQL na mão**. Isso não pode ser o procedimento |
+| reenvio repartido | um bloco falhado reenviado igual falha igual, para sempre |
+
+### A trava de legibilidade não pode reprovar Língua Inglesa
+
+É requisito, não detalhe: toda prova bancária tem seção em inglês, e reprovar essa página mandaria
+a prova **inteira** para uma fila de OCR que não existe no MVP — o erro mais caro possível, porque
+é silencioso e joga fora acervo bom. A medida é de **escrita alfabética**, não de idioma:
+proporção de caracteres plausíveis e proporção de vogais, com teste em português, inglês e
+espanhol. Medido nos três cadernos reais: 96% e 34%; os pisos estão em 60% e 15%.

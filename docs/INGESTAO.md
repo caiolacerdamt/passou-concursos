@@ -37,6 +37,32 @@ psql "$DATABASE_URL" -c "insert into public.provas (banca, ano, orgao, cargo, ca
 
 Guarde o `id` que voltou: é o `--prova` de todos os comandos abaixo.
 
+## 0. Inspecionar — antes de gastar
+
+```bash
+npm run jobs:ingestao -- --acao inspecionar --pdf ./provas/nova-prova.pdf
+```
+
+**Não precisa de nada provisionado**: não abre banco, não pede chave, não chama o provedor.
+É assim que se testa um PDF de banca nova. Ele responde a única pergunta que depende do layout:
+*o texto sai legível deste PDF?* Tudo depois dessa etapa é agnóstico a layout.
+
+```
+  veredito:     PRONTA PARA EXTRAIR
+  paginas:      17
+  caracteres:   62554
+  legibilidade: 96% de texto escrito, 34% de vogais
+  imagens JPEG: 0
+  blocos:       5 (~17962 tokens no total)
+  amostra do texto extraido:
+    | BANCO DO BRASIL
+    | ESCRITURÁRIO - AGENTE COMERCIAL - PROVA C
+```
+
+Os vereditos possíveis: `PRONTA PARA EXTRAIR`, `SEM TEXTO NATIVO` (escaneada),
+`ILEGIVEL` (fonte com codificação própria — sai muito texto e nenhuma palavra) e
+`NAO FATIAVEL` (alguma página sozinha não cabe no teto de tokens).
+
 ## 1. Enviar
 
 ```bash
@@ -113,6 +139,37 @@ O que o comando faz com cada questão:
 Se o gabarito chegar antes de a extração terminar, ele conta os itens sem questão e **espera** — rode
 de novo depois.
 
+## Ver o que aconteceu
+
+```bash
+npm run jobs:ingestao -- --acao estado --prova <uuid>
+```
+
+```
+  prova: extraindo
+  bloco 0  p.1-4     colhido   10 aceitas, 0 recusadas
+  bloco 1  p.5-8     falhou    0 aceitas, 0 recusadas
+              motivo: o provedor encerrou a geracao no meio: content_filter
+  bloco 2  p.9-12    colhido   21 aceitas, 0 recusadas
+  1 bloco(s) falhado(s). Rodar --acao enviar reenvia so eles.
+```
+
+Um bloco que falha **some do fluxo**: `colher` não o enxerga (só olha o que está em voo) e
+`enviar` só diz quantos mandou. Este comando é como você descobre. Só precisa de `DATABASE_URL`.
+
+### O que fazer com um bloco falhado
+
+Rodar `--acao enviar` de novo. Ele reenvia **só** os blocos falhados, e o reenvio é diferente
+do primeiro: o bloco vai **uma página por linha**, em vez de inteiro.
+
+Isso não é capricho. Medido na Prova C do BB 2021: o filtro de conteúdo da OpenAI cortou a
+geração de um bloco de quatro páginas (seção de Língua Inglesa, texto de apoio sobre aparições
+aéreas), e o corte é **determinístico** — cada página passa sozinha, e as quatro falham juntas,
+sempre. Reenviar igual repetiria a falha para sempre e a prova nunca fecharia.
+
+Repartir custa mais (perde o desconto do prefixo em cache e são N pedidos em vez de um). É o
+preço de não perder as questões daquelas páginas, e só acontece na segunda tentativa.
+
 ## Pelo GitHub Actions
 
 Actions → **Ingestão de prova** → *Run workflow*. Escolha `enviar`, `colher` ou `gabarito`, informe o
@@ -153,6 +210,25 @@ SPEC 09 subiu para a versão 2 por causa disso.
 
 **O gabarito veio como imagem (PNG), não como texto.** Não há OCR no MVP: a transcrição para CSV é
 manual, feita uma vez por caderno, conferida linha a linha. Os três estão em `provas/*.csv`.
+
+## Provas de outra banca, outro layout
+
+Das cinco etapas do pipeline, **só a primeira depende do layout**: tirar o texto do PDF. Cortar
+em blocos, transcrever, gravar e cruzar o gabarito não olham para a página.
+
+| Situação | O que acontece |
+| --- | --- |
+| Cesgranrio, outros anos | mesmo gerador de PDF; risco baixo |
+| FCC, FGV, VUNESP (A a E) | formato já suportado; o risco é só o do PDF |
+| Cebraspe/CESPE (certo-errado) | **suportado** — entra sem alternativas |
+| Escaneada | `precisa_ocr`, sem gastar nada |
+| Fonte com codificação própria | `precisa_ocr` pela trava de legibilidade |
+| Seção em inglês ou espanhol | **passa** — a trava mede escrita alfabética, não idioma |
+| Gráfico/tabela como figura | só JPEG é extraído; o resto vai para revisão |
+| Alternativas numeradas, ou mais de 5 letras | **não suportado** (contrato da SPEC 04: A–E) |
+
+O procedimento para uma banca nova é: `--acao inspecionar` primeiro, olhar a amostra do texto,
+e só então `--acao enviar`.
 
 ## Limites conhecidos
 

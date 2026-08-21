@@ -43,6 +43,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.caderno_erros",
       "flag.m5.raiox",
       "flag.m9.rota_de_erro_proposital",
+      "flag.m9.analytics_logado",
     ];
     const parametros: ChaveParam[] = [
       "param.m1.teto_tokens_por_pedido",
@@ -73,6 +74,9 @@ describe("catalogo de chaves", () => {
       "param.m2.matriz_de_modelos",
       "param.m2.precos_por_modelo",
       "param.m2.teto_gasto_mensal_usd",
+      "param.m8.preco_anual_centavos",
+      "param.m8.desconto_a_vista_percentual",
+      "param.m8.garantia_dias",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 
@@ -108,6 +112,21 @@ describe("catalogo de chaves", () => {
     expect(CATALOGO["param.m5.piso_amostra_baixa"].padrao).toBe(10);
     expect(CATALOGO["param.m5.periodo_tendencia_recente_anos"].padrao).toBe(3);
     expect(CATALOGO["param.m5.periodo_tendencia_anterior_anos"].padrao).toBe(3);
+  });
+
+  it("declara os valores comerciais do funil e a flag logada desligada", () => {
+    expect(CATALOGO["param.m8.preco_anual_centavos"].padrao).toBe(19_700);
+    expect(CATALOGO["param.m8.desconto_a_vista_percentual"].padrao).toBe(0.1);
+    expect(CATALOGO["param.m8.garantia_dias"].padrao).toBe(7);
+    expect(CATALOGO["flag.m9.analytics_logado"].padrao).toBe(false);
+
+    expect(
+      CATALOGO["param.m8.desconto_a_vista_percentual"].tipo.safeParse(1.01)
+        .success,
+    ).toBe(false);
+    expect(CATALOGO["param.m8.garantia_dias"].tipo.safeParse(7.5).success).toBe(
+      false,
+    );
   });
 
   it("toda flag e booleana e global, sem rollout percentual nem segmentacao (AC4)", () => {

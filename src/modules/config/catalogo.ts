@@ -333,6 +333,29 @@ export const CATALOGO = {
       "Acima disto o time e alertado uma vez no mes. SHALL NOT desligar nada sozinho (IA-12 / decisao de 2026-07-23).",
   }),
 
+  // ── M8 · negocio e pagamentos ────────────────────────────────────────────
+  "param.m8.preco_anual_centavos": chave({
+    tipo: z.number().int().positive(),
+    padrao: 19_700,
+    moduloDono: "m8",
+    descricao:
+      "Preco anual parcelado em centavos de BRL. O valor e lido da configuracao no checkout e congelado no pagamento criado.",
+  }),
+  "param.m8.desconto_a_vista_percentual": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.1,
+    moduloDono: "m8",
+    descricao:
+      "Desconto aplicado ao preco anual quando o aluno escolhe Pix ou boleto. Percentual entre 0 e 1, exibido como preco final.",
+  }),
+  "param.m8.garantia_dias": chave({
+    tipo: z.number().int().positive(),
+    padrao: 7,
+    moduloDono: "m8",
+    descricao:
+      "Quantidade de dias corridos da garantia contados a partir da confirmacao do pagamento.",
+  }),
+
   // ── M9 · infra e operacoes ────────────────────────────────────────────────
   "flag.m9.rota_de_erro_proposital": chave({
     tipo: z.boolean(),
@@ -340,6 +363,13 @@ export const CATALOGO = {
     moduloDono: "m9",
     descricao:
       "Libera /api/erro-proposital, que lanca de proposito para conferir se o erro chega ao Sentry com alerta (INFRA-09). Nasce desligada: com ela ligada, qualquer um derruba uma rota de producao.",
+  }),
+  "flag.m9.analytics_logado": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m9",
+    descricao:
+      "Analytics da superficie logada. Nasce desligada: o funil pre-login e a unica coleta desta spec.",
   }),
 } as const;
 

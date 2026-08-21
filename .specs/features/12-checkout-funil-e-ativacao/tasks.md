@@ -86,15 +86,22 @@ preço e documentar as variáveis externas novas.
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [ ] Preço anual, percentual à vista e dias de garantia têm tipo, default e descrição.
-- [ ] `flag.m9.analytics_logado` nasce `false` e não aceita rollout, string ou percentual.
-- [ ] O DTO público expõe os dois preços sem revelar configuração interna.
-- [ ] `.env.example` documenta Asaas, PostHog e URL pública sem valores secretos.
+- [x] Preço anual, percentual à vista e dias de garantia têm tipo, default e descrição.
+- [x] `flag.m9.analytics_logado` nasce `false` e não aceita rollout, string ou percentual.
+- [x] O DTO público expõe os dois preços sem revelar configuração interna.
+- [x] `.env.example` documenta Asaas, PostHog e URL pública sem valores secretos.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(pag): cadastra preco e flag do funil`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; o catalogo e a fronteira publica de preco estao prontos.
+- **Assumptions**: o preco de ancora continua em R$ 197,00; desconto e garantia permanecem configuraveis no banco.
+- **Files**: `src/modules/config/catalogo.ts`, `src/modules/config/catalogo.test.ts`, `src/modules/pagamentos/preco.ts`, `src/modules/pagamentos/preco.test.ts`, `.env.example`.
+- **Success evidence**: defaults e tipos passam; DTO retorna parcelado/a vista/garantia sem expor chaves internas; `npm run test:unit -- src/modules/config/catalogo.test.ts src/modules/pagamentos/preco.test.ts` — 2 arquivos, 9 testes verdes.
 
 ### T107: Criar schema de pagamentos, eventos, faturas e transições
 

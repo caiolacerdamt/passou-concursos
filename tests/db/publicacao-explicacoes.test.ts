@@ -5,6 +5,63 @@ import { criarUsuario } from "./conta";
 import { comTransacaoRevertida } from "./conexao";
 import { descreveComBanco } from "./setup";
 
+async function inserirExplicacaoAprovada(
+  cliente: Parameters<typeof inserirQuestao>[0],
+  questao: { id: string; questao_versao: number },
+  alternativa = "C",
+): Promise<void> {
+  await cliente.query(
+    `insert into public.explicacoes
+       (questao_id, questao_versao, status, texto, alternativa_correta,
+        fontes_citadas, chave_dedup)
+     values ($1, $2, 'aprovada', 'explicacao fixture', $3,
+             '[{"doc_id":"teste","trecho":"fixture"}]'::jsonb, $4)`,
+    [
+      questao.id,
+      questao.questao_versao,
+      alternativa,
+      `teste:explicacao:${questao.id}:${questao.questao_versao}`,
+    ],
+  );
+}
+
+async function aprovarRevisao(
+  cliente: Parameters<typeof inserirQuestao>[0],
+  questao: { id: string; questao_versao: number },
+  motivo = "teste",
+): Promise<void> {
+  const operador = await criarUsuario(cliente);
+  const { rows } = await cliente.query<{ id: string }>(
+    `select public.enfileirar_questao_revisao(
+       $1::uuid, $2::integer, $3::text, 1::smallint, null::text
+     ) as id`,
+    [questao.id, questao.questao_versao, motivo],
+  );
+  await cliente.query(
+    `select public.registrar_decisao_questao_revisao($1, 'aprovada', $2, 'teste')`,
+    [rows[0].id, operador],
+  );
+}
+
+async function configurarQa(
+  cliente: Parameters<typeof inserirQuestao>[0],
+  piso: number,
+  amostra: number,
+): Promise<void> {
+  const autor = await criarUsuario(cliente);
+  for (const [chave, valor] of [
+    ["param.m1.piso_confianca_ia", piso],
+    ["param.m1.amostra_qa_real", amostra],
+  ] as const) {
+    await cliente.query(
+      `insert into public.configuracoes
+         (chave, valor, modulo_dono, alterado_por, motivo)
+       values ($1, to_jsonb($2::numeric), 'm1', $3, 'teste da porta de publicacao')`,
+      [chave, valor, autor],
+    );
+  }
+}
+
 descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
   it("cria as tres tabelas com RLS e sem privilegio do navegador", async () => {
     await comTransacaoRevertida(async (cliente) => {
@@ -142,6 +199,98 @@ descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
           [criada[0].id, operador],
         ),
       ).rejects.toThrow(/revisao_nao_esta_pendente/);
+    });
+  });
+
+  it("bloqueia real de baixa confianca mesmo com explicacao aprovada", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await configurarQa(cliente, 0.95, 0);
+      const questao = await inserirQuestao(cliente, { confianca_ia: 0.5 });
+      await inserirExplicacaoAprovada(cliente, questao);
+
+      await expect(
+        cliente.query(
+          "update public.questoes set status = 'publicada' where id = $1 and questao_versao = $2",
+          [questao.id, questao.questao_versao],
+        ),
+      ).rejects.toThrow(/questao_exige_revisao_humana/);
+    });
+  });
+
+  it("bloqueia real de alta confianca quando cai na amostra", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await configurarQa(cliente, 0, 1);
+      const questao = await inserirQuestao(cliente, { confianca_ia: 0.99 });
+      await inserirExplicacaoAprovada(cliente, questao);
+
+      await expect(
+        cliente.query(
+          "update public.questoes set status = 'publicada' where id = $1 and questao_versao = $2",
+          [questao.id, questao.questao_versao],
+        ),
+      ).rejects.toThrow(/questao_exige_revisao_humana/);
+    });
+  });
+
+  it("exige explicacao aprovada antes de publicar real fora da fila", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await configurarQa(cliente, 0, 0);
+      const questao = await inserirQuestao(cliente, { confianca_ia: 0.99 });
+
+      await expect(
+        cliente.query(
+          "select public.publicar_questao($1, $2)",
+          [questao.id, questao.questao_versao],
+        ),
+      ).rejects.toThrow(/explicacao_nao_aprovada/);
+    });
+  });
+
+  it("publica real depois que explicacao e as exigencias de QA passam", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await configurarQa(cliente, 0, 0);
+      const questao = await inserirQuestao(cliente, { confianca_ia: 0.99 });
+      await inserirExplicacaoAprovada(cliente, questao);
+
+      const { rows } = await cliente.query<{ publicar_questao: boolean }>(
+        "select public.publicar_questao($1, $2)",
+        [questao.id, questao.questao_versao],
+      );
+      expect(rows[0].publicar_questao).toBe(true);
+
+      const { rows: atualizada } = await cliente.query<{ status: string }>(
+        "select status::text from public.questoes where id = $1 and questao_versao = $2",
+        [questao.id, questao.questao_versao],
+      );
+      expect(atualizada[0].status).toBe("publicada");
+    });
+  });
+
+  it("exige revisao para inedita e publica depois da aprovacao humana", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await configurarQa(cliente, 0, 0);
+      const questao = await inserirQuestao(cliente, {
+        origem: "gerada_ia",
+        prova_id: null,
+        numero: null,
+        fonte_citacao: null,
+      });
+      await inserirExplicacaoAprovada(cliente, questao);
+
+      await cliente.query("savepoint tentativa_sem_revisao");
+      await expect(
+        cliente.query("select public.publicar_questao($1, $2)", [questao.id, questao.questao_versao]),
+      ).rejects.toThrow(/gerada_ia_passa_por_revisao/);
+      await cliente.query("rollback to savepoint tentativa_sem_revisao");
+
+      await aprovarRevisao(cliente, questao, "gerada_ia");
+      await cliente.query("select public.publicar_questao($1, $2)", [questao.id, questao.questao_versao]);
+
+      const { rows } = await cliente.query<{ status: string }>(
+        "select status::text from public.questoes where id = $1 and questao_versao = $2",
+        [questao.id, questao.questao_versao],
+      );
+      expect(rows[0].status).toBe("publicada");
     });
   });
 });

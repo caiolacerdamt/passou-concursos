@@ -131,6 +131,22 @@ e exige explicação aprovada; manter proveniência/gabarito e amostra configur�
 nova e testes DB. **Done when**: baixa confiança, amostra e origem gerada são bloqueadas sem decisão;
 real aprovada só publica com explicação. **Depends**: T89.
 
+**Status**: ✅ concluída. **Gate**: 71 testes DB passando, incluindo fixtures existentes de acervo e plano.
+
+**Post-gate adequacy**:
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Baixa confiança manda real à revisão | `tests/db/publicacao-explicacoes.test.ts:216` — `rejects.toThrow(/questao_exige_revisao_humana/)` | Não publica sem aprovação humana | ✅ |
+| Amostra alcança real de alta confiança | `tests/db/publicacao-explicacoes.test.ts:231` — `rejects.toThrow(/questao_exige_revisao_humana/)` com amostra `1` | Amostra configurada bloqueia publicação | ✅ |
+| Explicação aprovada é obrigatória | `tests/db/publicacao-explicacoes.test.ts:245` — `rejects.toThrow(/explicacao_nao_aprovada/)` | Questão não fica publicada sem explicação | ✅ |
+| Publicação válida muda o estado | `tests/db/publicacao-explicacoes.test.ts:259` — `expect(rows[0].publicar_questao).toBe(true)` e `:265` — `expect(atualizada[0].status).toBe("publicada")` | Porta publica somente após os pré-requisitos | ✅ |
+| Inédita exige revisão completa | `tests/db/publicacao-explicacoes.test.ts:283` — `rejects.toThrow(/gerada_ia_passa_por_revisao/)` e `:293` — `expect(rows[0].status).toBe("publicada")` | Sem revisão bloqueia; com aprovação publica | ✅ |
+| Proveniência e gabarito continuam travados | `tests/db/acervo-proveniencia.test.ts:25`, `:43` e `:123` — asserts dos nomes das constraints | Real sem fonte e questão sem gabarito continuam recusadas | ✅ |
+
+Necessidade: os testes exercitam trigger, função pública de publicação e fixtures antigas; não dependem
+apenas de chamadas do job.
+
 ### Fase 2 — contrato e persistência da explicação
 
 #### T91: Seleção da base de referência

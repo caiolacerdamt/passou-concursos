@@ -80,6 +80,20 @@ export {
 
 export { type Conferidor, type ResultadoDeRefazer, refazerUmaVez } from "./refazer";
 
+export {
+  ExplicacaoRejeitada,
+  NOME_DO_FORMATO_DA_EXPLICACAO,
+  SCHEMA_DA_EXPLICACAO,
+  type ExplicacaoGerada,
+  type FonteCitacaoDaExplicacao,
+  type MotivoDaRejeicaoDaExplicacao,
+  type QuestaoParaExplicacao,
+  conferirExplicacao,
+  explicacaoGeradaSchema,
+  fonteCitacaoDaExplicacaoSchema,
+  normalizarTrecho,
+} from "./explicacao";
+
 export { type ContadorDeGasto, calcularCusto, conferirGasto, periodoDe } from "./gasto";
 
 export {

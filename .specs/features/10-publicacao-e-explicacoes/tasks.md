@@ -174,6 +174,20 @@ oficial/resumo/rascunho será exercitada contra o banco no gate de integração 
 e veto de afirmações externas na fonte mínima. **Where**: `src/modules/ia/explicacao.ts` e testes unit.
 **Done when**: cada sucesso e cada rejeição da spec tem assert específico. **Depends**: T91.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 52 arquivos e 464 testes passando; `npm run lint` limpo.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Saída estruturada strict | `src/modules/ia/explicacao.ts:10-33,37-82` e `src/modules/ia/explicacao.test.ts:35-49` | Só o formato declarado pode chegar à conferência | ✅ |
+| Citação é comparada por código | `src/modules/ia/explicacao.ts:101-106,162-180` e `src/modules/ia/explicacao.test.ts:50-93` | Caixa, acento, pontuação e espaços não quebram uma citação válida; trecho ausente é rejeitado | ✅ |
+| Nenhuma citação também é rejeição | `src/modules/ia/explicacao.ts:25` e `src/modules/ia/explicacao.test.ts:72-80` | Explicação sem fonte não passa | ✅ |
+| Gabarito continua sendo oficial | `src/modules/ia/explicacao.ts:140-148` e `src/modules/ia/explicacao.test.ts:108-116` | Contradição da alternativa correta é rejeitada | ✅ |
+| Fonte mínima não autoriza fato externo | `src/modules/ia/explicacao.ts:150-158` e `src/modules/ia/explicacao.test.ts:118-140` | Afirmação externa declarada não passa, inclusive na fonte mínima | ✅ |
+| Documento citado é o entregue no pedido | `src/modules/ia/explicacao.ts:162-169` e `src/modules/ia/explicacao.test.ts:95-106` | O provedor não escolhe uma fonte diferente | ✅ |
+
+Necessidade: o schema não decide conteúdo por si; a função `conferirExplicacao` é a barreira de código
+antes da persistência. A fila e o registro da rejeição serão ligados na T93/T95.
+
 #### T93: Persistência idempotente da explicação
 
 **What**: inserir explicação aprovada/rejeitada vinculada à questão-versão, guardar citações e ligar a

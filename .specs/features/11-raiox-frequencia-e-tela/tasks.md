@@ -55,40 +55,40 @@ As fases são sequenciais e as tasks dentro de cada fase também.
 ### Phase 1: Foundation
 
 ```text
-T1 → T2
+T87 → T88
 ```
 
 ### Phase 2: Core projection
 
 ```text
-T3 → T4
+T89 → T90
 ```
 
 ### Phase 3: Surface
 
 ```text
-T5 → T6 → T7
+T91 → T92 → T93
 ```
 
 ### Phase 4: Contract closure
 
 ```text
-T8
+T94
 ```
 
 ### Phase dependency edges
 
 ```text
-T2 → T3
-T3 → T5
-T4 → T5
-T4 → T8
-T7 → T8
+T88 → T89
+T89 → T91
+T90 → T91
+T90 → T94
+T93 → T94
 ```
 
 ## Task Breakdown
 
-### T1: Cadastrar configuração do M5
+### T87: Cadastrar configuração do M5
 
 **What**: Adicionar as chaves tipadas do Raio-X e a flag global da tela ao catálogo existente.
 **Where**: `src/modules/config/catalogo.ts`
@@ -106,11 +106,11 @@ T7 → T8
 **Commit**: `feat(m5): cadastra configuracao do raio-x`
 **Status**: ✅ Done — unit gate verde
 
-### T2: Criar schema do perfil e da projeção
+### T88: Criar schema do perfil e da projeção
 
 **What**: Criar as tabelas, enum de tendência, constraints, índice de perfil ativo e proteção RLS.
 **Where**: `supabase/migrations/20260821100000_raiox_schema.sql`
-**Depends on**: T1
+**Depends on**: T87
 **Requirement**: RAIOX-08, RAIOX-05
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -124,30 +124,30 @@ T7 → T8
 **Commit**: `feat(m5): cria schema do perfil e da projecao`
 **Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-schema.test.ts`)
 
-### T3: Implementar o recálculo idempotente do Raio-X
+### T89: Implementar o recálculo idempotente do Raio-X
 
 **What**: Implementar `recalcula_raiox(p_referencia)` com taxa real, decaimento, tendência e amortecimento.
 **Where**: `supabase/migrations/20260821101000_raiox_recalculo.sql`
-**Depends on**: T2
+**Depends on**: T88
 **Requirement**: RAIOX-01, RAIOX-04, RAIOX-05, RAIOX-11, RAIOX-12, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Só questão real, publicada e vigente entra; inédita não entra; anulada conta; versões antigas não somam.
-- [ ] A taxa é participação, o ano recente pesa mais e nenhum ano é cortado.
-- [ ] Amostra baixa é amortizada para a média, tópico sem questão recebe a média, e tendência tem três valores.
-- [ ] A função usa trava, substitui sem duplicar, recalcula perfis e falha sem corromper a projeção anterior.
+- [x] Só questão real, publicada e vigente entra; inédita não entra; anulada conta; versões antigas não somam.
+- [x] A taxa é participação, o ano recente pesa mais e nenhum ano é cortado.
+- [x] Amostra baixa é amortizada para a média, tópico sem questão recebe a média, e tendência tem três valores.
+- [x] A função usa trava, substitui sem duplicar, recalcula perfis e falha sem corromper a projeção anterior.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m5): calcula frequencia real do raio-x`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-recalculo.test.ts`)
 
-### T4: Ligar view, porteiro e agendamento
+### T90: Ligar view, porteiro e agendamento
 
 **What**: Substituir a view stub mantendo a assinatura, excluir peso zero do plano e agendar o job antes do M4.
 **Where**: `supabase/migrations/20260821102000_raiox_integracao.sql`
-**Depends on**: T3
+**Depends on**: T89
 **Requirement**: RAIOX-03, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -161,11 +161,11 @@ T7 → T8
 **Commit**: `feat(m5): liga raio-x ao plano e ao cron`
 **Status**: ⬜ Pending
 
-### T5: Criar leitura server-side do Raio-X
+### T91: Criar leitura server-side do Raio-X
 
 **What**: Expor no módulo M5 um DTO mínimo que consulta perfil ativo e projeções ordenadas pelo peso.
 **Where**: `src/modules/raiox/index.ts`
-**Depends on**: T3, T4
+**Depends on**: T89, T90
 **Requirement**: RAIOX-05, RAIOX-08, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -179,11 +179,11 @@ T7 → T8
 **Commit**: `feat(m5): expõe leitura server-side do raio-x`
 **Status**: ⬜ Pending
 
-### T6: Construir componente de leitura
+### T92: Construir componente de leitura
 
 **What**: Criar o componente responsivo e acessível que apresenta o perfil, a lista e os sinais da projeção.
 **Where**: `src/modules/raiox/tela.tsx`
-**Depends on**: T5
+**Depends on**: T91
 **Requirement**: RAIOX-05, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -197,11 +197,11 @@ T7 → T8
 **Commit**: `feat(m5): renderiza leitura do raio-x`
 **Status**: ⬜ Pending
 
-### T7: Integrar rota logada e flag
+### T93: Integrar rota logada e flag
 
 **What**: Adicionar `/app/raio-x` como Server Component protegido por matrícula e pela flag M5.
 **Where**: `src/app/app/raio-x/page.tsx`
-**Depends on**: T6
+**Depends on**: T92
 **Requirement**: RAIOX-08, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -215,11 +215,11 @@ T7 → T8
 **Commit**: `feat(m5): adiciona rota logada do raio-x`
 **Status**: ⬜ Pending
 
-### T8: Fechar contrato com o plano e rastreabilidade
+### T94: Fechar contrato com o plano e rastreabilidade
 
 **What**: Provar que o peso da view reordena o plano sem alterar o motor e fechar a rastreabilidade da SPEC.
 **Where**: `tests/db/raiox-plano.test.ts`
-**Depends on**: T4, T7
+**Depends on**: T90, T93
 **Requirement**: RAIOX-03, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -237,43 +237,43 @@ T7 → T8
 
 | Task | Depends on | Diagram | Status |
 | --- | --- | --- | --- |
-| T1 | None | None | ✅ |
-| T2 | T1 | T1 → T2 | ✅ |
-| T3 | T2 | T2 → T3 | ✅ |
-| T4 | T3 | T3 → T4 | ✅ |
-| T5 | T3, T4 | T3/T4 → T5 | ✅ |
-| T6 | T5 | T5 → T6 | ✅ |
-| T7 | T6 | T6 → T7 | ✅ |
-| T8 | T4, T7 | T4/T7 → T8 | ✅ |
+| T87 | None | None | ✅ |
+| T88 | T87 | T87 → T88 | ✅ |
+| T89 | T88 | T88 → T89 | ✅ |
+| T90 | T89 | T89 → T90 | ✅ |
+| T91 | T89, T90 | T89/T90 → T91 | ✅ |
+| T92 | T91 | T91 → T92 | ✅ |
+| T93 | T92 | T92 → T93 | ✅ |
+| T94 | T90, T93 | T90/T93 → T94 | ✅ |
 
 ## Test Co-location Validation
 
 | Task | Layer | Matrix | Task says | Status |
 | --- | --- | --- | --- | --- |
-| T1 | Configuração | unit | unit | ✅ |
-| T2 | Schema Supabase | integration | integration | ✅ |
-| T3 | Regra de frequência e job | integration | integration | ✅ |
-| T4 | View, cron e contrato | integration | integration | ✅ |
-| T5 | Leitura server-side | unit | unit | ✅ |
-| T6 | Componente de tela | unit | unit | ✅ |
-| T7 | Rota protegida | unit | unit | ✅ |
-| T8 | View, cron e contrato | integration | integration | ✅ |
+| T87 | Configuração | unit | unit | ✅ |
+| T88 | Schema Supabase | integration | integration | ✅ |
+| T89 | Regra de frequência e job | integration | integration | ✅ |
+| T90 | View, cron e contrato | integration | integration | ✅ |
+| T91 | Leitura server-side | unit | unit | ✅ |
+| T92 | Componente de tela | unit | unit | ✅ |
+| T93 | Rota protegida | unit | unit | ✅ |
+| T94 | View, cron e contrato | integration | integration | ✅ |
 
 ## Traceability Plan
 
 | Requirement | Tasks |
 | --- | --- |
-| RAIOX-01 | T3 |
-| RAIOX-03 | T4, T8 |
-| RAIOX-04 | T3 |
-| RAIOX-05 | T2, T3, T5, T6 |
-| RAIOX-08 | T2, T5, T7 |
-| RAIOX-11 | T1, T3 |
-| RAIOX-12 | T1, T3, T5, T6, T7 |
-| RAIOX-14 | T1, T3, T4, T8 |
+| RAIOX-01 | T89 |
+| RAIOX-03 | T90, T94 |
+| RAIOX-04 | T89 |
+| RAIOX-05 | T88, T89, T91, T92 |
+| RAIOX-08 | T88, T91, T93 |
+| RAIOX-11 | T87, T89 |
+| RAIOX-12 | T87, T89, T91, T92, T93 |
+| RAIOX-14 | T87, T89, T90, T94 |
 
 ## Closing Protocol
 
-Depois de T8: dispatch automático do Verifier independente, aguardando a conclusão. O relatório deve ser
+Depois de T94: dispatch automático do Verifier independente, aguardando a conclusão. O relatório deve ser
 gravado em `validation.md` e passar `validate_state.py` antes de declarar a SPEC concluída. Como o Ritual
 é B, o relatório confere os Success Criteria com evidência `file:line`, sem sensor de mutação.

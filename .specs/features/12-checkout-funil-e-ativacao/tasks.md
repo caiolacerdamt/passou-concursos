@@ -114,16 +114,23 @@ funções de transição/claim, RLS e privilégios de serviço.
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [ ] O banco aceita somente os estados e transições previstos e rejeita reembolso antes da confirmação.
-- [ ] Evento Asaas repetido não cria segunda linha; eventos e transições não aceitam edição nem truncate.
-- [ ] O pagamento congela valor, meio, e-mail, referência e aceite; `faturas` mantém referência fiscal.
-- [ ] Navegador não escreve pagamentos, faturas, eventos, transições ou pendências.
-- [ ] A reserva de ativação é concorrente e recuperável pela reconciliação.
+- [x] O banco aceita somente os estados e transições previstos e rejeita reembolso antes da confirmação.
+- [x] Evento Asaas repetido não cria segunda linha; eventos e transições não aceitam edição nem truncate.
+- [x] O pagamento congela valor, meio, e-mail, referência e aceite; `faturas` mantém referência fiscal.
+- [x] Navegador não escreve pagamentos, faturas, eventos, transições ou pendências.
+- [x] A reserva de ativação é concorrente e recuperável pela reconciliação.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(pag): cria schema do checkout e estados`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; migration aplicada no Supabase de desenvolvimento.
+- **Assumptions**: o claim de ativacao expira apos 10 minutos; recuperacao e feita pela reconciliação futura.
+- **Files**: `supabase/migrations/20260821110000_pagamentos_schema.sql`, `tests/db/pagamentos-schema.test.ts`.
+- **Success evidence**: `npm run db:push`; `npm run test:db -- tests/db/pagamentos-schema.test.ts` — 1 arquivo, 4 testes verdes; `npm run test:unit` — 58 arquivos, 493 testes verdes.
 
 ### T108: Publicar contratos puros, retenção e regras de garantia
 

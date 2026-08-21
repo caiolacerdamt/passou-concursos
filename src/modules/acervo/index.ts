@@ -52,6 +52,7 @@ export {
   cabecalhoDaPagina,
   estimarTokens,
   fatiarEmBlocos,
+  orcamentoPadrao,
   orcamentoVigente,
 } from "./fatiamento";
 
@@ -81,6 +82,7 @@ export {
   ProvaNaoCatalogada,
   type ResumoDaGravacao,
   type SubidorDeImagem,
+  type BlocoPendente,
   blocosParaEnviar,
   caminhoDaImagem,
   fonteCitacaoDe,
@@ -98,3 +100,22 @@ export {
   cruzarGabarito,
   lerGabarito,
 } from "./gabarito";
+
+export {
+  type Legibilidade,
+  PISO_DE_PLAUSIVEIS,
+  PISO_DE_VOGAIS,
+  medirLegibilidade,
+} from "./legibilidade";
+
+export {
+  CONSULTA_DO_ESTADO,
+  type EstadoDaProva,
+  type EstadoDoBloco,
+  type Inspecao,
+  estadoDaProva,
+  inspecionar,
+  relatorioDaInspecao,
+  relatorioDoEstado,
+  vereditoDaInspecao,
+} from "./inspecao";

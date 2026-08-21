@@ -1,4 +1,4 @@
-import { getParams } from "@/modules/config";
+import { CATALOGO, getParams } from "@/modules/config";
 
 import type { PaginaDoPdf } from "./pdf";
 
@@ -167,4 +167,28 @@ export function fatiarEmBlocos(
 
   fechar();
   return blocos;
+}
+
+/**
+ * O orcamento dos **defaults declarados no catalogo**, sem tocar no banco.
+ *
+ * Existe para a inspecao (`--acao inspecionar`), que precisa rodar com **nada**
+ * provisionado: sem banco, sem chave de IA, sem Storage. E o comando com que se
+ * testa um PDF de banca nova, e exigir provisionamento dele derrotaria o ponto.
+ *
+ * O numero pode diferir do que esta valendo em producao, se alguem trocou a
+ * chave em `configuracoes`. A diferenca muda a **contagem de blocos** do
+ * relatorio, nunca o veredito de legibilidade — que e o que a inspecao existe
+ * para responder.
+ */
+export function orcamentoPadrao(): OrcamentoDeTokens {
+  const teto = CATALOGO["param.m1.teto_tokens_por_pedido"].padrao;
+  const margem = CATALOGO["param.m1.margem_do_teto"].padrao;
+
+  return {
+    teto,
+    tetoUtil: Math.floor(teto * (1 - margem)),
+    charsPorToken: CATALOGO["param.m1.chars_por_token"].padrao,
+    paginasPorBloco: CATALOGO["param.m1.paginas_por_bloco"].padrao,
+  };
 }

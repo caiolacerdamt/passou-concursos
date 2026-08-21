@@ -16,6 +16,9 @@ import {
   enviarLote,
   lerSaida,
   montarLote,
+  chaveDaPagina,
+  chaveDoBlocoDe,
+  juntarPaginas,
   semCaracteresDeControle,
   restaurarClienteDeLotePadrao,
   textoDaResposta,
@@ -94,6 +97,24 @@ function linhaDeSaida(
     error: null,
     ...extras,
   });
+}
+
+/** Uma linha ja colhida, na forma que `juntarPaginas` consome. */
+function linhaColhida(
+  idDaLinha: string,
+  estruturado: unknown,
+  entrada: number,
+  saida: number,
+) {
+  return {
+    idDaLinha,
+    estruturado,
+    texto: JSON.stringify(estruturado),
+    erro: null,
+    tokensEntrada: entrada,
+    tokensCacheados: null,
+    tokensSaida: saida,
+  };
 }
 
 beforeEach(() => {
@@ -385,5 +406,79 @@ describe("textoDaResposta", () => {
 
   it("corpo sem saida nenhuma devolve string vazia, nao explode", () => {
     expect(textoDaResposta({})).toBe("");
+  });
+});
+
+describe("bloco repartido por pagina", () => {
+  it("a chave da pagina volta a ser a chave do bloco", () => {
+    const bloco = "extracao_pdf:3:prova:p1:bloco:1";
+    expect(chaveDoBlocoDe(chaveDaPagina(bloco, 5))).toBe(bloco);
+    // Bloco inteiro (nao repartido) passa direto.
+    expect(chaveDoBlocoDe(bloco)).toBe(bloco);
+  });
+
+  it("junta as questoes das paginas na ordem, somando os tokens", () => {
+    const bloco = "b:1";
+    const linhas = [
+      // Fora de ordem de proposito: o provedor nao promete ordem.
+      linhaColhida(chaveDaPagina(bloco, 6), { questoes: [{ numero: 12 }] }, 10, 20),
+      linhaColhida(
+        chaveDaPagina(bloco, 5),
+        { textos_base: [{ id: "T1", conteudo: "texto" }], questoes: [{ numero: 11 }] },
+        30,
+        40,
+      ),
+    ];
+
+    const junto = juntarPaginas(linhas);
+
+    expect(junto.erros).toEqual([]);
+    expect(junto.estruturado).toEqual({
+      textos_base: [{ id: "T1", conteudo: "texto" }],
+      questoes: [{ numero: 11 }, { numero: 12 }],
+    });
+    expect(junto.tokensEntrada).toBe(40);
+    expect(junto.tokensSaida).toBe(60);
+  });
+
+  it("uma pagina que falhou nao derruba as outras do bloco", () => {
+    // E o ponto inteiro de repartir: o estado anterior era perder as quatro
+    // paginas juntas, sempre.
+    const bloco = "b:1";
+    const linhas = [
+      linhaColhida(chaveDaPagina(bloco, 5), { questoes: [{ numero: 11 }] }, 10, 20),
+      {
+        idDaLinha: chaveDaPagina(bloco, 6),
+        estruturado: null,
+        texto: "",
+        erro: "o provedor encerrou a geracao no meio: content_filter",
+        tokensEntrada: null,
+        tokensCacheados: null,
+        tokensSaida: null,
+      },
+    ];
+
+    const junto = juntarPaginas(linhas);
+
+    expect((junto.estruturado as { questoes: unknown[] }).questoes).toHaveLength(1);
+    expect(junto.erros).toHaveLength(1);
+    expect(junto.erros[0]).toContain("content_filter");
+  });
+
+  it("todas as paginas falhando devolve lista vazia e os motivos", () => {
+    const junto = juntarPaginas([
+      {
+        idDaLinha: "b:1#p5",
+        estruturado: null,
+        texto: "",
+        erro: "content_filter",
+        tokensEntrada: null,
+        tokensCacheados: null,
+        tokensSaida: null,
+      },
+    ]);
+
+    expect((junto.estruturado as { questoes: unknown[] }).questoes).toEqual([]);
+    expect(junto.erros).toHaveLength(1);
   });
 });

@@ -19,6 +19,24 @@ import { TIPO_QUESTAO } from "./contrato";
  * nunca da IA (invariante nº4); a proveniencia sai da linha da prova, que um
  * humano catalogou; e o status quem escolhe e a persistencia, entre `rascunho`
  * e `em_revisao` — `publicada` nao e alcancavel a partir daqui.
+ *
+ * ## O texto-base vem separado, e quem junta e este arquivo
+ *
+ * Um grupo de questoes de interpretacao se apoia num texto (um artigo, um poema,
+ * uma reportagem em ingles). A questao sozinha, sem esse texto, e impossivel de
+ * responder — e ela vai ser servida sozinha a um aluno.
+ *
+ * A primeira versao mandava o modelo **copiar o texto dentro de cada questao**.
+ * Funcionava e custou caro: na Prova C do BB 2021, uma pagina de Lingua Inglesa
+ * com cinco questoes sobre uma reportagem a respeito de aparicoes aereas fez o
+ * modelo reescrever a reportagem cinco vezes, e o **filtro de conteudo do
+ * provedor cortou a geracao** (`incomplete_details.reason = "content_filter"`).
+ * O bloco inteiro morria, sempre no mesmo lugar — reenviar nao adiantava.
+ *
+ * Agora o modelo transcreve cada texto-base **uma vez**, em `textos_base`, e a
+ * questao aponta para ele por `texto_base_id`. **`validarBloco` faz a juncao**
+ * antes de gravar, entao a coluna `enunciado` continua autocontida e o banco nao
+ * muda. Medido: a mesma pagina passa a voltar completa, com as 5 questoes.
  */
 
 /**
@@ -56,11 +74,14 @@ export const INSTRUCAO = [
   "",
   "Pagina de redacao, de rascunho ou de instrucoes gerais nao tem questao nenhuma.",
   "",
-  "Quando um grupo de questoes se apoia num **texto-base** (um artigo, um poema,",
-  "uma tabela, um dialogo em ingles), copie esse texto-base no inicio do",
-  "`enunciado` de **cada** questao que depende dele, separado do comando da",
-  "questao por uma linha em branco. Sem isso a questao fica sem resposta possivel",
-  "fora da prova — e ela vai ser servida sozinha a um aluno.",
+  "**Texto-base.** Quando um grupo de questoes se apoia num mesmo texto de leitura",
+  "(um artigo, um poema, uma tabela, uma reportagem em ingles), transcreva esse",
+  "texto **uma unica vez** em `textos_base`, com um `id` curto seu ('T1', 'T2'), e",
+  "ponha esse `id` em `texto_base_id` de cada questao que depende dele. **NAO**",
+  "repita o texto dentro do `enunciado`: quem junta as duas partes e o sistema que",
+  "le esta resposta. Questao que nao depende de texto-base leva `texto_base_id`",
+  "nulo. A prova e transcrita para estudo, e a transcricao e literal — inclusive",
+  "quando o assunto do texto e polemico.",
 ].join("\n");
 
 /** O nome da saida estruturada, que a Responses API exige junto do schema. */
@@ -79,8 +100,20 @@ const texto = { type: "string" } as const;
 export const SCHEMA_DA_EXTRACAO: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
-  required: ["questoes"],
+  required: ["textos_base", "questoes"],
   properties: {
+    textos_base: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "conteudo"],
+        properties: {
+          id: { type: "string", description: "rotulo curto, referenciado pelas questoes" },
+          conteudo: texto,
+        },
+      },
+    },
     questoes: {
       type: "array",
       items: {
@@ -90,6 +123,7 @@ export const SCHEMA_DA_EXTRACAO: Record<string, unknown> = {
           "numero",
           "tipo_questao",
           "enunciado",
+          "texto_base_id",
           "alternativas",
           "materia_sugerida",
           "topico_sugerido",
@@ -103,6 +137,10 @@ export const SCHEMA_DA_EXTRACAO: Record<string, unknown> = {
           numero: { type: "integer", description: "o numero impresso na prova" },
           tipo_questao: { type: "string", enum: [...TIPO_QUESTAO] },
           enunciado: texto,
+          texto_base_id: {
+            type: ["string", "null"],
+            description: "o id em textos_base, ou null quando a questao nao depende de um",
+          },
           alternativas: {
             type: ["array", "null"],
             items: {
@@ -134,6 +172,7 @@ export const questaoExtraidaSchema = z
     numero: z.number().int().positive(),
     tipo_questao: z.enum(TIPO_QUESTAO),
     enunciado: naoVazio,
+    texto_base_id: z.string().nullable().optional(),
     alternativas: alternativasSchema.nullable(),
     materia_sugerida: z.string().trim(),
     topico_sugerido: z.string().trim(),
@@ -151,7 +190,10 @@ export const questaoExtraidaSchema = z
 
 export type QuestaoExtraida = z.infer<typeof questaoExtraidaSchema>;
 
+const textoBaseSchema = z.object({ id: z.string().trim().min(1), conteudo: naoVazio });
+
 export const respostaDaExtracaoSchema = z.object({
+  textos_base: z.array(z.unknown()).optional(),
   questoes: z.array(z.unknown()),
 });
 
@@ -163,13 +205,21 @@ export type BlocoValidado = {
   recusadas: QuestaoRecusada[];
 };
 
+/** Separa o texto-base do comando da questao dentro do enunciado gravado. */
+export const SEPARADOR_DO_TEXTO_BASE = "\n\n";
+
 /**
- * Confere o que o modelo devolveu para um bloco.
+ * Confere o que o modelo devolveu para um bloco, e junta o texto-base.
  *
  * **Uma questao ruim nao derruba as irmas.** Um bloco tem dezenas de questoes e
  * vem de um pedido ja pago; descartar as 39 boas porque a 40ª veio torta seria
  * jogar dinheiro fora e adiar o acervo. A recusada vai nomeada para o log, que e
  * o que permite o operador ir olhar aquela questao na prova.
+ *
+ * `texto_base_id` que nao existe em `textos_base` **nao derruba a questao**: ela
+ * entra sem o texto. O comando da questao continua sendo o que a banca escreveu,
+ * e questao de interpretacao sem o texto e problema da revisao humana (SPEC 10),
+ * nao motivo para jogar fora o que foi pago.
  *
  * @throws quando a **resposta inteira** nao tem a forma esperada — ai nao ha o
  *         que aproveitar, e o bloco volta para a fila.
@@ -180,6 +230,12 @@ export function validarBloco(bruto: unknown): BlocoValidado {
     throw new Error(
       "a extracao nao devolveu { questoes: [...] }: a resposta do bloco inteiro e inaproveitavel",
     );
+  }
+
+  const textos = new Map<string, string>();
+  for (const cru of envelope.data.textos_base ?? []) {
+    const conferido = textoBaseSchema.safeParse(cru);
+    if (conferido.success) textos.set(conferido.data.id, conferido.data.conteudo);
   }
 
   const aceitas: QuestaoExtraida[] = [];
@@ -204,10 +260,38 @@ export function validarBloco(bruto: unknown): BlocoValidado {
       continue;
     }
 
-    aceitas.push(conferida.data);
+    aceitas.push(comTextoBase(conferida.data, textos));
   }
 
   return { aceitas, recusadas };
+}
+
+/**
+ * Junta o texto-base ao enunciado.
+ *
+ * A juncao acontece **aqui**, e nao no modelo, porque foi pedir ao modelo que
+ * ele repetisse o texto que fez o filtro de conteudo do provedor cortar a
+ * geracao — e porque repetir o mesmo texto cinco vezes e cinco vezes o custo de
+ * saida. O resultado gravado e identico: `enunciado` autocontido.
+ */
+function comTextoBase(
+  questao: QuestaoExtraida,
+  textos: ReadonlyMap<string, string>,
+): QuestaoExtraida {
+  const id = questao.texto_base_id;
+  if (id == null) return questao;
+
+  const base = textos.get(id);
+  if (base === undefined) return questao;
+
+  // Modelo que ignorou a instrucao e copiou o texto assim mesmo nao vira
+  // enunciado com o texto duas vezes.
+  if (questao.enunciado.includes(base.slice(0, 120))) return questao;
+
+  return {
+    ...questao,
+    enunciado: base + SEPARADOR_DO_TEXTO_BASE + questao.enunciado,
+  };
 }
 
 function numeroDeclarado(crua: unknown): number | null {

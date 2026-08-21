@@ -23,32 +23,46 @@ import { createClient } from "@supabase/supabase-js";
 import { Client } from "pg";
 
 import {
+  type BlocoDaProva,
+  type BlocoPendente,
   type ImagemDoPdf,
   type OrcamentoDeTokens,
+  type PdfLido,
   type SubidorDeImagem,
   INSTRUCAO_DA_EXTRACAO,
   NOME_DO_FORMATO,
   SCHEMA_DA_EXTRACAO,
   blocosParaEnviar,
+  cabecalhoDaPagina,
+  estadoDaProva,
   estimarTokens,
   fatiarEmBlocos,
   gravarQuestoes,
+  inspecionar,
   lerCatalogo,
   lerPdf,
   lerProva,
   marcarProva,
+  medirLegibilidade,
+  orcamentoPadrao,
   orcamentoVigente,
   registrarBlocos,
+  relatorioDaInspecao,
+  relatorioDoEstado,
   validarBloco,
 } from "@/modules/acervo";
 import { definirLeitorDeConfig, getParam } from "@/modules/config";
 import {
   type ClienteSql,
+  type PedidoDeLote,
+  chaveDaPagina,
   chaveDoBloco,
+  chaveDoBlocoDe,
   colherLote,
   enviarLote,
   geracaoJaExiste,
   definirRepositorioDeIa,
+  juntarPaginas,
   leitorDeConfigPorPg,
   montarLote,
   registrarGeracaoDeLote,
@@ -62,7 +76,14 @@ import { encerrar, iniciarSentry, reportar } from "./sentry-node.mjs";
 
 const TAREFA = "extracao_pdf" as const;
 
-export type Acao = "enviar" | "colher";
+export type Acao = "enviar" | "colher" | "inspecionar" | "estado";
+
+const ACOES: readonly Acao[] = ["enviar", "colher", "inspecionar", "estado"];
+
+export const USO =
+  "uso: ingestao-de-prova --acao enviar|colher|inspecionar|estado " +
+  "--prova <uuid> --pdf <arquivo.pdf>   " +
+  "(inspecionar dispensa --prova; estado dispensa --pdf)";
 
 export type Argumentos = {
   provaId: string;
@@ -70,7 +91,6 @@ export type Argumentos = {
   acao: Acao;
 };
 
-/** `--prova <uuid> --pdf <arquivo> --acao enviar|colher`. */
 export function lerArgumentos(argv: readonly string[]): Argumentos {
   const valores = new Map<string, string>();
   for (let i = 0; i < argv.length; i += 1) {
@@ -82,11 +102,12 @@ export function lerArgumentos(argv: readonly string[]): Argumentos {
   const pdf = valores.get("pdf")?.trim() ?? "";
   const acao = (valores.get("acao")?.trim() ?? "") as Acao;
 
-  if (provaId === "" || pdf === "" || (acao !== "enviar" && acao !== "colher")) {
-    throw new Error(
-      "uso: ingestao-de-prova --prova <uuid> --pdf <arquivo.pdf> --acao enviar|colher",
-    );
-  }
+  if (!ACOES.includes(acao)) throw new Error(USO);
+  // `inspecionar` e um ensaio: le o PDF, nao encosta no banco nem no provedor,
+  // e por isso nao exige prova catalogada. `estado` e o oposto — nao le PDF.
+  if (acao !== "inspecionar" && provaId === "") throw new Error(USO);
+  if (acao !== "estado" && pdf === "") throw new Error(USO);
+
   return { provaId, pdf, acao };
 }
 
@@ -113,6 +134,62 @@ export function custoFixoDoPedido(orcamento: OrcamentoDeTokens): number {
 }
 
 /**
+ * O pedido (ou os pedidos) de um bloco.
+ *
+ * Na **primeira** ida o bloco vai inteiro: e um pedido so, o prompt caching
+ * aproveita o prefixo, e e o caminho barato. Na **segunda**, depois de ter
+ * falhado, ele vai **uma pagina por linha**.
+ *
+ * Isso nao e teimosia com o provedor: e a unica coisa que funciona. O filtro de
+ * conteudo da OpenAI cortou a geracao de um bloco de quatro paginas da Prova C
+ * do BB 2021 — a secao de Lingua Inglesa, cujo texto de apoio era uma reportagem
+ * sobre aparicoes aereas. Medido pagina a pagina: **cada uma passa sozinha e
+ * todas falham juntas**, sempre no mesmo lugar. Reenviar igual repetiria a falha
+ * para sempre, e a prova nunca fecharia.
+ *
+ * Repartir custa mais: some o desconto do prefixo cacheado e sao N pedidos em
+ * vez de um. E o preco de nao perder 15 questoes de uma prova, e so acontece na
+ * segunda tentativa.
+ */
+export function pedidosDoBloco(
+  provaId: string,
+  bloco: BlocoDaProva,
+  pdf: PdfLido,
+  pendente: BlocoPendente,
+): PedidoDeLote[] {
+  const chave = chaveDoBloco(TAREFA, provaId, bloco.indice);
+  const formato = { nome: NOME_DO_FORMATO, schema: SCHEMA_DA_EXTRACAO };
+
+  if (pendente.status !== "falhou") {
+    return [
+      {
+        idDaLinha: chave,
+        pedido: {
+          instrucao: INSTRUCAO_DA_EXTRACAO,
+          entrada: bloco.texto,
+          formato,
+        },
+      },
+    ];
+  }
+
+  return pdf.paginas
+    .filter(
+      (pagina) =>
+        pagina.numero >= bloco.primeiraPagina && pagina.numero <= bloco.ultimaPagina,
+    )
+    .map((pagina) => ({
+      idDaLinha: chaveDaPagina(chave, pagina.numero),
+      pedido: {
+        instrucao: INSTRUCAO_DA_EXTRACAO,
+        entrada: `${cabecalhoDaPagina(pagina.numero)}\n${pagina.texto}`,
+        formato,
+      },
+    }));
+}
+
+
+/**
  * Le o PDF e manda os blocos que ainda nao foram mandados.
  *
  * A **primeira** decisao e a do BANCO-12, e ela vem antes de qualquer gasto: PDF
@@ -128,12 +205,24 @@ export async function enviar(
   await lerProva(cliente, argumentos.provaId);
   const pdf = lerPdf(bruto);
 
-  if (!pdf.temTextoNativo) {
+  // BANCO-12 AC3 tem **duas** metades. A primeira e a prova escaneada: nao sai
+  // texto nenhum. A segunda e o caso pior — fonte com codificacao propria, que
+  // devolve muito texto e nenhuma palavra. Sem a segunda, o lixo passaria pela
+  // porta e viraria conta a pagar, porque "tem texto" seria literalmente verdade.
+  const legibilidade = medirLegibilidade(
+    pdf.paginas.map((pagina) => pagina.texto).join("\n"),
+  );
+
+  if (!pdf.temTextoNativo || !legibilidade.legivel) {
+    const porque = pdf.temTextoNativo
+      ? `o texto extraido nao e legivel: ${legibilidade.motivo}`
+      : `PDF sem texto nativo em nenhuma das ${pdf.totalDePaginas} paginas`;
+
     await marcarProva(
       cliente,
       argumentos.provaId,
       "precisa_ocr",
-      `PDF sem texto nativo em nenhuma das ${pdf.totalDePaginas} paginas (BANCO-12).`,
+      `${porque} (BANCO-12).`,
     );
     return {
       paginas: pdf.totalDePaginas,
@@ -171,14 +260,9 @@ export async function enviar(
 
   const lote = await montarLote(
     TAREFA,
-    novos.map((indice: number) => ({
-      idDaLinha: chaveDoBloco(TAREFA, argumentos.provaId, indice),
-      pedido: {
-        instrucao: INSTRUCAO_DA_EXTRACAO,
-        entrada: blocos[indice].texto,
-        formato: { nome: NOME_DO_FORMATO, schema: SCHEMA_DA_EXTRACAO },
-      },
-    })),
+    novos.flatMap((pendente) =>
+      pedidosDoBloco(argumentos.provaId, blocos[pendente.bloco], pdf, pendente),
+    ),
   );
 
   const loteProvedor = await enviarLote(lote);
@@ -187,12 +271,26 @@ export async function enviar(
   // la a matriz de configuracao pode ter mudado de modelo sem deploy (AD-078).
   // Registrar na auditoria o modelo de **hoje** diria que o bloco nasceu de um
   // modelo que nao o produziu.
-  await cliente.query(
-    `update public.prova_lote
-        set status = 'enviado', lote_provedor = $3, destino = $4::jsonb, erro = null
-      where prova_id = $1 and bloco = any($2)`,
-    [argumentos.provaId, novos, loteProvedor, JSON.stringify(lote.destino)],
-  );
+  // A `chave_dedup` e **regravada**, e nao so o status. Ela embute a versao do
+  // prompt (IA-14), e um bloco pendente pode ter nascido numa versao anterior —
+  // foi o que aconteceu quando a instrucao subiu para a v3. Sem regravar, o
+  // `custom_id` que sai no arquivo seria o novo e o guardado no banco seria o
+  // velho, e a colheita nao acharia a resposta de volta.
+  for (const pendente of novos) {
+    await cliente.query(
+      `update public.prova_lote
+          set status = 'enviado', lote_provedor = $3, destino = $4::jsonb,
+              erro = null, chave_dedup = $5
+        where prova_id = $1 and bloco = $2`,
+      [
+        argumentos.provaId,
+        pendente.bloco,
+        loteProvedor,
+        JSON.stringify(lote.destino),
+        chaveDoBloco(TAREFA, argumentos.provaId, pendente.bloco),
+      ],
+    );
+  }
   await marcarProva(cliente, argumentos.provaId, "extraindo");
 
   return {
@@ -288,20 +386,55 @@ export async function colher(
       continue;
     }
 
-    const porChave = new Map(colheita.linhas.map((linha) => [linha.idDaLinha, linha]));
+    // Agrupado pela chave do **bloco**, e nao pela da linha: um bloco reenviado
+    // volta repartido em varias linhas, uma por pagina. `juntarPaginas` remonta
+    // o resultado; bloco inteiro tem uma linha so e passa direto.
+    const porChave = new Map<string, typeof colheita.linhas>();
+    for (const linha of colheita.linhas) {
+      const chave = chaveDoBlocoDe(linha.idDaLinha);
+      porChave.set(chave, [...(porChave.get(chave) ?? []), linha]);
+    }
 
     for (const bloco of blocos) {
-      const linha = porChave.get(bloco.chave);
-      if (linha === undefined || linha.erro !== null) {
+      const partes = porChave.get(bloco.chave) ?? [];
+      if (partes.length === 0) {
         await marcarBlocos(
           cliente,
           argumentos.provaId,
           [bloco],
           "falhou",
-          linha?.erro ?? "o lote voltou sem a linha deste bloco",
+          "o lote voltou sem a linha deste bloco",
         );
         continue;
       }
+
+      const junto = juntarPaginas(partes);
+      const questoes = (junto.estruturado as { questoes: unknown[] }).questoes;
+
+      // Nada aproveitavel: o bloco volta para a fila. Uma pagina que falhou
+      // entre varias **nao** derruba as outras — o que veio entra, e o que
+      // faltou aparece no log.
+      if (questoes.length === 0 && junto.erros.length > 0) {
+        await marcarBlocos(
+          cliente,
+          argumentos.provaId,
+          [bloco],
+          "falhou",
+          junto.erros.join(" | "),
+        );
+        continue;
+      }
+      for (const erro of junto.erros) {
+        console.warn(`[ingestao] bloco ${bloco.bloco}: ${erro}`);
+      }
+
+      const linha = {
+        ...partes[0],
+        estruturado: junto.estruturado,
+        tokensEntrada: junto.tokensEntrada,
+        tokensCacheados: junto.tokensCacheados,
+        tokensSaida: junto.tokensSaida,
+      };
 
       try {
         const validado = validarBloco(linha.estruturado);
@@ -445,10 +578,19 @@ export function ambienteDoScript(
  */
 export function motivoDeParada(
   ambiente: Record<string, string | undefined>,
+  acao: Acao = "enviar",
 ): string | null {
+  // `inspecionar` roda com **nada** provisionado, e isso e o desenho: e o
+  // comando com que se testa um PDF de banca nova, e exigir chave dele
+  // derrotaria o ponto — ninguem provisiona para descobrir se vale provisionar.
+  if (acao === "inspecionar") return null;
+
   if (!ambiente.DATABASE_URL?.trim()) {
     return "DATABASE_URL nao esta definida. Ver docs/SEGREDOS.md.";
   }
+  // `estado` so le a nossa tabela. Nao chama modelo e nao sobe imagem.
+  if (acao === "estado") return null;
+
   if (!ambiente.OPENAI_API_KEY?.trim()) {
     return "OPENAI_API_KEY nao esta definida: nenhuma prova e extraida sem ela.";
   }
@@ -493,12 +635,8 @@ export async function executar(
     subirImagem?: SubidorDeImagem;
   } = {},
 ): Promise<number> {
-  const motivo = motivoDeParada(ambiente);
-  if (motivo !== null) {
-    console.error(`[ingestao] ${motivo}`);
-    return 1;
-  }
-
+  // A acao vem antes da conferencia de provisionamento: o que cada uma exige e
+  // diferente, e `inspecionar` nao exige nada.
   let argumentos: Argumentos;
   try {
     argumentos = lerArgumentos(argv);
@@ -507,13 +645,33 @@ export async function executar(
     return 1;
   }
 
-  const lerArquivo = opcoes.lerArquivo ?? readFileSync;
-  let bruto: Buffer;
-  try {
-    bruto = lerArquivo(argumentos.pdf);
-  } catch {
-    console.error(`[ingestao] nao achei o PDF em ${argumentos.pdf}`);
+  const motivo = motivoDeParada(ambiente, argumentos.acao);
+  if (motivo !== null) {
+    console.error(`[ingestao] ${motivo}`);
     return 1;
+  }
+
+  const lerArquivo = opcoes.lerArquivo ?? readFileSync;
+  let bruto: Buffer = Buffer.alloc(0);
+  if (argumentos.acao !== "estado") {
+    try {
+      bruto = lerArquivo(argumentos.pdf);
+    } catch {
+      console.error(`[ingestao] nao achei o PDF em ${argumentos.pdf}`);
+      return 1;
+    }
+  }
+
+  // `inspecionar` termina aqui: e um ensaio, e ensaio nao abre conexao, nao pede
+  // chave e nao gasta. E por isso que ele e o primeiro comando a rodar quando
+  // chega uma prova de banca nova.
+  if (argumentos.acao === "inspecionar") {
+    const orcamento = orcamentoPadrao();
+    const relatorio = relatorioDaInspecao(
+      inspecionar(bruto, orcamento, custoFixoDoPedido(orcamento)),
+    );
+    console.log(`[ingestao] inspecao de ${argumentos.pdf}:\n${relatorio}`);
+    return 0;
   }
 
   await iniciarSentry();
@@ -528,7 +686,9 @@ export async function executar(
     definirLeitorDeConfig(leitorDeConfigPorPg(cliente) as never);
     definirRepositorioDeIa(repositorioPorPg(cliente));
 
-    if (argumentos.acao === "enviar") {
+    if (argumentos.acao === "estado") {
+      console.log(relatorioDoEstado(await estadoDaProva(cliente, argumentos.provaId)));
+    } else if (argumentos.acao === "enviar") {
       const resumo = await enviar(cliente, argumentos, bruto);
       if (resumo.precisaOcr) {
         console.warn(

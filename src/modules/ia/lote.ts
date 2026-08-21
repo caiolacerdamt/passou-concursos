@@ -386,3 +386,93 @@ function tokensDe(uso: unknown) {
     tokensSaida: u?.output_tokens ?? null,
   };
 }
+
+/**
+ * O separador entre a chave do bloco e a pagina, quando um bloco vai repartido.
+ *
+ * Um bloco que falhou volta ao provedor **uma pagina por linha**, e as linhas
+ * carregam a chave do bloco com este sufixo. A colheita agrupa pelo prefixo, de
+ * volta num resultado so.
+ *
+ * Existe por um caso real: o filtro de conteudo da OpenAI cortou a geracao de um
+ * bloco de quatro paginas da Prova C do BB 2021 — a secao de Lingua Ingles a,
+ * cujo texto de apoio era uma reportagem sobre aparicoes aereas. Medido: as
+ * paginas passam **uma a uma** e falham **juntas**, sempre. Reenviar igual
+ * repetiria a falha para sempre.
+ */
+export const SUFIXO_DE_PAGINA = "#p";
+
+/** A chave de uma pagina dentro de um bloco repartido. */
+export function chaveDaPagina(chaveDoBloco: string, pagina: number): string {
+  return `${chaveDoBloco}${SUFIXO_DE_PAGINA}${pagina}`;
+}
+
+/** De volta a chave do bloco, repartida ou nao. */
+export function chaveDoBlocoDe(idDaLinha: string): string {
+  const corte = idDaLinha.indexOf(SUFIXO_DE_PAGINA);
+  return corte === -1 ? idDaLinha : idDaLinha.slice(0, corte);
+}
+
+/**
+ * Junta as linhas de um bloco repartido num resultado so.
+ *
+ * As listas de `questoes` e `textos_base` sao concatenadas na ordem das paginas.
+ * **Uma pagina que falhou nao derruba as outras**: o bloco entra com o que deu,
+ * e o que faltou aparece no log como questao ausente — melhor do que perder a
+ * pagina inteira de novo, que e o estado de onde se veio.
+ */
+export function juntarPaginas(linhas: readonly LinhaColhida[]): {
+  estruturado: unknown;
+  erros: string[];
+  tokensEntrada: number | null;
+  tokensCacheados: number | null;
+  tokensSaida: number | null;
+} {
+  const questoes: unknown[] = [];
+  const textosBase: unknown[] = [];
+  const erros: string[] = [];
+  let entrada: number | null = null;
+  let cacheados: number | null = null;
+  let saida: number | null = null;
+
+  const somar = (a: number | null, b: number | null) =>
+    a === null && b === null ? null : (a ?? 0) + (b ?? 0);
+
+  for (const linha of [...linhas].sort(ordemDaPagina)) {
+    entrada = somar(entrada, linha.tokensEntrada);
+    cacheados = somar(cacheados, linha.tokensCacheados);
+    saida = somar(saida, linha.tokensSaida);
+
+    if (linha.erro !== null) {
+      erros.push(`${linha.idDaLinha}: ${linha.erro}`);
+      continue;
+    }
+
+    const corpo = linha.estruturado as
+      | { questoes?: unknown; textos_base?: unknown }
+      | null;
+    if (corpo === null || !Array.isArray(corpo.questoes)) {
+      erros.push(`${linha.idDaLinha}: a pagina nao devolveu { questoes: [...] }`);
+      continue;
+    }
+
+    questoes.push(...corpo.questoes);
+    if (Array.isArray(corpo.textos_base)) textosBase.push(...corpo.textos_base);
+  }
+
+  return {
+    estruturado: { textos_base: textosBase, questoes },
+    erros,
+    tokensEntrada: entrada,
+    tokensCacheados: cacheados,
+    tokensSaida: saida,
+  };
+}
+
+function ordemDaPagina(a: LinhaColhida, b: LinhaColhida): number {
+  const numero = (id: string) => {
+    const corte = id.indexOf(SUFIXO_DE_PAGINA);
+    return corte === -1 ? 0 : Number(id.slice(corte + SUFIXO_DE_PAGINA.length));
+  };
+  return numero(a.idDaLinha) - numero(b.idDaLinha);
+}

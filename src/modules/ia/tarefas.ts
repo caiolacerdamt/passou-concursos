@@ -42,10 +42,12 @@ export function existeTarefa(nome: string): nome is Tarefa {
  * chave de dedup — e um rotulo, nao uma conta.
  */
 export const VERSAO_DO_PROMPT: Record<Tarefa, string> = {
-  // v2: regras de PDF em duas colunas (hifen de quebra, cabecalho repetido,
-  // numero de linha do texto de apoio) e texto-base copiado em cada questao.
-  // Medido nas provas reais do BB 2021 (SPEC 09).
-  extracao_pdf: "2",
+  // v3: o texto-base vira campo proprio (`textos_base` + `texto_base_id`) e
+  // quem junta e o nosso codigo. A v2 mandava o modelo repetir o texto dentro
+  // de cada questao, e isso fez o filtro de conteudo do provedor cortar a
+  // geracao de uma pagina de Lingua Inglesa da Prova C do BB 2021 — sempre no
+  // mesmo lugar, reenviar nao adiantava. Medido na SPEC 09.
+  extracao_pdf: "3",
   explicacao: "1",
   verificacao_quantitativa: "1",
   classificacao_topico: "1",

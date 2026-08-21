@@ -140,10 +140,16 @@ export async function registrarBlocos(
 }
 
 export const CONSULTA_DOS_BLOCOS_PENDENTES = `
-  select bloco from public.prova_lote
+  select bloco, status::text as status from public.prova_lote
    where prova_id = $1 and status in ('montado', 'falhou')
    order by bloco
 `;
+
+export type BlocoPendente = {
+  bloco: number;
+  /** `falhou` = ja foi ao provedor uma vez e voltou sem nada aproveitavel. */
+  status: string;
+};
 
 /**
  * Quais blocos precisam ir ao provedor agora.
@@ -161,9 +167,12 @@ export const CONSULTA_DOS_BLOCOS_PENDENTES = `
 export async function blocosParaEnviar(
   cliente: ClienteSql,
   provaId: string,
-): Promise<number[]> {
+): Promise<BlocoPendente[]> {
   const { rows } = await cliente.query(CONSULTA_DOS_BLOCOS_PENDENTES, [provaId]);
-  return rows.map((linha) => Number(linha.bloco));
+  return rows.map((linha) => ({
+    bloco: Number(linha.bloco),
+    status: String(linha.status),
+  }));
 }
 
 // ── Questoes ────────────────────────────────────────────────────────────────

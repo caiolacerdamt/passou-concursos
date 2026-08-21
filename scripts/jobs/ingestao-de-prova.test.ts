@@ -28,7 +28,26 @@ import {
 } from "./ingestao-de-prova.mts";
 
 /** Um PDF sintetico: as paginas que se pedir, com o texto que se pedir. */
-function pdfDeTeste(paginas: string[]): Buffer {
+/**
+ * Enche a pagina ate parecer pagina de prova.
+ *
+ * A trava de legibilidade (BANCO-12) exige uma amostra minima para poder medir,
+ * e uma pagina real tem milhares de caracteres. Testar com "QUESTAO 1" faria os
+ * testes passarem por um caminho que nenhuma prova percorre.
+ */
+function corpoDeProva(cabecalho: string): string {
+  // Texto que ja tem tamanho de pagina entra como veio: e assim que o teste da
+  // trava de legibilidade consegue montar uma pagina cheia e ilegivel.
+  if (cabecalho.length >= 400) return cabecalho;
+
+  const enchimento =
+    "O aluno deve assinalar a alternativa correta de acordo com o " +
+    "enunciado apresentado, considerando as regras vigentes. ";
+  return `${cabecalho} ${enchimento.repeat(6)}`;
+}
+
+function pdfDeTeste(cabecalhos: string[]): Buffer {
+  const paginas = cabecalhos.map(corpoDeProva);
   const pedacos: Buffer[] = [Buffer.from("%PDF-1.7\n", "latin1")];
   const ids = paginas.map((_, i) => 3 + i * 2);
 
@@ -57,8 +76,11 @@ function pdfDeTeste(paginas: string[]): Buffer {
 
 /** Uma pagina que nao mostra texto nenhum: e o que um scanner produz. */
 function pdfEscaneado(): Buffer {
-  const bruto = pdfDeTeste(["x"]);
-  return Buffer.from(bruto.toString("latin1").replace("BT (x) Tj ET", "0 0 1 1 re f"), "latin1");
+  const bruto = pdfDeTeste(["x"]).toString("latin1");
+  // Troca o operador de texto por um desenho: a pagina existe e nao mostra
+  // letra nenhuma, que e o que um scanner produz.
+  const semTexto = bruto.replace(/BT \([\s\S]*?\) Tj ET/, "0 0 612 792 re f");
+  return Buffer.from(semTexto, "latin1");
 }
 
 const ARGUMENTOS: Argumentos = {
@@ -362,10 +384,15 @@ describe("enviar — o caminho normal", () => {
 
     expect(resumo.enviados).toBe(1);
     expect(lote.enviados).toBe(1);
-    // So o bloco 1 foi ao provedor, e o `erro` dele foi limpo junto.
-    const enviado = consultas.find((c) => c.texto.includes("set status = 'enviado'"));
-    expect(enviado?.valores?.[1]).toEqual([1]);
-    expect(enviado?.texto).toContain("erro = null");
+    // So o bloco 1 foi ao provedor, o `erro` dele foi limpo e a `chave_dedup`
+    // foi regravada — ela embute a versao do prompt, que pode ter mudado desde
+    // que o bloco nasceu.
+    const enviados = consultas.filter((c) => c.texto.includes("set status = 'enviado'"));
+    expect(enviados).toHaveLength(1);
+    expect(enviados[0].valores?.[1]).toBe(1);
+    expect(enviados[0].texto).toContain("erro = null");
+    expect(enviados[0].texto).toContain("chave_dedup = $5");
+    expect(String(enviados[0].valores?.[4])).toContain("bloco:1");
   });
 
   it("nada pendente nao chama o provedor", async () => {
@@ -597,5 +624,110 @@ describe("executar", () => {
     );
 
     expect(codigo).toBe(1);
+  });
+});
+
+describe("--acao inspecionar — o ensaio que nao gasta nada", () => {
+  it("roda com o ambiente vazio: sem banco, sem chave de IA, sem Storage", async () => {
+    // E o comando com que se testa um PDF de banca nova. Exigir provisionamento
+    // dele derrotaria o ponto: ninguem provisiona para descobrir se vale.
+    const codigo = await executar({}, ["--acao", "inspecionar", "--pdf", "a.pdf"], {
+      abrirConexao: () => {
+        throw new Error("inspecionar nao pode abrir conexao");
+      },
+      lerArquivo: () => pdfDeTeste(["QUESTAO 1", "QUESTAO 2"]),
+    });
+
+    expect(codigo).toBe(0);
+  });
+
+  it("nao chama o provedor", async () => {
+    const lote = clienteDeLoteFalso();
+
+    await executar({}, ["--acao", "inspecionar", "--pdf", "a.pdf"], {
+      abrirConexao: () => {
+        throw new Error("inspecionar nao pode abrir conexao");
+      },
+      lerArquivo: () => pdfDeTeste(["QUESTAO 1"]),
+    });
+
+    expect(lote.enviados).toBe(0);
+    expect(lote.jsonl).toEqual([]);
+  });
+
+  it("dispensa --prova, mas exige --pdf", () => {
+    expect(lerArgumentos(["--acao", "inspecionar", "--pdf", "a.pdf"]).provaId).toBe("");
+    expect(() => lerArgumentos(["--acao", "inspecionar"])).toThrow(/uso:/);
+  });
+});
+
+describe("--acao estado", () => {
+  it("dispensa --pdf e nao exige chave de IA nem Storage", () => {
+    expect(lerArgumentos(["--acao", "estado", "--prova", "p1"]).pdf).toBe("");
+    expect(motivoDeParada({ DATABASE_URL: "x" }, "estado")).toBeNull();
+    expect(motivoDeParada({}, "estado")).toContain("DATABASE_URL");
+  });
+
+  it("`inspecionar` nao exige nem o banco", () => {
+    expect(motivoDeParada({}, "inspecionar")).toBeNull();
+  });
+
+  it("le os blocos da prova sem ler PDF nenhum", async () => {
+    const { cliente, consultas } = bancoFalso();
+
+    const codigo = await executar(
+      { DATABASE_URL: "postgres://x" },
+      ["--acao", "estado", "--prova", "prova-1"],
+      {
+        abrirConexao: () => cliente,
+        lerArquivo: () => {
+          throw new Error("estado nao pode ler PDF");
+        },
+      },
+    );
+
+    expect(codigo).toBe(0);
+    expect(consultas.some((c) => c.texto.includes("from public.prova_lote"))).toBe(true);
+  });
+});
+
+describe("enviar — a trava de texto ilegivel (BANCO-12 AC3)", () => {
+  it("PDF com texto que nao forma palavra cai em precisa_ocr sem gastar", async () => {
+    // O caso pior: sai **muito** texto e nenhuma palavra. Sem esta trava,
+    // "tem texto nativo" seria verdade e o lixo viraria conta a pagar.
+    // Consoantes e pontuacao: todo caractere e "plausivel", e nao ha vogal
+    // nenhuma. E o que uma fonte com codificacao propria produz — e e
+    // PDF-safe, ao contrario de parenteses soltos.
+    const lixo = "bcdfg hjklm npqrs tvwxz. ".repeat(25);
+    const { cliente, consultas } = bancoFalso();
+    const lote = clienteDeLoteFalso();
+
+    const resumo = await enviar(cliente, ARGUMENTOS, pdfDeTeste([lixo]));
+
+    expect(resumo.precisaOcr).toBe(true);
+    expect(lote.enviados).toBe(0);
+    const marca = consultas.find((c) => c.texto.includes("update public.provas"));
+    expect(marca?.valores?.[1]).toBe("precisa_ocr");
+    // O motivo distingue "ilegivel" de "escaneada": a acao do operador e outra.
+    expect(String(marca?.valores?.[2])).toContain("nao e legivel");
+  });
+
+  it("prova com secao em ingles passa: a medida e de escrita, nao de idioma", async () => {
+    // A secao de Lingua Inglesa e prova legitima. Reprova-la mandaria a prova
+    // inteira para uma fila de OCR que nem existe no MVP.
+    const { cliente } = bancoFalso();
+    const lote = clienteDeLoteFalso();
+
+    const resumo = await enviar(
+      cliente,
+      ARGUMENTOS,
+      pdfDeTeste([
+        "QUESTION 11 American intelligence officials have found no evidence that aerial phenomena observed by Navy pilots are alien spacecraft, but they cannot explain the unusual movements",
+        "QUESTION 12 In the second paragraph of the text the highlighted expression is associated with the idea of addition and consequence in the sentence",
+      ]),
+    );
+
+    expect(resumo.precisaOcr).toBe(false);
+    expect(lote.enviados).toBe(1);
   });
 });

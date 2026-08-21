@@ -5,6 +5,7 @@ import { expect, it } from "vitest";
 import { comTransacaoRevertida } from "./conexao";
 import { criarMatricula, criarUsuario, idDoProdutoUnico } from "./conta";
 import { descreveComBanco } from "./setup";
+import { hashTokenDeResultado } from "@/modules/pagamentos/resultado-token";
 
 async function criarPagamento(cliente: Client, estado = "pendente") {
   const usuario = await criarUsuario(cliente);
@@ -36,6 +37,7 @@ descreveComBanco("schema de pagamentos", () => {
           "pagamento_transicoes",
           "faturas",
           "pagamento_pendencias",
+          "pagamento_resultado_tokens",
         ]],
       );
       expect(tabelas.map((linha) => linha.relname)).toEqual([
@@ -43,6 +45,7 @@ descreveComBanco("schema de pagamentos", () => {
         "pagamento_aceites",
         "pagamento_eventos",
         "pagamento_pendencias",
+        "pagamento_resultado_tokens",
         "pagamento_transicoes",
         "pagamentos",
       ]);
@@ -60,9 +63,64 @@ descreveComBanco("schema de pagamentos", () => {
           "pagamento_transicoes",
           "faturas",
           "pagamento_pendencias",
+          "pagamento_resultado_tokens",
         ]],
       );
       expect(rls.every((linha) => linha.relrowsecurity)).toBe(true);
+    });
+  });
+
+  it("guarda somente o hash da capability e rejeita resultado expirado", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const pagamento = await criarPagamento(cliente);
+      const token = "A".repeat(43);
+      const hash = hashTokenDeResultado(token);
+
+      await cliente.query(
+        `insert into public.pagamento_resultado_tokens
+           (pagamento_id, token_hash, expira_em)
+         values ($1, $2, now() + interval '48 hours')`,
+        [pagamento, hash],
+      );
+
+      const { rows: armazenado } = await cliente.query<{ token_hash: string }>(
+        `select token_hash
+           from public.pagamento_resultado_tokens
+          where pagamento_id = $1`,
+        [pagamento],
+      );
+      expect(armazenado[0].token_hash).toBe(hash);
+      expect(armazenado[0].token_hash).not.toContain(token);
+
+      const { rows: valido } = await cliente.query<{ pagamento_id: string }>(
+        `select pagamento_id
+           from public.pagamento_resultado_tokens
+          where token_hash = $1 and expira_em > now()`,
+        [hash],
+      );
+      expect(valido).toEqual([{ pagamento_id: pagamento }]);
+
+      const { rows: desconhecido } = await cliente.query(
+        `select pagamento_id
+           from public.pagamento_resultado_tokens
+          where token_hash = $1 and expira_em > now()`,
+        [hashTokenDeResultado("B".repeat(43))],
+      );
+      expect(desconhecido).toEqual([]);
+
+      await cliente.query(
+        `update public.pagamento_resultado_tokens
+            set expira_em = now() - interval '1 second'
+          where pagamento_id = $1`,
+        [pagamento],
+      );
+      const { rows: expirado } = await cliente.query(
+        `select pagamento_id
+           from public.pagamento_resultado_tokens
+          where token_hash = $1 and expira_em > now()`,
+        [hash],
+      );
+      expect(expirado).toEqual([]);
     });
   });
 
@@ -97,6 +155,32 @@ descreveComBanco("schema de pagamentos", () => {
           [pagamento],
         ),
       ).rejects.toThrow(/transicao de pagamento invalida/);
+    });
+  });
+
+  it("só a RPC de reconciliação permite expirada para confirmada", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const pagamento = await criarPagamento(cliente, "expirada");
+
+      await cliente.query("savepoint recon_guard");
+      await expect(
+        cliente.query(
+          "select public.mudar_estado_pagamento($1, 'confirmada'::public.pagamento_estado, 'atalho')",
+          [pagamento],
+        ),
+      ).rejects.toThrow(/transicao de pagamento invalida/);
+      await cliente.query("rollback to savepoint recon_guard");
+
+      await cliente.query(
+        "select public.reabrir_pagamento_expirado_reconciliacao($1, 'reconciliacao_pagamento_pago')",
+        [pagamento],
+      );
+
+      const { rows } = await cliente.query<{ estado: string }>(
+        "select estado::text from public.pagamentos where id = $1",
+        [pagamento],
+      );
+      expect(rows[0].estado).toBe("confirmada");
     });
   });
 
@@ -361,6 +445,58 @@ descreveComBanco("schema de pagamentos", () => {
         fatura_estado: "pendente",
       });
       expect(rows[0].reembolsado_em).not.toBeNull();
+    });
+  });
+
+  it("fecha pagamento e matrícula na mesma RPC e permite retry idempotente", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const matricula = await criarMatricula(cliente, aluno);
+      const pagamento = await criarPagamento(cliente, "ativada");
+      await cliente.query(
+        "update public.pagamentos set user_id = $2, matricula_id = $3 where id = $1",
+        [pagamento, aluno, matricula.id],
+      );
+
+      await cliente.query(
+        `select public.confirmar_reembolso_pagamento(
+          $1, $2, 'PIX'::public.pagamento_meio,
+          '2026-08-21T12:00:00Z'::timestamptz, 'teste_reembolso'
+        )`,
+        [pagamento, aluno],
+      );
+
+      let { rows } = await cliente.query<{ pagamento: string; matricula: string }>(
+        `select p.estado::text as pagamento, m.estado::text as matricula
+           from public.pagamentos p
+           join public.matriculas m on m.id = p.matricula_id
+          where p.id = $1`,
+        [pagamento],
+      );
+      expect(rows[0]).toEqual({ pagamento: "reembolsada", matricula: "reembolsada" });
+
+      // Harness adversarial: representa a divergência que uma versão antiga
+      // podia deixar após falha entre as duas escritas.
+      await cliente.query(
+        "update public.matriculas set estado = 'ativa' where id = $1",
+        [matricula.id],
+      );
+      await cliente.query(
+        `select public.confirmar_reembolso_pagamento(
+          $1, $2, 'PIX'::public.pagamento_meio,
+          '2026-08-21T12:01:00Z'::timestamptz, 'teste_reembolso_retry'
+        )`,
+        [pagamento, aluno],
+      );
+
+      ({ rows } = await cliente.query<{ pagamento: string; matricula: string }>(
+        `select p.estado::text as pagamento, m.estado::text as matricula
+           from public.pagamentos p
+           join public.matriculas m on m.id = p.matricula_id
+          where p.id = $1`,
+        [pagamento],
+      ));
+      expect(rows[0]).toEqual({ pagamento: "reembolsada", matricula: "reembolsada" });
     });
   });
 });

@@ -32,6 +32,10 @@ function dependencias() {
     mudarEstado: vi.fn(async (_id: string, estado: "confirmada" | "expirada") => {
       linha = { ...linha, estado };
     }),
+    reabrirExpirada: vi.fn(async (_id: string) => {
+      void _id;
+      linha = { ...linha, estado: "confirmada" };
+    }),
     listarPendentesExpiráveis: vi.fn(async () => []),
     abrirPendencia: vi.fn(async () => undefined),
     lerHorasExpiracao: vi.fn(async () => 48),
@@ -105,6 +109,26 @@ describe("job de reconciliação de pagamentos", () => {
       "reconciliacao_expiracao",
     );
     expect(deps.ativar).not.toHaveBeenCalled();
+  });
+
+  it("reabre pagamento expirado que o Asaas confirmou e ativa de forma idempotente", async () => {
+    const deps = dependencias();
+    deps.repo.buscarPagamento.mockResolvedValue(pagamento("expirada"));
+
+    const resumo = await executarReconciliacao({
+      gateway: deps.gateway,
+      repositorio: deps.repo,
+      ativar: deps.ativar,
+      agora: new Date("2026-08-21T12:00:00.000Z"),
+      horasParaExpirar: 48,
+    });
+
+    expect(resumo.ativacoesSolicitadas).toBe(1);
+    expect(deps.repo.reabrirExpirada).toHaveBeenCalledWith(
+      "pag_1",
+      "reconciliacao_pagamento_pago",
+    );
+    expect(deps.ativar).toHaveBeenCalledWith("pag_1");
   });
 
   it("falha de ativação abre pendência e deixa o job vermelho", async () => {

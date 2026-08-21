@@ -14,6 +14,7 @@ import { Client } from "pg";
 
 import { lerEnv } from "../alvo-do-banco.mjs";
 import { CATALOGO } from "@/modules/config";
+import { emitirEventoDoFunilNaoBloqueante } from "@/modules/analytics/posthog";
 import {
   gatewayAsaasDoAmbiente,
   type ListagemDeCobrancasAsaas,
@@ -59,6 +60,7 @@ export type RepositorioDeRecon = {
     estado: "confirmada" | "expirada",
     motivo: string,
   ): Promise<void>;
+  reabrirExpirada(pagamentoId: string, motivo: string): Promise<void>;
   listarPendentesExpiráveis(antesDe: Date): Promise<PagamentoRecon[]>;
   abrirPendencia(pagamentoId: string, codigo: string): Promise<void>;
   lerHorasExpiracao(): Promise<number>;
@@ -112,6 +114,13 @@ export function criarRepositorioDeRecon(cliente: ClienteSql): RepositorioDeRecon
       );
     },
 
+    async reabrirExpirada(pagamentoId, motivo) {
+      await cliente.query(
+        `select public.reabrir_pagamento_expirado_reconciliacao($1, $2)`,
+        [pagamentoId, motivo],
+      );
+    },
+
     async listarPendentesExpiráveis(antesDe) {
       const { rows } = await cliente.query<PagamentoRecon>(
         `select id, referencia_interna, asaas_cobranca_id, estado::text, criado_em
@@ -157,6 +166,7 @@ export async function executarReconciliacao(
     gateway: GatewayDeRecon;
     repositorio: RepositorioDeRecon;
     ativar: (pagamentoId: string) => Promise<ResultadoDaAtivacao>;
+    emitirPagamentoConfirmado?: () => void;
     alertar?: (erro: unknown, contexto: Record<string, unknown>) => Promise<void> | void;
     agora?: Date;
     horasParaExpirar?: number;
@@ -260,6 +270,8 @@ export async function executar(
       gateway,
       repositorio: criarRepositorioDeRecon(cliente),
       ativar,
+      emitirPagamentoConfirmado: () =>
+        emitirEventoDoFunilNaoBloqueante("pagamento_confirmado"),
     });
     console.log("[reconciliacao]", resumo);
     codigo = resumo.falhas > 0 ? 1 : 0;
@@ -279,6 +291,7 @@ async function reconciliarCobranca(
   dependencias: {
     repositorio: RepositorioDeRecon;
     ativar: (pagamentoId: string) => Promise<ResultadoDaAtivacao>;
+    emitirPagamentoConfirmado?: () => void;
     alertar?: (erro: unknown, contexto: Record<string, unknown>) => Promise<void> | void;
   },
   resumo: ResumoDaRecon,
@@ -305,8 +318,18 @@ async function reconciliarCobranca(
         "confirmada",
         "reconciliacao_pagamento_pago",
       );
+    } else if (pagamento.estado === "expirada") {
+      await dependencias.repositorio.reabrirExpirada(
+        pagamento.id,
+        "reconciliacao_pagamento_pago",
+      );
     }
-    if (pagamento.estado === "pendente" || pagamento.estado === "confirmada") {
+    if (
+      pagamento.estado === "pendente" ||
+      pagamento.estado === "confirmada" ||
+      pagamento.estado === "expirada"
+    ) {
+      dependencias.emitirPagamentoConfirmado?.();
       resumo.ativacoesSolicitadas += 1;
       const resultado = await dependencias.ativar(pagamento.id);
       if (resultado.estado === "pendente") resumo.falhas += 1;
@@ -337,6 +360,8 @@ function copiarVariaveisDoJob(ambiente: Record<string, string | undefined>): voi
     "ASAAS_NF_NOME_SERVICO",
     "ASAAS_NF_CODIGO_SERVICO",
     "ASAAS_NF_IMPOSTOS_JSON",
+    "POSTHOG_API_KEY",
+    "POSTHOG_API_URL",
   ]) {
     const valor = ambiente[chave];
     if (valor !== undefined) process.env[chave] = valor;

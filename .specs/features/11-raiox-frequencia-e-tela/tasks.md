@@ -170,14 +170,14 @@ T93 → T94
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] A leitura usa cliente de serviço no servidor e não expõe configuração ou tabelas internas.
-- [ ] O DTO traz somente órgão, banca, data, formato e as linhas necessárias à tela.
-- [ ] A consulta preserva a ordenação da projeção e retorna estado vazio sem perfil ativo.
+- [x] A leitura usa cliente de serviço no servidor e não expõe configuração ou tabelas internas.
+- [x] O DTO traz somente órgão, banca, data, formato e as linhas necessárias à tela.
+- [x] A consulta preserva a ordenação da projeção e retorna estado vazio sem perfil ativo.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m5): expõe leitura server-side do raio-x`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — unit gate verde (`src/modules/raiox/index.test.ts`)
 
 ### T92: Construir componente de leitura
 

@@ -188,7 +188,57 @@ describe("contrato da explicacao conferida", () => {
         { respostaCorreta: "B" },
         minima,
       ),
+      ).toThrow(/afirmacao_externa_sem_fonte/);
+  });
+
+  it("rejeita fato externo escrito mesmo quando a IA nao o declara", () => {
+    const minima: ReferenciaEntregue = {
+      ...referencia,
+      id: "minima:prova-1:questao-1:v1",
+      origem: "minima",
+      baseReferenciaId: null,
+      conteudo: "Enunciado da questão. Gabarito oficial: B.",
+    };
+
+    expect(() =>
+      conferirExplicacao(
+        {
+          ...base,
+          texto: "A lei determina prazo de 30 dias.",
+          fontes_citadas: [
+            { doc_id: minima.id, trecho: "Gabarito oficial: B" },
+          ],
+          afirmacoes_externas: [],
+        },
+        { respostaCorreta: "B" },
+        minima,
+      ),
     ).toThrow(/afirmacao_externa_sem_fonte/);
+  });
+
+  it("continua permitindo explicar o raciocinio apoiado na fonte minima", () => {
+    const minima: ReferenciaEntregue = {
+      ...referencia,
+      id: "minima:prova-1:questao-1:v1",
+      origem: "minima",
+      baseReferenciaId: null,
+      conteudo: "Enunciado da questão. Gabarito oficial: B.",
+    };
+
+    expect(
+      conferirExplicacao(
+        {
+          ...base,
+          texto: "A alternativa B é a correta porque é o gabarito oficial.",
+          fontes_citadas: [
+            { doc_id: minima.id, trecho: "Gabarito oficial: B" },
+          ],
+          afirmacoes_externas: [],
+        },
+        { respostaCorreta: "B" },
+        minima,
+      ),
+    ).toMatchObject({ alternativa_correta: "B" });
   });
 
   it("rejeita questao sem gabarito oficial", () => {

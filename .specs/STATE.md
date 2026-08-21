@@ -261,6 +261,23 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-099
+- **Decision**: O roteamento de QA da SPEC 10 acontece automaticamente em trigger `AFTER INSERT` da
+  questão e em alteração de origem/confiança: baixa confiança, amostra real determinística e origem
+  `gerada_ia` abrem uma pendência em `questao_revisoes` antes da publicação. Para fonte mínima, além
+  da declaração estruturada da IA, a conferência local rejeita marcadores de norma, prazo, percentual
+  e regra externa no texto.
+- **Reason**: A trava de publicação sozinha detectava a falta de revisão, mas não deixava trabalho
+  persistido para o operador; e uma lista declaratória não é prova de que o texto não contém fato
+  externo. O caminho seguro é abrir a fila no nascimento da questão e falhar fechado na conferência.
+- **Trade-off**: A guarda textual é conservadora e pode enviar uma explicação válida para revisão
+  humana. Isso é preferível a publicar uma afirmação externa sem documento; a base mínima continua
+  permitindo explicações que não usam esses marcadores.
+- **Scope**: `supabase/migrations/20260821093000_roteamento_qa_spec10.sql`,
+  `src/modules/ia/explicacao.ts`, testes da SPEC 10.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -279,7 +296,7 @@
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
   | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
-  | **10 — Publicação e explicações** | T87–T97 | ✅ **478 unit + 319 db**. Ritual B — verificação independente no fim desta rodada. Porta de publicação, fila, referência, citações e job entregues. |
+  | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
 - **Next step**: **SPEC 11 — Raio-X: frequência, peso e tela**
   (`.specs/features/11-raiox-frequencia-e-tela/spec.md`). **Ritual B**. Depende das specs 06, 07 e 10.
   A SPEC 10 deixou o operador com a fila no Supabase Studio, a explicação pré-computada e a porta de

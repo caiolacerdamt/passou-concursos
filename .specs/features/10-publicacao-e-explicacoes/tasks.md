@@ -29,6 +29,10 @@ humana quando a confiança está abaixo do piso, quando a questão real cai na a
 é `gerada_ia`. A amostra é determinística por questão para ser auditável e testável. A decisão da
 revisão guarda operador e timestamp.
 
+O roteamento para a fila acontece automaticamente depois que a questão nasce ou quando a origem/confiança
+muda. A trava de publicação continua sendo a segunda defesa. Na fonte mínima, além do campo declaratório
+da IA, o código aplica uma guarda lexical conservadora para norma, prazo, percentual e regra externa.
+
 ### Critérios de segurança aplicáveis (ASVS v5.0.0, alvo L2)
 
 | ID | Referência | Decisão da SPEC 10 | Verificação |
@@ -182,7 +186,7 @@ e veto de afirmações externas na fonte mínima. **Where**: `src/modules/ia/exp
 | Citação é comparada por código | `src/modules/ia/explicacao.ts:101-106,162-180` e `src/modules/ia/explicacao.test.ts:50-93` | Caixa, acento, pontuação e espaços não quebram uma citação válida; trecho ausente é rejeitado | ✅ |
 | Nenhuma citação também é rejeição | `src/modules/ia/explicacao.ts:25` e `src/modules/ia/explicacao.test.ts:72-80` | Explicação sem fonte não passa | ✅ |
 | Gabarito continua sendo oficial | `src/modules/ia/explicacao.ts:140-148` e `src/modules/ia/explicacao.test.ts:108-116` | Contradição da alternativa correta é rejeitada | ✅ |
-| Fonte mínima não autoriza fato externo | `src/modules/ia/explicacao.ts:150-158` e `src/modules/ia/explicacao.test.ts:118-140` | Afirmação externa declarada não passa, inclusive na fonte mínima | ✅ |
+| Fonte mínima não autoriza fato externo | `src/modules/ia/explicacao.ts:201-220,265-280` e `src/modules/ia/explicacao.test.ts:194-241` | Afirmação externa declarada ou escrita não passa, inclusive na fonte mínima | ✅ |
 | Documento citado é o entregue no pedido | `src/modules/ia/explicacao.ts:162-169` e `src/modules/ia/explicacao.test.ts:95-106` | O provedor não escolhe uma fonte diferente | ✅ |
 
 Necessidade: o schema não decide conteúdo por si; a função `conferirExplicacao` é a barreira de código
@@ -233,7 +237,7 @@ continua fora da aplicação web, no job da T95.
 chave. **Where**: `scripts/jobs/explicacoes.mts`, testes e `package.json`. **Done when**: gerar, rejeitar,
 enfileirar e deduplicar funcionam; nenhum caminho entra em `src/app`. **Depends**: T93, T94.
 
-**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 54 arquivos e 478 testes passando; `npm run lint` limpo.
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 54 arquivos e 480 testes passando; `npm run lint` limpo.
 
 | Critério | Evidência | Resultado esperado | Coberto |
 | --- | --- | --- | --- |
@@ -253,7 +257,7 @@ continua sendo lida apenas no processo do job.
 sem IA. **Where**: `tests/db/publicacao-explicacoes.test.ts`, `scripts/jobs/explicacoes.test.ts`.
 **Done when**: Full gate verde quando `DATABASE_URL` estiver disponível. **Depends**: T90, T95.
 
-**Status**: ✅ concluída. **Gate**: `npm run test:db` — 37 arquivos e 319 testes DB; `npm run test:unit` — 54 arquivos e 478 testes; lint e TypeScript sem erros.
+**Status**: ✅ concluída. **Gate**: `npm run test:db` — 37 arquivos e 319 testes DB; `npm run test:unit` — 54 arquivos e 480 testes; lint e TypeScript sem erros.
 
 | Critério | Evidência | Resultado esperado | Coberto |
 | --- | --- | --- | --- |
@@ -271,8 +275,8 @@ Necessidade: o banco foi exercitado com transações revertidas, sem deixar dado
 build/lint/test e preparar a validação independente. **Where**: `.specs/*`, `docs/*`, `.github/workflows/*`.
 **Done when**: documentação explica como operar a fábrica e o handoff aponta a SPEC 11. **Depends**: T96.
 
-**Status**: ✅ implementação concluída; validação independente Ritual B pendente de registro ao fim deste arquivo.
-**Gate**: `npm run build`, `npm run lint`, `npm test` — 91 arquivos e 797 testes passando.
+**Status**: ✅ implementação concluída; verificação independente inicial encontrou duas lacunas, ambas corrigidas e cobertas pelos gates finais.
+**Gate**: `npm run build`, `npm run lint`, `npm test` — 91 arquivos e 799 testes passando.
 
 | Critério | Evidência | Resultado esperado | Coberto |
 | --- | --- | --- | --- |
@@ -281,11 +285,13 @@ build/lint/test e preparar a validação independente. **Where**: `.specs/*`, `d
 | Decisão e handoff atualizados | `.specs/STATE.md:244-285` e `.specs/ROADMAP.md:105-112` | AD-098 registrada e próxima é SPEC 11 | ✅ |
 | Contrato da spec fechado | `.specs/features/10-publicacao-e-explicacoes/spec.md:5-10` | Status da SPEC 10 aparece como concluído | ✅ |
 
-Necessidade: o relatório independente abaixo é a última saída do Ritual B; ele deve conferir somente os
-Success Criteria, com evidência `file:line`, sem sensor de mutação.
+Necessidade: o relatório abaixo registra o achado independente inicial, a remediação e os gates finais.
+O sensor de mutação não entra no Ritual B.
 
 ## Verificação independente (Ritual B)
 
-Após T97, um Verificador independente deve reler apenas os Success Criteria, localizar evidência
-`file:line`, conferir o resultado esperado contra a spec, rodar os gates disponíveis e escrever
-`.specs/features/10-publicacao-e-explicacoes/validation.md`. O Ritual B não usa sensor de mutação.
+O Verificador independente Mencius releu os Success Criteria antes das correções e encontrou SC1 e SC6.
+As correções foram feitas pelo agente principal e os gates finais estão em
+`.specs/features/10-publicacao-e-explicacoes/validation.md`. Uma segunda rodada independente não foi
+concluída porque os verificadores foram interrompidos; o registro não chama essa rodada de PASS
+independente.

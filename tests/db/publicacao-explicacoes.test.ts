@@ -276,6 +276,16 @@ descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
       const questao = await inserirQuestao(cliente, { confianca_ia: 0.5 });
       await inserirExplicacaoAprovada(cliente, questao);
 
+      const { rows: pendencias } = await cliente.query(
+        "select motivo, status::text as status " +
+          "from public.questao_revisoes " +
+          "where questao_id = $1 and questao_versao = $2",
+        [questao.id, questao.questao_versao],
+      );
+      expect(pendencias).toEqual([
+        { motivo: "baixa_confianca", status: "pendente" },
+      ]);
+
       await expect(
         cliente.query(
           "update public.questoes set status = 'publicada' where id = $1 and questao_versao = $2",

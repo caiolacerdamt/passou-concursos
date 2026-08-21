@@ -196,6 +196,31 @@ export function normalizarTrecho(texto: string): string {
     .trim();
 }
 
+/**
+ * A fonte minima prova o que esta na propria questao e no gabarito, mas nao
+ * autoriza uma afirmacao normativa por memoria. A lista e deliberadamente
+ * conservadora: um falso positivo manda a explicacao para uma pessoa, enquanto
+ * um falso negativo publicaria um fato sem fonte.
+ */
+const PADROES_DE_FATO_EXTERNO = [
+  /\b(?:lei|decreto|resolucao|portaria|constituicao|codigo|sumula|legislacao)\b/,
+  /\b(?:art|artigo|inciso|paragrafo|caput)\b/,
+  /\b(?:prazo|vigencia|vencimento|prescricao|prescreve)\b/,
+  /\b(?:dia|dias|mes|meses|ano|anos|hora|horas|semana|semanas)\b/,
+  /(?:\d+(?:[.,]\d+)?)\s*%/,
+  /\b(?:por cento|percentual|percentuais)\b/,
+  /\b(?:regra|regras|norma|normas)\b/,
+] as const;
+
+function normalizarParaPolitica(texto: string): string {
+  return texto.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+}
+
+function encontrarIndicioDeFatoExterno(texto: string): string | null {
+  const normalizado = normalizarParaPolitica(texto);
+  return PADROES_DE_FATO_EXTERNO.find((padrao) => padrao.test(normalizado))?.source ?? null;
+}
+
 function primeiroMotivo(erro: z.ZodError): string {
   const primeiro = erro.issues[0];
   if (primeiro === undefined) return "fora do contrato estruturado";
@@ -242,6 +267,16 @@ export function conferirExplicacao(
       "afirmacao_externa_sem_fonte",
       "a saída declarou fato que não está no documento entregue",
     );
+  }
+
+  if (referencia.origem === "minima") {
+    const indicio = encontrarIndicioDeFatoExterno(resultado.data.texto);
+    if (indicio !== null) {
+      throw new ExplicacaoRejeitada(
+        "afirmacao_externa_sem_fonte",
+        "a fonte minima nao autoriza norma, prazo, percentual ou regra externa",
+      );
+    }
   }
 
   for (const citacao of resultado.data.fontes_citadas) {

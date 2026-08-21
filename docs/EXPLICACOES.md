@@ -19,6 +19,12 @@ Uma explicação rejeitada fica fora de vigência. Saída que nem respeita o for
 gravada como explicação. A chave de deduplicação é a questão, a versão e a versão do pedido; repetir o
 job não cria uma segunda explicação nem reenvia uma geração já registrada no gateway.
 
+O banco abre automaticamente uma pendência de revisão para questão real abaixo do piso de confiança,
+para a amostra configurada e para origem gerada por IA. Essa pendência nasce antes da publicação; a
+porta de publicação continua exigindo uma decisão humana aprovada. Quando a fonte é mínima, há ainda
+uma verificação independente que rejeita no texto marcadores de norma, prazo, percentual ou regra
+externa, mesmo que a IA não os declare no campo próprio.
+
 ## Operação manual
 
 Pré-requisitos:
@@ -64,4 +70,3 @@ Com uma questão de teste e uma referência conferida, rode o job duas vezes. A 
 criar uma linha aprovada; a segunda deve informar que nada novo precisa ser gravado. Altere um trecho
 da resposta de teste para um texto que não esteja na referência: o resultado deve ficar rejeitado e a
 fila deve receber um motivo que começa com `explicacao_`.
-

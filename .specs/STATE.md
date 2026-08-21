@@ -200,6 +200,47 @@
 - **Status**: active
 
 
+### AD-096
+- **Decision**: **A extração de PDF manda ao modelo o texto lido por nós, e não o arquivo PDF como
+  entrada nativa do provedor.** O leitor mínimo é `src/modules/acervo/pdf.ts`, sem dependência nova:
+  `node:zlib` para os `stream` Flate, os operadores de texto do PDF para o conteúdo, e os `XObject`
+  `DCTDecode` para as imagens. Isto **substitui a metade "entrada de PDF nativa do provedor" do
+  BANCO-03 AC1**; o resto do AC (saída estruturada por schema) continua valendo e está implementado.
+- **Reason**: O BANCO-03 AC2 e o IA-17 exigem que a prova vá em **blocos** e que nenhum pedido passe
+  de 272K tokens. Mandar o PDF nativo em cada bloco só tem duas formas: reenviar a prova inteira a
+  cada pedido — que é exatamente o que o AC2 proíbe e o que estoura o teto — ou escrever um cortador
+  de PDF que produza um sub-PDF por bloco, o que é uma indústria no caminho crítico de um produto que
+  vai ingerir 3–4 provas. Além disso, o BANCO-12 AC3 (`precisa_ocr`) **já obriga** a ler o PDF do
+  lado de cá: não existe outra forma de afirmar que um PDF não tem texto nativo. Feito o trabalho uma
+  vez, usar o resultado é o caminho barato.
+- **Trade-off**: O texto sai decodificado como Latin-1, que é o que `WinAnsiEncoding` produz na
+  prática. Fonte com codificação própria sai com acento torto; fonte assim na prova inteira faz a
+  prova cair em `precisa_ocr`, que é o lado seguro do erro. Perde-se também a chance de o modelo ver
+  o **layout** da página — questão em duas colunas depende do `numero` impresso vir no texto, o que a
+  instrução cobra explicitamente. Se o primeiro lote real mostrar que o layout importa, a decisão
+  volta com o custo medido, não estimado.
+- **Scope**: `src/modules/acervo/pdf.ts`, `src/modules/acervo/fatiamento.ts`,
+  `scripts/jobs/ingestao-de-prova.mts`.
+- **Date**: 2026-08-20
+- **Status**: active
+
+### AD-097
+- **Decision**: **Toda questão com imagem nasce `em_revisao`**, mesmo quando a imagem sobe ao Storage
+  sem erro. Só imagem `DCTDecode` (JPEG) é extraída; qualquer outro formato deixa `imagens` vazio e a
+  questão também vai para revisão.
+- **Reason**: O BANCO-11 AC4 exige `alt_text` em cada imagem, e o AD-040 o exige não vazio. Esse
+  texto é descrição acessível de uma figura — e o modelo leu o **texto** da prova, nunca a imagem.
+  Gerar um `alt_text` a partir do enunciado seria inventar descrição, que é pior do que não ter. O
+  M1 já manda "imagem que não pôde ser extraída → questão em revisão"; estender isso a "imagem sem
+  descrição conferida" é a mesma regra, e no primeiro lote o humano confere na mão de qualquer jeito
+  (AD-090).
+- **Trade-off**: A fila de revisão da SPEC 10 nasce maior. Aceito: acervo pequeno e certo vale mais
+  que acervo grande e torto, e é o fosso que está em jogo. Bitmap inflado exigiria um codificador PNG
+  — registrado como limite conhecido em `docs/INGESTAO.md`, não como esquecimento.
+- **Scope**: `src/modules/acervo/ingestao.ts`, `src/modules/acervo/pdf.ts`.
+- **Date**: 2026-08-20
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -217,192 +258,23 @@
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
-- **Next step**: **SPEC 09 — Ingestão do primeiro lote**
-  (`.specs/features/09-ingestao-do-primeiro-lote/spec.md`). **Ritual B**. Depende das specs 04 e 08 —
-  as duas concluídas. ⚠️ **Duas travas externas**: `OPENAI_API_KEY` continua não provisionada, e o
-  caminho crítico do acervo são **3–4 PDFs de prova oficial na mão**.
-  O que a SPEC 08 deixou pronto: `executarTarefa()` em `src/modules/ia` é o **único** caminho até um
-  modelo; tarefa nova = nome em `TAREFAS` + linha na matriz de configuração, nunca um cliente novo.
-  `montarLinhaDeLote()` já produz o JSONL de `/v1/responses` — **o envio e a colheita do lote são da
-  SPEC 09**. Job da fábrica é `.mts` rodado por `tsx` (AD-095), com
-  `scripts/jobs/frase-do-plano.mts` como molde: conexão `pg`, `definirLeitorDeConfig` +
-  `definirRepositorioDeIa`, falha de um item não derruba os outros.
-  O que a SPEC 07 deixou pronto: `matriculas` como chave única com paywall por RLS, sessão do
-  Supabase pelo `src/proxy.ts`, `<Shell>` e `<Estado>` como a camada de UI de toda tela, e
-  `src/modules/lgpd/grupo-1.ts` como inventário das tabelas de aluno.
-
-### Dívida aberta
-
-0. **Minor (SPEC 08) — `npm run test:db` é instável contra o banco de desenvolvimento.** Medido na
-   verificação independente: três execuções seguidas deram 2 falhas, 1 falha e 0 falhas, em
-   `tests/db/gera-plano.test.ts` e `tests/db/tentativas-particao-endurecida.test.ts` — arquivos que a
-   SPEC 08 não toca e que **passam quando rodados isolados**. Não é regressão desta spec; é o banco
-   compartilhado. Vai morder a CI da **SPEC 09**, que é quem escreve muito no banco. Um ponto cego
-   sobrou aberto de propósito no sensor de nome de modelo: `git ls-files` só enxerga arquivo
-   rastreado, então arquivo novo sem `git add` escapa localmente (fecha no stage; a CI sempre roda
-   sobre árvore commitada).
-1. **Major — a SPEC 04 foi verificada pelo próprio autor.** O sensor rodou 4 mutações das 6, e uma
-   (flip de `vigente` no `AFTER INSERT`) foi contada por raciocínio, não por medição. Detalhe em
-   `.specs/features/04-*/validation.md`. ⚠️ **A SPEC 05 apoiou `tentativas` neste schema sem que o
-   Verifier de `5630e06..f2f1850` fosse rodado** — a recomendação continua de pé e agora tem uma
-   tabela em cima dela.
-2. **Minor — 6 gaps abertos da SPEC 05**, nenhum bloqueante, todos com evidência em
-   `.specs/features/05-log-de-tentativas/validation.md`: **G2** INFRA-04 AC3 provado no agendamento e
-   não no efeito (nenhum teste chama `run_maintenance_proc()`) · **G3** ALUNO-01 AC5 "recalculável do
-   zero" sem asserção — é propriedade das projeções, fecha na SPEC 06 · **G4** dedup testado só
-   sequencialmente, nunca com dois cliques concorrentes de verdade · **G7** a suíte valida o banco
-   aplicado, não o `.sql` versionado · **G8** `not.toMatch(/Seq Scan/)` é tautológico com
-   `enable_seqscan = off` · **G10** o contrato SQL↔TS da recusa é mantido por duas asserções
-   paralelas, e o teste unitário do mapeamento continua verde quando o banco muda a mensagem — evitar
-   esse padrão quando a SPEC 13 mapear mais motivos.
-3. **Major — `sanitizar` achata `Date`/`Error`/`Map` em `{}` em silêncio**
-   (`src/modules/observabilidade/saneamento.mjs:144`). A AD-087 tornou `reportarErro` transversal: a
-   primeira spec que passar `{ causa: erro }` perde a informação sem erro e sem teste vermelho.
-4. **Major — `executar()` do vigia sem teste automatizado** (`scripts/jobs/vigia-de-jobs.mjs:113`).
-   `new Client()` construído dentro da função, sem ponto de injeção. O padrão que resolve está no
-   mesmo diff (`advisors.mjs:105`, `buscar = fetch`).
-5. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
-   vez de `if: failure()` nos três. Job cancelado ou skipado não dispara `failure()`.
-6. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
-7. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
-8. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
-9. **Minor — default de configuração duplicado entre catálogo e SQL, sem trava contra deriva**
-   (gap G6 da SPEC 06). `gera_plano_do_dia()` e `podar_historico_de_jobs()` repetem em `coalesce`
-   os defaults que vivem em `src/modules/config/catalogo.ts`. Mudar um lado não quebra teste nenhum.
-   É transversal a toda função SQL que lê configuração, não só a estas duas — fecha na **SPEC 15**,
-   junto da tela de configuração.
-10. **Lição da SPEC 06 — teste de ordenação que semeia os dois lados não testa o caso frio.** O gap
-   `Major` G2 (semente do retrato frio invertida) sobreviveu a dois testes de ordenação porque os
-   dois semeavam `dominio_topico` nos dois tópicos comparados. Quando a regra tem um ramo de
-   ausência (`coalesce`, `left join`, default), o teste tem que comparar **presente contra ausente**.
-11. **Lição da SPEC 06 — função `security definer` concedida a `authenticated` precisa amarrar o
-   titular.** O gap `Major` G1 deixou um aluno gravar no log append-only de outro. A SPEC 05 já
-   resolvia isso em `registrar_tentativa` amarrando ao dono da sessão; a SPEC 06 repetiu a forma
-   (`security definer` + `grant`) sem repetir a defesa. Toda função nova nesse molde SHALL checar
-   `auth.uid()` ou não ser concedida a `authenticated`.
-
-12. **Minor (SPEC 07) — `overflow-x: hidden` no `body` mascara `scrollWidth`**
-    (`src/app/globals.css:75`). A rede protege o aluno e impede a medição: tela nova com tabela larga
-    vai **cortar** conteúdo em silêncio em vez de falhar. O sensor de hoje proíbe `w-[NNNpx]` e não
-    alcança `min-width`, `nowrap`, grid de coluna fixa nem `<img>` sem `max-width`. Fecha na SPEC 13.
-13. **Minor (SPEC 07) — o contrato "quatro estados, componente único" não tem sensor.** O paywall
-    ganhou varredura de diretório; este não. A primeira exceção já existe (`src/app/entrar/page.tsx`
-    monta a própria apresentação de erro de credencial, com motivo declarado). Fecha na SPEC 13.
-14. **Bloqueio da SPEC 13 — `registrar.ts:34` e `agendar.ts:29` usam a chave de serviço**, que passa
-    por cima da RLS. Não é defeito hoje: nenhuma rota os alcança. Mas expor a sessão de questões por
-    eles sem trocar para `clienteDaSessao()` criaria caminho de leitura **sem** matrícula.
-
-### Contratos vigentes que nenhuma spec pode contrariar
-
-1. `tentativas` (SPEC 05) referencia `questoes (id, questao_versao)` — é a PK. Matéria e rótulo do
-   snapshot saem de `topicos` → `materias` por join no INSERT.
-2. `explicacoes` (SPEC 10) referencia o mesmo par e lê `mudanca_tipo`: `cosmetica` não regera,
-   `substantiva` regera (IA-09 AC4 / AD-052).
-3. Raio-X (SPEC 11) conta `origem='real' and status='publicada' and not anulada and vigente` —
-   índice `questoes_origem_status_idx` já existe.
-4. **Dimensão do embedding = 1536**, `vector_cosine_ops`. Não vive em configuração: é tipo de coluna.
-   Espelho em `src/modules/acervo/contrato.ts`, com teste comparando.
-5. `questoes` **não** é append-only — difere de `configuracoes` e `tentativas`. UPDATE na versão
-   vigente é o caminho normal das SPECs 09/10/23. Imutável: a versão que saiu de cena, a identidade
-   (`id`, `questao_versao`) e a existência da linha.
-6. `status_prova` é o vocabulário do estado da ingestão; quem transiciona é a SPEC 09.
-7. **`raiox_peso_topico`** é a fronteira entre plano e Raio-X: a SPEC 11 troca o corpo da view sem
-   tocar no motor da SPEC 06.
-8. **`matricula` é a chave única** do conteúdo pago (SPEC 07). Nenhuma spec inventa outro caminho.
-9. **Toda tabela com `user_id` estende a rotina de apagamento da SPEC 14 e o teste dela na mesma
-   task** — tabela nova não registrada tem que fazer o teste falhar, não passar em silêncio.
-10. **Tabela particionada nova obedece ao AD-091**: `revoke all` + RLS + gatilho de TRUNCATE em cada
-    partição, por função idempotente chamada também pelo job de manutenção. `endurecer_particoes_de_
-    tentativas()` é o molde. Quem só copiar o AD-084 deixa a tabela aberta.
-11. `registrar_revisao(...)` é o único caminho de escrita em `revisao_agenda`/`revisao_evento`, e
-    amarra `auth.uid()` ao `p_user_id` quando há sessão. Toda função `security definer` concedida a
-    `authenticated` repete essa amarra.
-12. **`raiox_peso_topico` tem assinatura `(topico_id, peso)`** e há teste que quebra se a SPEC 11
-    renomear ou acrescentar coluna. Trocar o **corpo** é o caminho previsto; trocar a forma não é.
-13. **`plano_bloco.nivel ∈ {piso, meta_cheia}`** é o contrato que a SPEC 19 consome. `piso` contém
-    só as revisões devidas e **não** é cortado pelo tempo declarado; o corte vale para Avançar e
-    Treinar.
-14. `registrar_tentativa(...)` é o **único** caminho de escrita em `tentativas`. `security invoker`:
-    a RLS vale dentro dela. Quem gravar por INSERT direto (SPEC 09/13) repete o snapshot na mão.
-15. Schema: AD-039/040 (questão, **implementados**), AD-042/043/044 (log e projeções), AD-046
-    (acumulador anônimo), AD-052 (explicação × versão), AD-056/057 (fórmula do Raio-X), AD-060 (anel
-    por bloco), AD-063 (áudio × versão), AD-078/AD-081 (config), AD-082 **substituído pela AD-084**,
-    AD-083 (ambiente de teste), AD-085 (cache fora de requisição), AD-086 **substituído pela AD-089**.
-16. **Sessão e paywall são perguntas diferentes** (SPEC 07). `src/proxy.ts` decide sessão; a
-    matrícula é decidida por `exigirMatriculaAtiva()` na tela e pela policy de `select` do acervo no
-    banco. Toda página sob `src/app/app/` SHALL chamar `exigirMatriculaAtiva()` — há varredura de
-    diretório que falha se uma nascer sem ela.
-17. **A camada de UI é `<Shell>` + `<Estado>`** (SPEC 07, AD-093). Tela nova não monta o próprio
-    shell nem o próprio estado de carga/erro/vazio/degradado. Estilo é Tailwind v4, tokens no
-    `@theme` de `src/app/globals.css`.
-18. **`src/modules/lgpd/grupo-1.ts` é o inventário das tabelas de aluno.** Tabela nova com `user_id`
-    que não entrar lá **faz `tests/db/grupo-1.test.ts` falhar** — é o contrato nº 9 com mecanismo.
-    Exceção ao apagamento (`pagamentos`/`faturas` da SPEC 12) vai em `EXCECOES_DO_APAGAMENTO`, com
-    motivo escrito.
-
-### Armadilhas de Postgres que já foram pagas (não repetir)
-
-1. Gatilho que valida **antes** do INSERT: apagar o selo de `vigente` num `AFTER` chega tarde.
-2. `array_agg(enumlabel)` volta como string crua no driver `pg` — cast para `text[]`.
-3. `proconfig` guarda o literal `search_path=""`, com as aspas.
-4. **`EXPLAIN` em tabela vazia não prova índice nominal.** Exigir "nenhum Seq Scan" (com
-   `enable_seqscan = off`) é o que se pode afirmar; nome de índice só onde nenhum outro tem a coluna
-   como primeira.
-5. **Migração já aplicada não re-roda.** Para corrigir uma da própria branch em dev vazio: `drop` do
-   objeto, apagar a linha em `supabase_migrations.schema_migrations`, e `db:push`.
-
-### Trabalho planejado que continua valendo (não refazer)
-
-`.specs/modulos/m4-coluna-vertebral/design.md` e `tasks.md` cobrem **T11–T22**: T11–T15 → **SPEC 05**;
-T16–T21 → **SPEC 06**; T22 (frase do plano) → **SPEC 08, feita**. **T10 morreu** (virou a SPEC 04).
-Duas correções obrigatórias sobre esse material: (a) a trava de `tentativas` é de **3 camadas**
-(AD-084, substitui a receita de 2 do AD-082) — `REVOKE`+RLS, gatilho de linha, e gatilho de TRUNCATE;
-(b) `unstable_cache` só vale dentro de requisição do Next (AD-085) — job e script leem direto.
-
-### Perguntas abertas que a próxima spec resolve aplicando
-
-- ~~**SPEC 05**: o gatilho de linha propaga para as partições?~~ **Respondida medindo: propaga.** O
-  Postgres clona `BEFORE UPDATE OR DELETE ... FOR EACH ROW` para cada partição, presente e futura, e
-  atacar a partição direto também é bloqueado. O que **não** propaga é o gatilho de `TRUNCATE`, e daí
-  saiu a **AD-091**.
-- ~~**SPEC 06**: FSRS por tópico produz intervalo utilizável?~~ **Respondida medindo: só com
-  `enable_short_term: false`** (AD-092). Com o default, `Good` num tópico novo devolve 10 minutos.
-- **SPEC 07**: é a única spec sem requisito numerado de origem. Precisa de **Specify curto** criando
-  requisitos `UI-NN`, e a escolha da camada de estilo vira **AD nova**.
-- **Duas chamadas de IA fora da lista fechada do IA-02**, cada uma travando o Design da sua spec:
-  pré-diagnóstico de questão suspeita (**SPEC 29**) e extração do programa do edital (**SPEC 27**).
-
-### Ambiente
-
-- **In-progress** (file:line): none.
-- **Branch**: `main` (a SPEC 08 foi mergeada; nada em andamento). `main` protegida pelo hook local `.githooks/pre-push` (a
-  proteção do GitHub não funciona em repositório privado no plano Free) — ativar por clone com
-  `git config core.hooksPath .githooks`.
-- **Infra provisionada**: Supabase **`kfpmetkmhjtmgwgaaerl`**, org "Passou Concursos", **sa-east-1
-  (SP)**, Postgres 17.6, plano Free · extensões: `pg_cron` (SPEC 03) e `vector` 0.8.2 (SPEC 04) ·
-  **Sentry** org e projeto `passou-concursos`, Free, região **EUA** (AD-087g), alerta por e-mail
-  funcionando · **OpenAI provisionada em 2026-08-20**: `OPENAI_API_KEY` no `.env`, matriz e preços
-  inseridos em `configuracoes` com **`gpt-5.6-luna` nas 9 tarefas** (decisão de 2026-08-20, substitui
-  a Terra no refaz do AD-073 — o refaz escala só o esforço, `high` → `max`). Cadeia conferida de
-  ponta a ponta com chamada real: `frase_do_plano` respondeu, custo US$ 0,000032 registrado em
-  `ia_geracoes`. `npm run ia:matriz` mostra o vigente. **Não provisionados**: **Vercel — o código da SPEC 07 está pronto e o site não sobe sem a conta ligada (`docs/DEPLOY.md`)**, Asaas + CNPJ (SPEC 12),
-  PostHog (SPEC 12), Cohere (SPEC 23) — tabela completa no `ROADMAP.md`.
-- **Segredos no GitHub**: `DATABASE_URL`, `SENTRY_DSN`, `SUPABASE_ACCESS_TOKEN`. O `SENTRY_DSN` está
-  lá por conveniência do YAML, **não porque seja segredo** (AD-087f, com teste negativo na varredura).
-- **MCP do Supabase — resolvido, não repetir o erro**: o `${VAR}` do `.mcp.json` expande da variável
-  de ambiente do **sistema operacional**; o bloco `env` de `.claude/settings.local.json` **não**
-  alimenta essa expansão. A variável global do Windows contém o token de **outra conta**. O servidor
-  `supabase-passou` está registrado no **escopo local** (`~/.claude.json`), que vence o `.mcp.json`.
-- **Achados de ambiente**: (1) `--env-file` e `process.loadEnvFile()` não sobrescrevem variável já
-  existente no sistema; (2) conexão direta `db.<ref>.supabase.co` não resolve nesta máquina — usar o
-  **Session pooler, porta 5432**; (3) o Vitest usa reporter `minimal` dentro de agente e esconde
-  `console.warn` — depurar com `--reporter=default`; (4) `next build` já é o typecheck, não existe
-  script `typecheck`; (5) **Next 16 reescreve o `AGENTS.md` sozinho** (bloco
-  `<!-- BEGIN:nextjs-agent-rules -->` a cada `next dev`) — não decidido se aceita ou desliga com
-  `agentRules: false`; (6) **RTK filtra saída e esconde erro** — se um comando falhar com resumo sem
-  detalhe, repita com `rtk proxy <comando>`.
-- **Pendências que não travam o começo**: advogado (base legal das questões AD-003; janela de 24m
-  AD-045; LIA AD-026; instrumento da transferência para os EUA, art. 33 LGPD, AD-079; texto da
-  política e encarregado, SPEC 14) · contador (**CNPJ/regime — é o bloqueio de calendário mais longo
-  do MVP**) · contrato do Asaas · preço do Cohere embed-v4 · teste cego da voz (trava a SPEC 35) ·
-  free tier do PostHog em fonte primária · critério de morte do produto.
+  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
+- **Next step**: **SPEC 10 — Publicação e explicações**
+  (`.specs/features/10-publicacao-e-explicacoes/spec.md`). **Ritual B**. Depende da SPEC 09, concluída.
+  **O acervo existe.** As 3 provas do BB 2021 (Cesgranrio) foram ingeridas de verdade:
+  **205 questões** (70 + 70 + 65), todas com gabarito oficial cruzado, em `rascunho`/`em_revisao` —
+  **nenhuma `publicada`**, porque a porta de publicação é da SPEC 10. Custo medido: **US$ 0,045 por
+  prova** de 70 questões, via Batch.
+  Quatro coisas que a SPEC 10 herda:
+  (a) **70+ candidatos a tópico pendentes e zero tópico canônico** — nenhuma questão tem `topico_id`,
+  então nenhuma entra em plano antes de a taxonomia ser preenchida (a tela é da SPEC 15, mas o
+  `insert` mínimo não depende dela);
+  (b) o enunciado das questões de interpretação carrega o **texto-base inteiro** (~3 mil caracteres),
+  por decisão da instrução v3 — a tela da sessão (SPEC 13) vai receber blocos grandes;
+  (c) **a Prova C está em 65/70**: as questões 11–15 (Língua Inglesa, página 5) foram cortadas pelo
+  **filtro de conteúdo do provedor**, de forma determinística, mesmo com a página isolada em Batch.
+  Não é bug nosso e não tem correção por código — precisa de transcrição humana ou de outro modelo.
+  O bloco está marcado com perda **parcial** e `--acao estado` mostra;
+  (d) os PDFs e os gabaritos transcritos vivem em `provas/` e **não entram no git**.
+  Ferramentas de operação: `--acao inspecionar` (testa um PDF de banca nova sem gastar nada) e
+  `--acao estado` (mostra bloco a bloco, com motivo). Passo a passo em `docs/INGESTAO.md`.

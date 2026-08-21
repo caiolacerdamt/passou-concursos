@@ -84,6 +84,43 @@ const PRECO_DE_MODELO = z.object({
 });
 
 export const CATALOGO = {
+  // ── M1 · acervo e ingestão ─────────────────────────────────────
+  "param.m1.teto_tokens_por_pedido": chave({
+    tipo: z.number().int().positive(),
+    padrao: 272_000,
+    moduloDono: "m1",
+    descricao:
+      "Teto de tokens de um pedido da fabrica (IA-17). Acima disto a OpenAI cobra 2x a entrada e 1,5x a saida, o que anula o desconto do modelo (AD-073). Vive em configuracao porque o degrau e do fornecedor, nao nosso.",
+  }),
+  "param.m1.margem_do_teto": chave({
+    tipo: z.number().min(0).max(0.5),
+    padrao: 0.2,
+    moduloDono: "m1",
+    descricao:
+      "Quanto do teto fica de folga, porque a contagem de tokens do lado de ca e estimativa. 0.2 = usa no maximo 80% do teto.",
+  }),
+  "param.m1.chars_por_token": chave({
+    tipo: z.number().positive(),
+    padrao: 3.5,
+    moduloDono: "m1",
+    descricao:
+      "Quantos caracteres de portugues valem um token, para estimar o tamanho de um bloco sem chamar o tokenizador do fornecedor. Calibra medindo uma prova real contra o `usage` que voltou.",
+  }),
+  "param.m1.paginas_por_bloco": chave({
+    tipo: z.number().int().positive(),
+    padrao: 4,
+    moduloDono: "m1",
+    descricao:
+      "Teto de paginas por bloco de extracao. Existe porque o teto de tokens sozinho nunca corta uma prova real: as provas do BB 2021 tem ~19 mil tokens contra um teto util de ~218 mil, e sem este limite a prova inteira iria num pedido so — o que o BANCO-03 AC2 proibe. Bloco menor tambem falha menor: um bloco ruim custa 4 paginas, nao a prova.",
+  }),
+  "param.m1.bucket_de_imagens": chave({
+    tipo: z.string().min(1),
+    padrao: "questoes",
+    moduloDono: "m1",
+    descricao:
+      "Bucket do Supabase Storage onde a imagem de uma questao e guardada (BANCO-11/AD-041).",
+  }),
+
   // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
   // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da
   // spec do M4. Estao aqui com default porque o AD-078 exige default declarado

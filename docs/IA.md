@@ -101,9 +101,11 @@ significa que um erro de digitação derruba tudo. Confira com `npm run ia:matri
 
 ## O que ainda não existe
 
+> O **envio e a colheita do lote** saíram desta lista: são `src/modules/ia/lote.ts`, construídos na
+> SPEC 09, que é quem tem volume para exercitá-los. Ver `docs/INGESTAO.md`.
+
 | O quê | Onde entra |
 | --- | --- |
-| Envio e colheita do arquivo de lote (Batch API) | **SPEC 09** — o gateway já monta a linha JSONL |
 | Grounding, citação conferida por código | SPEC 10 |
 | Catálogo de fórmulas e verificação quantitativa | SPEC 22 — aqui só existe o mecanismo genérico de refazer 1× |
 | Eval cego como porteiro e revisão trimestral da matriz | SPEC 30 |

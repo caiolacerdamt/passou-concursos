@@ -44,6 +44,11 @@ describe("catalogo de chaves", () => {
       "flag.m9.rota_de_erro_proposital",
     ];
     const parametros: ChaveParam[] = [
+      "param.m1.teto_tokens_por_pedido",
+      "param.m1.margem_do_teto",
+      "param.m1.chars_por_token",
+      "param.m1.paginas_por_bloco",
+      "param.m1.bucket_de_imagens",
       "param.m4.algoritmo_revisao",
       "param.m4.fsrs_faixas_nota",
       "param.m4.minutos_por_questao",

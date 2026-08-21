@@ -13,6 +13,8 @@
     "db:push": "node scripts/db-push.mjs",
     "jobs:vigia": "node scripts/jobs/vigia-de-jobs.mjs",
     "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
+    "jobs:ingestao": "tsx scripts/jobs/ingestao-de-prova.mts",
+    "jobs:gabarito": "tsx scripts/jobs/cruzar-gabarito.mts",
     "advisors": "node scripts/advisors.mjs",
     "ia:matriz": "node scripts/matriz-de-modelos.mjs"
   },

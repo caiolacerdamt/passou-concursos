@@ -1,0 +1,89 @@
+name: Ingestão de prova
+
+# BANCO-03 AC5 · BANCO-04 · AD-036 · INFRA-02
+#
+# O pipeline pesado do acervo. Roda **aqui**, e nunca numa função da Vercel: a
+# extração usa a Batch API, cuja janela é de 24 horas, e nenhum timeout de
+# serverless alcança isso (AD-036).
+#
+# **Só disparo manual.** Ingerir prova é ato deliberado do operador: ele tem o
+# PDF oficial na mão, catalogou a linha em `provas` e sabe qual arquivo está
+# mandando. Um agendamento aqui só poderia adivinhar, e adivinhar custa dinheiro.
+#
+# O fluxo é de dois passos, separados pelo tempo do provedor:
+#   1. `enviar` — hoje.
+#   2. `colher` — quando o lote voltar (até 24h depois). Rodar antes não é erro:
+#      o job diz que ainda está esperando e sai verde.
+
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: "O que fazer"
+        required: true
+        type: choice
+        options: [enviar, colher, gabarito]
+      prova:
+        description: "id da linha em `provas` (uuid)"
+        required: true
+        type: string
+      arquivo:
+        description: "caminho do PDF (enviar/colher) ou do gabarito (gabarito), a partir da raiz do repositório"
+        required: true
+        type: string
+      versao_do_gabarito:
+        description: "só para `gabarito`: o rótulo da versão (ex.: definitivo-2023-10-05)"
+        required: false
+        type: string
+
+jobs:
+  ingestao:
+    name: ${{ inputs.acao }} — prova ${{ inputs.prova }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # Sem `OPENAI_API_KEY` este job sai **vermelho**, ao contrário do da frase
+      # do plano. A diferença é o que se perde: lá, um plano sem frase de
+      # abertura; aqui, uma prova que o operador acha que foi ingerida e não foi.
+      - name: Extrair a prova
+        if: inputs.acao != 'gabarito'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: >-
+          npm run jobs:ingestao --
+          --prova "${{ inputs.prova }}"
+          --pdf "${{ inputs.arquivo }}"
+          --acao "${{ inputs.acao }}"
+
+      - name: Cruzar o gabarito definitivo
+        if: inputs.acao == 'gabarito'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: >-
+          npm run jobs:gabarito --
+          --prova "${{ inputs.prova }}"
+          --gabarito "${{ inputs.arquivo }}"
+          --versao "${{ inputs.versao_do_gabarito }}"
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "ingestao (${{ inputs.acao }}) terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs

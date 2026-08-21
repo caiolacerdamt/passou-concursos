@@ -253,16 +253,23 @@ resultado sem depender do analytics.
 **Tools**: Skill `tlc-spec-driven`; guia local do Next 16 para Server Actions
 **Done when**:
 
-- [ ] O preço parcelado e à vista aparece antes da escolha do meio.
-- [ ] Sem 18+ ou termos a action não cria cobrança; não existe campo de data de nascimento.
-- [ ] E-mail com matrícula ativa recebe aviso e não é cobrado novamente.
-- [ ] Erro de um meio preserva o formulário e permite trocar para outro.
-- [ ] Pix/boleto/cartão retornam para uma página própria de resultado com status operacional.
+- [x] O preço parcelado e à vista aparece antes da escolha do meio.
+- [x] Sem 18+ ou termos a action não cria cobrança; não existe campo de data de nascimento.
+- [x] E-mail com matrícula ativa recebe aviso e não é cobrado novamente.
+- [x] Erro de um meio preserva o formulário e permite trocar para outro.
+- [x] Pix/boleto/cartão retornam para uma página própria de resultado com status operacional.
 
 **Tests**: unit/render
 **Gate**: quick
 **Commit**: `feat(pag): implementa checkout proprio`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; checkout proprio valida no servidor, congela o valor, cria a cobrança e exibe resultado operacional sem depender de analytics.
+- **Assumptions**: o contrato atual do Asaas exige nome e CPF/CNPJ para criar o pagador; esses dados são informados pelo comprador, usados somente no servidor e não entram no registro financeiro local. A cobrança vence no dia seguinte à criação.
+- **Files**: `src/app/checkout/page.tsx`, `src/app/checkout/formulario.tsx`, `src/app/checkout/acoes.ts`, `src/app/checkout/resultado/[id]/page.tsx`, `src/modules/pagamentos/checkout.ts`, `src/modules/pagamentos/repositorio.ts`, `src/modules/pagamentos/resultado.ts`, `src/modules/pagamentos/contratos.ts`, `src/modules/pagamentos/asaas.ts`, `supabase/migrations/20260821120000_checkout_pagamento.sql` e testes co-localizados.
+- **Success evidence**: `npm run test:unit` — 70 arquivos, 528 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde; `npm run db:push` aplicou a migration do RPC no Supabase de desenvolvimento.
 
 ### T113: Validar webhook e registrar idempotência
 

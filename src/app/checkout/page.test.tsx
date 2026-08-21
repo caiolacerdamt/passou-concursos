@@ -13,7 +13,7 @@ afterEach(() => {
 });
 
 describe("resumo público do checkout", () => {
-  it("mostra os dois preços, garantia, termos e não coleta data de nascimento", async () => {
+  it("mostra os dois preços, campos necessários, garantia e não coleta data de nascimento", async () => {
     definirLeitorDeConfig(async () => ({}));
 
     const html = renderToStaticMarkup(await Checkout());
@@ -23,8 +23,13 @@ describe("resumo público do checkout", () => {
     expect(html).toContain("177,30");
     expect(html).toContain("18 anos");
     expect(html).toContain("Não solicitamos data de nascimento");
+    expect(html).toContain('name="nomeCompleto"');
+    expect(html).toContain('name="cpfCnpj"');
+    expect(html).toContain('name="maiorDeIdade"');
+    expect(html).toContain('name="aceitouTermos"');
+    expect(html).toContain('value="PIX"');
     expect(html).toContain('href="/termos"');
     expect(html).toContain('href="/privacidade"');
-    expect(html).toContain("processamento da cobrança será conectado");
+    expect(html).toContain("Continuar para pagamento");
   });
 });

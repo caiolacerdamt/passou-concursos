@@ -3,6 +3,9 @@ import { z } from "zod";
 export const MEIOS_DE_PAGAMENTO = ["CREDIT_CARD", "PIX", "BOLETO"] as const;
 export type MeioDePagamento = (typeof MEIOS_DE_PAGAMENTO)[number];
 
+/** Versão registrada junto do aceite; trocar o texto exige publicar uma versão nova. */
+export const VERSAO_ATUAL_DOS_TERMOS = "inicial-2026-08";
+
 export const ESTADOS_DE_PAGAMENTO = [
   "pendente",
   "confirmada",
@@ -19,6 +22,13 @@ export type EstadoDePagamento = (typeof ESTADOS_DE_PAGAMENTO)[number];
 export const entradaCheckoutSchema = z
   .object({
     email: z.string().trim().toLowerCase().email().max(320),
+    nomeCompleto: z.string().trim().min(2).max(120),
+    cpfCnpj: z
+      .string()
+      .trim()
+      .regex(/^[0-9.\-/\s]+$/)
+      .transform((valor) => valor.replace(/\D/g, ""))
+      .refine((valor) => valor.length === 11 || valor.length === 14),
     meio: z.enum(MEIOS_DE_PAGAMENTO),
     maiorDeIdade: z.literal(true),
     aceitouTermos: z.literal(true),

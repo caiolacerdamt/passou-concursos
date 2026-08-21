@@ -13,6 +13,8 @@ describe("contratos do checkout", () => {
     const validado = validarEntradaCheckout(
       {
         email: "  ALUNO@EXEMPLO.COM ",
+        nomeCompleto: "Aluno Exemplo",
+        cpfCnpj: "123.456.789-09",
         meio: "PIX",
         maiorDeIdade: true,
         aceitouTermos: true,
@@ -29,6 +31,8 @@ describe("contratos do checkout", () => {
     expect(
       entradaCheckoutSchema.safeParse({
         email: "aluno@exemplo.com",
+        nomeCompleto: "Aluno Exemplo",
+        cpfCnpj: "12345678909",
         meio: "PIX",
         maiorDeIdade: false,
         aceitouTermos: true,
@@ -38,6 +42,8 @@ describe("contratos do checkout", () => {
     expect(
       entradaCheckoutSchema.safeParse({
         email: "aluno@exemplo.com",
+        nomeCompleto: "Aluno Exemplo",
+        cpfCnpj: "12345678909",
         meio: "PIX",
         maiorDeIdade: true,
         aceitouTermos: false,
@@ -47,6 +53,8 @@ describe("contratos do checkout", () => {
     expect(
       entradaCheckoutSchema.safeParse({
         email: "aluno@exemplo.com",
+        nomeCompleto: "Aluno Exemplo",
+        cpfCnpj: "12345678909",
         meio: "PIX",
         maiorDeIdade: true,
         aceitouTermos: true,
@@ -54,6 +62,21 @@ describe("contratos do checkout", () => {
         dataNascimento: "1990-01-01",
       }).success,
     ).toBe(false);
+  });
+
+  it("normaliza o documento para o provedor e não cria data de nascimento", () => {
+    const validado = validarEntradaCheckout({
+      email: "aluno@exemplo.com",
+      nomeCompleto: "Aluno Exemplo",
+      cpfCnpj: "12.345.678/0001-90",
+      meio: "BOLETO",
+      maiorDeIdade: true,
+      aceitouTermos: true,
+      termosVersao: "v1",
+    });
+
+    expect(validado.cpfCnpj).toBe("12345678000190");
+    expect(validado).not.toHaveProperty("dataNascimento");
   });
 
   it("mantém a máquina pura igual à máquina SQL", () => {

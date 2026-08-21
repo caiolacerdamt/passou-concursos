@@ -70,6 +70,33 @@ describe("adapter Asaas", () => {
     expect(chamadas[0].init.headers).not.toHaveProperty("asaas-access-token");
   });
 
+  it("cria o cliente com os dados fornecidos e não inventa cadastro", async () => {
+    let corpoRecebido: Record<string, unknown> | undefined;
+    const gateway = new AsaasGateway({
+      apiKey: "chave-de-teste",
+      apiUrl: "https://api-sandbox.asaas.com",
+      fetchImpl: async (_url, init = {}) => {
+        corpoRecebido = JSON.parse(String(init.body));
+        return respostaJson({ id: "cus_123" });
+      },
+    });
+
+    await expect(
+      gateway.criarCliente({
+        nomeCompleto: "Aluno Exemplo",
+        email: "aluno@exemplo.com",
+        cpfCnpj: "12345678909",
+      }),
+    ).resolves.toEqual({ id: "cus_123" });
+
+    expect(corpoRecebido).toEqual({
+      name: "Aluno Exemplo",
+      email: "aluno@exemplo.com",
+      cpfCnpj: "12345678909",
+    });
+    expect(corpoRecebido).not.toHaveProperty("birthDate");
+  });
+
   it("Pix usa o valor à vista sem inventar parcela", async () => {
     let corpoRecebido: Record<string, unknown> | undefined;
     const gateway = new AsaasGateway({

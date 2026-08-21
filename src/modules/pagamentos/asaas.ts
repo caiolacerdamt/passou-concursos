@@ -10,6 +10,7 @@ const HOSTS_OFICIAIS_ASAAS = new Set([
 ]);
 
 const CAMINHO_PAGAMENTOS = "/v3/payments";
+const CAMINHO_CLIENTES = "/v3/customers";
 const CAMINHO_FATURAS = "/v3/invoices";
 
 type MetodoHTTP = "GET" | "POST";
@@ -30,6 +31,16 @@ export type CriarCobrancaAsaas = {
   referenciaExterna: string;
   vencimento: string;
   descricao: string;
+};
+
+export type CriarClienteAsaas = {
+  nomeCompleto: string;
+  email: string;
+  cpfCnpj: string;
+};
+
+export type ClienteAsaas = {
+  id: string;
 };
 
 export type CobrancaAsaas = {
@@ -133,6 +144,26 @@ export class AsaasGateway {
       corpo,
     );
     return normalizarCobranca(resposta);
+  }
+
+  async criarCliente(input: CriarClienteAsaas): Promise<ClienteAsaas> {
+    validarCriacaoDeCliente(input);
+
+    const resposta = await this.request<RespostaCliente>(
+      "POST",
+      CAMINHO_CLIENTES,
+      {
+        name: input.nomeCompleto,
+        email: input.email,
+        cpfCnpj: input.cpfCnpj,
+      },
+    );
+
+    if (typeof resposta.id !== "string" || !resposta.id) {
+      throw new ErroAsaas("gateway_indisponivel");
+    }
+
+    return { id: resposta.id };
   }
 
   async consultarCobranca(id: string): Promise<CobrancaAsaas> {
@@ -311,6 +342,8 @@ type RespostaCobranca = Partial<{
   pixCopiaECola: unknown;
 }>;
 
+type RespostaCliente = Partial<{ id: unknown }>;
+
 type RespostaListaDeCobrancas = { data?: unknown };
 
 type RespostaEstorno = Partial<{
@@ -373,6 +406,17 @@ function validarCriacaoDeCobranca(input: CriarCobrancaAsaas): void {
     !Number.isInteger(input.valorCentavos) ||
     input.valorCentavos <= 0 ||
     !MEIOS_DE_PAGAMENTO.includes(input.meio)
+  ) {
+    throw new ErroAsaas("entrada_invalida");
+  }
+}
+
+function validarCriacaoDeCliente(input: CriarClienteAsaas): void {
+  if (
+    input.nomeCompleto.trim().length < 2 ||
+    input.nomeCompleto.length > 120 ||
+    !/^\S+@\S+\.\S+$/.test(input.email) ||
+    !/^(\d{11}|\d{14})$/.test(input.cpfCnpj)
   ) {
     throw new ErroAsaas("entrada_invalida");
   }

@@ -2,7 +2,9 @@
  * Interface publica do modulo do acervo (M1 — BANCO-*).
  *
  * Monolito modular do AD-002: nada de fora importa arquivo interno deste modulo.
- * Hoje o modulo e so contrato de dados — o pipeline de ingestao entra na SPEC 08.
+ * Alem do contrato de dados (SPEC 04), o modulo entrega o pipeline de ingestao
+ * da SPEC 09: ler o PDF, fatiar, conferir o que o modelo devolveu, classificar
+ * o topico, gravar e cruzar o gabarito.
  */
 export {
   type Alternativa,
@@ -33,3 +35,56 @@ export {
   imagensSchema,
   respostaValidaParaTipo,
 } from "./contrato";
+
+export {
+  type ImagemDoPdf,
+  type PaginaDoPdf,
+  type PdfLido,
+  PdfIlegivel,
+  lerPdf,
+  textoDoConteudo,
+} from "./pdf";
+
+export {
+  type BlocoDaProva,
+  type OrcamentoDeTokens,
+  PaginaMaiorQueOTeto,
+  cabecalhoDaPagina,
+  estimarTokens,
+  fatiarEmBlocos,
+  orcamentoVigente,
+} from "./fatiamento";
+
+export {
+  type BlocoValidado,
+  INSTRUCAO as INSTRUCAO_DA_EXTRACAO,
+  NOME_DO_FORMATO,
+  type QuestaoExtraida,
+  type QuestaoRecusada,
+  SCHEMA_DA_EXTRACAO,
+  questaoExtraidaSchema,
+  validarBloco,
+} from "./extracao";
+
+export {
+  type Classificacao,
+  type TopicoCanonico,
+  casarTopico,
+  classificar,
+  lerCatalogo,
+  normalizarNome,
+} from "./classificacao";
+
+export {
+  type ContextoDaGravacao,
+  type ProvaCatalogada,
+  ProvaNaoCatalogada,
+  type ResumoDaGravacao,
+  type SubidorDeImagem,
+  caminhoDaImagem,
+  fonteCitacaoDe,
+  gravarQuestoes,
+  lerProva,
+  marcarProva,
+  registrarBlocos,
+} from "./ingestao";

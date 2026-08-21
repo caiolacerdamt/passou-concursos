@@ -1,4 +1,4 @@
-import { getParam } from "@/modules/config";
+import { getParams } from "@/modules/config";
 
 import type { PaginaDoPdf } from "./pdf";
 
@@ -69,12 +69,16 @@ export class PaginaMaiorQueOTeto extends Error {
 
 /** O orcamento vigente, lido da configuracao. */
 export async function orcamentoVigente(): Promise<OrcamentoDeTokens> {
-  const [teto, margem, charsPorToken, paginasPorBloco] = await Promise.all([
-    getParam("param.m1.teto_tokens_por_pedido"),
-    getParam("param.m1.margem_do_teto"),
-    getParam("param.m1.chars_por_token"),
-    getParam("param.m1.paginas_por_bloco"),
-  ]);
+  // `getParams`, e nao quatro `getParam` em `Promise.all`: o job fala com o banco
+  // por uma conexao `pg` unica, que **nao** aceita consultas concorrentes — o
+  // driver avisa e promete remover o suporte na versao 9. Uma leitura so tambem
+  // e um round-trip so.
+  const [teto, margem, charsPorToken, paginasPorBloco] = await getParams(
+    "param.m1.teto_tokens_por_pedido",
+    "param.m1.margem_do_teto",
+    "param.m1.chars_por_token",
+    "param.m1.paginas_por_bloco",
+  );
 
   return {
     teto,

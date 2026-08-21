@@ -198,15 +198,22 @@ somente dados anônimos ao PostHog quando configurado, sem bloquear a compra.
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [ ] Existem somente quatro eventos públicos e meio é o único campo opcional permitido.
-- [ ] E-mail, nome, CPF, telefone, `user_id`, pagamento e chaves desconhecidas são descartados.
-- [ ] Sem PostHog, com bloqueador ou com timeout, a rota continua respondendo sem afetar o checkout.
-- [ ] Não há session replay nem emissão da flag/logado na superfície protegida.
+- [x] Existem somente quatro eventos públicos e meio é o único campo opcional permitido.
+- [x] E-mail, nome, CPF, telefone, `user_id`, pagamento e chaves desconhecidas são descartados.
+- [x] Sem PostHog, com bloqueador ou com timeout, a rota continua respondendo sem afetar o checkout.
+- [x] Não há session replay nem emissão da flag/logado na superfície protegida.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(infra): adiciona proxy anonimo do funil`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; allowlist, proxy same-origin e transporte servidor-only publicados.
+- **Assumptions**: PostHog usa endpoint EUA oficial configurado por ambiente; `distinct_id=anonimo` é o único identificador enviado.
+- **Files**: `src/modules/analytics/funil.ts`, `src/modules/analytics/funil.test.ts`, `src/modules/analytics/posthog.ts`, `src/modules/analytics/posthog.test.ts`, `src/app/api/analytics/route.ts`, `src/app/api/analytics/route.test.ts`, `src/modules/conta/rotas.ts`, `src/modules/conta/rotas.test.ts`.
+- **Success evidence**: `npm run test:unit` — 64 arquivos, 514 testes verdes antes do teste direto do transporte; depois, transporte isolado — 1 arquivo, 3 testes verdes.
 
 ### T111: Construir a página pública e textos legais iniciais
 

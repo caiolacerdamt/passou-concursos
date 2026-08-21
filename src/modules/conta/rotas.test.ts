@@ -17,6 +17,7 @@ describe("ehRotaPublica", () => {
   it("deixa passar o que esta abaixo de um prefixo publico", () => {
     expect(ehRotaPublica("/auth/callback")).toBe(true);
     expect(ehRotaPublica("/entrar/erro")).toBe(true);
+    expect(ehRotaPublica("/api/analytics")).toBe(true);
   });
 
   /**

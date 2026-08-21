@@ -28,12 +28,20 @@ export async function pedirReembolso() {
   const resultado = await solicitarReembolso(user.id, precos.garantiaDias, new Date(), {
     buscarPagamentoDoUsuario: repositorio.buscarUltimoPagamentoDoUsuario,
     estornarCobranca: repositorioEstorno(gateway!),
-    registrarSolicitacaoReembolso: repositorio.registrarSolicitacaoReembolso,
-    mudarEstado: (pagamentoId, motivo) =>
-      repositorio.mudarEstado(pagamentoId, "reembolsada", motivo),
-    marcarMatriculaReembolsada: repositorio.marcarMatriculaReembolsada,
-    abrirPendencia: (pagamentoId, codigo) =>
-      repositorio.abrirPendencia(pagamentoId, "alerta", codigo),
+    confirmarReembolsoLocal: repositorio.confirmarReembolsoLocal,
+    buscarFatura: repositorio.buscarFatura,
+    cancelarNotaFiscal: async (faturaId) => {
+      const cancelamento = await gateway!.cancelarNotaFiscal(faturaId);
+      return { status: cancelamento.status };
+    },
+    registrarResultadoCancelamentoNF: async (input) =>
+      repositorio.registrarResultadoCancelamentoFatura(input.pagamentoId, {
+        estado: input.estado,
+        statusGateway: input.statusGateway,
+        codigo: input.codigo,
+      }),
+    abrirPendencia: (pagamentoId, tipo, codigo) =>
+      repositorio.abrirPendencia(pagamentoId, tipo, codigo),
   });
 
   redirect(`/app/reembolso?resultado=${resultado.estado}`);

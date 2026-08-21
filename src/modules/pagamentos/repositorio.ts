@@ -3,6 +3,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clienteDeServico } from "@/lib/db/servidor";
 
 import type { MeioDePagamento } from "./contratos";
+import {
+  criarTokenDeResultado,
+  hashTokenDeResultado,
+} from "./resultado-token";
 
 export type PagamentoCheckout = {
   id: string;
@@ -44,6 +48,13 @@ export type ResultadoGatewayPersistido = {
   bankSlipUrl: string | null;
   pixQrCode: string | null;
   pixCopiaECola: string | null;
+};
+
+export type FaturaOperacional = {
+  pagamento_id: string;
+  asaas_fatura_id: string | null;
+  estado: string;
+  status_gateway: string | null;
 };
 
 type UsuarioAuth = { id: string; email?: string | undefined };
@@ -114,8 +125,39 @@ export function criarRepositorioDePagamentos(
       if (error) throw error;
     },
 
+    async criarTokenResultado(pagamentoId: string): Promise<string> {
+      const resultado = criarTokenDeResultado();
+      const { error } = await cliente
+        .from("pagamento_resultado_tokens")
+        .upsert(
+          {
+            pagamento_id: pagamentoId,
+            token_hash: resultado.hash,
+            expira_em: resultado.expiraEm.toISOString(),
+          },
+          { onConflict: "pagamento_id" },
+        );
+      if (error) throw error;
+      return resultado.token;
+    },
+
     async buscarPagamento(pagamentoId: string) {
       return buscarPagamentoCom(cliente, "id", pagamentoId);
+    },
+
+    async buscarPagamentoPorToken(token: string) {
+      if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
+
+      const { data, error } = await cliente
+        .from("pagamento_resultado_tokens")
+        .select("pagamento_id")
+        .eq("token_hash", hashTokenDeResultado(token))
+        .gt("expira_em", new Date().toISOString())
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+
+      return buscarPagamentoCom(cliente, "id", data.pagamento_id);
     },
 
     async buscarPagamentoPorReferencia(referencia: string) {
@@ -139,35 +181,23 @@ export function criarRepositorioDePagamentos(
       return data as PagamentoOperacional | null;
     },
 
-    async registrarSolicitacaoReembolso(
-      pagamentoId: string,
-      userId: string,
-      meio: MeioDePagamento,
-      quando: string,
-    ): Promise<void> {
-      const { error } = await cliente
-        .from("pagamentos")
-        .update({
-          reembolso_solicitado_por: userId,
-          reembolso_solicitado_em: quando,
-          reembolso_meio: meio,
-        })
-        .eq("id", pagamentoId)
-        .eq("user_id", userId);
-      if (error) throw error;
-    },
-
-    async marcarMatriculaReembolsada(
-      matriculaId: string,
-      userId: string,
-    ): Promise<void> {
-      const { error } = await cliente
-        .from("matriculas")
-        .update({ estado: "reembolsada" })
-        .eq("id", matriculaId)
-        .eq("user_id", userId)
-        .eq("estado", "ativa");
-      if (error) throw error;
+    async confirmarReembolsoLocal(input: {
+      pagamentoId: string;
+      userId: string;
+      meio: MeioDePagamento;
+      quando: string;
+      motivo: string;
+    }): Promise<void> {
+      const { data, error } = await cliente.rpc("confirmar_reembolso_pagamento", {
+        p_pagamento_id: input.pagamentoId,
+        p_user_id: input.userId,
+        p_meio: input.meio,
+        p_quando: input.quando,
+        p_motivo: input.motivo,
+      });
+      if (error || data !== true) {
+        throw error ?? new Error("fechamento local do reembolso falhou");
+      }
     },
 
     async registrarEvento(input: {
@@ -332,6 +362,42 @@ export function criarRepositorioDePagamentos(
       const { error } = await cliente
         .from("faturas")
         .update({ estado: "falha", erro_codigo: codigo })
+        .eq("pagamento_id", pagamentoId);
+      if (error) throw error;
+    },
+
+    async buscarFatura(pagamentoId: string): Promise<FaturaOperacional | null> {
+      const { data, error } = await cliente
+        .from("faturas")
+        .select("pagamento_id, asaas_fatura_id, estado, status_gateway")
+        .eq("pagamento_id", pagamentoId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as FaturaOperacional | null;
+    },
+
+    async registrarResultadoCancelamentoFatura(
+      pagamentoId: string,
+      resultado: {
+        estado:
+          | "cancelamento_processando"
+          | "cancelada"
+          | "cancelamento_negado"
+          | "falha_cancelamento";
+        statusGateway: string | null;
+        codigo: string | null;
+      },
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("faturas")
+        .update({
+          estado: resultado.estado,
+          status_gateway: resultado.statusGateway,
+          cancelamento_solicitado_em: new Date().toISOString(),
+          cancelada_em:
+            resultado.estado === "cancelada" ? new Date().toISOString() : null,
+          erro_codigo: resultado.codigo,
+        })
         .eq("pagamento_id", pagamentoId);
       if (error) throw error;
     },

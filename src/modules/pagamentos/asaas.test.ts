@@ -171,6 +171,27 @@ describe("adapter Asaas", () => {
     ]);
   });
 
+  it("solicita cancelamento da NF no endpoint oficial e envia cancelOnlyOnAsaas", async () => {
+    let chamada: { url: string; body: unknown } | undefined;
+    const gateway = new AsaasGateway({
+      apiKey: "chave-de-teste",
+      apiUrl: "https://api-sandbox.asaas.com",
+      fetchImpl: async (url, init = {}) => {
+        chamada = { url: String(url), body: JSON.parse(String(init.body)) };
+        return respostaJson({ id: "nf_1", status: "PROCESSING_CANCELLATION" });
+      },
+    });
+
+    await expect(gateway.cancelarNotaFiscal("nf_1")).resolves.toMatchObject({
+      id: "nf_1",
+      status: "PROCESSING_CANCELLATION",
+    });
+    expect(chamada).toEqual({
+      url: "https://api-sandbox.asaas.com/v3/invoices/nf_1/cancel",
+      body: { cancelOnlyOnAsaas: true },
+    });
+  });
+
   it("não expõe resposta do gateway e transforma timeout em erro seguro", async () => {
     const gateway = new AsaasGateway({
       apiKey: "segredo-super-secreto",

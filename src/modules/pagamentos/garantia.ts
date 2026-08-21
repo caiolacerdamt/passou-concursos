@@ -1,6 +1,6 @@
 import type { EstadoDePagamento } from "./contratos";
 import type { MeioDePagamento } from "./contratos";
-import type { PagamentoOperacional } from "./repositorio";
+import type { FaturaOperacional, PagamentoOperacional } from "./repositorio";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 
 export type DadosDaGarantia = {
@@ -18,7 +18,11 @@ export type ResultadoDaGarantia = {
 };
 
 export type ResultadoDoReembolso =
-  | { estado: "solicitado"; mensagem: string }
+  | {
+      estado: "solicitado";
+      mensagem: string;
+      notaFiscal: "ausente" | "cancelada" | "processando" | "negada" | "pendente";
+    }
   | { estado: "recusado"; mensagem: string }
   | { estado: "pendente"; mensagem: string };
 
@@ -29,15 +33,30 @@ export type DependenciasDeReembolso = {
     meio: MeioDePagamento,
     descricao: string,
   ): Promise<{ status: string | null }>;
-  registrarSolicitacaoReembolso(
+  confirmarReembolsoLocal(input: {
+    pagamentoId: string;
+    userId: string;
+    meio: MeioDePagamento;
+    quando: string;
+    motivo: string;
+  }): Promise<void>;
+  buscarFatura?(pagamentoId: string): Promise<FaturaOperacional | null>;
+  cancelarNotaFiscal?(faturaId: string): Promise<{ status: string | null }>;
+  registrarResultadoCancelamentoNF?(input: {
+    pagamentoId: string;
+    estado:
+      | "cancelamento_processando"
+      | "cancelada"
+      | "cancelamento_negado"
+      | "falha_cancelamento";
+    statusGateway: string | null;
+    codigo: string | null;
+  }): Promise<void>;
+  abrirPendencia(
     pagamentoId: string,
-    userId: string,
-    meio: MeioDePagamento,
-    quando: string,
+    tipo: "alerta" | "nota_fiscal",
+    codigo: string,
   ): Promise<void>;
-  mudarEstado(pagamentoId: string, motivo: string): Promise<void>;
-  marcarMatriculaReembolsada(matriculaId: string, userId: string): Promise<void>;
-  abrirPendencia(pagamentoId: string, codigo: string): Promise<void>;
 };
 
 const MILISSEGUNDOS_POR_DIA = 86_400_000;
@@ -122,6 +141,46 @@ export async function solicitarReembolso(
     };
   }
 
+  // Se o gateway já confirmou em uma tentativa anterior, a operação segura é
+  // repetir somente o fechamento local. Isso corrige a janela reembolsada +
+  // matrícula ativa sem emitir um segundo estorno externo.
+  if (pagamento.estado === "reembolsada") {
+    try {
+      await dependencias.confirmarReembolsoLocal({
+        pagamentoId: pagamento.id,
+        userId,
+        meio: pagamento.meio,
+        quando: agora.toISOString(),
+        motivo: "reembolso_confirmado_retry_local",
+      });
+      const notaFiscal = await processarCancelamentoDaNotaFiscal(
+        pagamento,
+        dependencias,
+      );
+      return {
+        estado: "solicitado",
+        mensagem: mensagemDeSucessoDoReembolso(notaFiscal),
+        notaFiscal,
+      };
+    } catch (erro) {
+      await abrirPendenciaSegura(
+        dependencias,
+        pagamento.id,
+        "alerta",
+        "falha_fechamento_reembolso",
+      );
+      reportarErro(erro, {
+        modulo: "pagamentos",
+        operacao: "retry_fechamento_reembolso",
+        pagamento_id: pagamento.id,
+      });
+      return {
+        estado: "pendente",
+        mensagem: "O acesso ainda está sendo encerrado. O pedido ficou em análise.",
+      };
+    }
+  }
+
   const janela = calcularGarantia({
     estadoPagamento: pagamento.estado as EstadoDePagamento,
     confirmadoEm: pagamento.confirmado_em,
@@ -130,18 +189,29 @@ export async function solicitarReembolso(
   });
   const recusa = mensagemDaRecusaDaGarantia(janela);
   if (recusa) {
-    await abrirPendenciaSegura(dependencias, pagamento.id, "tentativa_reembolso_invalida");
+    await abrirPendenciaSegura(
+      dependencias,
+      pagamento.id,
+      "alerta",
+      "tentativa_reembolso_invalida",
+    );
     return { estado: "recusado", mensagem: recusa };
   }
 
   if (!pagamento.asaas_cobranca_id) {
-    await abrirPendenciaSegura(dependencias, pagamento.id, "cobranca_sem_id");
+    await abrirPendenciaSegura(
+      dependencias,
+      pagamento.id,
+      "alerta",
+      "cobranca_sem_id",
+    );
     return {
       estado: "pendente",
       mensagem: "Não conseguimos localizar o estorno agora. O pedido ficou em análise.",
     };
   }
 
+  let gatewayConfirmado = false;
   try {
     const estorno = await dependencias.estornarCobranca(
       pagamento.asaas_cobranca_id,
@@ -149,31 +219,44 @@ export async function solicitarReembolso(
       "Garantia do plano anual",
     );
     if (!estornoConfirmado(estorno.status)) {
-      await abrirPendenciaSegura(dependencias, pagamento.id, "estorno_aguardando_confirmacao");
+      await abrirPendenciaSegura(
+        dependencias,
+        pagamento.id,
+        "alerta",
+        "estorno_aguardando_confirmacao",
+      );
       return {
         estado: "pendente",
         mensagem: "O estorno foi solicitado e aguarda confirmação do provedor.",
       };
     }
+    gatewayConfirmado = true;
 
     const quando = agora.toISOString();
-    await dependencias.registrarSolicitacaoReembolso(
-      pagamento.id,
+    await dependencias.confirmarReembolsoLocal({
+      pagamentoId: pagamento.id,
       userId,
-      pagamento.meio,
+      meio: pagamento.meio,
       quando,
+      motivo: "reembolso_confirmado",
+    });
+    const notaFiscal = await processarCancelamentoDaNotaFiscal(
+      pagamento,
+      dependencias,
     );
-    await dependencias.mudarEstado(pagamento.id, "reembolso_confirmado");
-    if (pagamento.matricula_id) {
-      await dependencias.marcarMatriculaReembolsada(pagamento.matricula_id, userId);
-    }
 
     return {
       estado: "solicitado",
-      mensagem: "Reembolso confirmado. O acesso foi encerrado.",
+      mensagem: mensagemDeSucessoDoReembolso(notaFiscal),
+      notaFiscal,
     };
   } catch (erro) {
-    await abrirPendenciaSegura(dependencias, pagamento.id, "falha_no_estorno");
+    await abrirPendenciaSegura(
+      dependencias,
+      pagamento.id,
+      "alerta",
+      gatewayConfirmado ? "falha_fechamento_reembolso" : "falha_no_estorno",
+    );
     reportarErro(erro, {
       modulo: "pagamentos",
       operacao: "solicitar_reembolso",
@@ -194,10 +277,11 @@ function estornoConfirmado(status: string | null): boolean {
 async function abrirPendenciaSegura(
   dependencias: Pick<DependenciasDeReembolso, "abrirPendencia">,
   pagamentoId: string,
+  tipo: "alerta" | "nota_fiscal",
   codigo: string,
 ): Promise<void> {
   try {
-    await dependencias.abrirPendencia(pagamentoId, codigo);
+    await dependencias.abrirPendencia(pagamentoId, tipo, codigo);
   } catch (erro) {
     reportarErro(erro, {
       modulo: "pagamentos",
@@ -206,6 +290,163 @@ async function abrirPendenciaSegura(
       codigo,
     });
   }
+}
+
+type ResultadoDoCancelamentoDaNota =
+  | "ausente"
+  | "cancelada"
+  | "processando"
+  | "negada"
+  | "pendente";
+
+async function processarCancelamentoDaNotaFiscal(
+  pagamento: PagamentoOperacional,
+  dependencias: DependenciasDeReembolso,
+): Promise<ResultadoDoCancelamentoDaNota> {
+  if (!dependencias.buscarFatura || !dependencias.registrarResultadoCancelamentoNF) {
+    return "ausente";
+  }
+
+  let fatura: FaturaOperacional | null;
+  try {
+    fatura = await dependencias.buscarFatura(pagamento.id);
+  } catch (erro) {
+    await abrirPendenciaSegura(
+      dependencias,
+      pagamento.id,
+      "nota_fiscal",
+      "falha_consulta_nf_reembolso",
+    );
+    reportarErro(erro, {
+      modulo: "pagamentos",
+      operacao: "consultar_nf_reembolso",
+      pagamento_id: pagamento.id,
+    });
+    return "pendente";
+  }
+
+  if (!fatura?.asaas_fatura_id) return "ausente";
+  if (fatura.estado === "cancelada") return "cancelada";
+  if (fatura.estado === "cancelamento_processando") return "processando";
+  if (fatura.estado === "cancelamento_negado") return "negada";
+  if (!dependencias.cancelarNotaFiscal) {
+    await registrarFalhaDeCancelamentoNF(
+      pagamento.id,
+      null,
+      "configuracao_cancelamento_nf_ausente",
+      dependencias,
+    );
+    return "pendente";
+  }
+
+  try {
+    const resposta = await dependencias.cancelarNotaFiscal(fatura.asaas_fatura_id);
+    const status = resposta.status?.toUpperCase() ?? null;
+    if (status === "CANCELED") {
+      await dependencias.registrarResultadoCancelamentoNF({
+        pagamentoId: pagamento.id,
+        estado: "cancelada",
+        statusGateway: status,
+        codigo: null,
+      });
+      return "cancelada";
+    }
+    if (status === "PROCESSING_CANCELLATION") {
+      await dependencias.registrarResultadoCancelamentoNF({
+        pagamentoId: pagamento.id,
+        estado: "cancelamento_processando",
+        statusGateway: status,
+        codigo: null,
+      });
+      await abrirPendenciaSegura(
+        dependencias,
+        pagamento.id,
+        "nota_fiscal",
+        "cancelamento_nf_em_processamento",
+      );
+      return "processando";
+    }
+    if (status === "CANCELLATION_DENIED") {
+      await dependencias.registrarResultadoCancelamentoNF({
+        pagamentoId: pagamento.id,
+        estado: "cancelamento_negado",
+        statusGateway: status,
+        codigo: "cancelamento_nf_negado",
+      });
+      await abrirPendenciaSegura(
+        dependencias,
+        pagamento.id,
+        "nota_fiscal",
+        "cancelamento_nf_negado",
+      );
+      reportarErro(new Error("cancelamento de NF negado"), {
+        modulo: "pagamentos",
+        operacao: "cancelar_nf_reembolso",
+        pagamento_id: pagamento.id,
+        status_gateway: status,
+      });
+      return "negada";
+    }
+
+    await registrarFalhaDeCancelamentoNF(
+      pagamento.id,
+      status,
+      "status_cancelamento_nf_desconhecido",
+      dependencias,
+    );
+    return "pendente";
+  } catch (erro) {
+    await registrarFalhaDeCancelamentoNF(
+      pagamento.id,
+      null,
+      "falha_cancelamento_nf",
+      dependencias,
+    );
+    reportarErro(erro, {
+      modulo: "pagamentos",
+      operacao: "cancelar_nf_reembolso",
+      pagamento_id: pagamento.id,
+    });
+    return "pendente";
+  }
+}
+
+async function registrarFalhaDeCancelamentoNF(
+  pagamentoId: string,
+  statusGateway: string | null,
+  codigo: string,
+  dependencias: DependenciasDeReembolso,
+): Promise<void> {
+  try {
+    await dependencias.registrarResultadoCancelamentoNF?.({
+      pagamentoId,
+      estado: "falha_cancelamento",
+      statusGateway,
+      codigo,
+    });
+    await abrirPendenciaSegura(
+      dependencias,
+      pagamentoId,
+      "nota_fiscal",
+      codigo,
+    );
+  } catch (erro) {
+    reportarErro(erro, {
+      modulo: "pagamentos",
+      operacao: "persistir_cancelamento_nf",
+      pagamento_id: pagamentoId,
+      codigo,
+    });
+  }
+}
+
+function mensagemDeSucessoDoReembolso(
+  notaFiscal: ResultadoDoCancelamentoDaNota,
+): string {
+  if (notaFiscal === "processando" || notaFiscal === "negada" || notaFiscal === "pendente") {
+    return "Reembolso confirmado. O acesso foi encerrado; a nota fiscal ficou em análise.";
+  }
+  return "Reembolso confirmado. O acesso foi encerrado.";
 }
 
 function converterData(data: Date | string): Date {

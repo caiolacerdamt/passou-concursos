@@ -80,6 +80,12 @@ export type NotaFiscalAsaas = {
   externalReference: string | null;
 };
 
+export type CancelamentoNotaFiscalAsaas = {
+  id: string | null;
+  status: string | null;
+  externalReference: string | null;
+};
+
 export type EstornoAsaas = {
   id: string | null;
   status: string | null;
@@ -243,6 +249,27 @@ export class AsaasGateway {
 
     return {
       id: typeof resposta.id === "string" ? resposta.id : "",
+      status: typeof resposta.status === "string" ? resposta.status : null,
+      externalReference:
+        typeof resposta.externalReference === "string"
+          ? resposta.externalReference
+          : null,
+    };
+  }
+
+  async cancelarNotaFiscal(
+    id: string,
+    cancelOnlyOnAsaas = true,
+  ): Promise<CancelamentoNotaFiscalAsaas> {
+    const identificador = validarIdentificador(id);
+    const resposta = await this.request<RespostaNotaFiscal>(
+      "POST",
+      `${CAMINHO_FATURAS}/${encodeURIComponent(identificador)}/cancel`,
+      { cancelOnlyOnAsaas },
+    );
+
+    return {
+      id: typeof resposta.id === "string" ? resposta.id : null,
       status: typeof resposta.status === "string" ? resposta.status : null,
       externalReference:
         typeof resposta.externalReference === "string"

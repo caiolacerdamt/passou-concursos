@@ -6,7 +6,7 @@ import {
   mensagemDaRecusaDaGarantia,
   solicitarReembolso,
 } from "./garantia";
-import type { PagamentoOperacional } from "./repositorio";
+import type { FaturaOperacional, PagamentoOperacional } from "./repositorio";
 
 describe("garantia de pagamento", () => {
   const confirmado = "2026-08-01T12:00:00.000Z";
@@ -76,20 +76,13 @@ describe("garantia de pagamento", () => {
       "PIX",
       "Garantia do plano anual",
     );
-    expect(dependencias.registrarSolicitacaoReembolso).toHaveBeenCalledWith(
-      "pag_1",
-      "user_1",
-      "PIX",
-      "2026-08-06T01:00:00.000Z",
-    );
-    expect(dependencias.mudarEstado).toHaveBeenCalledWith(
-      "pag_1",
-      "reembolso_confirmado",
-    );
-    expect(dependencias.marcarMatriculaReembolsada).toHaveBeenCalledWith(
-      "mat_1",
-      "user_1",
-    );
+    expect(dependencias.confirmarReembolsoLocal).toHaveBeenCalledWith({
+      pagamentoId: "pag_1",
+      userId: "user_1",
+      meio: "PIX",
+      quando: "2026-08-06T01:00:00.000Z",
+      motivo: "reembolso_confirmado",
+    });
   });
 
   it("recusa o nono dia e uma tentativa antes da confirmação sem chamar o gateway", async () => {
@@ -106,6 +99,7 @@ describe("garantia de pagamento", () => {
     expect(foraDaJanela.estornarCobranca).not.toHaveBeenCalled();
     expect(foraDaJanela.abrirPendencia).toHaveBeenCalledWith(
       "pag_1",
+      "alerta",
       "tentativa_reembolso_invalida",
     );
 
@@ -123,10 +117,10 @@ describe("garantia de pagamento", () => {
     expect(resultadoAntes.estado).toBe("recusado");
     expect(resultadoAntes.mensagem).toMatch(/confirmação/);
     expect(antesDaConfirmacao.estornarCobranca).not.toHaveBeenCalled();
-    expect(antesDaConfirmacao.mudarEstado).not.toHaveBeenCalled();
-    expect(antesDaConfirmacao.marcarMatriculaReembolsada).not.toHaveBeenCalled();
+    expect(antesDaConfirmacao.confirmarReembolsoLocal).not.toHaveBeenCalled();
     expect(antesDaConfirmacao.abrirPendencia).toHaveBeenCalledWith(
       "pag_1",
+      "alerta",
       "tentativa_reembolso_invalida",
     );
   });
@@ -143,10 +137,10 @@ describe("garantia de pagamento", () => {
     );
 
     expect(resultadoFalha.estado).toBe("pendente");
-    expect(gatewayFalhou.mudarEstado).not.toHaveBeenCalled();
-    expect(gatewayFalhou.marcarMatriculaReembolsada).not.toHaveBeenCalled();
+    expect(gatewayFalhou.confirmarReembolsoLocal).not.toHaveBeenCalled();
     expect(gatewayFalhou.abrirPendencia).toHaveBeenCalledWith(
       "pag_1",
+      "alerta",
       "falha_no_estorno",
     );
 
@@ -160,18 +154,104 @@ describe("garantia de pagamento", () => {
     );
 
     expect(resultadoAguardando.estado).toBe("pendente");
-    expect(aguardando.mudarEstado).not.toHaveBeenCalled();
-    expect(aguardando.marcarMatriculaReembolsada).not.toHaveBeenCalled();
+    expect(aguardando.confirmarReembolsoLocal).not.toHaveBeenCalled();
     expect(aguardando.abrirPendencia).toHaveBeenCalledWith(
       "pag_1",
+      "alerta",
       "estorno_aguardando_confirmacao",
     );
+  });
+
+  it("permite retry local quando pagamento reembolsado ainda deixou matrícula ativa", async () => {
+    const primeira = criarDependencias();
+    primeira.confirmarReembolsoLocal.mockRejectedValueOnce(new Error("falha local"));
+
+    const resultadoPrimeiro = await solicitarReembolso(
+      "user_1",
+      7,
+      new Date("2026-08-06T01:00:00.000Z"),
+      primeira,
+    );
+
+    expect(resultadoPrimeiro.estado).toBe("pendente");
+    expect(primeira.abrirPendencia).toHaveBeenCalledWith(
+      "pag_1",
+      "alerta",
+      "falha_fechamento_reembolso",
+    );
+
+    const retry = criarDependencias({ estado: "reembolsada" });
+    const resultadoRetry = await solicitarReembolso(
+      "user_1",
+      7,
+      new Date("2026-08-06T01:00:00.000Z"),
+      retry,
+    );
+
+    expect(resultadoRetry.estado).toBe("solicitado");
+    expect(retry.estornarCobranca).not.toHaveBeenCalled();
+    expect(retry.confirmarReembolsoLocal).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ["PROCESSING_CANCELLATION", "cancelamento_processando", "nota_fiscal", "cancelamento_nf_em_processamento"],
+    ["CANCELED", "cancelada", null, null],
+    ["CANCELLATION_DENIED", "cancelamento_negado", "nota_fiscal", "cancelamento_nf_negado"],
+  ])("trata status de cancelamento de NF %s sem reabrir acesso", async (status, estado, tipo, codigo) => {
+    const dependencias = criarDependencias({
+      fatura: { asaas_fatura_id: "nf_1", estado: "emitida" },
+      cancelamentoNF: { status },
+    });
+
+    const resultado = await solicitarReembolso(
+      "user_1",
+      7,
+      new Date("2026-08-06T01:00:00.000Z"),
+      dependencias,
+    );
+
+    expect(resultado.estado).toBe("solicitado");
+    expect(dependencias.confirmarReembolsoLocal).toHaveBeenCalled();
+    expect(dependencias.registrarResultadoCancelamentoNF).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pagamentoId: "pag_1",
+        estado,
+        statusGateway: status,
+      }),
+    );
+    if (tipo && codigo) {
+      expect(dependencias.abrirPendencia).toHaveBeenCalledWith("pag_1", tipo, codigo);
+    } else {
+      expect(dependencias.abrirPendencia).not.toHaveBeenCalledWith(
+        "pag_1",
+        "nota_fiscal",
+        expect.any(String),
+      );
+    }
+  });
+
+  it("não bloqueia reembolso quando não existe NF Asaas", async () => {
+    const dependencias = criarDependencias();
+
+    const resultado = await solicitarReembolso(
+      "user_1",
+      7,
+      new Date("2026-08-06T01:00:00.000Z"),
+      dependencias,
+    );
+
+    expect(resultado.estado).toBe("solicitado");
+    expect(dependencias.cancelarNotaFiscal).not.toHaveBeenCalled();
   });
 });
 
 function criarDependencias(
-  sobrescritas: Partial<PagamentoOperacional> = {},
+  opcoes: Partial<PagamentoOperacional> & {
+    fatura?: { asaas_fatura_id: string | null; estado: string } | null;
+    cancelamentoNF?: { status: string | null };
+  } = {},
 ) {
+  const { fatura = null, cancelamentoNF = { status: "CANCELED" }, ...sobrescritas } = opcoes;
   const pagamento: PagamentoOperacional = {
     id: "pag_1",
     produto_id: "produto_1",
@@ -199,9 +279,19 @@ function criarDependencias(
   return {
     buscarPagamentoDoUsuario: vi.fn(async () => pagamento),
     estornarCobranca: vi.fn(async () => ({ status: "DONE" })),
-    registrarSolicitacaoReembolso: vi.fn(async () => undefined),
-    mudarEstado: vi.fn(async () => undefined),
-    marcarMatriculaReembolsada: vi.fn(async () => undefined),
+    confirmarReembolsoLocal: vi.fn(async () => undefined),
+    buscarFatura: vi.fn(async (): Promise<FaturaOperacional | null> =>
+      fatura
+        ? {
+            pagamento_id: "pag_1",
+            asaas_fatura_id: fatura.asaas_fatura_id,
+            estado: fatura.estado,
+            status_gateway: null,
+          }
+        : null,
+    ),
+    cancelarNotaFiscal: vi.fn(async () => cancelamentoNF),
+    registrarResultadoCancelamentoNF: vi.fn(async () => undefined),
     abrirPendencia: vi.fn(async () => undefined),
   };
 }

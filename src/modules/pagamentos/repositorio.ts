@@ -180,8 +180,121 @@ export function criarRepositorioDePagamentos(
       });
       if (error) throw error;
     },
+
+    async reservarAtivacao(pagamentoId: string, dono: string): Promise<boolean> {
+      const { data, error } = await cliente.rpc("reservar_ativacao_pagamento", {
+        p_pagamento_id: pagamentoId,
+        p_dono: dono,
+      });
+      if (error) throw error;
+      return data === true;
+    },
+
+    async buscarProduto(produtoId: string): Promise<ProdutoPagamento | null> {
+      const { data, error } = await cliente
+        .from("produtos")
+        .select("id, codigo, meses_de_acesso")
+        .eq("id", produtoId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as ProdutoPagamento | null;
+    },
+
+    async buscarMatriculaAtiva(userId: string): Promise<{ id: string } | null> {
+      const { data, error } = await cliente
+        .from("matriculas")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("estado", "ativa")
+        .gt("fim_em", new Date().toISOString())
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string } | null;
+    },
+
+    async criarUsuario(email: string): Promise<{ id: string }> {
+      const { data, error } = await cliente.auth.admin.createUser({
+        email,
+        email_confirm: true,
+      });
+      if (error || !data.user) {
+        const existente = await obterUsuarioPorEmail(cliente, email);
+        if (existente) return existente;
+        throw error ?? new Error("usuario nao criado");
+      }
+      return { id: data.user.id };
+    },
+
+    async buscarUsuarioPorEmail(email: string): Promise<{ id: string } | null> {
+      return obterUsuarioPorEmail(cliente, email);
+    },
+
+    async enviarDefinicaoDeSenha(email: string): Promise<void> {
+      const origem = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
+      const { error } = await cliente.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origem}/auth/callback?proximo=%2Fdefinir-senha`,
+      });
+      if (error) throw error;
+    },
+
+    async criarMatricula(userId: string, produtoId: string): Promise<{ id: string }> {
+      const { data, error } = await cliente
+        .from("matriculas")
+        .insert({ user_id: userId, produto_id: produtoId })
+        .select("id")
+        .single();
+      if (error || !data) throw error ?? new Error("matricula nao criada");
+      return data as { id: string };
+    },
+
+    async vincularPagamento(
+      pagamentoId: string,
+      userId: string,
+      matriculaId: string,
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("pagamentos")
+        .update({ user_id: userId, matricula_id: matriculaId })
+        .eq("id", pagamentoId);
+      if (error) throw error;
+    },
+
+    async garantirFatura(pagamentoId: string): Promise<void> {
+      const { error } = await cliente.from("faturas").upsert(
+        { pagamento_id: pagamentoId, estado: "pendente" },
+        { onConflict: "pagamento_id", ignoreDuplicates: true },
+      );
+      if (error) throw error;
+    },
+
+    async marcarFaturaEmitida(
+      pagamentoId: string,
+      nota: { id: string; referencia: string | null },
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("faturas")
+        .update({
+          asaas_fatura_id: nota.id,
+          referencia_fiscal: nota.referencia,
+          estado: "emitida",
+          emitida_em: new Date().toISOString(),
+          erro_codigo: null,
+        })
+        .eq("pagamento_id", pagamentoId);
+      if (error) throw error;
+    },
+
+    async marcarFaturaFalha(pagamentoId: string, codigo: string): Promise<void> {
+      const { error } = await cliente
+        .from("faturas")
+        .update({ estado: "falha", erro_codigo: codigo })
+        .eq("pagamento_id", pagamentoId);
+      if (error) throw error;
+    },
   };
 }
+
+export type RepositorioDePagamentos = ReturnType<typeof criarRepositorioDePagamentos>;
 
 const COLUNAS_PAGAMENTO_OPERACIONAL =
   "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em";

@@ -310,16 +310,23 @@ falhas de NF sem bloquear a ativação.
 **Tools**: Skill `tlc-spec-driven`; SDK Supabase existente
 **Done when**:
 
-- [ ] Pagamento confirmado sem usuário cria conta pelo e-mail e envia o fluxo de senha.
-- [ ] Pagamento confirmado com usuário existente reaproveita a conta e não duplica matrícula.
-- [ ] A matrícula usa meses do produto no banco e fecha o paywall no reembolso.
-- [ ] Falha em Auth, matrícula ou NF vira pendência visível e alerta, sem perder a compra confirmada.
-- [ ] O mesmo processo repetido é seguro e termina em `ativada` uma única vez.
+- [x] Pagamento confirmado sem usuário cria conta pelo e-mail e envia o fluxo de senha.
+- [x] Pagamento confirmado com usuário existente reaproveita a conta e não duplica matrícula.
+- [x] A matrícula usa meses do produto no banco e fecha o paywall no reembolso.
+- [x] Falha em Auth, matrícula ou NF vira pendência visível e alerta, sem perder a compra confirmada.
+- [x] O mesmo processo repetido é seguro e termina em `ativada` uma única vez.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(pag): ativa conta e matricula pelo pagamento`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; confirmação autenticada pelo webhook percorre o claim SQL, cria/reaproveita Auth, envia definição de senha, cria/reaproveita matrícula, cria fatura e ativa o pagamento; NF permanece separada.
+- **Assumptions**: o Supabase Auth é a fonte de verdade de contas; a busca por e-mail usa paginação administrativa, e a validade de 12 meses é calculada pelo trigger do produto no banco. Sem configuração fiscal real, a NF fica em `falha`/pendência e não desfaz a compra.
+- **Files**: `src/modules/pagamentos/ativacao.ts`, `src/modules/pagamentos/ativacao.test.ts`, `src/modules/pagamentos/repositorio.ts`, `src/app/api/webhooks/asaas/route.ts`, `.env.example`.
+- **Success evidence**: testes de ativação, replay e rota — 3 arquivos, 12 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde.
 
 ### T115: Implementar job de reconciliação e expiração
 

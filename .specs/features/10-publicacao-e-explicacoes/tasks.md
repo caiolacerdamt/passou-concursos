@@ -271,6 +271,19 @@ Necessidade: o banco foi exercitado com transações revertidas, sem deixar dado
 build/lint/test e preparar a validação independente. **Where**: `.specs/*`, `docs/*`, `.github/workflows/*`.
 **Done when**: documentação explica como operar a fábrica e o handoff aponta a SPEC 11. **Depends**: T96.
 
+**Status**: ✅ implementação concluída; validação independente Ritual B pendente de registro ao fim deste arquivo.
+**Gate**: `npm run build`, `npm run lint`, `npm test` — 91 arquivos e 797 testes passando.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Operação do job documentada | `docs/EXPLICACOES.md:1-67` | Pré-requisitos, comando, fila e teste manual estão descritos | ✅ |
+| Workflow manual fora da aplicação | `.github/workflows/explicacoes.yml:1-38` | Fábrica roda em Actions e só falha é reportada | ✅ |
+| Decisão e handoff atualizados | `.specs/STATE.md:244-285` e `.specs/ROADMAP.md:105-112` | AD-098 registrada e próxima é SPEC 11 | ✅ |
+| Contrato da spec fechado | `.specs/features/10-publicacao-e-explicacoes/spec.md:5-10` | Status da SPEC 10 aparece como concluído | ✅ |
+
+Necessidade: o relatório independente abaixo é a última saída do Ritual B; ele deve conferir somente os
+Success Criteria, com evidência `file:line`, sem sensor de mutação.
+
 ## Verificação independente (Ritual B)
 
 Após T97, um Verificador independente deve reler apenas os Success Criteria, localizar evidência

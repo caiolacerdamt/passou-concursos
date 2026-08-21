@@ -102,14 +102,14 @@ trabalho é refeito.
 | 07 | **Interface, conta e deploy** | camada de estilo, shell responsivo, 4 estados, login e-mail+Google, `matricula` como chave única, Vercel no ar | 03 | **11** | B | ✅ Concluída (T54–T64) |
 | 08 | Gateway de IA | `tarefa → modelo/esforço/batch/cache/fallback` por configuração, dedup, alerta de gasto; 1ª tarefa real = frase do plano | 02, 03, 06 | **10** | B | ✅ Concluída (T65–T74) |
 | 09 | **Ingestão do primeiro lote** | PDF → questão estruturada + gabarito cruzado + classificação no tópico, por script em GitHub Actions | 04, 08 | **12** | B | ✅ Concluída (T75–T86) |
-| 10 | **Publicação e explicações** | piso de confiança, fila humana única, porta de publicação, fábrica de explicação com citação conferida por código | 09 | 11 | B | ⬜ Não iniciada |
+| 10 | **Publicação e explicações** | piso de confiança, fila humana única, porta de publicação, fábrica de explicação com citação conferida por código | 09 | 11 | B | ✅ Concluída |
 | 11 | **Raio-X — frequência, peso e tela** | taxa só de `origem='real'` com decaimento e amortecimento, porteiro do edital, substitui a view stub do plano, tela de leitura | 06, 07, 10 | 11 | B | ⬜ Não iniciada |
 | 12 | **Checkout, funil e ativação** | página de vendas, Asaas cartão/Pix/boleto, webhook verificado e idempotente, reconciliação, garantia de 7 dias, 18+ | 07 | 12 | **A** | ⬜ Não iniciada |
 | 13 | **Onboarding, plano e sessão** | pagar → senha → meta → plano do 1º dia → responder com causa do erro → explicação com fonte. **É o loop central** | 06, 07, 10, 12 | 12 | B | ⬜ Não iniciada |
 | 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ⬜ Não iniciada |
 | — | 🚀 **LANÇAMENTO** | — | — | — | — | — |
 
-**Restam ~73 tasks em 6 specs** para lançar.
+**Restam ~62 tasks em 5 specs** para lançar.
 
 ## Depois do lançamento — specs 15 a 36
 

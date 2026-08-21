@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 11, 13, 15, 21, 22, 23, 24, 30, 31, 35 |
 | **Tasks (estimativa)** | ~11 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída |
 | **Requisitos** | **BANCO-07**, **BANCO-01** (execução da trava), **IA-04**, **IA-08**, **IA-05**, **IA-01** (execução) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m2-camada-ia/spec.md` |
 | **Vem de** | SPEC 10 + SPEC 13 do recorte de 42, **fundidas e enxugadas** (AD-089) |

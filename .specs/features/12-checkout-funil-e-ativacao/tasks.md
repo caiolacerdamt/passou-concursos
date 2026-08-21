@@ -143,15 +143,22 @@ aceites e pendências no inventário de retenção.
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [ ] A validação não aceita DOB e exige 18+ e aceite datado.
-- [ ] A máquina pura coincide com a máquina SQL e não permite transição fora de ordem.
-- [ ] O cálculo da garantia usa dias corridos desde a confirmação e não depende do relógio da UI.
-- [ ] A rotina de esquecimento conhece as exceções financeiras antes da SPEC 14.
+- [x] A validação não aceita DOB e exige 18+ e aceite datado.
+- [x] A máquina pura coincide com a máquina SQL e não permite transição fora de ordem.
+- [x] O cálculo da garantia usa dias corridos desde a confirmação e não depende do relógio da UI.
+- [x] A rotina de esquecimento conhece as exceções financeiras antes da SPEC 14.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(pag): publica contratos de compra e garantia`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; contratos, cálculo da janela e inventário de retenção publicados.
+- **Assumptions**: dias corridos são comparados por data UTC; a janela fica aberta enquanto `diasPassados < garantiaDias`.
+- **Files**: `src/modules/pagamentos/contratos.ts`, `src/modules/pagamentos/contratos.test.ts`, `src/modules/pagamentos/garantia.ts`, `src/modules/pagamentos/garantia.test.ts`, `src/modules/lgpd/grupo-1.ts`, `src/modules/lgpd/grupo-1.test.ts`.
+- **Success evidence**: `npm run test:unit` — 61 arquivos, 501 testes verdes; schema strict rejeita `dataNascimento`, e os casos do 5º/9º dia passam.
 
 ### T109: Implementar adaptador HTTP do Asaas
 

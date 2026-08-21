@@ -43,4 +43,29 @@ export const TABELAS_GRUPO_1_INDIRETAS = [
  * prazo fiscal, e elas SHALL sobreviver ao DELETE-por-esquecimento (DADOS-04).
  * Sem este campo, a única saída seria esquecer de listá-las.
  */
-export const EXCECOES_DO_APAGAMENTO: { tabela: string; motivo: string }[] = [];
+export const EXCECOES_DO_APAGAMENTO: { tabela: string; motivo: string }[] = [
+  {
+    tabela: "pagamentos",
+    motivo: "Registro financeiro e fiscal sobrevive ao esquecimento pelo prazo legal.",
+  },
+  {
+    tabela: "pagamento_aceites",
+    motivo: "Prova do aceite contratual fica ligada ao pagamento retido.",
+  },
+  {
+    tabela: "pagamento_eventos",
+    motivo: "Idempotência e diagnóstico do gateway exigem retenção do evento mínimo.",
+  },
+  {
+    tabela: "pagamento_transicoes",
+    motivo: "Histórico financeiro append-only precisa sobreviver ao apagamento.",
+  },
+  {
+    tabela: "faturas",
+    motivo: "Referência fiscal e nota emitida permanecem pelo prazo legal.",
+  },
+  {
+    tabela: "pagamento_pendencias",
+    motivo: "Fila operacional ligada ao pagamento permanece para auditoria e retry.",
+  },
+];

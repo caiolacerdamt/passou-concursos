@@ -188,14 +188,14 @@ T93 → T94
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Cada linha mostra tópico, peso, `n_questoes` e tendência em texto humano.
-- [ ] Toda linha `amostra_baixa` mostra `Baseado em poucas questões` junto do número.
-- [ ] A tela tem estado vazio orientado e não cria largura fixa que cause rolagem em 360px.
+- [x] Cada linha mostra tópico, peso, `n_questoes` e tendência em texto humano.
+- [x] Toda linha `amostra_baixa` mostra `Baseado em poucas questões` junto do número.
+- [x] A tela tem estado vazio orientado e não cria largura fixa que cause rolagem em 360px.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m5): renderiza leitura do raio-x`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — unit gate verde (`src/modules/raiox/tela.test.tsx`)
 
 ### T93: Integrar rota logada e flag
 

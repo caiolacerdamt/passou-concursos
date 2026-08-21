@@ -152,14 +152,14 @@ T93 → T94
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] `raiox_peso_topico` continua com exatamente `topico_id, peso`.
-- [ ] Fora do programa não entra na view/planejamento; perfil ativo muda a coluna no recálculo seguinte.
-- [ ] O job `m5-recalcula-raiox` é ativo, tem lock próprio e roda antes de `m4-recalcula-projecoes`.
+- [x] `raiox_peso_topico` continua com exatamente `topico_id, peso`.
+- [x] Fora do programa não entra na view/planejamento; perfil ativo muda a coluna no recálculo seguinte.
+- [x] O job `m5-recalcula-raiox` é ativo, tem lock próprio e roda antes de `m4-recalcula-projecoes`.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m5): liga raio-x ao plano e ao cron`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-view-cron.test.ts`)
 
 ### T91: Criar leitura server-side do Raio-X
 

@@ -167,6 +167,29 @@ describe("fatiarEmBlocos — o teto de paginas e o corte que sempre acontece", (
   });
 });
 
+describe("fatiarEmBlocos — o custo fixo do pedido conta no teto", () => {
+  /** Teto folgado, para o unico corte possivel ser o que o teste provoca. */
+  const FOLGADO = { ...ORCAMENTO, teto: 200, tetoUtil: 200 };
+
+  it("a instrucao e o schema comem orcamento antes do texto da prova", () => {
+    // O IA-17 fala do **pedido**, e todo pedido leva a instrucao estavel e o
+    // JSON Schema da saida estruturada por cima do texto do bloco. Medir so o
+    // bloco mediria outra coisa.
+    const paginas = [pagina(1, 30), pagina(2, 30), pagina(3, 30)];
+
+    expect(fatiarEmBlocos(paginas, FOLGADO)).toHaveLength(1);
+    expect(fatiarEmBlocos(paginas, FOLGADO, 80).length).toBeGreaterThan(1);
+  });
+
+  it("pagina que so nao cabe por causa do custo fixo tambem e parada visivel", () => {
+    // Sem o custo fixo a mesma pagina passava — e o pedido estouraria calado.
+    expect(fatiarEmBlocos([pagina(1, 150)], FOLGADO)).toHaveLength(1);
+    expect(() => fatiarEmBlocos([pagina(1, 150)], FOLGADO, 80)).toThrow(
+      PaginaMaiorQueOTeto,
+    );
+  });
+});
+
 describe("orcamentoVigente — o teto vem da configuracao", () => {
   it("aplica a margem sobre o teto lido do banco", async () => {
     const leitor: LeitorDeConfig = async () => ({

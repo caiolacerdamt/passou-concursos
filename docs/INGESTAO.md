@@ -133,7 +133,26 @@ Todos vivem na tabela `configuracoes` (AD-078):
 | `param.m1.teto_tokens_por_pedido` | 272000 | o degrau de preço da OpenAI. Acima dele, 2× a entrada e 1,5× a saída |
 | `param.m1.margem_do_teto` | 0.2 | folga, porque a contagem do nosso lado é estimativa |
 | `param.m1.chars_por_token` | 3.5 | a estimativa. Calibra comparando com o `usage` que voltou em `ia_geracoes` |
+| `param.m1.paginas_por_bloco` | 4 | **quantas páginas cabem num bloco.** É esta trava que corta a prova, não o teto de tokens: as provas do BB 2021 têm ~19 mil tokens contra um teto útil de ~218 mil |
 | `param.m1.bucket_de_imagens` | `questoes` | onde a figura da questão é guardada |
+
+## Medido nas provas do BB 2021 (Cesgranrio, 3 cadernos)
+
+| | |
+| --- | --- |
+| Páginas por caderno | 17 |
+| Texto extraído | ~63 a 66 mil caracteres |
+| Tokens estimados por caderno | ~19 mil — **7% do teto** |
+| Blocos por caderno, com o padrão de 4 páginas | 5 |
+| Questões por caderno | 70 |
+| Imagens JPEG embutidas | nenhuma nos três cadernos |
+
+O texto sai com acentuação correta. As duas marcas do PDF de duas colunas — palavra partida por
+hífen no fim da linha e cabeçalho repetido em toda página — estão na instrução da extração, que a
+SPEC 09 subiu para a versão 2 por causa disso.
+
+**O gabarito veio como imagem (PNG), não como texto.** Não há OCR no MVP: a transcrição para CSV é
+manual, feita uma vez por caderno, conferida linha a linha. Os três estão em `provas/*.csv`.
 
 ## Limites conhecidos
 

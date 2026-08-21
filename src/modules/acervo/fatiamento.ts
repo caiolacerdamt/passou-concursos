@@ -119,14 +119,21 @@ function juntar(paginas: PaginaDoPdf[]): string {
  * meio da prova nao pode deslocar a numeracao das que vem depois, e o cabecalho
  * de pagina e o que deixa o modelo saber que ali nao havia nada.
  *
+ * `custoFixo` sao os tokens que o pedido gasta **antes** do texto da prova — a
+ * instrucao estavel e o schema da saida estruturada, que viajam em toda linha do
+ * lote. O criterio do IA-17 e sobre o pedido, nao sobre o bloco: medir so o
+ * texto mediria outra coisa.
+ *
  * @throws {PaginaMaiorQueOTeto} uma pagina sozinha nao cabe
  */
 export function fatiarEmBlocos(
   paginas: readonly PaginaDoPdf[],
   orcamento: OrcamentoDeTokens,
+  custoFixo = 0,
 ): BlocoDaProva[] {
   const blocos: BlocoDaProva[] = [];
   let atual: PaginaDoPdf[] = [];
+  const disponivel = orcamento.tetoUtil - custoFixo;
 
   const fechar = (): void => {
     if (atual.length === 0) return;
@@ -146,13 +153,13 @@ export function fatiarEmBlocos(
       juntar([pagina]),
       orcamento.charsPorToken,
     );
-    if (sozinha > orcamento.tetoUtil) {
-      throw new PaginaMaiorQueOTeto(pagina.numero, sozinha, orcamento.tetoUtil);
+    if (sozinha > disponivel) {
+      throw new PaginaMaiorQueOTeto(pagina.numero, sozinha + custoFixo, orcamento.tetoUtil);
     }
 
     const comEla = estimarTokens(juntar([...atual, pagina]), orcamento.charsPorToken);
     const cheio =
-      atual.length >= orcamento.paginasPorBloco || comEla > orcamento.tetoUtil;
+      atual.length >= orcamento.paginasPorBloco || comEla > disponivel;
     if (atual.length > 0 && cheio) fechar();
 
     atual.push(pagina);

@@ -102,11 +102,12 @@ export async function marcarProva(
 // ── Blocos ──────────────────────────────────────────────────────────────────
 
 /**
- * Registra os blocos que ainda nao existem, e devolve os que precisam ser
- * enviados.
+ * Registra os blocos que ainda nao existem.
  *
  * O `on conflict do nothing` e a retomada: reenviar a mesma prova nao remonta
- * bloco que ja tem linha, e por isso nao paga de novo por ele (AD-036).
+ * bloco que ja tem linha, e por isso nao paga de novo por ele (AD-036). Quem
+ * decide o que **sai** desta vez e `blocosParaEnviar`, nao esta funcao — um
+ * bloco pode precisar ir de novo sem ser novo.
  */
 export async function registrarBlocos(
   cliente: ClienteSql,
@@ -136,6 +137,33 @@ export async function registrarBlocos(
   }
 
   return novos;
+}
+
+export const CONSULTA_DOS_BLOCOS_PENDENTES = `
+  select bloco from public.prova_lote
+   where prova_id = $1 and status in ('montado', 'falhou')
+   order by bloco
+`;
+
+/**
+ * Quais blocos precisam ir ao provedor agora.
+ *
+ * Sao **dois** casos, e o segundo e o que faltava: o bloco `montado` (recem
+ * registrado, ou registrado numa execucao que morreu antes de enviar) e o bloco
+ * `falhou` (o lote morreu no provedor, ou a resposta veio inaproveitavel).
+ *
+ * Sem o segundo, um bloco que falha fica preso para sempre: `enviar` nao o
+ * remonta porque a linha ja existe, `colher` nao o enxerga porque so olha
+ * `enviado`, e a prova nunca fecha — porque fechar exige todos `colhido`. A
+ * saida seria editar o banco na mao. Reenviar bloco que falhou **custa de novo**,
+ * e e o preco certo: o pedido anterior nao produziu nada aproveitavel.
+ */
+export async function blocosParaEnviar(
+  cliente: ClienteSql,
+  provaId: string,
+): Promise<number[]> {
+  const { rows } = await cliente.query(CONSULTA_DOS_BLOCOS_PENDENTES, [provaId]);
+  return rows.map((linha) => Number(linha.bloco));
 }
 
 // ── Questoes ────────────────────────────────────────────────────────────────

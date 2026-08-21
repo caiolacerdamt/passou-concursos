@@ -24,10 +24,13 @@ import { Client } from "pg";
 
 import {
   type ImagemDoPdf,
+  type OrcamentoDeTokens,
   type SubidorDeImagem,
   INSTRUCAO_DA_EXTRACAO,
   NOME_DO_FORMATO,
   SCHEMA_DA_EXTRACAO,
+  blocosParaEnviar,
+  estimarTokens,
   fatiarEmBlocos,
   gravarQuestoes,
   lerCatalogo,
@@ -95,6 +98,21 @@ export type ResumoDoEnvio = {
 };
 
 /**
+ * Quantos tokens o pedido custa **antes** do texto da prova.
+ *
+ * A instrucao estavel e o JSON Schema da saida estruturada viajam em toda linha
+ * do lote. Sao ~2,5 mil caracteres hoje, folgados dentro da margem — mas o
+ * criterio do IA-17 e sobre o **pedido**, e medir so o texto do bloco mediria
+ * outra coisa. Descontar do orcamento e uma linha e nunca mais precisa de olho.
+ */
+export function custoFixoDoPedido(orcamento: OrcamentoDeTokens): number {
+  return estimarTokens(
+    INSTRUCAO_DA_EXTRACAO + JSON.stringify(SCHEMA_DA_EXTRACAO),
+    orcamento.charsPorToken,
+  );
+}
+
+/**
  * Le o PDF e manda os blocos que ainda nao foram mandados.
  *
  * A **primeira** decisao e a do BANCO-12, e ela vem antes de qualquer gasto: PDF
@@ -125,13 +143,22 @@ export async function enviar(
     };
   }
 
-  const blocos = fatiarEmBlocos(pdf.paginas, await orcamentoVigente());
-  const novos = await registrarBlocos(
+  // O pedido nao e so o texto do bloco: a instrucao estavel e o schema da saida
+  // estruturada vao junto em **toda** linha do lote. O teto do IA-17 fala do
+  // pedido, entao e o pedido inteiro que tem de caber.
+  const orcamento = await orcamentoVigente();
+  const blocos = fatiarEmBlocos(pdf.paginas, orcamento, custoFixoDoPedido(orcamento));
+
+  await registrarBlocos(
     cliente,
     argumentos.provaId,
     blocos,
     (bloco) => chaveDoBloco(TAREFA, argumentos.provaId, bloco),
   );
+
+  // Nao e "o que acabou de nascer": e "o que ainda nao foi entregue". Um bloco
+  // que falhou no provedor precisa ir de novo, e ele nao e novo.
+  const novos = await blocosParaEnviar(cliente, argumentos.provaId);
 
   if (novos.length === 0) {
     return {
@@ -144,7 +171,7 @@ export async function enviar(
 
   const lote = await montarLote(
     TAREFA,
-    novos.map((indice) => ({
+    novos.map((indice: number) => ({
       idDaLinha: chaveDoBloco(TAREFA, argumentos.provaId, indice),
       pedido: {
         instrucao: INSTRUCAO_DA_EXTRACAO,
@@ -162,7 +189,7 @@ export async function enviar(
   // modelo que nao o produziu.
   await cliente.query(
     `update public.prova_lote
-        set status = 'enviado', lote_provedor = $3, destino = $4::jsonb
+        set status = 'enviado', lote_provedor = $3, destino = $4::jsonb, erro = null
       where prova_id = $1 and bloco = any($2)`,
     [argumentos.provaId, novos, loteProvedor, JSON.stringify(lote.destino)],
   );

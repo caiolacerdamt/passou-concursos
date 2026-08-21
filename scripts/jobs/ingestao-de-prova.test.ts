@@ -84,12 +84,15 @@ const PROVA = {
 function bancoFalso(
   opcoes: {
     blocosJaRegistrados?: number[];
+    /** O que `blocosParaEnviar` devolve. Ausente = os que acabaram de nascer. */
+    pendentesParaEnviar?: number[];
     emVoo?: Record<string, unknown>[];
     pendentes?: number;
     totalDeBlocos?: number;
   } = {},
 ) {
   const consultas: { texto: string; valores?: unknown[] }[] = [];
+  const novosNestaExecucao: number[] = [];
 
   const cliente = {
     async query(texto: string, valores?: unknown[]) {
@@ -123,7 +126,13 @@ function bancoFalso(
       if (texto.includes("insert into public.prova_lote")) {
         const bloco = Number(valores?.[1]);
         const jaExiste = (opcoes.blocosJaRegistrados ?? []).includes(bloco);
+        if (!jaExiste) novosNestaExecucao.push(bloco);
         return { rows: jaExiste ? [] : [{ bloco }], rowCount: jaExiste ? 0 : 1 };
+      }
+      if (texto.includes("status in ('montado', 'falhou')")) {
+        const pendentes = opcoes.pendentesParaEnviar ?? novosNestaExecucao;
+        const rows = pendentes.map((bloco) => ({ bloco }));
+        return { rows, rowCount: rows.length };
       }
       if (texto.includes("where prova_id = $1 and status = 'enviado'")) {
         return { rows: opcoes.emVoo ?? [], rowCount: (opcoes.emVoo ?? []).length };
@@ -161,9 +170,14 @@ function comConfig(extras: Record<string, unknown> = {}): void {
         fallback: null,
       },
     },
-    "param.m1.teto_tokens_por_pedido": 1_000,
-    "param.m1.margem_do_teto": 0,
-    "param.m1.chars_por_token": 1,
+    // Teto realista de proposito: a instrucao estavel e o schema da saida
+    // estruturada ja custam ~3 mil tokens em **toda** linha do lote, entao um
+    // teto de brinquedo faria a pagina 1 estourar sozinha. Quem corta nestes
+    // testes e `paginas_por_bloco`, que e o que corta uma prova de verdade.
+    "param.m1.teto_tokens_por_pedido": 272_000,
+    "param.m1.margem_do_teto": 0.2,
+    "param.m1.chars_por_token": 3.5,
+    "param.m1.paginas_por_bloco": 4,
     ...extras,
   });
   definirLeitorDeConfig(leitor);
@@ -312,8 +326,8 @@ describe("enviar — o caminho normal", () => {
     expect(lote.enviados).toBe(0);
   });
 
-  it("prova longa vira mais de um bloco e nenhum passa do teto", async () => {
-    comConfig({ "param.m1.teto_tokens_por_pedido": 60 });
+  it("prova longa vira mais de um bloco, num arquivo de lote so", async () => {
+    comConfig({ "param.m1.paginas_por_bloco": 1 });
     const { cliente } = bancoFalso();
     const lote = clienteDeLoteFalso();
 
@@ -324,9 +338,47 @@ describe("enviar — o caminho normal", () => {
     );
 
     expect(resumo.blocos).toBeGreaterThan(1);
-    // Um arquivo de lote so, com uma linha por bloco.
+    // Um arquivo de lote so, com uma linha por bloco. O teto **em tokens** e
+    // provado em `fatiamento.test.ts`; aqui se afirma so o que este teste mede.
     expect(lote.enviados).toBe(1);
     expect(lote.jsonl[0].split("\n")).toHaveLength(resumo.blocos);
+  });
+
+  it("bloco que falhou volta a ser enviado; bloco ja colhido nao", async () => {
+    // O buraco que a verificacao independente achou: sem isto, um bloco que
+    // falha fica preso — `enviar` nao o remonta porque a linha ja existe e
+    // `colher` nao o enxerga porque so olha `enviado`. A prova nunca fechava.
+    const { cliente, consultas } = bancoFalso({
+      blocosJaRegistrados: [0, 1],
+      pendentesParaEnviar: [1],
+    });
+    const lote = clienteDeLoteFalso();
+
+    const resumo = await enviar(
+      cliente,
+      ARGUMENTOS,
+      pdfDeTeste(["QUESTAO 1", "QUESTAO 2", "QUESTAO 3", "QUESTAO 4", "QUESTAO 5"]),
+    );
+
+    expect(resumo.enviados).toBe(1);
+    expect(lote.enviados).toBe(1);
+    // So o bloco 1 foi ao provedor, e o `erro` dele foi limpo junto.
+    const enviado = consultas.find((c) => c.texto.includes("set status = 'enviado'"));
+    expect(enviado?.valores?.[1]).toEqual([1]);
+    expect(enviado?.texto).toContain("erro = null");
+  });
+
+  it("nada pendente nao chama o provedor", async () => {
+    const { cliente } = bancoFalso({
+      blocosJaRegistrados: [0],
+      pendentesParaEnviar: [],
+    });
+    const lote = clienteDeLoteFalso();
+
+    const resumo = await enviar(cliente, ARGUMENTOS, pdfDeTeste(["QUESTAO 1"]));
+
+    expect(resumo.enviados).toBe(0);
+    expect(lote.enviados).toBe(0);
   });
 });
 

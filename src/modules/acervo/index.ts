@@ -81,6 +81,7 @@ export {
   ProvaNaoCatalogada,
   type ResumoDaGravacao,
   type SubidorDeImagem,
+  blocosParaEnviar,
   caminhoDaImagem,
   fonteCitacaoDe,
   gravarQuestoes,

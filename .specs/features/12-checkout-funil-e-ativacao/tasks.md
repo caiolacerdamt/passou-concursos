@@ -82,7 +82,7 @@ e ao M9 a flag global de analytics logado desligada. Criar o leitor tipado do
 preço e documentar as variáveis externas novas.
 **Where**: `src/modules/config/catalogo.ts`
 **Depends on**: None
-**Requirement**: PAG-09, PAG-03, INFRA-12
+**Requirement**: PAG-09, PAG-03, INFRA-12, SEC-06
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
@@ -103,7 +103,7 @@ transições append-only, faturas, pendências, enum de estado, constraints,
 funções de transição/claim, RLS e privilégios de serviço.
 **Where**: `supabase/migrations/20260821110000_pagamentos_schema.sql`
 **Depends on**: T106
-**Requirement**: PAG-02, PAG-05, PAG-06, PAG-12, PAG-13, INFRA-10
+**Requirement**: PAG-02, PAG-05, PAG-06, PAG-12, PAG-13, INFRA-10, SEC-02, SEC-03
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
@@ -125,7 +125,7 @@ estados, transições, garantia e erro sanitizado; registrar pagamentos, faturas
 aceites e pendências no inventário de retenção.
 **Where**: `src/modules/pagamentos/contratos.ts`
 **Depends on**: T107
-**Requirement**: PAG-03, PAG-06, PAG-12, DADOS-11
+**Requirement**: PAG-03, PAG-06, PAG-12, DADOS-11, SEC-01
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
@@ -146,7 +146,7 @@ cobrança, consultar pagamentos, estornar cobrança e agendar NF, com timeout,
 headers, payloads por meio e erros sem dados pessoais.
 **Where**: `src/modules/pagamentos/asaas.ts`
 **Depends on**: T108
-**Requirement**: PAG-02, PAG-05, PAG-13
+**Requirement**: PAG-02, PAG-05, PAG-13, SEC-04, SEC-05, SEC-06, SEC-07
 **Tools**: Skill `tlc-spec-driven`; documentação oficial do Asaas
 **Done when**:
 
@@ -166,7 +166,7 @@ headers, payloads por meio e erros sem dados pessoais.
 somente dados anônimos ao PostHog quando configurado, sem bloquear a compra.
 **Where**: `src/modules/analytics/funil.ts`
 **Depends on**: T108
-**Requirement**: PAG-17, INFRA-12
+**Requirement**: PAG-17, INFRA-12, SEC-07, SEC-08
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
@@ -207,7 +207,7 @@ matrícula ativa, congelar preço, registrar pendente, chamar o gateway e exibir
 resultado sem depender do analytics.
 **Where**: `src/app/checkout/page.tsx`
 **Depends on**: T109, T111
-**Requirement**: PAG-02, PAG-09, PAG-12, DADOS-11
+**Requirement**: PAG-02, PAG-09, PAG-12, DADOS-11, SEC-01, SEC-03, SEC-08
 **Tools**: Skill `tlc-spec-driven`; guia local do Next 16 para Server Actions
 **Done when**:
 
@@ -229,7 +229,7 @@ parse, registrar evento, tratar desconhecido/fora de ordem e encaminhar somente
 confirmação válida para ativação.
 **Where**: `src/app/api/webhooks/asaas/route.ts`
 **Depends on**: T112
-**Requirement**: PAG-13, INFRA-10, PAG-06
+**Requirement**: PAG-13, INFRA-10, PAG-06, SEC-02, SEC-05, SEC-07, SEC-08
 **Tools**: Skill `tlc-spec-driven`; guia local do Next 16 para Route Handlers
 **Done when**:
 
@@ -250,7 +250,7 @@ senha, cria matrícula de 12 meses, grava fatura e abre pendência separada para
 falhas de NF sem bloquear a ativação.
 **Where**: `src/modules/pagamentos/ativacao.ts`
 **Depends on**: T113
-**Requirement**: PAG-05, PAG-06, PAG-13
+**Requirement**: PAG-05, PAG-06, PAG-13, SEC-02, SEC-03, SEC-04, SEC-07
 **Tools**: Skill `tlc-spec-driven`; SDK Supabase existente
 **Done when**:
 
@@ -272,7 +272,7 @@ reativa pendências de ativação, expira pagamentos pendentes vencidos, atualiz
 fila e reporta falhas.
 **Where**: `scripts/jobs/reconciliacao-pagamentos.mts`
 **Depends on**: T114
-**Requirement**: PAG-06, PAG-13, INFRA-10
+**Requirement**: PAG-06, PAG-13, INFRA-10, SEC-02, SEC-04, SEC-06, SEC-07
 **Tools**: Skill `tlc-spec-driven`; padrão dos jobs existentes
 **Done when**:
 
@@ -294,7 +294,7 @@ restantes, recusar fora da janela ou antes da confirmação e processar o estorn
 no Asaas antes de marcar pagamento/matrícula reembolsados.
 **Where**: `src/modules/pagamentos/garantia.ts`
 **Depends on**: T114
-**Requirement**: PAG-03, PAG-06
+**Requirement**: PAG-03, PAG-06, SEC-03, SEC-07, SEC-09
 **Tools**: Skill `tlc-spec-driven`; documentação oficial do estorno Asaas
 **Done when**:
 
@@ -315,7 +315,7 @@ faturas, retenção e paywall; atualizar rastreabilidade e preparar o pacote par
 verificação independente.
 **Where**: `tests/db/pagamentos-schema.test.ts`
 **Depends on**: T115, T116
-**Requirement**: PAG-02, PAG-03, PAG-05, PAG-06, PAG-08, PAG-09, PAG-12, PAG-13, PAG-17, DADOS-11, INFRA-10, INFRA-12
+**Requirement**: PAG-02, PAG-03, PAG-05, PAG-06, PAG-08, PAG-09, PAG-12, PAG-13, PAG-17, DADOS-11, INFRA-10, INFRA-12, SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06, SEC-07, SEC-08, SEC-09
 **Tools**: Skill `tlc-spec-driven`; gates do projeto
 **Done when**:
 
@@ -379,6 +379,15 @@ verificação independente.
 | DADOS-11 | T108, T112, T117 |
 | INFRA-10 | T107, T109, T113, T115, T117 |
 | INFRA-12 | T106, T110, T117 |
+| SEC-01 | T108, T112 |
+| SEC-02 | T107, T113, T114, T115 |
+| SEC-03 | T107, T112, T116, T117 |
+| SEC-04 | T109, T114, T115 |
+| SEC-05 | T109, T113 |
+| SEC-06 | T106, T109, T115 |
+| SEC-07 | T109, T110, T113, T114, T115, T116 |
+| SEC-08 | T110, T113 |
+| SEC-09 | T116 |
 
 ## Closing Protocol
 

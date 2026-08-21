@@ -114,6 +114,15 @@ de confirmação externa; a implementação local não depende de assumir esses 
 | DADOS-11 | Aceite datado de termos e maioridade | Testes do checkout e banco | Pending |
 | INFRA-10 | Entrada de webhook com assinatura e falha observável | Testes da rota e do alerta | Pending |
 | INFRA-12 | Analytics pré-login anônimo e não crítico para compra | Testes do proxy e bloqueio no navegador | Pending |
+| SEC-01 | Entrada do checkout é validada no serviço e combinações incoerentes são recusadas | `v5.0.0-2.2.1`, `v5.0.0-2.2.2`, `v5.0.0-2.2.3` · testes da action | Pending |
+| SEC-02 | Máquina de estados exige ordem e claim impede dupla ativação | `v5.0.0-2.3.1`, `v5.0.0-2.3.4` · testes de banco | Pending |
+| SEC-03 | Reembolso e leitura de dados usam autorização no servidor, não no navegador | `v5.0.0-8.2.1`, `v5.0.0-8.3.1` · testes de RLS e action | Pending |
+| SEC-04 | Asaas, Supabase e PostHog usam credenciais de serviço com privilégio mínimo | `v5.0.0-13.2.1`, `v5.0.0-13.2.2` · testes de configuração | Pending |
+| SEC-05 | Chamadas externas exigem HTTPS e destino permitido | `v5.0.0-12.2.1`, `v5.0.0-12.3.1`, `v5.0.0-13.2.4` · testes do gateway | Pending |
+| SEC-06 | Segredos não entram no código, no cliente ou no build | `v5.0.0-13.3.1` · inspeção e testes de ambiente | Pending |
+| SEC-07 | Webhook e falhas retornam mensagem genérica e não registram token, CPF, e-mail ou pagamento bruto | `v5.0.0-16.2.5`, `v5.0.0-16.5.1`, `v5.0.0-16.5.2`, `v5.0.0-16.5.3` · testes de saneamento | Pending |
+| SEC-08 | Rotas HTTP respondem com tipo de conteúdo coerente | `v5.0.0-4.1.1` · testes de Route Handler | Pending |
+| SEC-09 | Operações da garantia verificam a sessão por serviço confiável | `v5.0.0-7.2.1` · testes da action | Pending |
 
 ## Success Criteria
 

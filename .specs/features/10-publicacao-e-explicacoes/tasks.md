@@ -92,6 +92,20 @@ Necessidade: todos os critérios da task têm asserts específicos; nenhum teste
 privilegios fechados e índices da fila. **Where**: nova migration e `tests/db/publicacao-explicacoes.test.ts`.
 **Done when**: constraints, RLS, ausência de `user_id` e privilégios passam no DB gate. **Depends**: T87.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:db -- tests/db/publicacao-explicacoes.test.ts` — 4 testes passando.
+
+**Post-gate adequacy**:
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| RLS e privilégios fechados | `tests/db/publicacao-explicacoes.test.ts:17` — `expect(grants).toEqual([])` e `:29` — `expect(rls).toEqual([...])` | Navegador não lê nem escreve; as três tabelas têm RLS | ✅ |
+| Explicação/revisão usam questão e versão, sem `user_id` | `tests/db/publicacao-explicacoes.test.ts:50` — `expect(rows).toEqual([...])` | Referência ao par e nenhum dado de aluno | ✅ |
+| FK impede par inexistente | `tests/db/publicacao-explicacoes.test.ts:67` — `rejects.toThrow(/explicacoes_questao_fk|foreign key/i)` | Explicação órfã é recusada | ✅ |
+| Explicação aprovada exige fonte | `tests/db/publicacao-explicacoes.test.ts:81` — `rejects.toThrow(/explicacoes_aprovada_tem_fonte/)` | Nenhuma explicação aprovada sem citação | ✅ |
+
+Necessidade: todos os critérios da task têm asserts de estado/erro; os critérios de decisão da fila ficam
+na T89 e os de seleção da base na T91, conforme as dependências.
+
 #### T89: Operação da fila humana
 
 **What**: criar funções SQL para enfileirar motivo e registrar decisão com operador/data, sem permitir

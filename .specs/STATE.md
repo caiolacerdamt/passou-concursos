@@ -200,6 +200,47 @@
 - **Status**: active
 
 
+### AD-096
+- **Decision**: **A extração de PDF manda ao modelo o texto lido por nós, e não o arquivo PDF como
+  entrada nativa do provedor.** O leitor mínimo é `src/modules/acervo/pdf.ts`, sem dependência nova:
+  `node:zlib` para os `stream` Flate, os operadores de texto do PDF para o conteúdo, e os `XObject`
+  `DCTDecode` para as imagens. Isto **substitui a metade "entrada de PDF nativa do provedor" do
+  BANCO-03 AC1**; o resto do AC (saída estruturada por schema) continua valendo e está implementado.
+- **Reason**: O BANCO-03 AC2 e o IA-17 exigem que a prova vá em **blocos** e que nenhum pedido passe
+  de 272K tokens. Mandar o PDF nativo em cada bloco só tem duas formas: reenviar a prova inteira a
+  cada pedido — que é exatamente o que o AC2 proíbe e o que estoura o teto — ou escrever um cortador
+  de PDF que produza um sub-PDF por bloco, o que é uma indústria no caminho crítico de um produto que
+  vai ingerir 3–4 provas. Além disso, o BANCO-12 AC3 (`precisa_ocr`) **já obriga** a ler o PDF do
+  lado de cá: não existe outra forma de afirmar que um PDF não tem texto nativo. Feito o trabalho uma
+  vez, usar o resultado é o caminho barato.
+- **Trade-off**: O texto sai decodificado como Latin-1, que é o que `WinAnsiEncoding` produz na
+  prática. Fonte com codificação própria sai com acento torto; fonte assim na prova inteira faz a
+  prova cair em `precisa_ocr`, que é o lado seguro do erro. Perde-se também a chance de o modelo ver
+  o **layout** da página — questão em duas colunas depende do `numero` impresso vir no texto, o que a
+  instrução cobra explicitamente. Se o primeiro lote real mostrar que o layout importa, a decisão
+  volta com o custo medido, não estimado.
+- **Scope**: `src/modules/acervo/pdf.ts`, `src/modules/acervo/fatiamento.ts`,
+  `scripts/jobs/ingestao-de-prova.mts`.
+- **Date**: 2026-08-20
+- **Status**: active
+
+### AD-097
+- **Decision**: **Toda questão com imagem nasce `em_revisao`**, mesmo quando a imagem sobe ao Storage
+  sem erro. Só imagem `DCTDecode` (JPEG) é extraída; qualquer outro formato deixa `imagens` vazio e a
+  questão também vai para revisão.
+- **Reason**: O BANCO-11 AC4 exige `alt_text` em cada imagem, e o AD-040 o exige não vazio. Esse
+  texto é descrição acessível de uma figura — e o modelo leu o **texto** da prova, nunca a imagem.
+  Gerar um `alt_text` a partir do enunciado seria inventar descrição, que é pior do que não ter. O
+  M1 já manda "imagem que não pôde ser extraída → questão em revisão"; estender isso a "imagem sem
+  descrição conferida" é a mesma regra, e no primeiro lote o humano confere na mão de qualquer jeito
+  (AD-090).
+- **Trade-off**: A fila de revisão da SPEC 10 nasce maior. Aceito: acervo pequeno e certo vale mais
+  que acervo grande e torto, e é o fosso que está em jogo. Bitmap inflado exigiria um codificador PNG
+  — registrado como limite conhecido em `docs/INGESTAO.md`, não como esquecimento.
+- **Scope**: `src/modules/acervo/ingestao.ts`, `src/modules/acervo/pdf.ts`.
+- **Date**: 2026-08-20
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -217,23 +258,31 @@
   | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
-- **Next step**: **SPEC 09 — Ingestão do primeiro lote**
-  (`.specs/features/09-ingestao-do-primeiro-lote/spec.md`). **Ritual B**. Depende das specs 04 e 08 —
-  as duas concluídas. ⚠️ **Duas travas externas**: `OPENAI_API_KEY` continua não provisionada, e o
-  caminho crítico do acervo são **3–4 PDFs de prova oficial na mão**.
-  O que a SPEC 08 deixou pronto: `executarTarefa()` em `src/modules/ia` é o **único** caminho até um
-  modelo; tarefa nova = nome em `TAREFAS` + linha na matriz de configuração, nunca um cliente novo.
-  `montarLinhaDeLote()` já produz o JSONL de `/v1/responses` — **o envio e a colheita do lote são da
-  SPEC 09**. Job da fábrica é `.mts` rodado por `tsx` (AD-095), com
-  `scripts/jobs/frase-do-plano.mts` como molde: conexão `pg`, `definirLeitorDeConfig` +
-  `definirRepositorioDeIa`, falha de um item não derruba os outros.
-  O que a SPEC 07 deixou pronto: `matriculas` como chave única com paywall por RLS, sessão do
-  Supabase pelo `src/proxy.ts`, `<Shell>` e `<Estado>` como a camada de UI de toda tela, e
-  `src/modules/lgpd/grupo-1.ts` como inventário das tabelas de aluno.
+  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ Ritual B. PDF → questões, Batch API, gabarito cruzado. **Verificação independente pendente** — ver `## Dívida aberta` |
+- **Next step**: **SPEC 10 — Publicação e explicações**
+  (`.specs/features/10-publicacao-e-explicacoes/spec.md`). **Ritual B**. Depende da SPEC 09, agora
+  concluída. ⚠️ **As duas travas externas da SPEC 09 continuam de pé e agora bloqueiam valor real**:
+  `OPENAI_API_KEY` não provisionada e **nenhum PDF de prova oficial na mão** — o pipeline está
+  construído e testado ponta a ponta com PDF sintético e cliente duplo, mas **nenhuma questão real
+  existe no banco**.
+  O que a SPEC 09 deixou pronto: `scripts/jobs/ingestao-de-prova.mts` (`enviar`/`colher`) e
+  `scripts/jobs/cruzar-gabarito.mts`, os dois em `.github/workflows/ingestao.yml` por disparo manual;
+  `src/modules/acervo` passou a ser o pipeline inteiro (`pdf`, `fatiamento`, `extracao`,
+  `classificacao`, `ingestao`, `gabarito`); `src/modules/ia/lote.ts` é o envio e a colheita da Batch
+  API que a SPEC 08 tinha deixado para cá. Toda questão nasce `rascunho` ou `em_revisao` — **a porta
+  de publicação é da SPEC 10**, e é ela que vai ler `confianca_ia` e a fila de revisão. Passo a passo
+  do operador em `docs/INGESTAO.md`.
 
 ### Dívida aberta
 
-0. **Minor (SPEC 08) — `npm run test:db` é instável contra o banco de desenvolvimento.** Medido na
+0. **Major (SPEC 09) — a verificação independente ainda não foi rodada.** O autor rodou a
+   autoverificação contra os 8 *Success Criteria* e registrou o resultado no fim de
+   `.specs/features/09-*/tasks.md`, mas `autor ≠ verificador` **não** foi cumprido nesta rodada. É a
+   mesma dívida que a SPEC 04 abriu e a SPEC 08 fechou; fica declarada, não silenciosa. O que mais
+   precisa de olho de fora: o leitor de PDF (`src/modules/acervo/pdf.ts`), que é código novo sem
+   nenhum PDF real para conferir, e o `cruzar_gabarito()`, que mexe em dado imutável.
+
+0b. **Minor (SPEC 08) — `npm run test:db` é instável contra o banco de desenvolvimento.** Medido na
    verificação independente: três execuções seguidas deram 2 falhas, 1 falha e 0 falhas, em
    `tests/db/gera-plano.test.ts` e `tests/db/tentativas-particao-endurecida.test.ts` — arquivos que a
    SPEC 08 não toca e que **passam quando rodados isolados**. Não é regressão desta spec; é o banco
@@ -263,7 +312,7 @@
    mesmo diff (`advisors.mjs:105`, `buscar = fetch`).
 5. Minor — desvio do "Done when" de T27 sem `// SPEC_DEVIATION` (`ci.yml:128-131`): job agregador em
    vez de `if: failure()` nos três. Job cancelado ou skipado não dispara `failure()`.
-6. Minor — `provas.atualizada_em` sem gatilho de carimbo (`questoes` tem). Barato na SPEC 09.
+6. ~~Minor — `provas.atualizada_em` sem gatilho de carimbo.~~ **Fechada na SPEC 09** (`20260820110000_ingestao_lote.sql`, com teste em `tests/db/ingestao-lote.test.ts`).
 7. Minor — `fts` indexa só o `enunciado`; a SPEC 23 estende com dado real.
 8. Minor — precedência `.env` × ambiente duplicada em três scripts, uma cópia sem teste.
 9. **Minor — default de configuração duplicado entre catálogo e SQL, sem trava contra deriva**
@@ -339,6 +388,17 @@
     que não entrar lá **faz `tests/db/grupo-1.test.ts` falhar** — é o contrato nº 9 com mecanismo.
     Exceção ao apagamento (`pagamentos`/`faturas` da SPEC 12) vai em `EXCECOES_DO_APAGAMENTO`, com
     motivo escrito.
+19. **`prova_lote` é a retomada da extração** (SPEC 09). Reenviar uma prova nunca remonta bloco que
+    já tem linha, e a chave de dedup embute a versão do prompt. O **destino do modelo é gravado no
+    envio** e lido de volta na colheita — ler a matriz na colheita registraria na auditoria um modelo
+    que não produziu aquele bloco (IA-02 AC4).
+20. **`cruzar_gabarito(prova, itens, versao)` é o único caminho para `resposta_correta`,
+    `gabarito_versao` e `anulada`** (SPEC 09). Gabarito diferente do gravado **nunca** vira UPDATE:
+    vira `questao_versao` nova marcada `substantiva`, que é o que a SPEC 10 lê para regerar a
+    explicação. Rodar duas vezes o mesmo arquivo não versiona nada.
+21. **Toda questão que a ingestão grava nasce `rascunho` ou `em_revisao`.** `publicada` não é
+    alcançável a partir da SPEC 09 — nem pelo schema da saída estruturada, que não tem campo de
+    status, nem pelo INSERT. A porta de publicação é da SPEC 10.
 
 ### Armadilhas de Postgres que já foram pagas (não repetir)
 

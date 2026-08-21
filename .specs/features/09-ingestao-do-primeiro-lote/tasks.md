@@ -325,3 +325,65 @@ e retificação vira **versão nova**.
 - [ ] Gate: `npm run build && npm run lint && npm test`
 
 **Commit**: `docs(m1): registra o pipeline de ingestao e fecha a spec 09`
+
+---
+
+## Desvios registrados (o que saiu diferente do que este documento previa)
+
+1. **O texto é extraído por nós; o PDF nativo não vai ao provedor.** É metade do BANCO-03 AC1, e a
+   troca está registrada como **AD-096**, com o motivo medido: mandar o PDF nativo por bloco ou
+   reenvia a prova inteira a cada pedido (o que o AC2 proíbe e o que estoura o teto do IA-17) ou
+   exige um cortador de PDF. O `precisa_ocr` do BANCO-12 já obriga a ler o PDF do lado de cá.
+2. **Toda questão com figura nasce `em_revisao`**, não só quando a imagem falha — **AD-097**. O
+   `alt_text` acessível não existe até uma pessoa olhar a figura.
+3. **Três migrações, não uma.** O `tasks.md` previa `cruzar_gabarito()` na mesma migração da T79.
+   Migração já aplicada não re-roda (armadilha nº5 do `STATE.md`), e cada task fechou com commit
+   atômico — então saíram `20260820110000_ingestao_lote`, `20260820120000_topico_candidato`,
+   `20260820130000_cruzar_gabarito` e `20260820140000_prova_lote_destino`.
+4. **`prova_lote` ganhou a coluna `destino`**, que o design não previa. Descoberto ao escrever a
+   colheita: envio e colheita são execuções separadas por até 24 horas, e a matriz pode ter mudado de
+   modelo no meio (AD-078). Ler a matriz na colheita registraria em `ia_geracoes` um modelo que não
+   produziu aquele bloco — auditoria mentirosa (IA-02 AC4).
+5. **A T81 trouxe migração junto** (`registrar_topico_candidato` + índice único parcial), que o
+   `Where` da task não previa. Sem ela, a mesma sugestão viraria N linhas iguais e `ocorrencias`
+   nunca sairia de 1 — o número que a tela da SPEC 15 usa para ordenar a fila.
+6. **A verificação independente não foi rodada nesta sessão.** Fica como pendência declarada e como
+   dívida `Major` no `STATE.md`, não como omissão silenciosa.
+
+---
+
+## Autoverificação do autor (Ritual B — **não** substitui o verificador independente)
+
+Escopo: os 8 *Success Criteria* da spec, com evidência `file:line`. Sem sensor de mutação.
+**Isto não cumpre `autor ≠ verificador`** — quem escreveu o código escreveu esta tabela.
+
+| Success Criterion | Veredito | Evidência (`file:line`) |
+| --- | --- | --- |
+| 1. Prova real nativa vira N linhas estruturadas com `confianca_ia` | **PASS parcial** | código: `src/modules/acervo/pdf.ts:317` (lê o PDF), `fatiamento.ts:110` (blocos), `extracao.ts:66` (schema), `ingestao.ts:187` (grava) · teste: `tests/db/ingestao-questoes.test.ts:47` (insere de verdade, `confianca_ia` incluída), `scripts/jobs/ingestao-de-prova.test.ts` (`lote pronto grava as questoes`). **Parcial porque "prova real" não existe**: nenhum PDF oficial está na mão. O caminho é exercido ponta a ponta com PDF sintético e cliente duplo |
+| 2. Nenhum pedido ao modelo passa de 272K tokens | **PASS** | código: `src/modules/acervo/fatiamento.ts:135` (fecha o bloco antes de estourar), `:130` (página sozinha maior que o teto **para**, não trunca), `:69` (teto × margem, os dois de configuração) · teste: `fatiamento.test.ts` (`nenhum deles passa do teto`, `pagina sozinha acima do teto e parada visivel`, `o fatiamento respeita o teto que a configuracao mandar`) |
+| 3. Prova escaneada cai em `precisa_ocr` sem tentativa de extração | **PASS** | código: `scripts/jobs/ingestao-de-prova.mts:113` (a decisão vem antes de qualquer gasto) · teste: `scripts/jobs/ingestao-de-prova.test.ts` (`PDF sem texto nativo cai em precisa_ocr sem enviar lote nenhum` — assere que o cliente de lote recebeu **zero** chamadas e que nenhum bloco foi registrado), `src/modules/acervo/pdf.test.ts` (`PDF sem operador de texto nenhum e escaneado`) |
+| 4. Mesma prova duas vezes não duplica; interromper e retomar não reprocessa | **PASS** | código: `src/modules/acervo/ingestao.ts:124` (`on conflict (prova_id, bloco) do nothing`), `:229` (`on conflict (prova_id, numero) where vigente`) · teste **de comportamento contra o banco**: `tests/db/ingestao-questoes.test.ts` (`colher o mesmo bloco duas vezes nao cria a segunda questao` — conta as linhas), `tests/db/ingestao-lote.test.ts` (as duas unicidades) · retomada do envio: `scripts/jobs/ingestao-de-prova.test.ts` (`reenviar nao remonta bloco que ja tem linha`) |
+| 5. Rodar o gabarito preenche `resposta_correta` + `gabarito_versao` e marca as anuladas | **PASS** | código: `supabase/migrations/20260820130000_cruzar_gabarito.sql` (ramo "ainda sem gabarito") · teste: `tests/db/cruzar-gabarito.test.ts` (`preenche resposta_correta e gabarito_versao e marca as anuladas`) — anulada é mantida em **uma** versão, conferido |
+| 6. Retificar gabarito de questão respondida cria versão nova; a tentativa antiga segue apontando para a versão que respondeu | **PASS** | código: mesma migração, ramo da retificação (INSERT com o mesmo `id`) · teste: `tests/db/cruzar-gabarito.test.ts` (`retificacao cria versao nova... sem reescrever a anterior` e **`a tentativa antiga continua apontando para a versao que o aluno respondeu`**, que grava uma tentativa de verdade antes de retificar) |
+| 7. Tópico sugerido inexistente vira candidato e não cria tópico canônico | **PASS** | código: `src/modules/acervo/classificacao.ts:109` (só casa ou enfileira; não há `insert into topicos` no arquivo) · teste: `classificacao.test.ts` (`nunca escreve em topicos` varre o SQL emitido), `tests/db/topico-candidato.test.ts` (`nao cria topico canonico: a taxonomia nao muda de tamanho`, e a soma de `ocorrencias`) |
+| 8. Nenhuma linha do pipeline roda em função da Vercel | **PASS** | sensor: `src/modules/acervo/fora-da-vercel.test.ts` — varre `src/app/`, `src/proxy.ts` e `src/lib/` por caminho **e** por símbolo reexportado, tem autoteste contra sensor cego, e assere que os jobs existem como `.mts` fora do build do Next |
+
+### O que a autoverificação **não** conseguiu provar
+
+- **O leitor de PDF contra um PDF real.** Todos os testes usam PDF montado no próprio teste. Ele
+  cobre o que uma banca publica (objetos diretos, Flate, árvore de páginas normal), mas isso é
+  afirmação minha, não medição. É o item de maior risco desta spec.
+- **A forma da resposta do provedor.** `lote.test.ts` monta a linha de saída da Batch API a partir da
+  documentação; nenhuma linha real da OpenAI passou por aqui, porque não há chave.
+- **Que o `alt_text` provisório é aceitável.** Ele é provisório por decisão (AD-097) e a questão vai
+  para revisão por causa dele — mas ninguém revisou nenhuma ainda.
+
+### Comandos rodados (números reais)
+
+| Comando | Resultado |
+| --- | --- |
+| `npm run test:unit` | **404 testes, 404 passando**, 0 falhas |
+| `npm run test:db` | **306 testes, 306 passando**, 0 falhas |
+| `npm run lint` | `ESLint: No issues found` |
+| `npm run build` | verde, 9 rotas |
+| `npx tsc --noEmit` | `No errors found` |

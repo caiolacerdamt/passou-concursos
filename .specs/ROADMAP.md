@@ -101,7 +101,7 @@ trabalho é refeito.
 | 06 | Projeções, revisão espaçada e plano do dia | `dominio_topico`, `caderno_erros`, FSRS, `recalcula_projecoes()`, `gera_plano_do_dia()`, `pg_cron` | 05 | **6** | B | ✅ Concluída (T48–T53) |
 | 07 | **Interface, conta e deploy** | camada de estilo, shell responsivo, 4 estados, login e-mail+Google, `matricula` como chave única, Vercel no ar | 03 | **11** | B | ✅ Concluída (T54–T64) |
 | 08 | Gateway de IA | `tarefa → modelo/esforço/batch/cache/fallback` por configuração, dedup, alerta de gasto; 1ª tarefa real = frase do plano | 02, 03, 06 | **10** | B | ✅ Concluída (T65–T74) |
-| 09 | **Ingestão do primeiro lote** | PDF → questão estruturada + gabarito cruzado + classificação no tópico, por script em GitHub Actions | 04, 08 | 12 | B | ⬜ Não iniciada |
+| 09 | **Ingestão do primeiro lote** | PDF → questão estruturada + gabarito cruzado + classificação no tópico, por script em GitHub Actions | 04, 08 | **12** | B | ✅ Concluída (T75–T86) |
 | 10 | **Publicação e explicações** | piso de confiança, fila humana única, porta de publicação, fábrica de explicação com citação conferida por código | 09 | 11 | B | ⬜ Não iniciada |
 | 11 | **Raio-X — frequência, peso e tela** | taxa só de `origem='real'` com decaimento e amortecimento, porteiro do edital, substitui a view stub do plano, tela de leitura | 06, 07, 10 | 11 | B | ⬜ Não iniciada |
 | 12 | **Checkout, funil e ativação** | página de vendas, Asaas cartão/Pix/boleto, webhook verificado e idempotente, reconciliação, garantia de 7 dias, 18+ | 07 | 12 | **A** | ⬜ Não iniciada |

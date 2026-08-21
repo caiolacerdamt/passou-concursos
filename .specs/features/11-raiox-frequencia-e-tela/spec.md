@@ -46,6 +46,30 @@ enganosa contra o próprio aluno.
 | Fraqueza do aluno, domínio, caderno | SPEC 06 — o Raio-X **não lê `tentativas`** |
 | Módulo de formato A–E × Certo/Errado | SPEC 32 |
 
+---
+
+## User Stories
+
+- **P1 — Frequência real:** o aluno vê quanto cada tópico aparece nas provas reais, sem que questões inéditas alterem a medida.
+- **P1 — Peso honesto:** o plano usa a frequência amortecida, com pouca amostra explicitamente identificada.
+- **P1 — Porteiro do edital:** tópicos fora do programa não entram no plano; os tópicos do edital continuam visíveis mesmo sem questões publicadas.
+- **P1 — Perfil e leitura:** o sistema mantém perfis de concurso, recalcula a projeção por job e exibe a lista ordenada na área logada.
+
+## Requirement Traceability
+
+| Requirement ID | Story | Phase | Status |
+| --- | --- | --- | --- |
+| RAIOX-01 | P1: Frequência real | Design | Pending |
+| RAIOX-03 | P1: Porteiro do edital | Design | Pending |
+| RAIOX-04 | P1: Frequência real | Design | Pending |
+| RAIOX-05 | P1: Frequência real | Design | Pending |
+| RAIOX-08 | P1: Perfil e leitura | Design | Pending |
+| RAIOX-11 | P1: Frequência real | Design | Pending |
+| RAIOX-12 | P1: Peso honesto | Design | Pending |
+| RAIOX-14 | P1: Perfil e leitura | Design | Pending |
+
+**Coverage:** 8 total, 0 mapped to tasks, 8 pending.
+
 ## Contratos que esta spec fixa para as próximas
 
 - A view **`raiox_peso_topico`** passa a devolver o peso real **mantendo a assinatura** da SPEC 06 —
@@ -63,6 +87,12 @@ enganosa contra o próprio aluno.
 | Bancas na coluna | Cesgranrio, FGV, Cebraspe; coluna nova é linha de config | y (AD-009) |
 | Acervo pequeno no lançamento | **a maioria das linhas sai com `amostra_baixa=true` e isso é dito na tela**, não escondido | y (AD-090) |
 | Acervo vazio | devolve as linhas do edital com nota amortecida, nunca lista vazia | y (edge case) |
+| Formato de `programa_edital` no MVP | array JSON de UUIDs dos tópicos canônicos; citações e redação entram no pivot do edital | mantém a fronteira da SPEC 27 sem bloquear o primeiro Raio-X | y (AD-100) |
+| Banca `indefinida` | combina as bancas de `param.m5.bancas`, sem classificar núcleo/condicional | entrega leitura antes da banca sem antecipar RAIOX-02/13 | y (AD-100) |
+| Perfil sem `ativo` | a tela fica sem perfil e a view preserva o fallback `1.0` do M4 | configuração do edital não pode quebrar o plano existente | y (AD-100) |
+| Flag da tela | `flag.m5.raiox` nasce desligada | AD-076 constrói a superfície antes de ligá-la no lançamento | y (AD-076/100) |
+
+**Open questions:** none — defaults de calibração ficam no catálogo de configuração.
 
 ## Success Criteria
 

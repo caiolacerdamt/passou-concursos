@@ -41,6 +41,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.diagnostico_adaptativo",
       "flag.m4.simulado_semanal",
       "flag.m4.caderno_erros",
+      "flag.m5.raiox",
       "flag.m9.rota_de_erro_proposital",
     ];
     const parametros: ChaveParam[] = [
@@ -63,6 +64,12 @@ describe("catalogo de chaves", () => {
       "param.m4.questoes_por_bloco",
       "param.m4.fraqueza_por_nivel",
       "param.m4.retencao_historico_cron_dias",
+      "param.m5.bancas",
+      "param.m5.meia_vida_decaimento_anos",
+      "param.m5.amortecimento_k",
+      "param.m5.piso_amostra_baixa",
+      "param.m5.periodo_tendencia_recente_anos",
+      "param.m5.periodo_tendencia_anterior_anos",
       "param.m2.matriz_de_modelos",
       "param.m2.precos_por_modelo",
       "param.m2.teto_gasto_mensal_usd",
@@ -87,6 +94,20 @@ describe("catalogo de chaves", () => {
       expect(tipo.safeParse(1.01).success).toBe(false);
       expect(tipo.safeParse(0.5).success).toBe(true);
     }
+  });
+
+  it("declara os defaults de calibracao do Raio-X e deixa a tela desligada", () => {
+    expect(CATALOGO["flag.m5.raiox"].padrao).toBe(false);
+    expect(CATALOGO["param.m5.bancas"].padrao).toEqual([
+      "Cesgranrio",
+      "FGV",
+      "Cebraspe",
+    ]);
+    expect(CATALOGO["param.m5.meia_vida_decaimento_anos"].padrao).toBe(5);
+    expect(CATALOGO["param.m5.amortecimento_k"].padrao).toBe(10);
+    expect(CATALOGO["param.m5.piso_amostra_baixa"].padrao).toBe(10);
+    expect(CATALOGO["param.m5.periodo_tendencia_recente_anos"].padrao).toBe(3);
+    expect(CATALOGO["param.m5.periodo_tendencia_anterior_anos"].padrao).toBe(3);
   });
 
   it("toda flag e booleana e global, sem rollout percentual nem segmentacao (AC4)", () => {

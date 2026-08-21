@@ -278,6 +278,22 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-100
+- **Decision**: A SPEC 11 modela `perfil_concurso` como cadastro global multi-concurso, com no máximo
+  um perfil `ativo`. No MVP, `programa_edital` é um array JSON de UUIDs canônicos de `topicos`; quando
+  `banca='indefinida'`, a frequência combina as bancas declaradas em `param.m5.bancas`. A tela nasce
+  atrás de `flag.m5.raiox=false`; sem perfil ativo, a view mantém o fallback `1.0` da SPEC 06 para não
+  quebrar o plano antes da configuração do edital.
+- **Reason**: A primeira versão precisa persistir o esqueleto do edital sem antecipar o diff com citações
+  da SPEC 27, atender o BB antes da banca ser anunciada e manter o contrato do motor do plano durante a
+  transição entre as specs.
+- **Trade-off**: O array de UUIDs não guarda ainda a citação ou a redação do edital; essa estrutura entra
+  quando o pivot do edital for construído. A combinação de bancas não entrega núcleo/condicional, que fica
+  para a SPEC 20.
+- **Scope**: SPEC 11 · `perfil_concurso`, `raiox_projecoes`, configuração M5 e tela do Raio-X.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a

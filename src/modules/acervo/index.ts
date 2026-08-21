@@ -109,6 +109,16 @@ export {
 } from "./legibilidade";
 
 export {
+  CONSULTA_DA_BASE_CONFERIDA,
+  FonteMinimaSemGabarito,
+  type DocumentoDeReferencia,
+  type QuestaoParaReferencia,
+  type ReferenciaEntregue,
+  montarFonteMinima,
+  selecionarReferencia,
+} from "./base-referencia";
+
+export {
   CONSULTA_DO_ESTADO,
   type EstadoDaProva,
   type EstadoDoBloco,

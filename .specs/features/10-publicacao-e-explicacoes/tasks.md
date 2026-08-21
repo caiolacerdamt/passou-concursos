@@ -155,6 +155,19 @@ apenas de chamadas do job.
 não existir base; enfileirar pendência de base. **Where**: `src/modules/acervo/base-referencia.ts` e
 testes unit/DB. **Done when**: seleção respeita origem/status e nunca usa rascunho. **Depends**: T88.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 51 arquivos e 454 testes passando.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Documento precisa estar conferido | `src/modules/acervo/base-referencia.ts:35-42` — consulta filtra `status = 'conferido'` | Rascunho nunca é entregue à IA | ✅ |
+| Origem oficial tem prioridade | `src/modules/acervo/base-referencia.ts:39-40` e `src/modules/acervo/base-referencia.test.ts:67-87` | Documento oficial vem antes de resumo nosso | ✅ |
+| Fonte mínima contém dados oficiais | `src/modules/acervo/base-referencia.ts:70-99` e `src/modules/acervo/base-referencia.test.ts:47-59` | Enunciado, alternativas, proveniência e gabarito são entregues | ✅ |
+| Falta de base abre pendência | `src/modules/acervo/base-referencia.ts:125-130` e `src/modules/acervo/base-referencia.test.ts:90-104` | A questão não fica sem rastreabilidade | ✅ |
+| Fonte mínima sem gabarito é recusada | `src/modules/acervo/base-referencia.test.ts:61-65` | A IA não recebe questão sem verdade oficial | ✅ |
+
+Necessidade: os asserts cobrem a decisão de seleção e o fallback; a precedência real entre registros
+oficial/resumo/rascunho será exercitada contra o banco no gate de integração da T96.
+
 #### T92: Saída estruturada e conferência de citações
 
 **What**: schema da explicação, normalização PT-BR, conferência literal de trechos, alternativa correta

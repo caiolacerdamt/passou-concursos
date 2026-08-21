@@ -10,8 +10,15 @@ import type { PaginaDoPdf } from "./pdf";
  * justificou a escolha do modelo desaparece — a prova inteira num pedido so nao
  * e "mais simples", e mais cara.
  *
- * O teto, a margem e a razao caractere/token vivem em **configuracao**: o degrau
- * de preco e do fornecedor e muda sem o nosso deploy.
+ * Mas o teto de tokens **sozinho nao corta prova nenhuma**: medido nas provas do
+ * BB 2021, uma prova inteira sao ~19 mil tokens contra um teto util de ~218 mil.
+ * Sem um segundo limite, "fatiar em blocos" seria um bloco so — que e
+ * exatamente o que o BANCO-03 AC2 proibe. Por isso ha **duas** travas: o teto de
+ * tokens (o custo) e o teto de paginas (a fronteira). Bloco menor tambem falha
+ * menor: um bloco ruim custa 4 paginas, nao a prova.
+ *
+ * O teto, a margem, a razao caractere/token e o tamanho do bloco vivem em
+ * **configuracao**: o degrau de preco e do fornecedor e muda sem o nosso deploy.
  *
  * A unidade do bloco e a **pagina**, e nao a questao. A fronteira de questao so
  * existe depois que o modelo leu a prova; a de pagina o PDF entrega de graca. O
@@ -36,6 +43,8 @@ export type OrcamentoDeTokens = {
   /** O que sobra depois da margem — o numero que o fatiamento realmente usa. */
   tetoUtil: number;
   charsPorToken: number;
+  /** Quantas paginas, no maximo, cabem num bloco. E o corte que sempre acontece. */
+  paginasPorBloco: number;
 };
 
 /**
@@ -60,13 +69,19 @@ export class PaginaMaiorQueOTeto extends Error {
 
 /** O orcamento vigente, lido da configuracao. */
 export async function orcamentoVigente(): Promise<OrcamentoDeTokens> {
-  const [teto, margem, charsPorToken] = await Promise.all([
+  const [teto, margem, charsPorToken, paginasPorBloco] = await Promise.all([
     getParam("param.m1.teto_tokens_por_pedido"),
     getParam("param.m1.margem_do_teto"),
     getParam("param.m1.chars_por_token"),
+    getParam("param.m1.paginas_por_bloco"),
   ]);
 
-  return { teto, tetoUtil: Math.floor(teto * (1 - margem)), charsPorToken };
+  return {
+    teto,
+    tetoUtil: Math.floor(teto * (1 - margem)),
+    charsPorToken,
+    paginasPorBloco,
+  };
 }
 
 /**
@@ -132,7 +147,9 @@ export function fatiarEmBlocos(
     }
 
     const comEla = estimarTokens(juntar([...atual, pagina]), orcamento.charsPorToken);
-    if (atual.length > 0 && comEla > orcamento.tetoUtil) fechar();
+    const cheio =
+      atual.length >= orcamento.paginasPorBloco || comEla > orcamento.tetoUtil;
+    if (atual.length > 0 && cheio) fechar();
 
     atual.push(pagina);
   }

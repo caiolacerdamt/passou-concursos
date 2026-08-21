@@ -36,3 +36,9 @@ desktop.ini
 # Logs & temp
 *.log
 *.tmp
+
+# Provas oficiais e gabaritos (SPEC 09). Fonte legal e o PDF da banca (AD-003),
+# mas binario de prova nao entra no git: sao centenas de KB por arquivo, mudam
+# a cada lote e nao sao codigo. O operador os guarda fora do repositorio.
+/provas/*.pdf
+/provas/*.png

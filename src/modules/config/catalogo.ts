@@ -106,6 +106,13 @@ export const CATALOGO = {
     descricao:
       "Quantos caracteres de portugues valem um token, para estimar o tamanho de um bloco sem chamar o tokenizador do fornecedor. Calibra medindo uma prova real contra o `usage` que voltou.",
   }),
+  "param.m1.paginas_por_bloco": chave({
+    tipo: z.number().int().positive(),
+    padrao: 4,
+    moduloDono: "m1",
+    descricao:
+      "Teto de paginas por bloco de extracao. Existe porque o teto de tokens sozinho nunca corta uma prova real: as provas do BB 2021 tem ~19 mil tokens contra um teto util de ~218 mil, e sem este limite a prova inteira iria num pedido so — o que o BANCO-03 AC2 proibe. Bloco menor tambem falha menor: um bloco ruim custa 4 paginas, nao a prova.",
+  }),
   "param.m1.bucket_de_imagens": chave({
     tipo: z.string().min(1),
     padrao: "questoes",

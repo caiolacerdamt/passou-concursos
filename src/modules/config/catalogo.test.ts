@@ -47,6 +47,7 @@ describe("catalogo de chaves", () => {
       "param.m1.teto_tokens_por_pedido",
       "param.m1.margem_do_teto",
       "param.m1.chars_por_token",
+      "param.m1.paginas_por_bloco",
       "param.m1.bucket_de_imagens",
       "param.m4.algoritmo_revisao",
       "param.m4.fsrs_faixas_nota",

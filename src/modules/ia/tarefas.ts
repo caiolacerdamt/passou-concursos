@@ -42,7 +42,10 @@ export function existeTarefa(nome: string): nome is Tarefa {
  * chave de dedup — e um rotulo, nao uma conta.
  */
 export const VERSAO_DO_PROMPT: Record<Tarefa, string> = {
-  extracao_pdf: "1",
+  // v2: regras de PDF em duas colunas (hifen de quebra, cabecalho repetido,
+  // numero de linha do texto de apoio) e texto-base copiado em cada questao.
+  // Medido nas provas reais do BB 2021 (SPEC 09).
+  extracao_pdf: "2",
   explicacao: "1",
   verificacao_quantitativa: "1",
   classificacao_topico: "1",

@@ -18,8 +18,17 @@ function pagina(numero: number, tamanho: number): PaginaDoPdf {
   return { numero, texto: "x".repeat(tamanho), imagens: [] };
 }
 
-/** Um orcamento pequeno, para o teste caber na cabeca: 1 char = 1 token. */
-const ORCAMENTO = { teto: 100, tetoUtil: 100, charsPorToken: 1 };
+/**
+ * Um orcamento pequeno, para o teste caber na cabeca: 1 char = 1 token.
+ * `paginasPorBloco` alto de proposito nos testes que provam o teto de **tokens**
+ * — assim o corte que acontece e sempre o que o teste diz que esta provando.
+ */
+const ORCAMENTO = {
+  teto: 100,
+  tetoUtil: 100,
+  charsPorToken: 1,
+  paginasPorBloco: 999,
+};
 
 afterEach(() => {
   restaurarLeitorPadrao();
@@ -102,6 +111,62 @@ describe("fatiarEmBlocos — nenhum pedido passa do teto (IA-17)", () => {
   });
 });
 
+describe("fatiarEmBlocos — o teto de paginas e o corte que sempre acontece", () => {
+  /**
+   * Medido nas provas do BB 2021: 17 paginas, ~19 mil tokens estimados contra um
+   * teto util de ~218 mil. O teto de tokens **nunca** corta uma prova real —
+   * sem o teto de paginas, "fatiar em blocos" seria um bloco so, que e
+   * exatamente o que o BANCO-03 AC2 proibe.
+   */
+  const PROVA_REAL = Array.from({ length: 17 }, (_, i) => pagina(i + 1, 3_900));
+
+  it("uma prova de tamanho real vira varios blocos, mesmo folgando no teto de tokens", () => {
+    const blocos = fatiarEmBlocos(PROVA_REAL, {
+      teto: 272_000,
+      tetoUtil: 217_600,
+      charsPorToken: 3.5,
+      paginasPorBloco: 4,
+    });
+
+    expect(blocos.length).toBe(5);
+    // Nenhum bloco chega perto do teto: quem cortou foi a pagina, nao o token.
+    expect(Math.max(...blocos.map((b) => b.tokensEstimados))).toBeLessThan(20_000);
+  });
+
+  it("sem o teto de paginas a mesma prova iria num pedido so", () => {
+    // O contrafactual explicito: e ele que mostra que a trava nova nao e enfeite.
+    const semTeto = fatiarEmBlocos(PROVA_REAL, {
+      teto: 272_000,
+      tetoUtil: 217_600,
+      charsPorToken: 3.5,
+      paginasPorBloco: 999,
+    });
+    expect(semTeto).toHaveLength(1);
+  });
+
+  it("nenhum bloco passa do teto de paginas", () => {
+    const blocos = fatiarEmBlocos(PROVA_REAL, {
+      ...ORCAMENTO,
+      tetoUtil: 1_000_000,
+      paginasPorBloco: 4,
+    });
+
+    for (const bloco of blocos) {
+      const quantas = bloco.ultimaPagina - bloco.primeiraPagina + 1;
+      expect(quantas).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("o teto que apertar primeiro e o que vale", () => {
+    // Paginas gordas: o teto de tokens corta antes das 4 paginas.
+    const blocos = fatiarEmBlocos(
+      Array.from({ length: 6 }, (_, i) => pagina(i + 1, 60)),
+      { ...ORCAMENTO, tetoUtil: 100, paginasPorBloco: 4 },
+    );
+    expect(blocos.every((b) => b.ultimaPagina - b.primeiraPagina + 1 <= 2)).toBe(true);
+  });
+});
+
 describe("orcamentoVigente — o teto vem da configuracao", () => {
   it("aplica a margem sobre o teto lido do banco", async () => {
     const leitor: LeitorDeConfig = async () => ({
@@ -116,6 +181,7 @@ describe("orcamentoVigente — o teto vem da configuracao", () => {
     expect(orcamento.teto).toBe(100_000);
     expect(orcamento.tetoUtil).toBe(75_000);
     expect(orcamento.charsPorToken).toBe(4);
+    expect(orcamento.paginasPorBloco).toBeGreaterThan(0);
   });
 
   it("sem linha no banco vale o default do catalogo, que e o teto do fornecedor", async () => {
@@ -136,14 +202,14 @@ describe("orcamentoVigente — o teto vem da configuracao", () => {
     const paginas = Array.from({ length: 10 }, (_, i) => pagina(i + 1, 100));
 
     const apertado = fatiarEmBlocos(paginas, {
+      ...ORCAMENTO,
       teto: 250,
       tetoUtil: 250,
-      charsPorToken: 1,
     });
     const folgado = fatiarEmBlocos(paginas, {
+      ...ORCAMENTO,
       teto: 2000,
       tetoUtil: 2000,
-      charsPorToken: 1,
     });
 
     expect(apertado.length).toBeGreaterThan(folgado.length);

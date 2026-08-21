@@ -195,6 +195,18 @@ antes da persistência. A fila e o registro da rejeição serão ligados na T93/
 testes unit/DB. **Done when**: duas execuções deixam uma explicação e resultado inválido não abre
 publicação. **Depends**: T90, T92.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 53 arquivos e 470 testes passando; `npm run lint` limpo.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Aprovada fica ligada à questão-versão e ao dedup do IA | `src/modules/acervo/explicacao.ts:22-52` e `src/modules/acervo/explicacao.test.ts:39-57` | A linha leva par, versão própria, fontes e a mesma chave da geração | ✅ |
+| Execuções repetidas não duplicam | `src/modules/acervo/explicacao.ts:31` e `src/modules/acervo/explicacao.test.ts:60-67` | Conflito no banco retorna sem segunda linha | ✅ |
+| Rejeitada não fica vigente nem serve como fonte conferida | `src/modules/acervo/explicacao.ts:56-86` e `src/modules/acervo/explicacao.test.ts:70-88` | Resultado semântico rejeitado não abre publicação | ✅ |
+
+Necessidade: a persistência só recebe `ExplicacaoGerada`, que já passou pelo schema; saída malformada
+continua fora do banco. A integração da chave com uma geração real e o trigger de publicação ficam no
+job/gate da T95/T96.
+
 #### T94: Montagem do pedido da fábrica
 
 **What**: instrução estável e entrada variável com referência no mesmo pedido, schema strict e chave de

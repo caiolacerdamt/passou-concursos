@@ -119,6 +119,13 @@ export {
 } from "./base-referencia";
 
 export {
+  type ExplicacaoParaGravar,
+  type ResultadoDaGravacao,
+  gravarExplicacaoAprovada,
+  gravarExplicacaoRejeitada,
+} from "./explicacao";
+
+export {
   CONSULTA_DO_ESTADO,
   type EstadoDaProva,
   type EstadoDoBloco,

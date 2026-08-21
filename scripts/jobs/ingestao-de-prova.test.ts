@@ -487,7 +487,9 @@ describe("colher", () => {
     });
 
     const fecha = consultas.find((c) => c.texto.includes("set status = 'colhido'"));
-    expect(fecha?.valores).toEqual(["prova-1", 0, 2, 0]);
+    // O quinto valor e o motivo da perda parcial: `null` quando o bloco veio
+    // inteiro. Bloco colhido **com** motivo e o caso que sumia sozinho.
+    expect(fecha?.valores).toEqual(["prova-1", 0, 2, 0, null]);
     const marca = consultas.filter((c) => c.texto.includes("update public.provas")).pop();
     expect(marca?.valores?.[1]).toBe("extraida");
   });

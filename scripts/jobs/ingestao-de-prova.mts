@@ -408,6 +408,7 @@ export async function colher(
         continue;
       }
 
+      let parcial: string | null = null;
       const junto = juntarPaginas(partes);
       const questoes = (junto.estruturado as { questoes: unknown[] }).questoes;
 
@@ -427,6 +428,12 @@ export async function colher(
       for (const erro of junto.erros) {
         console.warn(`[ingestao] bloco ${bloco.bloco}: ${erro}`);
       }
+      // Perda **parcial**: parte das paginas veio e parte nao. O bloco fecha
+      // como `colhido` — o que veio e bom e nao se joga fora — mas o motivo
+      // fica gravado na linha. Sem isto, `--acao estado` mostraria o bloco
+      // inteiro em ordem e as questoes da pagina perdida sumiriam caladas, que
+      // e o unico jeito de o acervo ficar errado sem ninguem saber.
+      parcial = junto.erros.length > 0 ? junto.erros.join(" | ") : null;
 
       const linha = {
         ...partes[0],
@@ -474,13 +481,15 @@ export async function colher(
 
         await cliente.query(
           `update public.prova_lote
-              set status = 'colhido', questoes_aceitas = $3, questoes_recusadas = $4
+              set status = 'colhido', questoes_aceitas = $3,
+                  questoes_recusadas = $4, erro = $5
             where prova_id = $1 and bloco = $2`,
           [
             argumentos.provaId,
             bloco.bloco,
             validado.aceitas.length,
             validado.recusadas.length,
+            parcial,
           ],
         );
       } catch (erro) {

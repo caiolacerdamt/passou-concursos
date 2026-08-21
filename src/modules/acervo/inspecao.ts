@@ -163,10 +163,22 @@ export function relatorioDoEstado(estado: EstadoDaProva): string {
   });
 
   const presos = estado.blocos.filter((bloco) => bloco.status === "falhou");
-  const rodape =
-    presos.length === 0
-      ? ""
-      : `\n  ${presos.length} bloco(s) falhado(s). Rodar --acao enviar reenvia so eles.`;
+  // Bloco `colhido` **com** motivo gravado e perda parcial: parte das paginas
+  // entrou e parte se perdeu. E o caso que some sozinho, porque o bloco parece
+  // pronto — e por isso ele tem aviso proprio.
+  const parciais = estado.blocos.filter(
+    (bloco) => bloco.status === "colhido" && bloco.erro !== null,
+  );
 
-  return [`  prova: ${estado.prova.status}`, ...linhas].join("\n") + rodape;
+  const avisos = [
+    presos.length === 0
+      ? null
+      : `  ${presos.length} bloco(s) falhado(s). Rodar --acao enviar reenvia so eles.`,
+    parciais.length === 0
+      ? null
+      : `  ${parciais.length} bloco(s) com perda PARCIAL: parte das paginas nao voltou. ` +
+        "As questoes delas nao estao no acervo — o motivo esta na linha do bloco.",
+  ].filter((aviso): aviso is string => aviso !== null);
+
+  return [`  prova: ${estado.prova.status}`, ...linhas, ...avisos].join("\n");
 }

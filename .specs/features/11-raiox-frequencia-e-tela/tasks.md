@@ -206,14 +206,14 @@ T93 → T94
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Sem matrícula a guarda existente redireciona antes da leitura do acervo.
-- [ ] Flag desligada não exibe a projeção; flag ligada renderiza os dados pré-computados.
-- [ ] A rota funciona sem `data_prova` e exibe a banca `indefinida` sem inventar contagem regressiva.
+- [x] Sem matrícula a guarda existente redireciona antes da leitura do acervo.
+- [x] Flag desligada não exibe a projeção; flag ligada renderiza os dados pré-computados.
+- [x] A rota funciona sem `data_prova` e exibe a banca `indefinida` sem inventar contagem regressiva.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m5): adiciona rota logada do raio-x`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — unit gate verde (`src/app/app/raio-x/page.test.tsx`)
 
 ### T94: Fechar contrato com o plano e rastreabilidade
 

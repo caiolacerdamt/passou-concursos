@@ -251,6 +251,57 @@ export const CATALOGO = {
       "Caderno de erros. Nasce ligada: faz parte de 'progresso', uma das 4 superficies do lancamento (AD-076).",
   }),
 
+  // ── M5 · Raio-X da banca ─────────────────────────────────────────────────
+  "flag.m5.raiox": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m5",
+    descricao:
+      "Tela de leitura do Raio-X. Nasce desligada (AD-076): a projeção é construída antes de a superfície ser ligada.",
+  }),
+  "param.m5.bancas": chave({
+    tipo: z.array(z.string().min(1)).min(1),
+    padrao: ["Cesgranrio", "FGV", "Cebraspe"],
+    moduloDono: "m5",
+    descricao:
+      "Bancas que compõem o escopo combinado quando o perfil ainda está indefinido. Banca nova entra por configuração.",
+  }),
+  "param.m5.meia_vida_decaimento_anos": chave({
+    tipo: z.number().positive(),
+    padrao: 5,
+    moduloDono: "m5",
+    descricao:
+      "Meia-vida em anos do peso de uma questão real. Nenhum ano é descartado; o valor só calibra a queda gradual.",
+  }),
+  "param.m5.amortecimento_k": chave({
+    tipo: z.number().positive(),
+    padrao: 10,
+    moduloDono: "m5",
+    descricao:
+      "Constante da força de amortecimento para puxar amostras pequenas em direção à média da banca.",
+  }),
+  "param.m5.piso_amostra_baixa": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m5",
+    descricao:
+      "Número mínimo de questões reais para uma linha deixar de receber o rótulo de pouca amostra.",
+  }),
+  "param.m5.periodo_tendencia_recente_anos": chave({
+    tipo: z.number().int().positive(),
+    padrao: 3,
+    moduloDono: "m5",
+    descricao:
+      "Tamanho, em anos, da janela recente usada para apontar a direção da frequência.",
+  }),
+  "param.m5.periodo_tendencia_anterior_anos": chave({
+    tipo: z.number().int().positive(),
+    padrao: 3,
+    moduloDono: "m5",
+    descricao:
+      "Tamanho, em anos, da janela anterior comparada com a janela recente da tendência.",
+  }),
+
   // ── M2 · camada de IA ─────────────────────────────────────────────────────
   // **Os tres defaults abaixo sao vazios de proposito** e isso e o desenho, nao
   // esquecimento (SPEC 08). O `AGENTS.md` proibe nome de modelo em codigo; o

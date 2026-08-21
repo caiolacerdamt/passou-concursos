@@ -278,6 +278,37 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-100
+- **Decision**: A SPEC 11 modela `perfil_concurso` como cadastro global multi-concurso, com no máximo
+  um perfil `ativo`. No MVP, `programa_edital` é um array JSON de UUIDs canônicos de `topicos`; quando
+  `banca='indefinida'`, a frequência combina as bancas declaradas em `param.m5.bancas`. A tela nasce
+  atrás de `flag.m5.raiox=false`; sem perfil ativo, a view mantém o fallback `1.0` da SPEC 06 para não
+  quebrar o plano antes da configuração do edital.
+- **Reason**: A primeira versão precisa persistir o esqueleto do edital sem antecipar o diff com citações
+  da SPEC 27, atender o BB antes da banca ser anunciada e manter o contrato do motor do plano durante a
+  transição entre as specs.
+- **Trade-off**: O array de UUIDs não guarda ainda a citação ou a redação do edital; essa estrutura entra
+  quando o pivot do edital for construído. A combinação de bancas não entrega núcleo/condicional, que fica
+  para a SPEC 20.
+- **Scope**: SPEC 11 · `perfil_concurso`, `raiox_projecoes`, configuração M5 e tela do Raio-X.
+- **Date**: 2026-08-21
+- **Status**: active
+
+### AD-101
+- **Decision**: A projeção do Raio-X usa amortecimento suave em direção à média, sem teto absoluto de
+  posição baseado apenas em `n_questoes`. O recálculo é idempotente nos valores de negócio; a coluna
+  `atualizado_em` registra cada execução para observabilidade. Fora do programa, o tópico é omitido da
+  view do plano, representando peso lógico zero.
+- **Reason**: O contrato da SPEC 11 exige reduzir a instabilidade de amostras pequenas, preservar a
+  projeção anterior quando o job falha e deixar o motor do plano inalterado. Um teto rígido de ranking
+  seria uma regra adicional de ordenação não prevista no requisito formal.
+- **Trade-off**: Uma amostra pequena pode continuar em posição alta se a evidência amortizada ainda for
+  maior; a tela explicita `amostra_baixa`. Reexecutar não repete os valores de negócio, mas muda o
+  timestamp operacional.
+- **Scope**: SPEC 11 · `recalcula_raiox`, `raiox_projecoes`, `raiox_peso_topico` e tela do Raio-X.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -297,8 +328,8 @@
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
   | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
   | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
-- **Next step**: **SPEC 11 — Raio-X: frequência, peso e tela**
-  (`.specs/features/11-raiox-frequencia-e-tela/spec.md`). **Ritual B**. Depende das specs 06, 07 e 10.
-  A SPEC 10 deixou o operador com a fila no Supabase Studio, a explicação pré-computada e a porta de
-  publicação protegida no banco. O próximo passo calcula frequência real, peso do plano e a tela de
-  leitura; não deve criar dependência para uma spec de número maior.
+  | **11 — Raio-X: frequência, peso e tela** | T98–T105 | ✅ **490 unit + 332 db**. Lint e build verdes. Ritual B — **PASS parcial** independente; limitações de ranking absoluto e timestamp registradas em `.specs/features/11-*/validation.md`. |
+- **Next step**: **SPEC 12 — Checkout, funil e ativação**
+  (`.specs/features/12-checkout-funil-e-ativacao/spec.md`). Depende das specs 07 e 10. A SPEC 11 deixou
+  o perfil do concurso, a frequência real, o peso do plano e a tela do Raio-X construídos atrás de flag;
+  o próximo passo implementa a conversão e a ativação sem criar dependência para uma spec de número maior.

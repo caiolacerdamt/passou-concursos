@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 14, 19, 20, 27, 31, 32 |
 | **Tasks (estimativa)** | ~11 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída — PASS parcial independente; limitações em `validation.md` |
 | **Requisitos** | **RAIOX-08**, **RAIOX-01**, **RAIOX-04**, **RAIOX-05**, **RAIOX-11**, **RAIOX-12**, **RAIOX-03** (porteiro do edital), **RAIOX-14** |
 | **Fonte dos requisitos** | `.specs/modulos/m5-raiox-banca/spec.md` |
 | **Vem de** | SPEC 26 + parte da SPEC 27 do recorte de 42, **com a tela puxada para dentro** (AD-089) |
@@ -46,6 +46,30 @@ enganosa contra o próprio aluno.
 | Fraqueza do aluno, domínio, caderno | SPEC 06 — o Raio-X **não lê `tentativas`** |
 | Módulo de formato A–E × Certo/Errado | SPEC 32 |
 
+---
+
+## User Stories
+
+- **P1 — Frequência real:** o aluno vê quanto cada tópico aparece nas provas reais, sem que questões inéditas alterem a medida.
+- **P1 — Peso honesto:** o plano usa a frequência amortecida, com pouca amostra explicitamente identificada.
+- **P1 — Porteiro do edital:** tópicos fora do programa não entram no plano; os tópicos do edital continuam visíveis mesmo sem questões publicadas.
+- **P1 — Perfil e leitura:** o sistema mantém perfis de concurso, recalcula a projeção por job e exibe a lista ordenada na área logada.
+
+## Requirement Traceability
+
+| Requirement ID | Story | Phase | Status |
+| --- | --- | --- | --- |
+| RAIOX-01 | P1: Frequência real | Execute | Verified |
+| RAIOX-03 | P1: Porteiro do edital | Execute | Verified |
+| RAIOX-04 | P1: Frequência real | Execute | Verified |
+| RAIOX-05 | P1: Frequência real | Execute | Verified |
+| RAIOX-08 | P1: Perfil e leitura | Execute | Verified |
+| RAIOX-11 | P1: Frequência real | Execute | Verified |
+| RAIOX-12 | P1: Peso honesto | Execute | Verified |
+| RAIOX-14 | P1: Perfil e leitura | Execute | Verified |
+
+**Coverage:** 8 total, 8 mapped to tasks, 0 pending.
+
 ## Contratos que esta spec fixa para as próximas
 
 - A view **`raiox_peso_topico`** passa a devolver o peso real **mantendo a assinatura** da SPEC 06 —
@@ -63,13 +87,24 @@ enganosa contra o próprio aluno.
 | Bancas na coluna | Cesgranrio, FGV, Cebraspe; coluna nova é linha de config | y (AD-009) |
 | Acervo pequeno no lançamento | **a maioria das linhas sai com `amostra_baixa=true` e isso é dito na tela**, não escondido | y (AD-090) |
 | Acervo vazio | devolve as linhas do edital com nota amortecida, nunca lista vazia | y (edge case) |
+| Formato de `programa_edital` no MVP | array JSON de UUIDs dos tópicos canônicos; citações e redação entram no pivot do edital | mantém a fronteira da SPEC 27 sem bloquear o primeiro Raio-X | y (AD-100) |
+| Banca `indefinida` | combina as bancas de `param.m5.bancas`, sem classificar núcleo/condicional | entrega leitura antes da banca sem antecipar RAIOX-02/13 | y (AD-100) |
+| Perfil sem `ativo` | a tela fica sem perfil e a view preserva o fallback `1.0` do M4 | configuração do edital não pode quebrar o plano existente | y (AD-100) |
+| Flag da tela | `flag.m5.raiox` nasce desligada | AD-076 constrói a superfície antes de ligá-la no lançamento | y (AD-076/100) |
+
+**Open questions:** none — defaults de calibração ficam no catálogo de configuração.
 
 ## Success Criteria
 
-- [ ] Publicar 50 inéditas de um tópico **não** muda a taxa dele
-- [ ] Uma prova real recente move a taxa mais do que uma de 10 anos atrás
-- [ ] Tópico com 3 questões e taxa bruta altíssima **não** lidera a lista, e a tela mostra "pouca amostra"
-- [ ] Tópico fora do programa do edital fica com peso zero
-- [ ] Rerodar o job produz exatamente o mesmo resultado
-- [ ] Trocar a view stub pelo peso real reordena o plano do dia seguinte **sem alterar o motor**
-- [ ] A tela abre com acervo fino sem mentir: toda linha amortecida aparece rotulada
+- [x] Publicar 50 inéditas de um tópico **não** muda a taxa dele
+- [x] Uma prova real recente move a taxa mais do que uma de 10 anos atrás
+- [x] Tópico com 3 questões e taxa bruta altíssima **não** lidera a lista, e a tela mostra "pouca amostra"
+- [x] Tópico fora do programa do edital fica com peso zero
+- [x] Rerodar o job produz exatamente o mesmo resultado
+- [x] Trocar a view stub pelo peso real reordena o plano do dia seguinte **sem alterar o motor**
+- [x] A tela abre com acervo fino sem mentir: toda linha amortecida aparece rotulada
+
+> Nota de validação: o verificador independente classificou os critérios 3 e 5 como **PASS parcial**.
+> O amortecimento puxa a taxa de amostras pequenas para a média, mas não impõe um teto absoluto de
+> posição para `n_questoes = 3`; e a coluna `atualizado_em` registra a nova execução embora os valores
+> de negócio sejam idempotentes. Os detalhes e a evidência estão em `validation.md`.

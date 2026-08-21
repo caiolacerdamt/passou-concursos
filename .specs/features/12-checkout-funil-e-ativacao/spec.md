@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 13, 16, 17, 28, 34 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Implementada; validação visual manual e dependências externas pendentes |
 | **Requisitos** | **PAG-08**, **PAG-17**, **INFRA-12**, **PAG-02**, **PAG-05**, **PAG-09**, **PAG-06**, **PAG-13**, **PAG-12**, **DADOS-11**, **PAG-03**, **INFRA-10** (webhook) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` (DADOS-11) |
 | **Vem de** | SPEC 19 + SPEC 21 + a garantia da SPEC 20 do recorte de 42 (AD-089) |
@@ -69,6 +69,11 @@ calendário mais longo do MVP — resolver em paralelo com as specs 08–11.
 **Open questions:** o contrato do Asaas, o CNPJ/regime fiscal e o free tier do PostHog ainda precisam
 de confirmação externa; a implementação local não depende de assumir esses valores como fato.
 
+**Nota de implementação (T112):** o Asaas exige nome e CPF/CNPJ para criar o cliente pagador. O
+checkout coleta esses dados no servidor, não coleta data de nascimento e não grava esses campos no
+registro operacional local de pagamento; o contrato externo, CNPJ e configuração fiscal continuam
+pendentes de confirmação antes da operação real.
+
 ## User Stories
 
 ### P1: visitante entende a oferta e inicia a compra
@@ -102,37 +107,41 @@ de confirmação externa; a implementação local não depende de assumir esses 
 
 | ID | Contrato coberto nesta spec | Evidência esperada | Status |
 | --- | --- | --- | --- |
-| PAG-02 | Compra anual no cartão em até 12x, Pix e boleto | Testes unitários, banco e fluxo de checkout | Pending |
-| PAG-03 | Garantia de 7 dias, reembolso e encerramento de acesso | Testes unitários, banco e fluxo de reembolso | Pending |
-| PAG-05 | Checkout próprio integrado ao Asaas e NF nativa | Testes do adaptador e registro de fatura | Pending |
-| PAG-06 | Buy-then-activate, matrícula de 12 meses e estados | Testes de transição, idempotência e ativação | Pending |
-| PAG-08 | Página de vendas responsiva e honesta | Teste de renderização e teste visual manual | Pending |
-| PAG-09 | Preço e desconto à vista em configuração | Testes do catálogo e da leitura de preço | Pending |
-| PAG-12 | Declaração afirmativa de 18+ sem data de nascimento | Testes do checkout e banco | Pending |
-| PAG-13 | Webhook verificado, idempotente e reconciliação | Testes de rota, banco e job | Pending |
-| PAG-17 | Funil anônimo, proxy próprio e sem session replay | Testes de allowlist e rota de analytics | Pending |
-| DADOS-11 | Aceite datado de termos e maioridade | Testes do checkout e banco | Pending |
-| INFRA-10 | Entrada de webhook com assinatura e falha observável | Testes da rota e do alerta | Pending |
-| INFRA-12 | Analytics pré-login anônimo e não crítico para compra | Testes do proxy e bloqueio no navegador | Pending |
-| SEC-01 | Entrada do checkout é validada no serviço e combinações incoerentes são recusadas | `v5.0.0-2.2.1`, `v5.0.0-2.2.2`, `v5.0.0-2.2.3` · testes da action | Pending |
-| SEC-02 | Máquina de estados exige ordem e claim impede dupla ativação | `v5.0.0-2.3.1`, `v5.0.0-2.3.4` · testes de banco | Pending |
-| SEC-03 | Reembolso e leitura de dados usam autorização no servidor, não no navegador | `v5.0.0-8.2.1`, `v5.0.0-8.3.1` · testes de RLS e action | Pending |
-| SEC-04 | Asaas, Supabase e PostHog usam credenciais de serviço com privilégio mínimo | `v5.0.0-13.2.1`, `v5.0.0-13.2.2` · testes de configuração | Pending |
-| SEC-05 | Chamadas externas exigem HTTPS e destino permitido | `v5.0.0-12.2.1`, `v5.0.0-12.3.1`, `v5.0.0-13.2.4` · testes do gateway | Pending |
-| SEC-06 | Segredos não entram no código, no cliente ou no build | `v5.0.0-13.3.1` · inspeção e testes de ambiente | Pending |
-| SEC-07 | Webhook e falhas retornam mensagem genérica e não registram token, CPF, e-mail ou pagamento bruto | `v5.0.0-16.2.5`, `v5.0.0-16.5.1`, `v5.0.0-16.5.2`, `v5.0.0-16.5.3` · testes de saneamento | Pending |
-| SEC-08 | Rotas HTTP respondem com tipo de conteúdo coerente | `v5.0.0-4.1.1` · testes de Route Handler | Pending |
-| SEC-09 | Operações da garantia verificam a sessão por serviço confiável | `v5.0.0-7.2.1` · testes da action | Pending |
+| PAG-02 | Compra anual no cartão em até 12x, Pix e boleto | Testes unitários, banco e fluxo de checkout | Verified |
+| PAG-03 | Garantia de 7 dias, reembolso e encerramento de acesso | Testes unitários, banco e fluxo de reembolso | Verified |
+| PAG-05 | Checkout próprio integrado ao Asaas e NF nativa | Testes do adaptador e registro de fatura | Verified — NF real depende de CNPJ/configuração externa |
+| PAG-06 | Buy-then-activate, matrícula de 12 meses e estados | Testes de transição, idempotência e ativação | Verified |
+| PAG-08 | Página de vendas responsiva e honesta | Teste de renderização e teste visual manual | Verified — visual manual pendente |
+| PAG-09 | Preço e desconto à vista em configuração | Testes do catálogo e da leitura de preço | Verified |
+| PAG-12 | Declaração afirmativa de 18+ sem data de nascimento | Testes do checkout e banco | Verified |
+| PAG-13 | Webhook verificado, idempotente e reconciliação | Testes de rota, banco e job | Verified |
+| PAG-17 | Funil anônimo, proxy próprio e sem session replay | Testes de allowlist e rota de analytics | Verified |
+| DADOS-11 | Aceite datado de termos e maioridade | Testes do checkout e banco | Verified |
+| INFRA-10 | Entrada de webhook com assinatura e falha observável | Testes da rota e do alerta | Verified |
+| INFRA-12 | Analytics pré-login anônimo e não crítico para compra | Testes do proxy e bloqueio no navegador | Verified |
+| SEC-01 | Entrada do checkout é validada no serviço e combinações incoerentes são recusadas | `v5.0.0-2.2.1`, `v5.0.0-2.2.2`, `v5.0.0-2.2.3` · testes da action | Verified |
+| SEC-02 | Máquina de estados exige ordem e claim impede dupla ativação | `v5.0.0-2.3.1`, `v5.0.0-2.3.4` · testes de banco | Verified |
+| SEC-03 | Reembolso e leitura de dados usam autorização no servidor, não no navegador | `v5.0.0-8.2.1`, `v5.0.0-8.3.1` · testes de RLS e action | Verified |
+| SEC-04 | Asaas, Supabase e PostHog usam credenciais de serviço com privilégio mínimo | `v5.0.0-13.2.1`, `v5.0.0-13.2.2` · testes de configuração | Verified |
+| SEC-05 | Chamadas externas exigem HTTPS e destino permitido | `v5.0.0-12.2.1`, `v5.0.0-12.3.1`, `v5.0.0-13.2.4` · testes do gateway | Verified |
+| SEC-06 | Segredos não entram no código, no cliente ou no build | `v5.0.0-13.3.1` · inspeção e testes de ambiente | Verified |
+| SEC-07 | Webhook e falhas retornam mensagem genérica e não registram token, CPF, e-mail ou pagamento bruto | `v5.0.0-16.2.5`, `v5.0.0-16.5.1`, `v5.0.0-16.5.2`, `v5.0.0-16.5.3` · testes de saneamento | Verified |
+| SEC-08 | Rotas HTTP respondem com tipo de conteúdo coerente | `v5.0.0-4.1.1` · testes de Route Handler | Verified |
+| SEC-09 | Operações da garantia verificam a sessão por serviço confiável | `v5.0.0-7.2.1` · testes da action | Verified |
+
+`Verified` significa que a implementação local e os testes correspondentes passaram. A conferência
+visual manual e a ativação real de Asaas/NF continuam explicitamente fora do que foi executado neste
+workspace.
 
 ## Success Criteria
 
-- [ ] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique
-- [ ] Compra de ponta a ponta em cada meio de pagamento, informando só o e-mail
-- [ ] Mesmo webhook disparado três vezes → **uma** conta e **uma** matrícula
-- [ ] Webhook apagado → o job de reconciliação ativa a compra sozinho
-- [ ] E-mail com matrícula ativa comprando de novo é avisado, não cobrado
-- [ ] Checkout sem a declaração de 18+ não conclui
-- [ ] Transição inválida (reembolso antes da confirmação) é rejeitada com alerta
-- [ ] Reembolso no 5º dia devolve e encerra; no 9º, recusa com mensagem clara
-- [ ] Os quatro eventos aparecem sem nenhum dado pessoal nas propriedades
-- [ ] Bloquear o analytics no navegador e concluir a compra normalmente
+- [ ] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique — conferência manual pendente
+- [ ] Compra de ponta a ponta em cada meio de pagamento — depende de credenciais e contrato reais do Asaas
+- [x] Mesmo webhook disparado três vezes → **uma** conta e **uma** matrícula
+- [x] Webhook apagado → o job de reconciliação ativa a compra sozinho
+- [x] E-mail com matrícula ativa comprando de novo é avisado, não cobrado
+- [x] Checkout sem a declaração de 18+ não conclui
+- [x] Transição inválida (reembolso antes da confirmação) é rejeitada com alerta
+- [x] Reembolso no 5º dia devolve e encerra; no 9º, recusa com mensagem clara
+- [x] Os quatro eventos aparecem sem nenhum dado pessoal nas propriedades
+- [x] Bloquear o analytics no navegador e concluir a compra normalmente

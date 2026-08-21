@@ -368,15 +368,22 @@ no Asaas antes de marcar pagamento/matrícula reembolsados.
 **Tools**: Skill `tlc-spec-driven`; documentação oficial do estorno Asaas
 **Done when**:
 
-- [ ] No quinto dia a tela mostra a janela e permite solicitar; no nono dia recusa com clareza.
-- [ ] Reembolso antes da confirmação é rejeitado, alertado e não encerra acesso.
-- [ ] Estorno confirmado grava solicitante, timestamp e meio, marca ambos os estados e fecha o paywall.
-- [ ] Falha do gateway não marca reembolso falso e abre pendência de retry.
+- [x] No quinto dia a tela mostra a janela e permite solicitar; no nono dia recusa com clareza.
+- [x] Reembolso antes da confirmação é rejeitado, alertado e não encerra acesso.
+- [x] Estorno confirmado grava solicitante, timestamp e meio, marca ambos os estados e fecha o paywall.
+- [x] Falha do gateway não marca reembolso falso e abre pendência de retry.
 
 **Tests**: unit/render
 **Gate**: quick
 **Commit**: `feat(pag): implementa garantia e reembolso`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; a tela autenticada calcula os dias no servidor, recusa tentativas fora da janela ou antes da confirmação, chama o estorno somente no prazo e só fecha pagamento/matrícula após confirmação segura do gateway.
+- **Assumptions**: a janela usa dias corridos UTC; `DONE`, `CONFIRMED` e `REFUNDED` são respostas finais aceitas do Asaas; qualquer outro status ou falha fica em pendência e mantém o acesso; o pedido inválido também abre alerta operacional sem expor dados financeiros.
+- **Files**: `src/modules/pagamentos/garantia.ts`, `src/modules/pagamentos/garantia.test.ts`, `src/modules/pagamentos/repositorio.ts`, `src/app/app/reembolso/page.tsx`, `src/app/app/reembolso/page.test.tsx`, `src/app/app/reembolso/acoes.ts`, `src/app/app/reembolso/acoes.test.ts`.
+- **Success evidence**: `npm run test:unit -- src/modules/pagamentos/garantia.test.ts src/app/app/reembolso/page.test.tsx src/app/app/reembolso/acoes.test.ts` — 3 arquivos, 9 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde.
 
 ### T117: Fechar integração, rastreabilidade e gate da SPEC
 
@@ -389,49 +396,56 @@ verificação independente.
 **Tools**: Skill `tlc-spec-driven`; gates do projeto
 **Done when**:
 
-- [ ] O teste de banco cobre estados, idempotência, RLS, fila, retenção e matrícula única.
-- [ ] A matriz de rastreabilidade da SPEC e o status de cada task têm evidência real.
-- [ ] `validate_spec.py`, `validate_tasks.py`, unit, db, lint e build passam, ou a limitação fica registrada.
-- [ ] O teste visual manual fica documentado com `/` e `/checkout`, sem criar mockup.
+- [x] O teste de banco cobre estados, idempotência, RLS, fila, retenção e matrícula única.
+- [x] A matriz de rastreabilidade da SPEC e o status de cada task têm evidência real.
+- [x] `validate_spec.py`, `validate_tasks.py`, unit, db, lint e build passam, ou a limitação fica registrada.
+- [x] O teste visual manual fica documentado com `/` e `/checkout`, sem criar mockup.
 
 **Tests**: integration + build
 **Gate**: build
 **Commit**: `test(pag): fecha contrato do funil e ativacao`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; o contrato integrado de checkout, webhook, ativação, reconciliação, garantia, fatura, retenção e paywall foi exercitado por testes unitários e de banco; rastreabilidade e gates foram atualizados.
+- **Assumptions**: o Postgres de desenvolvimento é o banco de contrato; o teste visual manual não foi executado pelo agente e fica explicitamente pendente para conferência humana; o Verifier independente não foi iniciado por instrução explícita do usuário, então o relatório final identifica a auto-verificação do agente principal e esse desvio.
+- **Files**: `tests/db/pagamentos-schema.test.ts`, `tests/db/matricula.test.ts`, `.specs/features/12-checkout-funil-e-ativacao/spec.md`, `.specs/features/12-checkout-funil-e-ativacao/tasks.md`, `.specs/features/12-checkout-funil-e-ativacao/validation.md`.
+- **Success evidence**: `tests/db/pagamentos-schema.test.ts` — 9 testes verdes com conexão autorizada; `npm run test:unit` — contagem final registrada em `validation.md`; `npm run lint`, `npx tsc --noEmit`, `npm run build`, `validate_spec.py`, `validate_tasks.py` e `validate_state.py` registrados em `validation.md`.
 
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |
 | --- | --- | --- | --- |
-| T106 | None | None | Pending |
-| T107 | T106 | T106 → T107 | Pending |
-| T108 | T107 | T107 → T108 | Pending |
-| T109 | T108 | T108 → T109 | Pending |
-| T110 | T108 | T108 → T110 | Pending |
-| T111 | T110 | T110 → T111 | Pending |
-| T112 | T109, T111 | T109/T111 → T112 | Pending |
-| T113 | T112 | T112 → T113 | Pending |
-| T114 | T113 | T113 → T114 | Pending |
-| T115 | T114 | T114 → T115 | Pending |
-| T116 | T114 | T114 → T116 | Pending |
-| T117 | T115, T116 | T115/T116 → T117 | Pending |
+| T106 | None | None | Done |
+| T107 | T106 | T106 → T107 | Done |
+| T108 | T107 | T107 → T108 | Done |
+| T109 | T108 | T108 → T109 | Done |
+| T110 | T108 | T108 → T110 | Done |
+| T111 | T110 | T110 → T111 | Done |
+| T112 | T109, T111 | T109/T111 → T112 | Done |
+| T113 | T112 | T112 → T113 | Done |
+| T114 | T113 | T113 → T114 | Done |
+| T115 | T114 | T114 → T115 | Done |
+| T116 | T114 | T114 → T116 | Done |
+| T117 | T115, T116 | T115/T116 → T117 | Done |
 
 ## Test Co-location Validation
 
 | Task | Layer | Matrix | Task says | Status |
 | --- | --- | --- | --- | --- |
-| T106 | Catálogo e preço | unit | unit | Pending |
-| T107 | Schema Supabase | integration | integration | Pending |
-| T108 | Contratos puros | unit | unit | Pending |
-| T109 | Gateway Asaas | unit | unit | Pending |
-| T110 | Analytics | unit | unit | Pending |
-| T111 | Página pública | unit/render | unit/render | Pending |
-| T112 | Página pública | unit/render | unit/render | Pending |
-| T113 | Webhook e ativação | unit | unit | Pending |
-| T114 | Webhook e ativação | unit | unit | Pending |
-| T115 | Job | unit | unit | Pending |
-| T116 | Garantia | unit/render | unit/render | Pending |
-| T117 | Gate final | build | integration + build | Pending |
+| T106 | Catálogo e preço | unit | unit | Done |
+| T107 | Schema Supabase | integration | integration | Done |
+| T108 | Contratos puros | unit | unit | Done |
+| T109 | Gateway Asaas | unit | unit | Done |
+| T110 | Analytics | unit | unit | Done |
+| T111 | Página pública | unit/render | unit/render | Done |
+| T112 | Página pública | unit/render | unit/render | Done |
+| T113 | Webhook e ativação | unit | unit | Done |
+| T114 | Webhook e ativação | unit | unit | Done |
+| T115 | Job | unit | unit | Done |
+| T116 | Garantia | unit/render | unit/render | Done |
+| T117 | Gate final | build | integration + build | Done |
 
 ## Traceability Plan
 
@@ -461,8 +475,8 @@ verificação independente.
 
 ## Closing Protocol
 
-Depois de T117, o coordenador deve disparar um único Verifier independente com
-sensor de mutação scratch, aguardar `worker_done`/veredito final e só então
-escrever `validation.md`. Se o Verifier encontrar falha, corrigir e aguardar a
-verificação de retorno sem cancelar uma execução em andamento. `validate_state.py`
-é o último gate antes de declarar a SPEC concluída.
+Por instrução explícita do usuário, nenhum Verifier independente ou subagent foi
+iniciado neste lote. O agente principal executou os gates disponíveis, registrou
+as limitações e escreveu `validation.md` com essa divergência explícita. Em um
+fluxo normal, o Verifier independente com sensor de mutação scratch seria o
+último passo antes de `validate_state.py`.

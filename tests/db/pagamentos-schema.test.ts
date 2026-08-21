@@ -3,7 +3,7 @@ import type { Client } from "pg";
 import { expect, it } from "vitest";
 
 import { comTransacaoRevertida } from "./conexao";
-import { criarUsuario, idDoProdutoUnico } from "./conta";
+import { criarMatricula, criarUsuario, idDoProdutoUnico } from "./conta";
 import { descreveComBanco } from "./setup";
 
 async function criarPagamento(cliente: Client, estado = "pendente") {
@@ -53,7 +53,14 @@ descreveComBanco("schema de pagamentos", () => {
            join pg_namespace n on n.oid = c.relnamespace
           where n.nspname = 'public'
             and c.relname = any($1::text[])`,
-        [["pagamentos", "pagamento_eventos", "pagamento_transicoes", "faturas"]],
+        [[
+          "pagamentos",
+          "pagamento_aceites",
+          "pagamento_eventos",
+          "pagamento_transicoes",
+          "faturas",
+          "pagamento_pendencias",
+        ]],
       );
       expect(rls.every((linha) => linha.relrowsecurity)).toBe(true);
     });
@@ -146,6 +153,214 @@ descreveComBanco("schema de pagamentos", () => {
           [pagamento],
         ),
       ).rejects.toThrow(/pagamento_aceite_maioridade/);
+    });
+  });
+
+  it("RPC do checkout grava valor congelado e aceite no mesmo contrato", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const email = `checkout-${crypto.randomUUID()}@exemplo.test`;
+      const referencia = `checkout-${crypto.randomUUID()}`;
+      const { rows } = await cliente.query<{
+        id: string;
+        email: string;
+        valor_centavos: number;
+        meio: string;
+        parcelas: number;
+        estado: string;
+        referencia_interna: string;
+      }>(
+        `select id, email, valor_centavos, meio::text, parcelas, estado::text,
+                referencia_interna
+           from public.criar_pagamento_checkout(
+             'anual-unico'::text, $1::text, 19700::integer,
+             'PIX'::public.pagamento_meio, 1::smallint, $2::text,
+             true::boolean, 'termos-2026-08'::text,
+             '2026-08-21T12:00:00Z'::timestamptz
+           )`,
+        [email, referencia],
+      );
+
+      expect(rows[0]).toMatchObject({
+        email,
+        valor_centavos: 19700,
+        meio: "PIX",
+        parcelas: 1,
+        estado: "pendente",
+        referencia_interna: referencia,
+      });
+
+      const { rows: aceites } = await cliente.query<{
+        maior_de_idade: boolean;
+        termos_versao: string;
+        aceito_em: string;
+      }>(
+        `select maior_de_idade, termos_versao, aceito_em::text
+           from public.pagamento_aceites
+          where pagamento_id = $1`,
+        [rows[0].id],
+      );
+      expect(aceites).toEqual([
+        {
+          maior_de_idade: true,
+          termos_versao: "termos-2026-08",
+          aceito_em: "2026-08-21 12:00:00+00",
+        },
+      ]);
+    });
+  });
+
+  it("checkout não cria cobrança para e-mail com matrícula ativa", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const email = `matricula-${crypto.randomUUID()}@exemplo.test`;
+      const aluno = await criarUsuario(cliente, email);
+      await criarMatricula(cliente, aluno);
+
+      await cliente.query("savepoint checkout_bloqueado");
+      await expect(
+        cliente.query(
+          `select public.criar_pagamento_checkout(
+             'anual-unico'::text, $1::text, 19700::integer,
+             'PIX'::public.pagamento_meio, 1::smallint, $2::text,
+             true::boolean, 'termos-2026-08'::text, now()
+           )`,
+          [email, `bloqueado-${crypto.randomUUID()}`],
+        ),
+      ).rejects.toThrow(/matricula_ativa/);
+      await cliente.query("rollback to savepoint checkout_bloqueado");
+    });
+  });
+
+  it("fatura e pendência preservam o vínculo e impedem fila duplicada", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const pagamento = await criarPagamento(cliente);
+
+      await cliente.query(
+        `insert into public.faturas
+           (pagamento_id, asaas_fatura_id, referencia_fiscal, estado)
+         values ($1, 'nf_1', 'ref_fiscal_1', 'emitida')`,
+        [pagamento],
+      );
+      await cliente.query(
+        `insert into public.pagamento_pendencias
+           (pagamento_id, tipo, ultima_falha_codigo, proxima_tentativa_em)
+         values ($1, 'reconciliacao', 'gateway_temporario', now())`,
+        [pagamento],
+      );
+
+      await cliente.query("savepoint pendencia_duplicada");
+      await expect(
+        cliente.query(
+          `insert into public.pagamento_pendencias (pagamento_id, tipo)
+           values ($1, 'reconciliacao')`,
+          [pagamento],
+        ),
+      ).rejects.toThrow(/pagamento_pendencias_uma_aberta|duplicate key/i);
+      await cliente.query("rollback to savepoint pendencia_duplicada");
+
+      const { rows: faturas } = await cliente.query<{
+        asaas_fatura_id: string;
+        referencia_fiscal: string;
+        estado: string;
+      }>(
+        `select asaas_fatura_id, referencia_fiscal, estado
+           from public.faturas
+          where pagamento_id = $1`,
+        [pagamento],
+      );
+      expect(faturas).toEqual([
+        {
+          asaas_fatura_id: "nf_1",
+          referencia_fiscal: "ref_fiscal_1",
+          estado: "emitida",
+        },
+      ]);
+    });
+  });
+
+  it("logs de evento e transição são append-only", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const pagamento = await criarPagamento(cliente);
+      const evento = `evento-${crypto.randomUUID()}`;
+      await cliente.query(
+        "select public.registrar_pagamento_evento($1, 'PAYMENT_CONFIRMED', null, $2, 'recebido')",
+        [evento, pagamento],
+      );
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'confirmada'::public.pagamento_estado, null)",
+        [pagamento],
+      );
+
+      await cliente.query("savepoint update_log");
+      await expect(
+        cliente.query(
+          "update public.pagamento_eventos set tipo = 'alterado' where evento_id = $1",
+          [evento],
+        ),
+      ).rejects.toThrow(/append-only|mutacao/i);
+      await cliente.query("rollback to savepoint update_log");
+
+      await cliente.query("savepoint delete_log");
+      await expect(
+        cliente.query(
+          "delete from public.pagamento_transicoes where pagamento_id = $1",
+          [pagamento],
+        ),
+      ).rejects.toThrow(/append-only|mutacao/i);
+      await cliente.query("rollback to savepoint delete_log");
+    });
+  });
+
+  it("reembolso mantém a fatura e fecha o estado de acesso", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const matricula = await criarMatricula(cliente, aluno);
+      const pagamento = await criarPagamento(cliente);
+      await cliente.query(
+        "update public.pagamentos set matricula_id = $2 where id = $1",
+        [pagamento, matricula.id],
+      );
+      await cliente.query(
+        "insert into public.faturas (pagamento_id, estado) values ($1, 'pendente')",
+        [pagamento],
+      );
+
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'confirmada'::public.pagamento_estado, null)",
+        [pagamento],
+      );
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'ativada'::public.pagamento_estado, null)",
+        [pagamento],
+      );
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'reembolsada'::public.pagamento_estado, 'reembolso_confirmado')",
+        [pagamento],
+      );
+      await cliente.query(
+        "update public.matriculas set estado = 'reembolsada' where id = $1",
+        [matricula.id],
+      );
+
+      const { rows } = await cliente.query<{
+        pagamento_estado: string;
+        reembolsado_em: string | null;
+        matricula_estado: string;
+        fatura_estado: string;
+      }>(
+        `select p.estado::text as pagamento_estado, p.reembolsado_em::text,
+                m.estado::text as matricula_estado, f.estado as fatura_estado
+           from public.pagamentos p
+           join public.matriculas m on m.id = p.matricula_id
+           join public.faturas f on f.pagamento_id = p.id
+          where p.id = $1`,
+        [pagamento],
+      );
+      expect(rows[0]).toMatchObject({
+        pagamento_estado: "reembolsada",
+        matricula_estado: "reembolsada",
+        fatura_estado: "pendente",
+      });
+      expect(rows[0].reembolsado_em).not.toBeNull();
     });
   });
 });

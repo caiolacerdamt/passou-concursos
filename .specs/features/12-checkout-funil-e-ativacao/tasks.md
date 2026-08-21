@@ -171,15 +171,22 @@ headers, payloads por meio e erros sem dados pessoais.
 **Tools**: Skill `tlc-spec-driven`; documentação oficial do Asaas
 **Done when**:
 
-- [ ] Cartão usa 12 parcelas; Pix e boleto usam o valor à vista configurado.
-- [ ] A API usa chave e URL de ambiente, `asaas-access-token` somente no webhook e nunca expõe segredo em erro.
-- [ ] O adaptador não inventa nome, CPF ou outro dado cadastral exigido pelo provedor.
-- [ ] O gateway é injetável para testes, sem rede real na suíte unitária.
+- [x] Cartão usa 12 parcelas; Pix e boleto usam o valor à vista configurado.
+- [x] A API usa chave e URL de ambiente, `asaas-access-token` somente no webhook e nunca expõe segredo em erro.
+- [x] O adaptador não inventa nome, CPF ou outro dado cadastral exigido pelo provedor.
+- [x] O gateway é injetável para testes, sem rede real na suíte unitária.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(pag): integra gateway Asaas`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; adapter HTTP e contratos de cobrança, consulta, estorno e NF publicados.
+- **Assumptions**: cobrança de cartão usa `totalValue` + 12 parcelas; NF exige serviço municipal e impostos fornecidos pelo chamador, sem valores inventados.
+- **Files**: `src/modules/pagamentos/asaas.ts`, `src/modules/pagamentos/asaas.test.ts`.
+- **Success evidence**: `npm run test:unit` — 62 arquivos, 507 testes verdes; testes cobrem host HTTPS allowlisted, headers, payloads, timeout, estorno por meio e ausência de PII.
 
 ### T110: Criar proxy próprio de analytics anônimo
 

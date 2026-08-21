@@ -33,6 +33,7 @@ A migration `pagamentos` cria as tabelas abaixo, todas sem escrita para `anon` e
 | `pagamento_transicoes` | Log append-only das mudanças da máquina de estados | Exceção fiscal ligada ao pagamento |
 | `faturas` | Referência da cobrança e da nota fiscal emitida/agendada | Exceção fiscal do apagamento |
 | `pagamento_pendencias` | Fila de ativação, NF, reconciliação ou alerta para retry | Retida com o pagamento |
+| `pagamento_resultado_tokens` | Capability bearer do resultado público: hash SHA-256, pagamento ligado e expiração | Retida com a tentativa; o token em claro nunca é persistido |
 
 `pagamentos.estado` será enum e terá exatamente estes estados de negócio:
 
@@ -57,6 +58,9 @@ O claim de ativação será uma operação condicional no banco. Só uma execuç
 reservar a linha `confirmada`; uma reserva abandonada pode ser recuperada pela
 reconciliação depois de um intervalo operacional. A criação de usuário é externa
 ao Postgres, por isso a fila é necessária para não esconder uma ativação parcial.
+Se o Asaas confirmar uma cobrança cujo pagamento local está `expirada`, somente a
+RPC de reconciliação poderá fazer a transição específica `expirada → confirmada`;
+o job então reutiliza o mesmo caminho idempotente de ativação.
 
 ### 3. Checkout e integração Asaas
 
@@ -77,8 +81,12 @@ O adaptador `GatewayDePagamento` esconde o HTTP. A implementação Asaas usa
 `ASAAS_API_KEY`, `ASAAS_API_URL` e `ASAAS_WEBHOOK_TOKEN` somente no servidor. A
 criação usa os endpoints diretos de cobrança para manter a jornada no domínio
 próprio, sem depender da página hospedada do Asaas. Respostas de Pix/boleto e
-links de acompanhamento ficam em `/checkout/resultado/[id]`, nunca em parâmetros
-com e-mail ou CPF.
+links de acompanhamento ficam em `/checkout/resultado/[token]`. O token é um
+segredo bearer aleatório de 32 bytes, com TTL de 48 horas; somente seu SHA-256
+fica em `pagamento_resultado_tokens`. A página faz o lookup no servidor por hash
+e `expira_em`; token desconhecido ou expirado recebe a mesma resposta genérica e
+nunca revela dados do pagamento. O UUID de `pagamentos` não é aceito pela rota
+pública.
 
 O requisito de “só e-mail” é preservado na primeira etapa do funil. Se a conta
 Asaas exigir dados cadastrais para o pagador, o formulário pede apenas os campos
@@ -117,7 +125,7 @@ Para pagamento recebido:
 
 A criação de usuário é idempotente por e-mail; a matrícula continua protegida
 por `matriculas_uma_ativa_por_aluno`. O job de reconciliação consulta cobranças
-pagas do Asaas para pagamentos locais pendentes e repete a mesma função de
+pagas do Asaas para pagamentos locais pendentes ou expirados e repete a mesma função de
 ativação. Ele também expira pendências vencidas. O job não roda em serverless;
 fica como script chamado por GitHub Actions, seguindo AD-035/AD-036.
 
@@ -126,10 +134,18 @@ fica como script chamado por GitHub Actions, seguindo AD-035/AD-036.
 `src/modules/pagamentos/garantia.ts` terá funções puras para contar dias
 corridos desde `confirmado_em`, calcular os dias restantes e explicar a recusa.
 O pedido autenticado grava solicitante, timestamp e meio. O servidor só chama o
-Asaas dentro da janela de sete dias; depois da confirmação de reembolso, marca o
-pagamento como `reembolsado`, muda a matrícula para `reembolsada` e o paywall
-fecha o acesso. A tentativa antes da confirmação é rejeitada pela máquina do
-banco e reportada.
+Asaas dentro da janela de sete dias. Depois da confirmação externa do estorno,
+uma RPC transacional e idempotente marca o pagamento como `reembolsada` e encerra
+a matrícula no mesmo commit; se o pagamento já estiver reembolsado, um retry ainda
+fecha uma matrícula que permaneceu ativa. Falha nessa etapa abre pendência de
+alerta e não é tratada como sucesso. A tentativa antes da confirmação é rejeitada
+pela máquina do banco e reportada.
+
+Se existir NF Asaas, o cancelamento usa `POST /v3/invoices/{id}/cancel` com
+`cancelOnlyOnAsaas`. `PROCESSING_CANCELLATION`, `CANCELED` e
+`CANCELLATION_DENIED` são estados persistidos separadamente; processamento ou
+recusa abre pendência fiscal, sem reabrir acesso. Ausência de NF não bloqueia o
+reembolso.
 
 O histórico financeiro e a fatura não são apagados quando o aluno pede
 esquecimento na SPEC 14. Essa exceção será registrada em
@@ -147,12 +163,14 @@ meio_escolhido
 pagamento_confirmado
 ```
 
-As propriedades permitidas são apenas `meio` com enum fechado; página vista e
-checkout iniciado não têm propriedades. A rota descarta e registra como
-rejeitados e-mail, nome, CPF, telefone, ID de usuário, ID de pagamento e
-qualquer chave desconhecida. Sem `POSTHOG_KEY` ou com PostHog indisponível,
-responde sucesso local e não interrompe a compra. Não há session replay, script
-de analytics de terceiro no navegador ou `user_id`.
+Os quatro eventos não carregam propriedades anônimas: o objeto permitido é
+sempre vazio. A entrada rejeita na origem qualquer e-mail, nome, CPF, telefone,
+ID de usuário, ID de pagamento, meio de pagamento ou chave desconhecida. Sem
+`POSTHOG_KEY` ou com PostHog indisponível, responde sucesso local e não
+interrompe a compra. A página vista, início do checkout e escolha do meio são
+emitidos pelo navegador de forma não bloqueante; pagamento confirmado é emitido
+no caminho de webhook/reconciliação, também sem afetar a ativação. Não há session
+replay, script de analytics de terceiro no navegador ou `user_id`.
 
 `flag.m9.analytics_logado` nasce `false` no catálogo. Nenhum componente da
 superfície logada emitirá evento enquanto a flag não for explicitamente tratada
@@ -161,8 +179,9 @@ em uma spec posterior.
 ### 7. Página e acessibilidade
 
 A página `/` mostra método, evidências da base científica sem prometer aprovação,
-preço parcelado, preço à vista, garantia, termos, privacidade e o estado atual
-do produto. O layout reutiliza `Shell`, é mobile-first e não cria largura fixa.
+preço parcelado, preço à vista, garantia e o estado atual do produto. Links de
+Termos e Privacidade aparecem antes ou junto do CTA, e também no rodapé. O layout
+reutiliza `Shell`, é mobile-first e não cria largura fixa.
 O checkout usa labels, mensagens não técnicas, preserva a escolha após erro e
 não imprime resposta bruta do Asaas. `/termos` e `/privacidade` são páginas
 públicas de texto inicial, com aviso de revisão jurídica pendente.
@@ -178,6 +197,7 @@ públicas de texto inicial, com aviso de revisão jurídica pendente.
 | Preço alterado depois da compra | Valor e desconto congelados na linha de `pagamentos` |
 | Dado cadastral inventado para satisfazer a API | Adaptador recusa falta de campo exigido; UI pede o campo real ou bloqueia com mensagem clara |
 | Fatura/NF falha depois do pagamento | Registro da cobrança permanece, pendência de NF é separada da ativação e alerta operacional |
+| Link de resultado compartilhado ou antigo | Token aleatório, hash no banco, TTL server-side e resposta genérica para token inválido/expirado |
 
 ## Evidência esperada
 
@@ -186,8 +206,8 @@ públicas de texto inicial, com aviso de revisão jurídica pendente.
 - testes de banco para enum, constraints, transições, idempotência, fila, RLS,
   retenção e criação de matrícula;
 - teste de renderização da página, checkout, termos, privacidade e resultado;
+- teste de capability token com hash, TTL e rejeição de token desconhecido/expirado;
 - `npm run lint`, `npm run test:unit`, `npm run test:db` e `npm run build` no gate
   final;
 - verificador independente conferindo todos os Success Criteria da SPEC com
   evidência `arquivo:linha` e sensor de mutação scratch.
-

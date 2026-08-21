@@ -191,15 +191,16 @@ headers, payloads por meio e erros sem dados pessoais.
 ### T110: Criar proxy próprio de analytics anônimo
 
 **What**: Criar a allowlist de eventos do funil e a rota same-origin que envia
-somente dados anônimos ao PostHog quando configurado, sem bloquear a compra.
+somente eventos anônimos com propriedades vazias ao PostHog quando configurado,
+sem bloquear a compra.
 **Where**: `src/modules/analytics/funil.ts`
 **Depends on**: T108
 **Requirement**: PAG-17, INFRA-12, SEC-07, SEC-08
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [x] Existem somente quatro eventos públicos e meio é o único campo opcional permitido.
-- [x] E-mail, nome, CPF, telefone, `user_id`, pagamento e chaves desconhecidas são descartados.
+- [x] Existem somente quatro eventos públicos e nenhum aceita campo de meio de pagamento.
+- [x] E-mail, nome, CPF, telefone, `user_id`, pagamento, meio e chaves desconhecidas são descartados.
 - [x] Sem PostHog, com bloqueador ou com timeout, a rota continua respondendo sem afetar o checkout.
 - [x] Não há session replay nem emissão da flag/logado na superfície protegida.
 
@@ -212,8 +213,8 @@ somente dados anônimos ao PostHog quando configurado, sem bloquear a compra.
 
 - **State**: concluida; allowlist, proxy same-origin e transporte servidor-only publicados.
 - **Assumptions**: PostHog usa endpoint EUA oficial configurado por ambiente; `distinct_id=anonimo` é o único identificador enviado.
-- **Files**: `src/modules/analytics/funil.ts`, `src/modules/analytics/funil.test.ts`, `src/modules/analytics/posthog.ts`, `src/modules/analytics/posthog.test.ts`, `src/app/api/analytics/route.ts`, `src/app/api/analytics/route.test.ts`, `src/modules/conta/rotas.ts`, `src/modules/conta/rotas.test.ts`.
-- **Success evidence**: `npm run test:unit` — 64 arquivos, 514 testes verdes antes do teste direto do transporte; depois, transporte isolado — 1 arquivo, 3 testes verdes.
+- **Files**: `src/modules/analytics/funil.ts`, `src/modules/analytics/funil.test.ts`, `src/modules/analytics/posthog.ts`, `src/modules/analytics/posthog.test.ts`, `src/modules/analytics/entrada.tsx`, `src/modules/analytics/navegador.ts`, `src/modules/analytics/navegador.test.ts`, `src/app/api/analytics/route.ts`, `src/app/api/analytics/route.test.ts`, `src/app/api/webhooks/asaas/route.ts`, `scripts/jobs/reconciliacao-pagamentos.mts`.
+- **Success evidence**: correção F-01/F-06 cobre emissão real dos quatro eventos, transporte não bloqueante e propriedades vazias; gate final será registrado na seção de correções pós-validação.
 
 ### T111: Construir a página pública e textos legais iniciais
 
@@ -227,7 +228,7 @@ as páginas públicas de termos e privacidade com links consistentes.
 
 - [x] A página mostra método, evidências citadas, estado atual, dois preços, garantia e um CTA para checkout.
 - [x] O texto não promete tutor, gamificação ou outras superfícies ainda desligadas.
-- [x] Termos e privacidade são alcançáveis sem login e deixam a revisão jurídica explícita.
+- [x] Termos e privacidade são alcançáveis sem login, deixam a revisão jurídica explícita e aparecem antes ou junto do CTA.
 - [x] A renderização não cria largura fixa em pixels nem rolagem horizontal em 360px.
 
 **Tests**: unit/render
@@ -257,7 +258,7 @@ resultado sem depender do analytics.
 - [x] Sem 18+ ou termos a action não cria cobrança; não existe campo de data de nascimento.
 - [x] E-mail com matrícula ativa recebe aviso e não é cobrado novamente.
 - [x] Erro de um meio preserva o formulário e permite trocar para outro.
-- [x] Pix/boleto/cartão retornam para uma página própria de resultado com status operacional.
+- [x] Pix/boleto/cartão retornam para uma página própria de resultado com status operacional por capability token com TTL; UUID de pagamento não é exposto na URL pública.
 
 **Tests**: unit/render
 **Gate**: quick
@@ -268,8 +269,8 @@ resultado sem depender do analytics.
 
 - **State**: concluida; checkout proprio valida no servidor, congela o valor, cria a cobrança e exibe resultado operacional sem depender de analytics.
 - **Assumptions**: o contrato atual do Asaas exige nome e CPF/CNPJ para criar o pagador; esses dados são informados pelo comprador, usados somente no servidor e não entram no registro financeiro local. A cobrança vence no dia seguinte à criação.
-- **Files**: `src/app/checkout/page.tsx`, `src/app/checkout/formulario.tsx`, `src/app/checkout/acoes.ts`, `src/app/checkout/resultado/[id]/page.tsx`, `src/modules/pagamentos/checkout.ts`, `src/modules/pagamentos/repositorio.ts`, `src/modules/pagamentos/resultado.ts`, `src/modules/pagamentos/contratos.ts`, `src/modules/pagamentos/asaas.ts`, `supabase/migrations/20260821120000_checkout_pagamento.sql` e testes co-localizados.
-- **Success evidence**: `npm run test:unit` — 70 arquivos, 528 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde; `npm run db:push` aplicou a migration do RPC no Supabase de desenvolvimento.
+- **Files**: `src/app/checkout/page.tsx`, `src/app/checkout/formulario.tsx`, `src/app/checkout/acoes.ts`, `src/app/checkout/resultado/[token]/page.tsx`, `src/modules/pagamentos/resultado-token.ts`, `src/modules/pagamentos/resultado-token.test.ts`, `src/modules/pagamentos/checkout.ts`, `src/modules/pagamentos/repositorio.ts`, `src/modules/pagamentos/resultado.ts`, `src/modules/pagamentos/contratos.ts`, `src/modules/pagamentos/asaas.ts`, `supabase/migrations/20260821120000_checkout_pagamento.sql`, `supabase/migrations/20260821132000_spec12_resultado_token.sql` e testes co-localizados.
+- **Success evidence**: correção F-05 cobre token aleatório, hash-only, TTL e lookup server-side; gate final será registrado na seção de correções pós-validação.
 
 ### T113: Validar webhook e registrar idempotência
 
@@ -339,7 +340,7 @@ fila e reporta falhas.
 **Tools**: Skill `tlc-spec-driven`; padrão dos jobs existentes
 **Done when**:
 
-- [x] Cobrança paga sem webhook é encontrada e percorre o mesmo caminho de ativação.
+- [x] Cobrança paga sem webhook é encontrada e percorre o mesmo caminho de ativação, inclusive quando o pagamento local está expirado.
 - [x] Job repetido não cria conta, matrícula ou evento duplicado.
 - [x] Pendência vencida passa a `expirada` e não cria conta.
 - [x] Falha de consulta/ativação fica na fila, é saneada no alerta e deixa o processo vermelho.
@@ -355,7 +356,7 @@ fila e reporta falhas.
 - **State**: concluida; job Node fora do serverless consulta páginas de cobranças pagas, registra evento determinístico, reutiliza o orquestrador de ativação, expira pendentes e retorna código vermelho em falhas.
 - **Assumptions**: a tentativa pendente expira por default após 48 horas, com override na tabela de configuração; o limite da página do Asaas é 100 e a varredura para quando a página vem menor.
 - **Files**: `scripts/jobs/reconciliacao-pagamentos.mts`, `scripts/jobs/reconciliacao-pagamentos.test.ts`, `package.json`, `.github/workflows/reconciliacao-pagamentos.yml`, `.env.example`, `src/modules/config/catalogo.ts`, `src/modules/config/catalogo.test.ts`.
-- **Success evidence**: `npm run test:unit -- scripts/jobs/reconciliacao-pagamentos.test.ts src/modules/config/catalogo.test.ts` — 2 arquivos, 13 testes verdes; `npx tsc --noEmit` — verde; `npm run lint` — 0 erros e 0 avisos.
+- **Success evidence**: correção F-03 cobre a RPC exclusiva `expirada → confirmada`, rejeição da transição genérica e ativação idempotente; gate final será registrado na seção de correções pós-validação.
 
 ### T116: Entregar garantia, pedido de reembolso e encerramento de acesso
 
@@ -370,7 +371,8 @@ no Asaas antes de marcar pagamento/matrícula reembolsados.
 
 - [x] No quinto dia a tela mostra a janela e permite solicitar; no nono dia recusa com clareza.
 - [x] Reembolso antes da confirmação é rejeitado, alertado e não encerra acesso.
-- [x] Estorno confirmado grava solicitante, timestamp e meio, marca ambos os estados e fecha o paywall.
+- [x] Estorno confirmado grava solicitante, timestamp e meio, marca pagamento e matrícula na mesma transação e fecha o paywall; retry recupera divergência local.
+- [x] NF Asaas, quando existente, usa `/v3/invoices/{id}/cancel`; estados em processamento/negado viram pendência sem reabrir acesso, e ausência de NF não bloqueia o reembolso.
 - [x] Falha do gateway não marca reembolso falso e abre pendência de retry.
 
 **Tests**: unit/render
@@ -383,7 +385,7 @@ no Asaas antes de marcar pagamento/matrícula reembolsados.
 - **State**: concluida; a tela autenticada calcula os dias no servidor, recusa tentativas fora da janela ou antes da confirmação, chama o estorno somente no prazo e só fecha pagamento/matrícula após confirmação segura do gateway.
 - **Assumptions**: a janela usa dias corridos UTC; `DONE`, `CONFIRMED` e `REFUNDED` são respostas finais aceitas do Asaas; qualquer outro status ou falha fica em pendência e mantém o acesso; o pedido inválido também abre alerta operacional sem expor dados financeiros.
 - **Files**: `src/modules/pagamentos/garantia.ts`, `src/modules/pagamentos/garantia.test.ts`, `src/modules/pagamentos/repositorio.ts`, `src/app/app/reembolso/page.tsx`, `src/app/app/reembolso/page.test.tsx`, `src/app/app/reembolso/acoes.ts`, `src/app/app/reembolso/acoes.test.ts`.
-- **Success evidence**: `npm run test:unit -- src/modules/pagamentos/garantia.test.ts src/app/app/reembolso/page.test.tsx src/app/app/reembolso/acoes.test.ts` — 3 arquivos, 9 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde.
+- **Success evidence**: correções F-02/F-04 cobrem RPC atômica/idempotente, retry adversarial, endpoint oficial e estados de NF; gate final será registrado na seção de correções pós-validação.
 
 ### T117: Fechar integração, rastreabilidade e gate da SPEC
 
@@ -412,6 +414,19 @@ verificação independente.
 - **Assumptions**: o Postgres de desenvolvimento é o banco de contrato; o teste visual manual não foi executado pelo agente e fica explicitamente pendente para conferência humana; o Verifier independente não foi iniciado por instrução explícita do usuário, então o relatório final identifica a auto-verificação do agente principal e esse desvio.
 - **Files**: `tests/db/pagamentos-schema.test.ts`, `tests/db/matricula.test.ts`, `.specs/features/12-checkout-funil-e-ativacao/spec.md`, `.specs/features/12-checkout-funil-e-ativacao/tasks.md`, `.specs/features/12-checkout-funil-e-ativacao/validation.md`.
 - **Success evidence**: `tests/db/pagamentos-schema.test.ts` — 9 testes verdes com conexão autorizada; `npm run test:unit` — contagem final registrada em `validation.md`; `npm run lint`, `npx tsc --noEmit`, `npm run build`, `validate_spec.py`, `validate_tasks.py` e `validate_state.py` registrados em `validation.md`.
+
+## Correções pós-validação independente
+
+Esta seção registra somente as correções solicitadas após o relatório independente.
+O arquivo `validation.md` permanece histórico e não é editado por esta rodada.
+
+| ID | Correção | Evidência de implementação | Evidência de gate |
+| --- | --- | --- | --- |
+| F-01/F-06 | Quatro eventos emitidos nos pontos reais do funil, envio não bloqueante e propriedades anônimas vazias, sem `meio` | `src/modules/analytics/entrada.tsx`, `src/modules/analytics/navegador.ts`, `src/app/api/webhooks/asaas/route.ts`, `scripts/jobs/reconciliacao-pagamentos.mts` | Unit 78 arquivos/563 testes; lint, TypeScript e build verdes |
+| F-02 | RPC transacional e idempotente fecha pagamento + matrícula; retry recupera divergência e abre pendência quando o fechamento falha | `supabase/migrations/20260821130000_spec12_reembolso_nf.sql`, `src/modules/pagamentos/garantia.ts` | Unit direcionado verde; DB schema 12/12 |
+| F-03 | Reabertura exclusiva `expirada → confirmada` na reconciliação, seguida de ativação idempotente | `supabase/migrations/20260821131000_spec12_reconciliacao.sql`, `supabase/migrations/20260821133000_spec12_guards.sql`, `scripts/jobs/reconciliacao-pagamentos.mts` | Unit direcionado verde; DB schema 12/12 |
+| F-04 | Cancelamento oficial de NF, estados persistidos e fila segura; ausência de NF não bloqueia reembolso | `src/modules/pagamentos/asaas.ts`, `src/modules/pagamentos/garantia.ts`, `src/modules/pagamentos/repositorio.ts` | Unit direcionado verde; DB schema 12/12 |
+| F-05 | Capability token aleatório, hash-only, TTL e lookup server-side; UUID não é aceito na rota pública | `src/modules/pagamentos/resultado-token.ts`, `src/modules/pagamentos/repositorio.ts`, `src/app/checkout/resultado/[token]/page.tsx`, `supabase/migrations/20260821132000_spec12_resultado_token.sql`, `supabase/migrations/20260821133000_spec12_guards.sql` | Unit direcionado verde; DB schema 12/12; build reconhece `/checkout/resultado/[token]` |
 
 ## Diagram-Definition Cross-Check
 

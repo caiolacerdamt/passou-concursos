@@ -26,7 +26,7 @@ checkout cobra.
 | Requisito | O que entra aqui | AC completos em |
 | --- | --- | --- |
 | PAG-08 | página responsiva sem login: método, evidências (`docs/EVIDENCIAS-CIENTIFICAS.md`), garantia, os dois preços, link para política e termos; **declaração honesta do que existe hoje** | m8 §P1: Página de vendas |
-| PAG-17 / INFRA-12 | quatro eventos do funil (página vista, checkout iniciado, meio escolhido, pagamento confirmado) **anônimos**, por proxy reverso do domínio; bloqueio de dado pessoal na origem; sem session replay; analytics da superfície logada **atrás de flag desligada** | m9 §P2: Analytics |
+| PAG-17 / INFRA-12 | quatro eventos do funil (página vista, checkout iniciado, meio escolhido, pagamento confirmado) **anônimos**, por proxy reverso do domínio; propriedades sempre vazias, incluindo meio de pagamento; bloqueio de dado pessoal na origem; sem session replay; analytics da superfície logada **atrás de flag desligada** | m9 §P2: Analytics |
 | PAG-02 / PAG-05 | checkout próprio integrado ao Asaas; cartão 12x, Pix e boleto; NF nativa do gateway | m8 §P1: Checkout |
 | PAG-09 | preço em configuração, dois valores (parcelado e à vista com desconto), os dois exibidos antes da escolha | m8 §P1: Checkout (AC4) |
 | PAG-06 | pagamento confirmado vira usuário + `matricula` de 12 meses **sem intervenção manual**; e-mail "defina sua senha"; estados `pendente → confirmada → ativada`, `confirmada → reembolsada`, `pendente → expirada`; transição inválida rejeitada; `faturas` | m8 §P1: Buy-then-activate |
@@ -49,6 +49,14 @@ checkout cobra.
 
 - `pagamentos` e `faturas` **sobrevivem ao DELETE-por-esquecimento** (prazo fiscal) — a SPEC 14
   trata essa exceção explicitamente.
+- A URL pública de resultado é `/checkout/resultado/[token]`: token bearer aleatório,
+  TTL de 48 horas, somente hash SHA-256 persistido e lookup server-side. UUID de pagamento
+  não é capability pública.
+- O fechamento local do reembolso é uma RPC transacional e idempotente que marca pagamento
+  e matrícula juntos. NF Asaas usa o cancelamento oficial e estados de pendência próprios;
+  ausência de NF não bloqueia o estorno.
+- A reconciliação pode usar somente a RPC específica para `expirada → confirmada`; a máquina
+  geral continua rejeitando essa transição fora desse caminho.
 - O fim da matrícula é o marco de onde a SPEC 18 conta `retencao_meses` (AD-045).
 - Avisos de vencimento são **transacionais** — não dependem de consentimento de marketing.
 
@@ -73,6 +81,11 @@ de confirmação externa; a implementação local não depende de assumir esses 
 checkout coleta esses dados no servidor, não coleta data de nascimento e não grava esses campos no
 registro operacional local de pagamento; o contrato externo, CNPJ e configuração fiscal continuam
 pendentes de confirmação antes da operação real.
+
+**Nota de implementação (correções F-01–F-06):** a instrumentação não aceita nem transporta
+qualquer campo de meio de pagamento. O resultado público usa capability token com hash e TTL;
+o caminho de reembolso é transacional, o cancelamento de NF é recuperável e a reconciliação
+tem a única abertura controlada de pagamento expirado.
 
 ## User Stories
 

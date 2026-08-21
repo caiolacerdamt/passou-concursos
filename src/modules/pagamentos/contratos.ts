@@ -115,6 +115,7 @@ export function erroSeguroDePagamento(
  * O erro original continua disponível para o ponto de observabilidade, mas a
  * mensagem que chega à UI ou a um alerta operacional é controlada.
  */
-export function sanitizarErroDePagamento(_erro: unknown): ErroSeguroDePagamento {
+export function sanitizarErroDePagamento(erro: unknown): ErroSeguroDePagamento {
+  void erro;
   return erroSeguroDePagamento("gateway_indisponivel");
 }

@@ -136,6 +136,9 @@ export async function inserirQuestao(
     mudanca_motivo: ou(dados.mudanca_motivo, null),
   };
 
+  const pediuPublicada = valores.status === "publicada";
+  if (pediuPublicada) valores.status = "rascunho";
+
   if (valores.prova_id === null && valores.origem === "real") {
     valores.prova_id = await criarProva(cliente);
   }
@@ -159,5 +162,42 @@ export async function inserirQuestao(
     sql,
     COLUNAS.map((coluna) => valores[coluna]),
   );
+
+  if (pediuPublicada && valores.origem === "real" && valores.fonte_citacao !== null && valores.resposta_correta !== null) {
+    const operador = await cliente.query<{ id: string }>(
+      "insert into auth.users (id) values (gen_random_uuid()) returning id",
+    );
+    const revisao = await cliente.query<{ id: string }>(
+      `select public.enfileirar_questao_revisao(
+         $1::uuid, $2::integer, 'fixture_publicacao'::text, 1::smallint, null::text
+       ) as id`,
+      [rows[0].id, rows[0].questao_versao],
+    );
+    await cliente.query(
+      `select public.registrar_decisao_questao_revisao($1, 'aprovada', $2, 'fixture')`,
+      [revisao.rows[0].id, operador.rows[0].id],
+    );
+    await cliente.query(
+      `insert into public.explicacoes
+         (questao_id, questao_versao, status, texto, alternativa_correta,
+          fontes_citadas, chave_dedup)
+       values ($1, $2, 'aprovada', 'explicacao fixture', $3,
+               '[{"doc_id":"fixture","trecho":"fixture"}]'::jsonb, $4)`,
+      [
+        rows[0].id,
+        rows[0].questao_versao,
+        valores.resposta_correta,
+        `fixture:explicacao:${rows[0].id}:${rows[0].questao_versao}`,
+      ],
+    );
+  }
+
+  if (pediuPublicada) {
+    await cliente.query(
+      "update public.questoes set status = 'publicada' where id = $1 and questao_versao = $2 and vigente",
+      [rows[0].id, rows[0].questao_versao],
+    );
+  }
+
   return rows[0];
 }

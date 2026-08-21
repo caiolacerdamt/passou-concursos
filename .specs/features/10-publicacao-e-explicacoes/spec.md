@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 11, 13, 15, 21, 22, 23, 24, 30, 31, 35 |
 | **Tasks (estimativa)** | ~11 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída |
 | **Requisitos** | **BANCO-07**, **BANCO-01** (execução da trava), **IA-04**, **IA-08**, **IA-05**, **IA-01** (execução) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m2-camada-ia/spec.md` |
 | **Vem de** | SPEC 10 + SPEC 13 do recorte de 42, **fundidas e enxugadas** (AD-089) |
@@ -67,12 +67,12 @@ Publicar e explicar são as duas portas que a alimentam.
 
 ## Success Criteria
 
-- [ ] Baixar a `confianca_ia` de uma questão real abaixo do piso a manda para revisão
-- [ ] Real sem proveniência não publica
-- [ ] Explicação de tópico com documento grava as citações conferidas
-- [ ] Citação que não bate literalmente com a fonte é rejeitada e vai à fila
-- [ ] Explicação que contradiz o gabarito é rejeitada
-- [ ] Explicação de tópico sem documento não cita nenhuma norma externa
-- [ ] Duas execuções da fábrica sobre a mesma questão gravam **uma** explicação
-- [ ] Desligar a chave de API não impede responder questão, ver plano e projeções
-- [ ] Decisão de revisão fica registrada com quem e quando
+- [x] Baixar a `confianca_ia` de uma questão real abaixo do piso a manda para revisão
+- [x] Real sem proveniência não publica
+- [x] Explicação de tópico com documento grava as citações conferidas
+- [x] Citação que não bate literalmente com a fonte é rejeitada e vai à fila
+- [x] Explicação que contradiz o gabarito é rejeitada
+- [x] Explicação de tópico sem documento não cita nenhuma norma externa
+- [x] Duas execuções da fábrica sobre a mesma questão gravam **uma** explicação
+- [x] Desligar a chave de API não impede responder questão, ver plano e projeções
+- [x] Decisão de revisão fica registrada com quem e quando

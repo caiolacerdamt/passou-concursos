@@ -241,6 +241,43 @@
 - **Date**: 2026-08-20
 - **Status**: active
 
+### AD-098
+- **Decision**: A SPEC 10 fecha a publicação em duas camadas. No banco, um gatilho exige proveniência,
+  gabarito oficial, explicação aprovada vigente e, quando aplicável, revisão humana por baixa confiança,
+  amostra determinística ou origem `gerada_ia`; a função de publicação só fica disponível ao serviço.
+  Na fábrica, a referência é documento `conferido` do tópico — oficial antes de resumo nosso — ou uma
+  fonte mínima composta pela questão e pelo gabarito. A saída estruturada exige citações e o código
+  compara cada trecho normalizado com a referência entregue. Resultado inválido não publica: fica fora
+  de vigência e abre a fila única `questao_revisoes`. A execução acontece no job standalone
+  `scripts/jobs/explicacoes.mts`, nunca no pedido do aluno.
+- **Reason**: A alternativa correta é verdade do gabarito, não da IA; a explicação precisa justificar
+  sem criar uma segunda fonte de verdade. O gatilho protege mesmo chamadas diretas ao banco, e a chave
+  de dedup do gateway mais a unicidade de `explicacoes` torna a retomada segura.
+- **Trade-off**: Sem documento curado, a explicação pode usar apenas a fonte mínima e a base entra na
+  fila para construção. A operação da fila continua no Supabase Studio até a SPEC 15; o job manual não
+  liga nenhuma tela e, sem chave de IA, sai limpo sem impedir o núcleo do produto.
+- **Scope**: SPEC 10 · M1/M2 · `questao_revisoes`, `base_referencia`, `explicacoes`, porta de publicação,
+  contrato de explicação e job standalone.
+- **Date**: 2026-08-21
+- **Status**: active
+
+### AD-099
+- **Decision**: O roteamento de QA da SPEC 10 acontece automaticamente em trigger `AFTER INSERT` da
+  questão e em alteração de origem/confiança: baixa confiança, amostra real determinística e origem
+  `gerada_ia` abrem uma pendência em `questao_revisoes` antes da publicação. Para fonte mínima, além
+  da declaração estruturada da IA, a conferência local rejeita marcadores de norma, prazo, percentual
+  e regra externa no texto.
+- **Reason**: A trava de publicação sozinha detectava a falta de revisão, mas não deixava trabalho
+  persistido para o operador; e uma lista declaratória não é prova de que o texto não contém fato
+  externo. O caminho seguro é abrir a fila no nascimento da questão e falhar fechado na conferência.
+- **Trade-off**: A guarda textual é conservadora e pode enviar uma explicação válida para revisão
+  humana. Isso é preferível a publicar uma afirmação externa sem documento; a base mínima continua
+  permitindo explicações que não usam esses marcadores.
+- **Scope**: `supabase/migrations/20260821093000_roteamento_qa_spec10.sql`,
+  `src/modules/ia/explicacao.ts`, testes da SPEC 10.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -259,22 +296,9 @@
   | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
   | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
   | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
-- **Next step**: **SPEC 10 — Publicação e explicações**
-  (`.specs/features/10-publicacao-e-explicacoes/spec.md`). **Ritual B**. Depende da SPEC 09, concluída.
-  **O acervo existe.** As 3 provas do BB 2021 (Cesgranrio) foram ingeridas de verdade:
-  **205 questões** (70 + 70 + 65), todas com gabarito oficial cruzado, em `rascunho`/`em_revisao` —
-  **nenhuma `publicada`**, porque a porta de publicação é da SPEC 10. Custo medido: **US$ 0,045 por
-  prova** de 70 questões, via Batch.
-  Quatro coisas que a SPEC 10 herda:
-  (a) **70+ candidatos a tópico pendentes e zero tópico canônico** — nenhuma questão tem `topico_id`,
-  então nenhuma entra em plano antes de a taxonomia ser preenchida (a tela é da SPEC 15, mas o
-  `insert` mínimo não depende dela);
-  (b) o enunciado das questões de interpretação carrega o **texto-base inteiro** (~3 mil caracteres),
-  por decisão da instrução v3 — a tela da sessão (SPEC 13) vai receber blocos grandes;
-  (c) **a Prova C está em 65/70**: as questões 11–15 (Língua Inglesa, página 5) foram cortadas pelo
-  **filtro de conteúdo do provedor**, de forma determinística, mesmo com a página isolada em Batch.
-  Não é bug nosso e não tem correção por código — precisa de transcrição humana ou de outro modelo.
-  O bloco está marcado com perda **parcial** e `--acao estado` mostra;
-  (d) os PDFs e os gabaritos transcritos vivem em `provas/` e **não entram no git**.
-  Ferramentas de operação: `--acao inspecionar` (testa um PDF de banca nova sem gastar nada) e
-  `--acao estado` (mostra bloco a bloco, com motivo). Passo a passo em `docs/INGESTAO.md`.
+  | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
+- **Next step**: **SPEC 11 — Raio-X: frequência, peso e tela**
+  (`.specs/features/11-raiox-frequencia-e-tela/spec.md`). **Ritual B**. Depende das specs 06, 07 e 10.
+  A SPEC 10 deixou o operador com a fila no Supabase Studio, a explicação pré-computada e a porta de
+  publicação protegida no banco. O próximo passo calcula frequência real, peso do plano e a tela de
+  leitura; não deve criar dependência para uma spec de número maior.

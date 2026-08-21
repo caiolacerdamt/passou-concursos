@@ -34,7 +34,7 @@ values (
   'param.m2.matriz_de_modelos',
   '{
     "extracao_pdf":                {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
-    "explicacao":                  {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "explicacao":                  {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":false,"cache":true, "fallback":null},
     "classificacao_topico":        {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
     "verificacao_quantitativa":    {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
     "reprocessamento_verificacao": {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"max",   "batch":false,"cache":true, "fallback":null},
@@ -106,7 +106,7 @@ significa que um erro de digitação derruba tudo. Confira com `npm run ia:matri
 
 | O quê | Onde entra |
 | --- | --- |
-| Grounding, citação conferida por código | SPEC 10 |
+| Grounding, citação conferida por código | ✅ SPEC 10 — `docs/EXPLICACOES.md` |
 | Catálogo de fórmulas e verificação quantitativa | SPEC 22 — aqui só existe o mecanismo genérico de refazer 1× |
 | Eval cego como porteiro e revisão trimestral da matriz | SPEC 30 |
 | Tutor e streaming | SPEC 24 |

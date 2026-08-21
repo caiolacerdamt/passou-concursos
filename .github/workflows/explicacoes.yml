@@ -1,0 +1,41 @@
+name: Fábrica de explicações
+
+# IA-01 · IA-04 · IA-08 · AD-036
+#
+# A explicação é pré-computada em job standalone. O disparo é manual para o
+# operador decidir quando há questões com gabarito prontas e evitar custo
+# inesperado. Nenhuma rota da Vercel chama a fábrica.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  explicacoes:
+    name: Gerar explicações do acervo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar e conferir explicações
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: npm run jobs:explicacoes
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "fábrica de explicações terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs
+

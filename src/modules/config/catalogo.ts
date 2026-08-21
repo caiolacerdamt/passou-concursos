@@ -120,6 +120,20 @@ export const CATALOGO = {
     descricao:
       "Bucket do Supabase Storage onde a imagem de uma questao e guardada (BANCO-11/AD-041).",
   }),
+  "param.m1.piso_confianca_ia": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.95,
+    moduloDono: "m1",
+    descricao:
+      "Piso de confianca da extracao que manda a questao real para revisao humana (BANCO-07 AC1).",
+  }),
+  "param.m1.amostra_qa_real": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.1,
+    moduloDono: "m1",
+    descricao:
+      "Fracao deterministica de questoes reais de alta confianca que recebe revisao por amostra (BANCO-07 AC3).",
+  }),
 
   // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
   // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da

@@ -213,6 +213,18 @@ job/gate da T95/T96.
 dedup por questão-versão. **Where**: `src/modules/ia/explicacao.ts`, testes unit. **Done when**: pedido
 não combina extração e explicação e o gateway registra tarefa/prompt. **Depends**: T92.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 53 arquivos e 470 testes passando; `npm run lint` limpo.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Referência e questão viajam no mesmo pedido | `src/modules/ia/explicacao.ts:136-167` e `src/modules/ia/explicacao.test.ts:68-82` | O modelo recebe o documento, enunciado, alternativas e gabarito oficial juntos | ✅ |
+| Formato é strict e próprio da explicação | `src/modules/ia/explicacao.ts:37-82,159-164` e `src/modules/ia/explicacao.test.ts:37-49,76-82` | A tarefa não reutiliza o schema da extração | ✅ |
+| Dedup é questão + versão | `src/modules/ia/explicacao.ts:171-183` e `src/modules/ia/explicacao.test.ts:84-92` | A mesma versão reaproveita a geração; nova versão muda a chave | ✅ |
+| Pedido sem gabarito para antes de IA | `src/modules/ia/explicacao.ts:101-105,141` e `src/modules/ia/explicacao.test.ts:94-102` | Não há explicação sem verdade oficial | ✅ |
+
+Necessidade: a função só monta o pedido; a execução continua exclusivamente pelo gateway e a geração
+continua fora da aplicação web, no job da T95.
+
 ### Fase 3 — job e fechamento
 
 #### T95: Job standalone da fábrica

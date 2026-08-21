@@ -82,15 +82,21 @@ export { type Conferidor, type ResultadoDeRefazer, refazerUmaVez } from "./refaz
 
 export {
   ExplicacaoRejeitada,
+  INSTRUCAO_DA_EXPLICACAO,
   NOME_DO_FORMATO_DA_EXPLICACAO,
+  QuestaoSemGabaritoParaExplicacao,
   SCHEMA_DA_EXPLICACAO,
   type ExplicacaoGerada,
   type FonteCitacaoDaExplicacao,
   type MotivoDaRejeicaoDaExplicacao,
+  type QuestaoParaPedidoDeExplicacao,
   type QuestaoParaExplicacao,
+  alvoDaExplicacao,
+  chaveDedupDaExplicacao,
   conferirExplicacao,
   explicacaoGeradaSchema,
   fonteCitacaoDaExplicacaoSchema,
+  montarPedidoDeExplicacao,
   normalizarTrecho,
 } from "./explicacao";
 

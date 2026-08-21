@@ -3,10 +3,15 @@ import { describe, expect, it } from "vitest";
 import type { ReferenciaEntregue } from "@/modules/acervo";
 
 import {
+  INSTRUCAO_DA_EXPLICACAO,
   NOME_DO_FORMATO_DA_EXPLICACAO,
   SCHEMA_DA_EXPLICACAO,
+  QuestaoSemGabaritoParaExplicacao,
+  alvoDaExplicacao,
   conferirExplicacao,
   explicacaoGeradaSchema,
+  chaveDedupDaExplicacao,
+  montarPedidoDeExplicacao,
   normalizarTrecho,
 } from "./explicacao";
 
@@ -32,6 +37,18 @@ const base = {
   afirmacoes_externas: [],
 };
 
+const questao = {
+  id: "11111111-1111-1111-1111-111111111111",
+  questaoVersao: 3,
+  enunciado: "Qual alternativa está correta?",
+  alternativas: [
+    { letra: "A", texto: "Primeira" },
+    { letra: "B", texto: "Segunda" },
+  ],
+  respostaCorreta: "B",
+  gabaritoVersao: "definitivo-2024",
+};
+
 describe("contrato da explicacao conferida", () => {
   it("declara formato estrito com citacoes estruturadas", () => {
     expect(NOME_DO_FORMATO_DA_EXPLICACAO).toBe("explicacao_conferida");
@@ -46,6 +63,41 @@ describe("contrato da explicacao conferida", () => {
       ],
     });
     expect(explicacaoGeradaSchema.safeParse(base).success).toBe(true);
+  });
+
+  it("entrega referencia e questao no mesmo pedido, com gabarito oficial", () => {
+    const pedido = montarPedidoDeExplicacao(questao, referencia);
+
+    expect(pedido.instrucao).toContain(INSTRUCAO_DA_EXPLICACAO);
+    expect(pedido.instrucao).toContain(referencia.id);
+    expect(pedido.instrucao).toContain(referencia.conteudo);
+    expect(pedido.entrada).toContain(questao.enunciado);
+    expect(pedido.entrada).toContain("A) Primeira");
+    expect(pedido.entrada).toContain("gabarito oficial (definitivo-2024): B");
+    expect(pedido.formato).toEqual({
+      nome: NOME_DO_FORMATO_DA_EXPLICACAO,
+      schema: SCHEMA_DA_EXPLICACAO,
+    });
+    expect(pedido.formato?.schema).not.toHaveProperty("questoes");
+  });
+
+  it("fixa o alvo e a chave de dedup na questao-versao", () => {
+    expect(alvoDaExplicacao(questao)).toEqual({
+      questaoId: questao.id,
+      questaoVersao: 3,
+    });
+    expect(chaveDedupDaExplicacao(questao)).toBe(
+      `explicacao:1:${questao.id}:3`,
+    );
+  });
+
+  it("nao monta pedido sem gabarito oficial", () => {
+    expect(() =>
+      montarPedidoDeExplicacao(
+        { ...questao, gabaritoVersao: null },
+        referencia,
+      ),
+    ).toThrow(QuestaoSemGabaritoParaExplicacao);
   });
 
   it("normaliza caixa, acentos, pontuacao e espacos para comparar trechos", () => {

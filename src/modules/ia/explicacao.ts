@@ -2,8 +2,24 @@ import { z } from "zod";
 
 import type { ReferenciaEntregue } from "@/modules/acervo";
 
+import type { PedidoDeIa } from "./adaptador-openai";
+import { montarChaveDeDedup } from "./gateway";
+
 /** O nome enviado ao provedor junto do JSON Schema estrito. */
 export const NOME_DO_FORMATO_DA_EXPLICACAO = "explicacao_conferida";
+
+/** Instrução estável; a referência entra abaixo dela no mesmo pedido. */
+export const INSTRUCAO_DA_EXPLICACAO = [
+  "Você escreve a explicação de uma questão de concurso público brasileiro.",
+  "",
+  "Regras obrigatórias:",
+  "- o gabarito oficial já foi decidido pelo acervo; não escolha nem altere a alternativa correta;",
+  "- explique somente o raciocínio que pode ser apoiado pela referência entregue neste pedido;",
+  "- cite pelo menos um trecho literal da referência, usando o doc_id recebido;",
+  "- não use recurso de citação do provedor e não invente fonte, número, prazo ou regra;",
+  "- quando a origem for 'minima', não afirme norma, prazo, percentual ou regra externa: omita;",
+  "- devolva afirmacoes_externas como [] quando todo o texto estiver apoiado na referência.",
+].join("\n");
 
 const textoNaoVazio = z.string().trim().min(1);
 
@@ -74,6 +90,21 @@ export type QuestaoParaExplicacao = {
   respostaCorreta: string | null;
 };
 
+export type QuestaoParaPedidoDeExplicacao = QuestaoParaExplicacao & {
+  id: string;
+  questaoVersao: number;
+  enunciado: string;
+  alternativas: readonly { letra: string; texto: string }[] | null;
+  gabaritoVersao: string | null;
+};
+
+export class QuestaoSemGabaritoParaExplicacao extends Error {
+  constructor() {
+    super("o pedido da explicacao exige resposta_correta e gabarito_versao");
+    this.name = "QuestaoSemGabaritoParaExplicacao";
+  }
+}
+
 export type MotivoDaRejeicaoDaExplicacao =
   | "saida_estruturada_invalida"
   | "gabarito_ausente"
@@ -92,6 +123,63 @@ export class ExplicacaoRejeitada extends Error {
     this.name = "ExplicacaoRejeitada";
     this.motivo = motivo;
   }
+}
+
+function alternativasDa(questao: QuestaoParaPedidoDeExplicacao): string {
+  if (questao.alternativas === null) return "Formato: certo ou errado";
+  return questao.alternativas
+    .map((alternativa) => `${alternativa.letra}) ${alternativa.texto}`)
+    .join("\n");
+}
+
+/** Monta o request provider-agnostic usado pela tarefa `explicacao`. */
+export function montarPedidoDeExplicacao(
+  questao: QuestaoParaPedidoDeExplicacao,
+  referencia: ReferenciaEntregue,
+): PedidoDeIa {
+  if (questao.respostaCorreta === null || questao.gabaritoVersao === null) {
+    throw new QuestaoSemGabaritoParaExplicacao();
+  }
+
+  const instrucao = [
+    INSTRUCAO_DA_EXPLICACAO,
+    "",
+    `REFERÊNCIA ENTREGUE — doc_id: ${referencia.id}`,
+    `origem: ${referencia.origem}`,
+    referencia.conteudo,
+  ].join("\n");
+
+  const entrada = [
+    `questao_id: ${questao.id}`,
+    `questao_versao: ${questao.questaoVersao}`,
+    `enunciado:\n${questao.enunciado}`,
+    `alternativas:\n${alternativasDa(questao)}`,
+    `gabarito oficial (${questao.gabaritoVersao}): ${questao.respostaCorreta}`,
+    `responda usando somente o doc_id ${referencia.id}`,
+  ].join("\n\n");
+
+  return {
+    instrucao,
+    entrada,
+    formato: {
+      nome: NOME_DO_FORMATO_DA_EXPLICACAO,
+      schema: SCHEMA_DA_EXPLICACAO,
+    },
+  };
+}
+
+export function alvoDaExplicacao(questao: QuestaoParaPedidoDeExplicacao): {
+  questaoId: string;
+  questaoVersao: number;
+} {
+  return { questaoId: questao.id, questaoVersao: questao.questaoVersao };
+}
+
+/** Usa exatamente a chave que o gateway consulta antes de chamar o provedor. */
+export function chaveDedupDaExplicacao(
+  questao: QuestaoParaPedidoDeExplicacao,
+): string {
+  return montarChaveDeDedup("explicacao", alvoDaExplicacao(questao)) as string;
 }
 
 /**

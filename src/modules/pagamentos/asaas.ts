@@ -268,7 +268,7 @@ export class AsaasGateway {
 }
 
 export function gatewayAsaasDoAmbiente(
-  ambiente: NodeJS.ProcessEnv = process.env,
+  ambiente: Record<string, string | undefined> = process.env,
 ): AsaasGateway {
   const apiKey = ambiente.ASAAS_API_KEY?.trim();
   const apiUrl = ambiente.ASAAS_API_URL?.trim();

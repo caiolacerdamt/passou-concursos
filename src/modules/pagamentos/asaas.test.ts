@@ -32,7 +32,7 @@ describe("adapter Asaas", () => {
     const gateway = new AsaasGateway({
       apiKey: "chave-de-teste",
       apiUrl: "https://api-sandbox.asaas.com",
-      fetchImpl: async (url, init) => {
+      fetchImpl: async (url, init = {}) => {
         chamadas.push({ url: String(url), init });
         return respostaJson({
           id: "pay_123",
@@ -75,7 +75,7 @@ describe("adapter Asaas", () => {
     const gateway = new AsaasGateway({
       apiKey: "chave-de-teste",
       apiUrl: "https://api-sandbox.asaas.com",
-      fetchImpl: async (_url, init) => {
+      fetchImpl: async (_url, init = {}) => {
         corpoRecebido = JSON.parse(String(init.body));
         return respostaJson({ id: "pay_pix", status: "PENDING" });
       },
@@ -100,7 +100,7 @@ describe("adapter Asaas", () => {
     const gateway = new AsaasGateway({
       apiKey: "chave-de-teste",
       apiUrl: "https://api-sandbox.asaas.com",
-      fetchImpl: async (url) => {
+        fetchImpl: async (url, _init = {}) => {
         chamadas.push(String(url));
         if (String(url).includes("invoices")) {
           return respostaJson({ id: "inv_1", status: "SCHEDULED" });
@@ -149,7 +149,7 @@ describe("adapter Asaas", () => {
       apiKey: "segredo-super-secreto",
       apiUrl: "https://api-sandbox.asaas.com",
       timeoutMs: 5,
-      fetchImpl: async (_url, init) =>
+      fetchImpl: async (_url, init = {}) =>
         new Promise<Response>((_resolve, reject) => {
           init.signal?.addEventListener("abort", () => reject(new Error("timeout")));
         }),
@@ -165,7 +165,10 @@ describe("adapter Asaas", () => {
 
   it("não cria gateway com ambiente incompleto", () => {
     expect(() =>
-      gatewayAsaasDoAmbiente({ ASAAS_API_KEY: "", ASAAS_API_URL: "" }),
+      gatewayAsaasDoAmbiente({
+        ASAAS_API_KEY: "",
+        ASAAS_API_URL: "",
+      }),
     ).toThrow(ErroAsaas);
   });
 });

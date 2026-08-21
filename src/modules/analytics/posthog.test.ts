@@ -36,7 +36,7 @@ describe("transporte do PostHog", () => {
       "pagamento_confirmado",
       { meio: "PIX" },
       {
-        fetchImpl: async (destino, init) => {
+        fetchImpl: async (destino, init = {}) => {
           url = String(destino);
           corpo = JSON.parse(String(init.body));
           return new Response("{}", {

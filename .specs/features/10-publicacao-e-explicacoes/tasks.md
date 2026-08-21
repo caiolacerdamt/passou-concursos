@@ -112,6 +112,18 @@ na T89 e os de seleção da base na T91, conforme as dependências.
 decisão incompleta. **Where**: migration de T88 e testes DB. **Done when**: pendência, aprovação,
 rejeição e auditoria ficam observáveis e idempotentes. **Depends**: T88.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:db -- tests/db/publicacao-explicacoes.test.ts` — 6 testes passando.
+
+**Post-gate adequacy**:
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Uma pendência por motivo e prioridade maior prevalece | `tests/db/publicacao-explicacoes.test.ts:98` — `expect(segunda.rows[0].id).toBe(primeira.rows[0].id)` e `:104` — `expect(rows[0]).toMatchObject({ status: "pendente", prioridade: 8, ... })` | Repetição não duplica e mantém prioridade maior | ✅ |
+| Aprovação registra decisão, operador e data | `tests/db/publicacao-explicacoes.test.ts:137-140` — asserts de `status`, `decidido_por`, `decidida_em` e observação | Quem e quando ficam registrados | ✅ |
+| Pendência decidida não pode ser decidida de novo | `tests/db/publicacao-explicacoes.test.ts:144` — `rejects.toThrow(/revisao_nao_esta_pendente/)` | Não há sobrescrita silenciosa da decisão | ✅ |
+
+Necessidade: os asserts verificam estado persistido e erro de transição, não apenas chamadas.
+
 #### T90: Porta de publicação no banco
 
 **What**: substituir a trava estrutural de inédita por trigger/função que exige revisão quando aplicável

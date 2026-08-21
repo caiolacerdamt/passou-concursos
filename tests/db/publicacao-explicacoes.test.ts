@@ -1,6 +1,7 @@
 import { expect, it } from "vitest";
 
 import { inserirQuestao } from "./acervo";
+import { criarUsuario } from "./conta";
 import { comTransacaoRevertida } from "./conexao";
 import { descreveComBanco } from "./setup";
 
@@ -79,6 +80,68 @@ descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
           [questao.id, questao.questao_versao],
         ),
       ).rejects.toThrow(/explicacoes_aprovada_tem_fonte/);
+    });
+  });
+
+  it("enfileira uma pendencia por motivo e eleva a prioridade sem duplicar", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const questao = await inserirQuestao(cliente);
+      const primeira = await cliente.query<{ id: string }>(
+        `select public.enfileirar_questao_revisao($1, $2, $3, $4, $5) as id`,
+        [questao.id, questao.questao_versao, "baixa_confianca", 2, "primeira"],
+      );
+      const segunda = await cliente.query<{ id: string }>(
+        `select public.enfileirar_questao_revisao($1, $2, $3, $4, $5) as id`,
+        [questao.id, questao.questao_versao, "baixa_confianca", 8, null],
+      );
+
+      expect(segunda.rows[0].id).toBe(primeira.rows[0].id);
+      const { rows } = await cliente.query(
+        `select status::text, prioridade, observacao, decidido_por, decidida_em
+           from public.questao_revisoes where id = $1`,
+        [primeira.rows[0].id],
+      );
+      expect(rows[0]).toMatchObject({
+        status: "pendente",
+        prioridade: 8,
+        observacao: "primeira",
+        decidido_por: null,
+        decidida_em: null,
+      });
+    });
+  });
+
+  it("registra aprovacao e rejeicao com operador e data, e fecha a pendencia", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const questao = await inserirQuestao(cliente);
+      const operador = await criarUsuario(cliente);
+      const { rows: criada } = await cliente.query<{ id: string }>(
+        `select public.enfileirar_questao_revisao(
+           $1::uuid, $2::integer, 'amostra_qa_real'::text, 1::smallint, null::text
+         ) as id`,
+        [questao.id, questao.questao_versao],
+      );
+
+      await cliente.query(
+        `select public.registrar_decisao_questao_revisao($1, 'aprovada', $2, 'conferida')`,
+        [criada[0].id, operador],
+      );
+      const { rows: aprovada } = await cliente.query(
+        `select status::text, decidido_por, decidida_em, observacao
+           from public.questao_revisoes where id = $1`,
+        [criada[0].id],
+      );
+      expect(aprovada[0].status).toBe("aprovada");
+      expect(aprovada[0].decidido_por).toBe(operador);
+      expect(aprovada[0].decidida_em).not.toBeNull();
+      expect(aprovada[0].observacao).toBe("conferida");
+
+      await expect(
+        cliente.query(
+          `select public.registrar_decisao_questao_revisao($1, 'rejeitada', $2)`,
+          [criada[0].id, operador],
+        ),
+      ).rejects.toThrow(/revisao_nao_esta_pendente/);
     });
   });
 });

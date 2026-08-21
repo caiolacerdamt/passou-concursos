@@ -50,10 +50,11 @@ export default async function Home() {
           <article className="rounded-lg border border-linha bg-fundo-suave p-5">
             <h3 className="font-semibold">Cartão de crédito</h3>
             <p className="mt-2 text-2xl font-semibold">
-              {precos.parcelado.parcelas}x {precos.parcelado.parcelaFormatada}
+              {precos.parcelado.parcelas}x de até {precos.parcelado.parcelaFormatada}
             </p>
             <p className="mt-1 text-sm text-suave">
-              Total de {precos.parcelado.totalFormatado}.
+              Total de {precos.parcelado.totalFormatado}; a última parcela pode
+              ter ajuste de centavos.
             </p>
           </article>
           <article className="rounded-lg border-2 border-marca p-5">

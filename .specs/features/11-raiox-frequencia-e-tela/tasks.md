@@ -24,7 +24,7 @@ por Verifier independente, conforme o Ritual B da SPEC 11.
 - A tela `/app/raio-x` exige matrícula, verifica `flag.m5.raiox` e lê somente a projeção pré-computada.
   Exibe tópico, peso, questões reais, tendência e `Baseado em poucas questões` quando aplicável.
 
-**Status**: In Progress
+**Status**: Completed — PASS parcial independente; limitações registradas em `validation.md`
 
 ## Test Coverage Matrix
 
@@ -55,40 +55,40 @@ As fases são sequenciais e as tasks dentro de cada fase também.
 ### Phase 1: Foundation
 
 ```text
-T87 → T88
+T98 → T99
 ```
 
 ### Phase 2: Core projection
 
 ```text
-T89 → T90
+T100 → T101
 ```
 
 ### Phase 3: Surface
 
 ```text
-T91 → T92 → T93
+T102 → T103 → T104
 ```
 
 ### Phase 4: Contract closure
 
 ```text
-T94
+T105
 ```
 
 ### Phase dependency edges
 
 ```text
-T88 → T89
-T89 → T91
-T90 → T91
-T90 → T94
-T93 → T94
+T99 → T100
+T100 → T102
+T101 → T102
+T101 → T105
+T104 → T105
 ```
 
 ## Task Breakdown
 
-### T87: Cadastrar configuração do M5
+### T98: Cadastrar configuração do M5
 
 **What**: Adicionar as chaves tipadas do Raio-X e a flag global da tela ao catálogo existente.
 **Where**: `src/modules/config/catalogo.ts`
@@ -97,20 +97,20 @@ T93 → T94
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] `flag.m5.raiox` nasce `false`.
-- [ ] Decaimento, amortecimento, piso e duas janelas de tendência têm tipo, default e descrição.
-- [ ] O teste do catálogo confirma formato, default e ausência de chave órfã em código.
+- [x] `flag.m5.raiox` nasce `false`.
+- [x] Decaimento, amortecimento, piso e duas janelas de tendência têm tipo, default e descrição.
+- [x] O teste do catálogo confirma formato, default e ausência de chave órfã em código.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m5): cadastra configuracao do raio-x`
 **Status**: ✅ Done — unit gate verde
 
-### T88: Criar schema do perfil e da projeção
+### T99: Criar schema do perfil e da projeção
 
 **What**: Criar as tabelas, enum de tendência, constraints, índice de perfil ativo e proteção RLS.
 **Where**: `supabase/migrations/20260821100000_raiox_schema.sql`
-**Depends on**: T87
+**Depends on**: T98
 **Requirement**: RAIOX-08, RAIOX-05
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -124,11 +124,11 @@ T93 → T94
 **Commit**: `feat(m5): cria schema do perfil e da projecao`
 **Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-schema.test.ts`)
 
-### T89: Implementar o recálculo idempotente do Raio-X
+### T100: Implementar o recálculo idempotente do Raio-X
 
 **What**: Implementar `recalcula_raiox(p_referencia)` com taxa real, decaimento, tendência e amortecimento.
 **Where**: `supabase/migrations/20260821101000_raiox_recalculo.sql`
-**Depends on**: T88
+**Depends on**: T99
 **Requirement**: RAIOX-01, RAIOX-04, RAIOX-05, RAIOX-11, RAIOX-12, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -143,11 +143,11 @@ T93 → T94
 **Commit**: `feat(m5): calcula frequencia real do raio-x`
 **Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-recalculo.test.ts`)
 
-### T90: Ligar view, porteiro e agendamento
+### T101: Ligar view, porteiro e agendamento
 
 **What**: Substituir a view stub mantendo a assinatura, excluir peso zero do plano e agendar o job antes do M4.
 **Where**: `supabase/migrations/20260821102000_raiox_integracao.sql`
-**Depends on**: T89
+**Depends on**: T100
 **Requirement**: RAIOX-03, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -161,11 +161,11 @@ T93 → T94
 **Commit**: `feat(m5): liga raio-x ao plano e ao cron`
 **Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-view-cron.test.ts`)
 
-### T91: Criar leitura server-side do Raio-X
+### T102: Criar leitura server-side do Raio-X
 
 **What**: Expor no módulo M5 um DTO mínimo que consulta perfil ativo e projeções ordenadas pelo peso.
 **Where**: `src/modules/raiox/index.ts`
-**Depends on**: T89, T90
+**Depends on**: T100, T101
 **Requirement**: RAIOX-05, RAIOX-08, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -179,11 +179,11 @@ T93 → T94
 **Commit**: `feat(m5): expõe leitura server-side do raio-x`
 **Status**: ✅ Done — unit gate verde (`src/modules/raiox/index.test.ts`)
 
-### T92: Construir componente de leitura
+### T103: Construir componente de leitura
 
 **What**: Criar o componente responsivo e acessível que apresenta o perfil, a lista e os sinais da projeção.
 **Where**: `src/modules/raiox/tela.tsx`
-**Depends on**: T91
+**Depends on**: T102
 **Requirement**: RAIOX-05, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -197,11 +197,11 @@ T93 → T94
 **Commit**: `feat(m5): renderiza leitura do raio-x`
 **Status**: ✅ Done — unit gate verde (`src/modules/raiox/tela.test.tsx`)
 
-### T93: Integrar rota logada e flag
+### T104: Integrar rota logada e flag
 
 **What**: Adicionar `/app/raio-x` como Server Component protegido por matrícula e pela flag M5.
 **Where**: `src/app/app/raio-x/page.tsx`
-**Depends on**: T92
+**Depends on**: T103
 **Requirement**: RAIOX-08, RAIOX-12
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
@@ -215,65 +215,65 @@ T93 → T94
 **Commit**: `feat(m5): adiciona rota logada do raio-x`
 **Status**: ✅ Done — unit gate verde (`src/app/app/raio-x/page.test.tsx`)
 
-### T94: Fechar contrato com o plano e rastreabilidade
+### T105: Fechar contrato com o plano e rastreabilidade
 
 **What**: Provar que o peso da view reordena o plano sem alterar o motor e fechar a rastreabilidade da SPEC.
 **Where**: `tests/db/raiox-plano.test.ts`
-**Depends on**: T90, T93
+**Depends on**: T101, T104
 **Requirement**: RAIOX-03, RAIOX-14
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] O teste mostra que alterar a projeção muda a ordem do plano pela view, sem mudar a função do plano.
-- [ ] Os Success Criteria da SPEC têm evidência em testes ou ficam explicitamente registrados como limitação.
-- [ ] Todos os gates do projeto passam antes do último commit.
+- [x] O teste mostra que alterar a projeção muda a ordem do plano pela view, sem mudar a função do plano.
+- [x] Os Success Criteria da SPEC têm evidência em testes ou ficam explicitamente registrados como limitação.
+- [x] Todos os gates do projeto passam antes do último commit.
 
 **Tests**: integration
 **Gate**: build
 **Commit**: `test(m5): fecha contrato do raio-x com o plano`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — integration, unit, lint e build verdes; verificador independente PASS parcial em `validation.md`
 
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |
 | --- | --- | --- | --- |
-| T87 | None | None | ✅ |
-| T88 | T87 | T87 → T88 | ✅ |
-| T89 | T88 | T88 → T89 | ✅ |
-| T90 | T89 | T89 → T90 | ✅ |
-| T91 | T89, T90 | T89/T90 → T91 | ✅ |
-| T92 | T91 | T91 → T92 | ✅ |
-| T93 | T92 | T92 → T93 | ✅ |
-| T94 | T90, T93 | T90/T93 → T94 | ✅ |
+| T98 | None | None | ✅ |
+| T99 | T98 | T98 → T99 | ✅ |
+| T100 | T99 | T99 → T100 | ✅ |
+| T101 | T100 | T100 → T101 | ✅ |
+| T102 | T100, T101 | T100/T101 → T102 | ✅ |
+| T103 | T102 | T102 → T103 | ✅ |
+| T104 | T103 | T103 → T104 | ✅ |
+| T105 | T101, T104 | T101/T104 → T105 | ✅ |
 
 ## Test Co-location Validation
 
 | Task | Layer | Matrix | Task says | Status |
 | --- | --- | --- | --- | --- |
-| T87 | Configuração | unit | unit | ✅ |
-| T88 | Schema Supabase | integration | integration | ✅ |
-| T89 | Regra de frequência e job | integration | integration | ✅ |
-| T90 | View, cron e contrato | integration | integration | ✅ |
-| T91 | Leitura server-side | unit | unit | ✅ |
-| T92 | Componente de tela | unit | unit | ✅ |
-| T93 | Rota protegida | unit | unit | ✅ |
-| T94 | View, cron e contrato | integration | integration | ✅ |
+| T98 | Configuração | unit | unit | ✅ |
+| T99 | Schema Supabase | integration | integration | ✅ |
+| T100 | Regra de frequência e job | integration | integration | ✅ |
+| T101 | View, cron e contrato | integration | integration | ✅ |
+| T102 | Leitura server-side | unit | unit | ✅ |
+| T103 | Componente de tela | unit | unit | ✅ |
+| T104 | Rota protegida | unit | unit | ✅ |
+| T105 | View, cron e contrato | integration | integration | ✅ |
 
 ## Traceability Plan
 
 | Requirement | Tasks |
 | --- | --- |
-| RAIOX-01 | T89 |
-| RAIOX-03 | T90, T94 |
-| RAIOX-04 | T89 |
-| RAIOX-05 | T88, T89, T91, T92 |
-| RAIOX-08 | T88, T91, T93 |
-| RAIOX-11 | T87, T89 |
-| RAIOX-12 | T87, T89, T91, T92, T93 |
-| RAIOX-14 | T87, T89, T90, T94 |
+| RAIOX-01 | T100 |
+| RAIOX-03 | T101, T105 |
+| RAIOX-04 | T100 |
+| RAIOX-05 | T99, T100, T102, T103 |
+| RAIOX-08 | T99, T102, T104 |
+| RAIOX-11 | T98, T100 |
+| RAIOX-12 | T98, T100, T102, T103, T104 |
+| RAIOX-14 | T98, T100, T101, T105 |
 
 ## Closing Protocol
 
-Depois de T94: dispatch automático do Verifier independente, aguardando a conclusão. O relatório deve ser
+Depois de T105: dispatch automático do Verifier independente, aguardando a conclusão. O relatório deve ser
 gravado em `validation.md` e passar `validate_state.py` antes de declarar a SPEC concluída. Como o Ritual
 é B, o relatório confere os Success Criteria com evidência `file:line`, sem sensor de mutação.

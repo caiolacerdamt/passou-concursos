@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 14, 19, 20, 27, 31, 32 |
 | **Tasks (estimativa)** | ~11 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída — PASS parcial independente; limitações em `validation.md` |
 | **Requisitos** | **RAIOX-08**, **RAIOX-01**, **RAIOX-04**, **RAIOX-05**, **RAIOX-11**, **RAIOX-12**, **RAIOX-03** (porteiro do edital), **RAIOX-14** |
 | **Fonte dos requisitos** | `.specs/modulos/m5-raiox-banca/spec.md` |
 | **Vem de** | SPEC 26 + parte da SPEC 27 do recorte de 42, **com a tela puxada para dentro** (AD-089) |
@@ -59,16 +59,16 @@ enganosa contra o próprio aluno.
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| RAIOX-01 | P1: Frequência real | Design | Pending |
-| RAIOX-03 | P1: Porteiro do edital | Design | Pending |
-| RAIOX-04 | P1: Frequência real | Design | Pending |
-| RAIOX-05 | P1: Frequência real | Design | Pending |
-| RAIOX-08 | P1: Perfil e leitura | Design | Pending |
-| RAIOX-11 | P1: Frequência real | Design | Pending |
-| RAIOX-12 | P1: Peso honesto | Design | Pending |
-| RAIOX-14 | P1: Perfil e leitura | Design | Pending |
+| RAIOX-01 | P1: Frequência real | Execute | Verified |
+| RAIOX-03 | P1: Porteiro do edital | Execute | Verified |
+| RAIOX-04 | P1: Frequência real | Execute | Verified |
+| RAIOX-05 | P1: Frequência real | Execute | Verified |
+| RAIOX-08 | P1: Perfil e leitura | Execute | Verified |
+| RAIOX-11 | P1: Frequência real | Execute | Verified |
+| RAIOX-12 | P1: Peso honesto | Execute | Verified |
+| RAIOX-14 | P1: Perfil e leitura | Execute | Verified |
 
-**Coverage:** 8 total, 0 mapped to tasks, 8 pending.
+**Coverage:** 8 total, 8 mapped to tasks, 0 pending.
 
 ## Contratos que esta spec fixa para as próximas
 
@@ -96,10 +96,15 @@ enganosa contra o próprio aluno.
 
 ## Success Criteria
 
-- [ ] Publicar 50 inéditas de um tópico **não** muda a taxa dele
-- [ ] Uma prova real recente move a taxa mais do que uma de 10 anos atrás
-- [ ] Tópico com 3 questões e taxa bruta altíssima **não** lidera a lista, e a tela mostra "pouca amostra"
-- [ ] Tópico fora do programa do edital fica com peso zero
-- [ ] Rerodar o job produz exatamente o mesmo resultado
-- [ ] Trocar a view stub pelo peso real reordena o plano do dia seguinte **sem alterar o motor**
-- [ ] A tela abre com acervo fino sem mentir: toda linha amortecida aparece rotulada
+- [x] Publicar 50 inéditas de um tópico **não** muda a taxa dele
+- [x] Uma prova real recente move a taxa mais do que uma de 10 anos atrás
+- [x] Tópico com 3 questões e taxa bruta altíssima **não** lidera a lista, e a tela mostra "pouca amostra"
+- [x] Tópico fora do programa do edital fica com peso zero
+- [x] Rerodar o job produz exatamente o mesmo resultado
+- [x] Trocar a view stub pelo peso real reordena o plano do dia seguinte **sem alterar o motor**
+- [x] A tela abre com acervo fino sem mentir: toda linha amortecida aparece rotulada
+
+> Nota de validação: o verificador independente classificou os critérios 3 e 5 como **PASS parcial**.
+> O amortecimento puxa a taxa de amostras pequenas para a média, mas não impõe um teto absoluto de
+> posição para `n_questoes = 3`; e a coluna `atualizado_em` registra a nova execução embora os valores
+> de negócio sejam idempotentes. Os detalhes e a evidência estão em `validation.md`.

@@ -3,6 +3,7 @@ import {
   type EventoDoFunil,
   type PropriedadesAnonimas,
 } from "./funil";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 
 const HOSTS_POSTHOG_EUA = new Set(["us.i.posthog.com", "us.posthog.com"]);
 
@@ -34,6 +35,19 @@ export function publicarEventoDoFunil(
   evento: EventoFunilAceito,
 ): Promise<ResultadoDoPostHog> {
   return publicadorAtual(evento.evento, evento.propriedades);
+}
+
+/** Analytics é best effort e não pode alongar ou quebrar a compra. */
+export function emitirEventoDoFunilNaoBloqueante(evento: EventoDoFunil): void {
+  void Promise.resolve()
+    .then(() => publicadorAtual(evento, {}))
+    .catch((erro) => {
+      reportarErro(erro, {
+        modulo: "analytics",
+        evento,
+        motivo: "publicacao_nao_bloqueante_falhou",
+      });
+    });
 }
 
 export async function publicarNoPostHog(

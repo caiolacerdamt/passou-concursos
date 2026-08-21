@@ -47,7 +47,7 @@ describe("POST /api/analytics", () => {
     expect(resposta.status).toBe(200);
     expect(await resposta.json()).toEqual({ ok: true });
     expect(recebidos).toEqual([
-      { evento: "meio_escolhido", propriedades: { meio: "PIX" } },
+      { evento: "meio_escolhido", propriedades: {} },
     ]);
   });
 

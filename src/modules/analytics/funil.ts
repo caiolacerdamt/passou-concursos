@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-import {
-  MEIOS_DE_PAGAMENTO,
-  type MeioDePagamento,
-} from "@/modules/pagamentos/contratos";
-
 export const EVENTOS_DO_FUNIL = [
   "pagina_vista",
   "checkout_iniciado",
@@ -21,7 +16,8 @@ const entradaEventoSchema = z
   })
   .strict();
 
-export type PropriedadesAnonimas = { meio?: MeioDePagamento };
+/** M9/INFRA-12: o funil pré-login não transporta propriedades de pagamento. */
+export type PropriedadesAnonimas = Record<string, never>;
 
 export type EventoFunilAceito = {
   aceito: true;
@@ -41,8 +37,9 @@ export type ResultadoDaNormalizacao =
   | EventoFunilRejeitado;
 
 /**
- * Allowlist do funil. O resultado não carrega as chaves rejeitadas, então uma
- * chamada posterior não consegue reenviar e-mail, CPF, telefone ou user_id.
+ * Allowlist do funil. O resultado não carrega nenhuma propriedade, então uma
+ * chamada posterior não consegue reenviar e-mail, CPF, telefone, user_id ou
+ * meio de pagamento.
  */
 export function normalizarEventoDoFunil(input: unknown): ResultadoDaNormalizacao {
   const resultado = entradaEventoSchema.safeParse(input);
@@ -55,25 +52,12 @@ export function normalizarEventoDoFunil(input: unknown): ResultadoDaNormalizacao
   }
 
   const propriedades = resultado.data.propriedades ?? {};
-  const chavesPermitidas =
-    resultado.data.evento === "meio_escolhido" ||
-    resultado.data.evento === "pagamento_confirmado"
-      ? new Set(["meio"])
-      : new Set<string>();
-  const quantidadeDescartada = Object.keys(propriedades).filter(
-    (chave) => !chavesPermitidas.has(chave),
-  ).length;
-  const meio = propriedades.meio;
+  const quantidadeDescartada = Object.keys(propriedades).length;
 
   return {
     aceito: true,
     evento: resultado.data.evento,
-    propriedades: {
-      ...(typeof meio === "string" &&
-      (MEIOS_DE_PAGAMENTO as readonly string[]).includes(meio)
-        ? { meio: meio as MeioDePagamento }
-        : {}),
-    },
+    propriedades: {},
     quantidadeDescartada,
   };
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EventoDoFunilNaEntrada } from "@/modules/analytics/entrada";
 import { obterPrecosPublicos } from "@/modules/pagamentos/preco";
 import { Shell } from "@/modules/ui/shell";
 
@@ -14,6 +15,7 @@ export default async function Checkout() {
     <Shell
       acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}
     >
+      <EventoDoFunilNaEntrada evento="checkout_iniciado" />
       <p className="text-sm font-semibold uppercase tracking-wide text-marca">Checkout</p>
       <h1 className="mt-2 text-3xl font-semibold">Finalize sua matrícula anual</h1>
       <p className="mt-4 leading-7 text-suave">

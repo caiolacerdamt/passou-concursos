@@ -1,10 +1,16 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { publicarNoPostHog } from "./posthog";
+import {
+  definirPublicadorDeAnalytics,
+  emitirEventoDoFunilNaoBloqueante,
+  publicarNoPostHog,
+  restaurarPublicadorDeAnalytics,
+} from "./posthog";
 
 const ambienteOriginal = { ...process.env };
 
 afterEach(() => {
+  restaurarPublicadorDeAnalytics();
   process.env.POSTHOG_API_KEY = ambienteOriginal.POSTHOG_API_KEY;
   process.env.POSTHOG_API_URL = ambienteOriginal.POSTHOG_API_URL;
 });
@@ -34,7 +40,7 @@ describe("transporte do PostHog", () => {
 
     const resultado = await publicarNoPostHog(
       "pagamento_confirmado",
-      { meio: "PIX" },
+      {},
       {
         fetchImpl: async (destino, init = {}) => {
           url = String(destino);
@@ -52,7 +58,7 @@ describe("transporte do PostHog", () => {
     expect(corpo).toEqual({
       api_key: "phc_teste",
       event: "pagamento_confirmado",
-      properties: { distinct_id: "anonimo", meio: "PIX" },
+      properties: { distinct_id: "anonimo" },
     });
   });
 
@@ -70,5 +76,17 @@ describe("transporte do PostHog", () => {
 
     expect(resultado).toEqual({ enviado: false, motivo: "desligado" });
     expect(chamou).toBe(false);
+  });
+
+  it("não propaga falha síncrona ou assíncrona do publicador não bloqueante", async () => {
+    const reportado = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    definirPublicadorDeAnalytics(async () => {
+      throw new Error("posthog indisponivel");
+    });
+
+    expect(() => emitirEventoDoFunilNaoBloqueante("pagamento_confirmado")).not.toThrow();
+    await new Promise((resolver) => setTimeout(resolver, 0));
+
+    reportado.mockRestore();
   });
 });

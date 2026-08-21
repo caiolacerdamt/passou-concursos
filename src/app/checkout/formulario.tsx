@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
+import { enviarEventoDoFunilNoNavegador } from "@/modules/analytics/navegador";
 import type { PrecosPublicos } from "@/modules/pagamentos/preco";
 
 import {
@@ -72,15 +73,34 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
         <legend className="text-sm font-semibold">Escolha o meio de pagamento</legend>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
           <label className="rounded-md border border-linha p-3 text-sm">
-            <input className="mr-2" type="radio" name="meio" value="CREDIT_CARD" defaultChecked />
+            <input
+              className="mr-2"
+              type="radio"
+              name="meio"
+              value="CREDIT_CARD"
+              defaultChecked
+              onChange={() => enviarEventoDoFunilNoNavegador("meio_escolhido")}
+            />
             Cartão em 12x
           </label>
           <label className="rounded-md border border-linha p-3 text-sm">
-            <input className="mr-2" type="radio" name="meio" value="PIX" />
+            <input
+              className="mr-2"
+              type="radio"
+              name="meio"
+              value="PIX"
+              onChange={() => enviarEventoDoFunilNoNavegador("meio_escolhido")}
+            />
             Pix à vista
           </label>
           <label className="rounded-md border border-linha p-3 text-sm">
-            <input className="mr-2" type="radio" name="meio" value="BOLETO" />
+            <input
+              className="mr-2"
+              type="radio"
+              name="meio"
+              value="BOLETO"
+              onChange={() => enviarEventoDoFunilNoNavegador("meio_escolhido")}
+            />
             Boleto à vista
           </label>
         </div>

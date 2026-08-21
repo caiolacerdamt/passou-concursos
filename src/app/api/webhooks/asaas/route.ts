@@ -1,4 +1,5 @@
 import { clienteDeServico } from "@/lib/db/servidor";
+import { emitirEventoDoFunilNaoBloqueante } from "@/modules/analytics/posthog";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { gatewayAsaasDoAmbiente } from "@/modules/pagamentos/asaas";
 import {
@@ -37,6 +38,8 @@ export async function POST(request: Request): Promise<Response> {
     processar: async (evento) =>
       processarEventoAsaas(evento, {
         ...repositorio,
+        emitirPagamentoConfirmado: () =>
+          emitirEventoDoFunilNaoBloqueante("pagamento_confirmado"),
         encaminharParaAtivacao: async (pagamentoId) => {
           await ativarPagamentoConfirmado(
             pagamentoId,

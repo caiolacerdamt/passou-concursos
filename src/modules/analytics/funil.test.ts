@@ -19,7 +19,7 @@ describe("allowlist do funil", () => {
     });
   });
 
-  it("mantém só meio permitido e descarta PII e chaves desconhecidas", () => {
+  it("não aceita meio nem qualquer outra propriedade anônima", () => {
     const resultado = normalizarEventoDoFunil({
       evento: "meio_escolhido",
       propriedades: {
@@ -36,8 +36,8 @@ describe("allowlist do funil", () => {
     expect(resultado).toEqual({
       aceito: true,
       evento: "meio_escolhido",
-      propriedades: { meio: "PIX" },
-      quantidadeDescartada: 6,
+      propriedades: {},
+      quantidadeDescartada: 7,
     });
   });
 
@@ -55,8 +55,13 @@ describe("allowlist do funil", () => {
     expect(
       normalizarEventoDoFunil({
         evento: "meio_escolhido",
-        propriedades: { meio: "DINHEIRO" },
+        propriedades: { meio: "PIX" },
       }),
-    ).toMatchObject({ aceito: true, propriedades: {} });
+    ).toEqual({
+      aceito: true,
+      evento: "meio_escolhido",
+      propriedades: {},
+      quantidadeDescartada: 1,
+    });
   });
 });

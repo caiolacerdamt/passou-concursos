@@ -27,6 +27,14 @@ describe("pagina de vendas", () => {
     expect(html).toContain('href="/checkout"');
     expect(html).toContain('href="/termos"');
     expect(html).toContain('href="/privacidade"');
+    expect(html.indexOf("Termos de uso")).toBeLessThan(
+      html.indexOf("Conferir o checkout"),
+    );
+    expect(html.indexOf("Política de privacidade")).toBeLessThan(
+      html.indexOf("Conferir o checkout"),
+    );
+    expect(html.indexOf("Termos")).toBeLessThan(html.indexOf("Ver oferta"));
+    expect(html.indexOf("Privacidade")).toBeLessThan(html.indexOf("Ver oferta"));
     expect(html).toContain("não fazem parte desta oferta atual");
     expect(html).not.toContain("data-nascimento");
   });

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EventoDoFunilNaEntrada } from "@/modules/analytics/entrada";
 import { Shell } from "@/modules/ui/shell";
 import { obterPrecosPublicos } from "@/modules/pagamentos/preco";
 
@@ -17,6 +18,12 @@ export default async function Home() {
     <Shell
       acoes={
         <div className="flex flex-wrap items-center gap-4">
+          <Link href="/termos" className="text-marca underline">
+            Termos
+          </Link>
+          <Link href="/privacidade" className="text-marca underline">
+            Privacidade
+          </Link>
           <Link href="/entrar" className="text-marca underline">
             Entrar
           </Link>
@@ -29,6 +36,7 @@ export default async function Home() {
         </div>
       }
     >
+      <EventoDoFunilNaEntrada evento="pagina_vista" />
       <section aria-labelledby="titulo-oferta" className="py-4 sm:py-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-marca">
           Método para concursos bancários
@@ -69,9 +77,16 @@ export default async function Home() {
           Garantia de {precos.garantiaDias} dias corridos a partir da confirmação
           do pagamento, conforme os termos da oferta.
         </p>
+        <div className="mt-5 rounded-md border border-linha p-4 text-sm">
+          <p className="leading-6 text-suave">
+            Antes de continuar, leia os <Link href="/termos" className="text-marca underline">Termos de uso</Link>
+            {" e a "}
+            <Link href="/privacidade" className="text-marca underline">Política de privacidade</Link>.
+          </p>
+        </div>
         <Link
           href="/checkout"
-          className="mt-5 inline-block rounded-md bg-marca px-5 py-3 font-medium text-fundo"
+          className="mt-4 inline-block rounded-md bg-marca px-5 py-3 font-medium text-fundo"
         >
           Conferir o checkout
         </Link>

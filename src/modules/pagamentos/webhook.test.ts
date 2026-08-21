@@ -48,6 +48,7 @@ function dependencias(estado: string = "pendente") {
     mudarEstado: vi.fn(async () => undefined),
     abrirPendencia: vi.fn(async () => undefined),
     encaminharParaAtivacao: vi.fn(async () => undefined),
+    emitirPagamentoConfirmado: vi.fn(),
   };
 }
 
@@ -81,6 +82,15 @@ describe("contratos do webhook Asaas", () => {
 
     expect(deps.mudarEstado).toHaveBeenCalledTimes(1);
     expect(deps.encaminharParaAtivacao).toHaveBeenCalledTimes(1);
+    expect(deps.emitirPagamentoConfirmado).toHaveBeenCalledTimes(1);
+  });
+
+  it("emite confirmação antes de uma falha de ativação", async () => {
+    const deps = dependencias();
+    deps.encaminharParaAtivacao.mockRejectedValueOnce(new Error("fila indisponivel"));
+
+    await expect(processarEventoAsaas(evento, deps)).rejects.toThrow("fila indisponivel");
+    expect(deps.emitirPagamentoConfirmado).toHaveBeenCalledTimes(1);
   });
 
   it("evento desconhecido é ignorado sem liberar conteúdo", async () => {

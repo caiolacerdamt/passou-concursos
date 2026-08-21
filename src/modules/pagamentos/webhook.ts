@@ -42,6 +42,7 @@ export type DependenciasDoWebhook = {
     codigo: string,
   ): Promise<void>;
   encaminharParaAtivacao(pagamentoId: string): Promise<void>;
+  emitirPagamentoConfirmado?: () => void;
 };
 
 export function tokenWebhookValido(
@@ -121,6 +122,7 @@ export async function processarEventoAsaas(
     await dependencias.mudarEstado(pagamento.id, "confirmada", "webhook_confirmacao");
   }
 
+  dependencias.emitirPagamentoConfirmado?.();
   await dependencias.encaminharParaAtivacao(pagamento.id);
   return "encaminhado";
 }

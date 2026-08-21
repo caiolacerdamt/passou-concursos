@@ -233,6 +233,20 @@ continua fora da aplicação web, no job da T95.
 chave. **Where**: `scripts/jobs/explicacoes.mts`, testes e `package.json`. **Done when**: gerar, rejeitar,
 enfileirar e deduplicar funcionam; nenhum caminho entra em `src/app`. **Depends**: T93, T94.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:unit` — 54 arquivos e 478 testes passando; `npm run lint` limpo.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Job seleciona apenas questão sem explicação aprovada | `scripts/jobs/explicacoes.mts:48-70` e `scripts/jobs/explicacoes.test.ts:153-158` | Rerodar não pede geração para explicação vigente aprovada | ✅ |
+| Gera, confere e grava pelo gateway | `scripts/jobs/explicacoes.mts:157-189` e `scripts/jobs/explicacoes.test.ts:168-192` | A IA passa pelo gateway e a explicação aprovada é persistida | ✅ |
+| Rejeição vira registro não vigente e fila | `scripts/jobs/explicacoes.mts:190-219` e `scripts/jobs/explicacoes.test.ts:194-213` | Citação inválida não abre publicação e fica auditável | ✅ |
+| Sem base usa fonte mínima e registra pendência | `src/modules/acervo/base-referencia.ts:125-130` e `scripts/jobs/explicacoes.test.ts:218-235` | A fábrica continua segura sem documento curado | ✅ |
+| Sem API não bloqueia o núcleo | `scripts/jobs/explicacoes.mts:246-265` e `scripts/jobs/explicacoes.test.ts:239-256` | O job sai limpo sem conexão; questões/plano não dependem de IA | ✅ |
+| Não existe caminho web para geração | `scripts/jobs/explicacoes.mts:268-326` e `package.json:16` | Execução fica em job standalone | ✅ |
+
+Necessidade: a cobertura de banco e a prova contra duas execuções reais ficam na T96; a chave de API
+continua sendo lida apenas no processo do job.
+
 #### T96: Testes de integração da publicação e explicação
 
 **What**: completar cobertura dos Success Criteria contra banco e job, incluindo operador/data e núcleo

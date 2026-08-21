@@ -20,6 +20,9 @@ export const ROTAS_PUBLICAS = [
   "/assinar", // o aviso do paywall precisa ser visivel para quem nao pagou
   "/auth", // callback do OAuth e troca de codigo por sessao
   "/api/analytics", // proxy same-origin; falha de analytics não bloqueia a compra
+  "/checkout",
+  "/termos",
+  "/privacidade",
 ] as const;
 
 export function ehRotaPublica(caminho: string): boolean {

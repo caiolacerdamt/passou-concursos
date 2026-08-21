@@ -225,15 +225,22 @@ as páginas públicas de termos e privacidade com links consistentes.
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
 
-- [ ] A página mostra método, evidências citadas, estado atual, dois preços, garantia e um CTA para checkout.
-- [ ] O texto não promete tutor, gamificação ou outras superfícies ainda desligadas.
-- [ ] Termos e privacidade são alcançáveis sem login e deixam a revisão jurídica explícita.
-- [ ] A renderização não cria largura fixa em pixels nem rolagem horizontal em 360px.
+- [x] A página mostra método, evidências citadas, estado atual, dois preços, garantia e um CTA para checkout.
+- [x] O texto não promete tutor, gamificação ou outras superfícies ainda desligadas.
+- [x] Termos e privacidade são alcançáveis sem login e deixam a revisão jurídica explícita.
+- [x] A renderização não cria largura fixa em pixels nem rolagem horizontal em 360px.
 
 **Tests**: unit/render
 **Gate**: quick
 **Commit**: `feat(pag): publica pagina de vendas e termos`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; landing, resumo público do checkout e textos legais iniciais estão acessíveis sem sessão.
+- **Assumptions**: o processamento real da cobrança fica em T112; o checkout deste lote é deliberadamente informativo e mantém o botão desabilitado.
+- **Files**: `src/app/page.tsx`, `src/app/page.test.tsx`, `src/app/checkout/page.tsx`, `src/app/checkout/page.test.tsx`, `src/app/termos/page.tsx`, `src/app/privacidade/page.tsx`, `src/app/paginas-publicas.test.tsx`, `src/modules/conta/rotas.ts`.
+- **Success evidence**: render tests — 4 arquivos, 10 testes verdes; `npm run lint` — 0 erros após a correção mecânica de lint `2eedcea`.
 
 ### T112: Implementar checkout próprio e resultado da cobrança
 

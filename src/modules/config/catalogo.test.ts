@@ -49,6 +49,8 @@ describe("catalogo de chaves", () => {
       "param.m1.chars_por_token",
       "param.m1.paginas_por_bloco",
       "param.m1.bucket_de_imagens",
+      "param.m1.piso_confianca_ia",
+      "param.m1.amostra_qa_real",
       "param.m4.algoritmo_revisao",
       "param.m4.fsrs_faixas_nota",
       "param.m4.minutos_por_questao",
@@ -72,6 +74,19 @@ describe("catalogo de chaves", () => {
     // @ts-expect-error chave inexistente
     const inexistente: Chave = "flag.m4.nao_existe";
     expect(typeof inexistente).toBe("string");
+  });
+
+  it("mantem piso e amostra dentro de 0..1", () => {
+    const piso = CATALOGO["param.m1.piso_confianca_ia"];
+    const amostra = CATALOGO["param.m1.amostra_qa_real"];
+
+    expect(piso.padrao).toBe(0.95);
+    expect(amostra.padrao).toBe(0.1);
+    for (const tipo of [piso.tipo, amostra.tipo]) {
+      expect(tipo.safeParse(-0.01).success).toBe(false);
+      expect(tipo.safeParse(1.01).success).toBe(false);
+      expect(tipo.safeParse(0.5).success).toBe(true);
+    }
   });
 
   it("toda flag e booleana e global, sem rollout percentual nem segmentacao (AC4)", () => {

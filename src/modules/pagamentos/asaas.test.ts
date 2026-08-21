@@ -100,7 +100,7 @@ describe("adapter Asaas", () => {
     const gateway = new AsaasGateway({
       apiKey: "chave-de-teste",
       apiUrl: "https://api-sandbox.asaas.com",
-        fetchImpl: async (url, _init = {}) => {
+        fetchImpl: async (url) => {
         chamadas.push(String(url));
         if (String(url).includes("invoices")) {
           return respostaJson({ id: "inv_1", status: "SCHEDULED" });

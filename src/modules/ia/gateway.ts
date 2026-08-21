@@ -137,6 +137,17 @@ export class TarefaEhDeLote extends Error {
   }
 }
 
+/** Tarefa marcada `batch: false` nao vai para a fila de lote (IA-02 AC9). */
+export class TarefaNaoEhDeLote extends Error {
+  constructor(tarefa: Tarefa) {
+    super(
+      `a tarefa "${tarefa}" esta marcada batch: false na configuracao e SHALL NOT ` +
+        "ser empurrada para a fila de lote. Use executarTarefa.",
+    );
+    this.name = "TarefaNaoEhDeLote";
+  }
+}
+
 /** Identifica a geracao para o dedup (IA-14). */
 export type AlvoDaTarefa =
   | { questaoId: string; questaoVersao: number }
@@ -315,4 +326,62 @@ export async function executarTarefa(
     usouFallback,
     custoUsd,
   };
+}
+
+/**
+ * Registra no banco uma geracao que voltou **pelo lote** (IA-02 AC4/AC8, IA-12).
+ *
+ * A chamada em lote nao passa por `executarTarefa` — o resultado dela chega
+ * horas depois, num arquivo. Mas tudo que vem **depois** da resposta e igual:
+ * calcular o custo, gravar com que modelo e versao de prompt aquilo nasceu, e
+ * conferir o gasto do mes. Duplicar isso no job da extracao criaria uma segunda
+ * regra de custo, que divergiria da primeira no dia em que o preco mudasse.
+ *
+ * Grava com `batch: true`, que e o que permite somar separado o que custou
+ * metade do preco.
+ */
+export async function registrarGeracaoDeLote(entrada: {
+  tarefa: Tarefa;
+  chaveDedup: string;
+  alvo?: AlvoDaTarefa;
+  destino: DestinoDeIa;
+  resultado: unknown;
+  tokensEntrada: number | null;
+  tokensCacheados: number | null;
+  tokensSaida: number | null;
+}): Promise<number | null> {
+  const custoUsd = calcularCusto(await precosVigentes(), entrada.destino.modelo, {
+    tokensEntrada: entrada.tokensEntrada,
+    tokensCacheados: entrada.tokensCacheados,
+    tokensSaida: entrada.tokensSaida,
+  });
+
+  await repositorio.gravar({
+    chaveDedup: entrada.chaveDedup,
+    tarefa: entrada.tarefa,
+    ...questaoDoAlvo(entrada.alvo ?? null),
+    modelo: entrada.destino.modelo,
+    modeloVersao: entrada.destino.versao,
+    esforco: entrada.destino.esforco,
+    versaoPrompt: VERSAO_DO_PROMPT[entrada.tarefa],
+    batch: true,
+    usouFallback: false,
+    tokensEntrada: entrada.tokensEntrada,
+    tokensCacheados: entrada.tokensCacheados,
+    tokensSaida: entrada.tokensSaida,
+    custoUsd,
+    resultado: entrada.resultado,
+  });
+
+  await conferirGasto(repositorio);
+  return custoUsd;
+}
+
+/**
+ * Ja existe geracao com esta chave? E a pergunta que torna a colheita
+ * idempotente: colher o mesmo lote duas vezes nao grava duas linhas nem soma o
+ * custo duas vezes (IA-14 / AD-036).
+ */
+export async function geracaoJaExiste(chave: string): Promise<boolean> {
+  return (await repositorio.buscarPorChave(chave)) !== null;
 }

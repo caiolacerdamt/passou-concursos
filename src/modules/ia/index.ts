@@ -28,6 +28,7 @@ export {
   type RespostaDeIa,
   SemChaveDaOpenAI,
   montarLinhaDeLote,
+  tetoDeSaidaDe,
 } from "./adaptador-openai";
 
 export {
@@ -39,13 +40,39 @@ export {
   type RepositorioDeIa,
   type ResultadoDaTarefa,
   TarefaEhDeLote,
+  TarefaNaoEhDeLote,
   definirAdaptador,
   definirRepositorioDeIa,
   executarTarefa,
+  geracaoJaExiste,
   montarChaveDeDedup,
+  registrarGeracaoDeLote,
   restaurarAdaptadorPadrao,
   restaurarRepositorioAusente,
 } from "./gateway";
+
+/**
+ * O lote (SPEC 09). A SPEC 08 montou a linha JSONL e parou ali; o envio e a
+ * colheita moram aqui, junto da spec que tem volume para exercita-los.
+ */
+export {
+  type ClienteDeLote,
+  type Colheita,
+  ENDPOINT_DO_LOTE,
+  type EstadoDoLote,
+  type LinhaColhida,
+  type LoteMontado,
+  LoteFalhou,
+  type PedidoDeLote,
+  chaveDoBloco,
+  colherLote,
+  definirClienteDeLote,
+  enviarLote,
+  lerSaida,
+  montarLote,
+  restaurarClienteDeLotePadrao,
+  textoDaResposta,
+} from "./lote";
 
 export { type Conferidor, type ResultadoDeRefazer, refazerUmaVez } from "./refazer";
 

@@ -53,6 +53,7 @@ function dependencias() {
       estado: "pendente",
     })),
     salvarResultadoGateway: vi.fn(async () => undefined),
+    criarTokenResultado: vi.fn(async () => "resultado-token-teste"),
   };
 
   return {
@@ -82,7 +83,10 @@ describe("orquestrador do checkout", () => {
 
     const resultado = await executarCheckout(entrada("PIX"), deps);
 
-    expect(resultado).toMatchObject({ tipo: "criado", pagamentoId: "pag_1" });
+    expect(resultado).toMatchObject({
+      tipo: "criado",
+      resultadoToken: "resultado-token-teste",
+    });
     expect(deps.repositorio.criarPagamentoPendente).toHaveBeenCalledWith(
       expect.objectContaining({
         valorCentavos: 17_730,
@@ -99,6 +103,7 @@ describe("orquestrador do checkout", () => {
       "pag_1",
       expect.objectContaining({ cobrancaId: "pay_1", clienteId: "cus_1" }),
     );
+    expect(deps.repositorio.criarTokenResultado).toHaveBeenCalledWith("pag_1");
   });
 
   it("cartão usa o total parcelado em 12 parcelas e rejeita maioridade/termos ausentes", async () => {

@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
@@ -53,7 +53,12 @@ function arquivosDaVercel(): string[] {
     encoding: "utf8",
   })
     .split("\0")
-    .filter((caminho) => /\.(ts|tsx)$/.test(caminho) && !caminho.endsWith(".test.ts"));
+    .filter(
+      (caminho) =>
+        existsSync(caminho) &&
+        /\.(ts|tsx)$/.test(caminho) &&
+        !caminho.endsWith(".test.ts"),
+    );
 }
 
 describe("o pipeline de ingestao nao roda na Vercel (BANCO-03 AC5)", () => {

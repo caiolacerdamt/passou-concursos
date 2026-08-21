@@ -37,10 +37,11 @@ export type RepositorioDoCheckout = {
     pagamentoId: string,
     resultado: ResultadoGatewayPersistido,
   ): Promise<void>;
+  criarTokenResultado(pagamentoId: string): Promise<string>;
 };
 
 export type ResultadoDoCheckout =
-  | { tipo: "criado"; pagamentoId: string; referencia: string }
+  | { tipo: "criado"; resultadoToken: string; referencia: string }
   | { tipo: "matricula_ativa"; email: string };
 
 export async function executarCheckout(
@@ -96,10 +97,11 @@ export async function executarCheckout(
     pixQrCode: cobranca.pixQrCode,
     pixCopiaECola: cobranca.pixCopiaECola,
   });
+  const resultadoToken = await dependencias.repositorio.criarTokenResultado(pagamento.id);
 
   return {
     tipo: "criado",
-    pagamentoId: pagamento.id,
+    resultadoToken,
     referencia,
   };
 }

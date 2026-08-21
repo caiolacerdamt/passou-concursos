@@ -44,7 +44,7 @@ export async function enviarCheckout(
       return { tipo: "matricula_ativa", email, meio };
     }
 
-    redirect(`/checkout/resultado/${encodeURIComponent(resultado.pagamentoId)}`);
+    redirect(`/checkout/resultado/${encodeURIComponent(resultado.resultadoToken)}`);
   } catch (erro) {
     if (erro instanceof ZodError) {
       return {

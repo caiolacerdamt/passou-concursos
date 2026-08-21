@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
 export default async function ResultadoCheckout({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const { id } = await params;
-  const pagamento = await criarRepositorioDePagamentos(clienteDeServico()).buscarPagamento(id);
+  const { token } = await params;
+  const pagamento = await criarRepositorioDePagamentos(clienteDeServico()).buscarPagamentoPorToken(token);
 
   if (!pagamento) {
     return (

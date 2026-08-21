@@ -14,6 +14,22 @@ export type PagamentoCheckout = {
   estado: string;
 };
 
+export type PagamentoOperacional = PagamentoCheckout & {
+  produto_id: string;
+  asaas_cliente_id: string | null;
+  asaas_cobranca_id: string | null;
+  asaas_status: string | null;
+  resultado_url: string | null;
+  resultado_boleto_url: string | null;
+  resultado_pix_qr_code: string | null;
+  resultado_pix_copia_e_cola: string | null;
+  user_id: string | null;
+  matricula_id: string | null;
+  confirmado_em: string | null;
+  ativado_em: string | null;
+  criado_em: string;
+};
+
 export type ProdutoPagamento = {
   id: string;
   codigo: string;
@@ -99,31 +115,90 @@ export function criarRepositorioDePagamentos(
     },
 
     async buscarPagamento(pagamentoId: string) {
-      const { data, error } = await cliente
-        .from("pagamentos")
-        .select(
-          "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em",
-        )
-        .eq("id", pagamentoId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
+      return buscarPagamentoCom(cliente, "id", pagamentoId);
     },
 
     async buscarPagamentoPorReferencia(referencia: string) {
-      const { data, error } = await cliente
-        .from("pagamentos")
-        .select(
-          "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em",
-        )
-        .eq("referencia_interna", referencia)
-        .maybeSingle();
+      return buscarPagamentoCom(cliente, "referencia_interna", referencia);
+    },
 
+    async buscarPagamentoPorCobranca(cobrancaId: string) {
+      return buscarPagamentoCom(cliente, "asaas_cobranca_id", cobrancaId);
+    },
+
+    async registrarEvento(input: {
+      eventoId: string;
+      tipo: string;
+      cobrancaId: string | null;
+      pagamentoId: string | null;
+      resultado: "recebido" | "ignorado" | "rejeitado";
+    }): Promise<boolean> {
+      const { data, error } = await cliente.rpc("registrar_pagamento_evento", {
+        p_evento_id: input.eventoId,
+        p_tipo: input.tipo,
+        p_asaas_cobranca_id: input.cobrancaId,
+        p_pagamento_id: input.pagamentoId,
+        p_resultado: input.resultado,
+      });
       if (error) throw error;
-      return data;
+      return data === true;
+    },
+
+    async mudarEstado(
+      pagamentoId: string,
+      novoEstado: "confirmada" | "ativada" | "expirada" | "reembolsada",
+      motivo: string,
+    ): Promise<void> {
+      const { error } = await cliente.rpc("mudar_estado_pagamento", {
+        p_pagamento_id: pagamentoId,
+        p_novo_estado: novoEstado,
+        p_motivo: motivo,
+      });
+      if (error) throw error;
+    },
+
+    async abrirPendencia(
+      pagamentoId: string,
+      tipo: "ativacao" | "nota_fiscal" | "reconciliacao" | "alerta",
+      codigo: string,
+    ): Promise<void> {
+      const atual = await cliente
+        .from("pagamento_pendencias")
+        .select("id")
+        .eq("pagamento_id", pagamentoId)
+        .eq("tipo", tipo)
+        .in("estado", ["aberta", "em_processamento"])
+        .maybeSingle();
+      if (atual.error) throw atual.error;
+      if (atual.data) return;
+
+      const { error } = await cliente.from("pagamento_pendencias").insert({
+        pagamento_id: pagamentoId,
+        tipo,
+        ultima_falha_codigo: codigo,
+        proxima_tentativa_em: new Date().toISOString(),
+      });
+      if (error) throw error;
     },
   };
+}
+
+const COLUNAS_PAGAMENTO_OPERACIONAL =
+  "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em";
+
+async function buscarPagamentoCom(
+  cliente: SupabaseClient,
+  coluna: "id" | "referencia_interna" | "asaas_cobranca_id",
+  valor: string,
+): Promise<PagamentoOperacional | null> {
+  const { data, error } = await cliente
+    .from("pagamentos")
+    .select(COLUNAS_PAGAMENTO_OPERACIONAL)
+    .eq(coluna, valor)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as PagamentoOperacional | null;
 }
 
 export async function obterUsuarioPorEmail(

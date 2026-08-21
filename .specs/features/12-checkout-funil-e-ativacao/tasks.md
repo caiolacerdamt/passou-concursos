@@ -282,15 +282,22 @@ confirmação válida para ativação.
 **Tools**: Skill `tlc-spec-driven`; guia local do Next 16 para Route Handlers
 **Done when**:
 
-- [ ] Token ausente ou incorreto é rejeitado antes de processamento e reportado sem payload bruto.
-- [ ] O mesmo `event.id` três vezes resulta em uma única ação.
-- [ ] Evento desconhecido ou transição inválida vira registro/alerta e não libera conteúdo.
-- [ ] A rota responde de forma estável e nunca depende de sessão do navegador.
+- [x] Token ausente ou incorreto é rejeitado antes de processamento e reportado sem payload bruto.
+- [x] O mesmo `event.id` três vezes resulta em uma única ação.
+- [x] Evento desconhecido ou transição inválida vira registro/alerta e não libera conteúdo.
+- [x] A rota responde de forma estável e nunca depende de sessão do navegador.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(pag): protege e torna idempotente o webhook`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; Route Handler público autentica o token antes do corpo, registra replay por `event.id` e encaminha apenas confirmações em estado permitido para a fila de ativação.
+- **Assumptions**: `PAYMENT_RECEIVED` e `PAYMENT_CONFIRMED` são os eventos de confirmação; desconhecidos são ignorados com alerta, e confirmação após expiração/reembolso fica em reconciliação.
+- **Files**: `src/app/api/webhooks/asaas/route.ts`, `src/app/api/webhooks/asaas/route.test.ts`, `src/modules/pagamentos/webhook.ts`, `src/modules/pagamentos/webhook.test.ts`, `src/modules/pagamentos/repositorio.ts`, `src/modules/conta/rotas.ts`.
+- **Success evidence**: `npm run test:unit` — 72 arquivos, 535 testes verdes; `npm run lint` — 0 erros e 0 avisos; `npx tsc --noEmit` — verde.
 
 ### T114: Ativar usuário, matrícula e fatura após confirmação
 

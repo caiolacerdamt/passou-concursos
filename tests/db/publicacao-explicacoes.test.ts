@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 
-import { inserirQuestao } from "./acervo";
+import {
+  CONSULTA_DA_BASE_CONFERIDA,
+  gravarExplicacaoAprovada,
+} from "@/modules/acervo";
+import { criarTopico, inserirQuestao } from "./acervo";
 import { criarUsuario } from "./conta";
 import { comTransacaoRevertida } from "./conexao";
 import { descreveComBanco } from "./setup";
@@ -137,6 +141,70 @@ descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
           [questao.id, questao.questao_versao],
         ),
       ).rejects.toThrow(/explicacoes_aprovada_tem_fonte/);
+    });
+  });
+
+  it("seleciona documento conferido oficial antes de resumo e ignora rascunho", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const topico = await criarTopico(cliente);
+      const operador = await criarUsuario(cliente);
+
+      await cliente.query(
+        `insert into public.base_referencia
+           (topico_id, titulo, conteudo, origem, status, conferido_por, conferido_em)
+         values ($1, 'Resumo conferido', 'resumo', 'resumo_nosso', 'conferido', $2, now())`,
+        [topico, operador],
+      );
+      await cliente.query(
+        `insert into public.base_referencia
+           (topico_id, titulo, conteudo, origem, status, conferido_por, conferido_em)
+         values ($1, 'Documento oficial', 'oficial', 'oficial', 'conferido', $2, now())`,
+        [topico, operador],
+      );
+      await cliente.query(
+        `insert into public.base_referencia (topico_id, titulo, conteudo, origem)
+         values ($1, 'Rascunho oficial', 'rascunho', 'oficial')`,
+        [topico],
+      );
+
+      const { rows } = await cliente.query(CONSULTA_DA_BASE_CONFERIDA, [topico]);
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        titulo: "Documento oficial",
+        conteudo: "oficial",
+        origem: "oficial",
+      });
+    });
+  });
+
+  it("grava explicacao aprovada uma vez pela chave de dedup", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const questao = await inserirQuestao(cliente);
+      const entrada = {
+        questaoId: questao.id,
+        questaoVersao: questao.questao_versao,
+        chaveDedup: `explicacao:1:${questao.id}:${questao.questao_versao}`,
+        baseReferenciaId: null,
+        resultado: {
+          texto: "A alternativa C é a correta.",
+          alternativa_correta: "C",
+          fontes_citadas: [{ doc_id: "minima", trecho: "gabarito oficial" }],
+          afirmacoes_externas: [],
+        },
+      };
+
+      const primeira = await gravarExplicacaoAprovada(cliente, entrada);
+      const segunda = await gravarExplicacaoAprovada(cliente, entrada);
+      const { rows } = await cliente.query(
+        `select count(*)::int as total, max(status::text) as status
+           from public.explicacoes where chave_dedup = $1`,
+        [entrada.chaveDedup],
+      );
+
+      expect(primeira.inserida).toBe(true);
+      expect(segunda).toEqual({ inserida: false, id: null });
+      expect(rows[0]).toEqual({ total: 1, status: "aprovada" });
     });
   });
 

@@ -253,6 +253,18 @@ continua sendo lida apenas no processo do job.
 sem IA. **Where**: `tests/db/publicacao-explicacoes.test.ts`, `scripts/jobs/explicacoes.test.ts`.
 **Done when**: Full gate verde quando `DATABASE_URL` estiver disponível. **Depends**: T90, T95.
 
+**Status**: ✅ concluída. **Gate**: `npm run test:db` — 37 arquivos e 319 testes DB; `npm run test:unit` — 54 arquivos e 478 testes; lint e TypeScript sem erros.
+
+| Critério | Evidência | Resultado esperado | Coberto |
+| --- | --- | --- | --- |
+| Base oficial conferida tem prioridade | `tests/db/publicacao-explicacoes.test.ts:147-179` | Oficial é escolhido; resumo conferido e rascunho não vencem | ✅ |
+| Explicação aprovada é única por chave | `tests/db/publicacao-explicacoes.test.ts:181-218` | Segunda gravação não cria segunda linha | ✅ |
+| Fila guarda decisão humana com ator/data | `tests/db/publicacao-explicacoes.test.ts:239-269` | Aprovação/rejeição e nova decisão inválida são observáveis | ✅ |
+| Job rejeita citação e enfileira | `scripts/jobs/explicacoes.test.ts:194-216` | Resultado inválido não abre publicação | ✅ |
+| Núcleo funciona sem chave de IA | `scripts/jobs/explicacoes.test.ts:239-256` e testes existentes de plano/acervo | Ausência de API não impede o restante do produto | ✅ |
+
+Necessidade: o banco foi exercitado com transações revertidas, sem deixar dados de fixture persistidos.
+
 #### T97: Fechamento da SPEC 10
 
 **What**: atualizar docs, workflow manual, `STATE.md`, roadmap e registrar AD da rodada; rodar gate de

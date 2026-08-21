@@ -66,6 +66,55 @@ checkout cobra.
 **Pendências externas que travam esta spec:** conta Asaas + **CNPJ** + contrato lido. É o bloqueio de
 calendário mais longo do MVP — resolver em paralelo com as specs 08–11.
 
+**Open questions:** o contrato do Asaas, o CNPJ/regime fiscal e o free tier do PostHog ainda precisam
+de confirmação externa; a implementação local não depende de assumir esses valores como fato.
+
+## User Stories
+
+### P1: visitante entende a oferta e inicia a compra
+
+**Acceptance Criteria**:
+
+1. **When** uma pessoa abre a página sem sessão, a página SHALL mostrar método, evidências, garantia, os dois preços, termos e política antes do botão de checkout.
+2. **When** a pessoa escolhe um meio de pagamento, o checkout SHALL manter o preço e o meio escolhidos visíveis e SHALL exigir e-mail, declaração afirmativa de 18+ e aceite datado dos termos.
+3. **If** a pessoa não marcar 18+ ou não aceitar os termos, **then** o checkout SHALL recusar a criação da cobrança e SHALL não coletar data de nascimento.
+4. **When** o analytics estiver bloqueado ou indisponível, a página e o checkout SHALL continuar permitindo a compra.
+
+### P1: pagamento confirmado libera o produto
+
+**Acceptance Criteria**:
+
+1. **When** o gateway confirmar um pagamento válido, o sistema SHALL criar ou localizar a conta pelo e-mail, criar uma matrícula de 12 meses e enviar o e-mail para definir a senha sem intervenção manual.
+2. **When** o mesmo evento de webhook chegar mais de uma vez, o sistema SHALL processá-lo uma única vez e SHALL deixar uma única conta e uma única matrícula ativa.
+3. **If** a assinatura do webhook for inválida, **then** o sistema SHALL rejeitar o evento antes de processá-lo e SHALL registrar a falha sem expor dados pessoais no alerta.
+4. **When** a ativação não concluir, o sistema SHALL manter uma pendência visível para retry e SHALL emitir um alerta operacional.
+5. **If** a cobrança for confirmada e o webhook não chegar, **then** o job de reconciliação SHALL encontrar a cobrança paga e SHALL concluir a ativação.
+
+### P1: aluno controla a garantia
+
+**Acceptance Criteria**:
+
+1. **While** a matrícula estiver dentro de sete dias corridos da confirmação, o aluno SHALL ver os dias restantes e SHALL poder solicitar reembolso.
+2. **If** o reembolso for solicitado antes da confirmação ou depois da janela, **then** o sistema SHALL recusar claramente, SHALL preservar a matrícula e SHALL registrar a tentativa inválida para alerta.
+3. **When** o Asaas confirmar um reembolso válido, o sistema SHALL marcar o pagamento e a matrícula como reembolsados, SHALL encerrar o acesso e SHALL registrar solicitante, data/hora e meio.
+
+## Requirement Traceability
+
+| ID | Contrato coberto nesta spec | Evidência esperada | Status |
+| --- | --- | --- | --- |
+| PAG-02 | Compra anual no cartão em até 12x, Pix e boleto | Testes unitários, banco e fluxo de checkout | Pending |
+| PAG-03 | Garantia de 7 dias, reembolso e encerramento de acesso | Testes unitários, banco e fluxo de reembolso | Pending |
+| PAG-05 | Checkout próprio integrado ao Asaas e NF nativa | Testes do adaptador e registro de fatura | Pending |
+| PAG-06 | Buy-then-activate, matrícula de 12 meses e estados | Testes de transição, idempotência e ativação | Pending |
+| PAG-08 | Página de vendas responsiva e honesta | Teste de renderização e teste visual manual | Pending |
+| PAG-09 | Preço e desconto à vista em configuração | Testes do catálogo e da leitura de preço | Pending |
+| PAG-12 | Declaração afirmativa de 18+ sem data de nascimento | Testes do checkout e banco | Pending |
+| PAG-13 | Webhook verificado, idempotente e reconciliação | Testes de rota, banco e job | Pending |
+| PAG-17 | Funil anônimo, proxy próprio e sem session replay | Testes de allowlist e rota de analytics | Pending |
+| DADOS-11 | Aceite datado de termos e maioridade | Testes do checkout e banco | Pending |
+| INFRA-10 | Entrada de webhook com assinatura e falha observável | Testes da rota e do alerta | Pending |
+| INFRA-12 | Analytics pré-login anônimo e não crítico para compra | Testes do proxy e bloqueio no navegador | Pending |
+
 ## Success Criteria
 
 - [ ] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique

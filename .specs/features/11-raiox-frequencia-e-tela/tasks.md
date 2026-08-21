@@ -115,14 +115,14 @@ T7 → T8
 **Tools**: MCP: none · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] `perfil_concurso` aceita banca `indefinida`, programa JSON, `data_prova` nula e mais de um registro.
-- [ ] No máximo um perfil fica ativo; `raiox_projecoes` guarda os campos da leitura e a enumeração exigida.
-- [ ] Cliente anônimo/autenticado não lê nem escreve as tabelas; o serviço continua podendo operar.
+- [x] `perfil_concurso` aceita banca `indefinida`, programa JSON, `data_prova` nula e mais de um registro.
+- [x] No máximo um perfil fica ativo; `raiox_projecoes` guarda os campos da leitura e a enumeração exigida.
+- [x] Cliente anônimo/autenticado não lê nem escreve as tabelas; o serviço continua podendo operar.
 
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m5): cria schema do perfil e da projecao`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — migration aplicada e integration gate verde (`raiox-schema.test.ts`)
 
 ### T3: Implementar o recálculo idempotente do Raio-X
 

@@ -16,6 +16,7 @@ import {
   enviarLote,
   lerSaida,
   montarLote,
+  semCaracteresDeControle,
   restaurarClienteDeLotePadrao,
   textoDaResposta,
 } from "./lote";
@@ -272,6 +273,90 @@ describe("lerSaida — uma linha ruim nao contamina as outras", () => {
 
   it("linha em branco no fim do arquivo e ignorada", () => {
     expect(lerSaida("\n\n")).toEqual([]);
+  });
+});
+
+describe("caracteres de controle — o bloco inteiro depende disto", () => {
+  it("tira o byte nulo, que o jsonb do Postgres recusa", () => {
+    // Medido na Prova B do BB 2021: o bloco das paginas 5-8 voltou inteiro e
+    // correto, com 17 questoes, e morreu no INSERT com "unsupported Unicode
+    // escape sequence" por causa de 8 bytes nulos no meio do texto. Sem esta
+    // limpeza, um bloco ja pago e perdido inteiro.
+    const sujo = { enunciado: "Qual e o \u0000 montante?" };
+    expect(semCaracteresDeControle(sujo)).toEqual({ enunciado: "Qual e o  montante?" });
+  });
+
+  it("tira tambem os outros controles, e limpa dentro de array e de objeto aninhado", () => {
+    const sujo = {
+      questoes: [
+        { enunciado: "a\u000bb", alternativas: [{ letra: "A", texto: "c\u0000d" }] },
+      ],
+    };
+    expect(semCaracteresDeControle(sujo)).toEqual({
+      questoes: [{ enunciado: "ab", alternativas: [{ letra: "A", texto: "cd" }] }],
+    });
+  });
+
+  it("mantem tabulacao, quebra de linha e retorno: sao formatacao de enunciado", () => {
+    // Enunciado tem paragrafo e tabela. Tirar estes tres achataria a questao.
+    const texto = ["linha 1", "linha 2\tcoluna"].join("\n") + "\r";
+    expect(semCaracteresDeControle(texto)).toBe(texto);
+  });
+
+  it("nao mexe em numero, booleano nem nulo", () => {
+    expect(semCaracteresDeControle({ n: 3, b: true, z: null })).toEqual({
+      n: 3,
+      b: true,
+      z: null,
+    });
+  });
+
+  it("a limpeza acontece na colheita, antes de qualquer gravacao", () => {
+    const bruto = linhaDeSaida("bloco-0", {
+      output_text: JSON.stringify({ questoes: [{ enunciado: "a\u0000b" }] }),
+    });
+    const linha = lerSaida(bruto)[0];
+    expect(JSON.stringify(linha.estruturado)).not.toContain("u0000");
+    expect(linha.estruturado).toEqual({ questoes: [{ enunciado: "ab" }] });
+  });
+});
+
+describe("geracao encerrada no meio pelo provedor", () => {
+  it("status incomplete vira erro com o motivo, nao 'resposta inaproveitavel'", () => {
+    // Medido na Prova C do BB 2021: o filtro de conteudo do provedor cortou a
+    // pagina de Lingua Inglesa. A mensagem generica mandava o operador procurar
+    // no lugar errado — o motivo estava em `incomplete_details`.
+    const bruto = linhaDeSaida("bloco-1", {
+      status: "incomplete",
+      incomplete_details: { reason: "content_filter" },
+      output_text: "texto cortado no meio",
+      usage: { input_tokens: 0, output_tokens: 0 },
+    });
+
+    const linha = lerSaida(bruto)[0];
+
+    expect(linha.erro).toContain("content_filter");
+    expect(linha.erro).toContain("encerrou a geracao no meio");
+    // E **nao** entrega o pedaco como se fosse resultado.
+    expect(linha.estruturado).toBeNull();
+  });
+
+  it("incomplete sem motivo declarado ainda vira erro", () => {
+    const bruto = linhaDeSaida("bloco-1", {
+      status: "incomplete",
+      output_text: "{}",
+    });
+    expect(lerSaida(bruto)[0].erro).toContain("sem motivo declarado");
+  });
+
+  it("status completed segue o caminho normal", () => {
+    const bruto = linhaDeSaida("bloco-0", {
+      status: "completed",
+      output_text: JSON.stringify({ questoes: [] }),
+    });
+    const linha = lerSaida(bruto)[0];
+    expect(linha.erro).toBeNull();
+    expect(linha.estruturado).toEqual({ questoes: [] });
   });
 });
 

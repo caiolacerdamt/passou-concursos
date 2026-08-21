@@ -263,6 +263,21 @@ function lerLinha(cru: string): LinhaColhida {
     };
   }
 
+  // O provedor pode encerrar a geracao no meio e ainda devolver 200: e o
+  // `status: "incomplete"`, com o motivo em `incomplete_details`. Sem ler isso,
+  // a falha chega ao operador como "a resposta e inaproveitavel", que manda ele
+  // procurar no lugar errado — foi o que aconteceu com o filtro de conteudo na
+  // pagina de Lingua Inglesa da Prova C do BB 2021.
+  const incompleto = motivoDeIncompletude(resposta.body);
+  if (incompleto !== null) {
+    return {
+      ...vazia,
+      idDaLinha: id,
+      erro: `o provedor encerrou a geracao no meio: ${incompleto}`,
+      ...tokensDe(resposta.body.usage),
+    };
+  }
+
   const texto = textoDaResposta(resposta.body);
   return {
     idDaLinha: id,
@@ -271,6 +286,14 @@ function lerLinha(cru: string): LinhaColhida {
     erro: null,
     ...tokensDe(resposta.body.usage),
   };
+}
+
+/** `null` quando a geracao terminou inteira. */
+function motivoDeIncompletude(corpo: Record<string, unknown>): string | null {
+  if (corpo.status !== "incomplete") return null;
+  const detalhes = corpo.incomplete_details as { reason?: unknown } | undefined;
+  const motivo = detalhes?.reason;
+  return typeof motivo === "string" ? motivo : "sem motivo declarado";
 }
 
 function descreverErro(erro: unknown): string | null {
@@ -308,10 +331,44 @@ export function textoDaResposta(corpo: Record<string, unknown>): string {
 
 function comoJson(texto: string): unknown {
   try {
-    return JSON.parse(texto);
+    return semCaracteresDeControle(JSON.parse(texto));
   } catch {
     return null;
   }
+}
+
+/**
+ * Tira os caracteres de controle do que o modelo devolveu.
+ *
+ * **Isto nao e higiene: e o que impede o bloco inteiro de ser perdido.** O
+ * `jsonb` do Postgres **recusa** `\u0000` — `unsupported Unicode escape
+ * sequence` — e a recusa derruba a gravacao das dezenas de questoes daquele
+ * bloco, todas ja pagas. Medido na Prova B do BB 2021: o bloco das paginas 5-8
+ * voltou inteiro e correto, com 17 questoes, e morreu no INSERT por causa de 8
+ * bytes nulos perdidos no meio do texto.
+ *
+ * Os outros controles (`\u000b`, `\u0010`, `\u000e`) o `jsonb` aceita, mas eles
+ * nao sao enunciado: sao ruido que o PDF carregou. Saem junto.
+ *
+ * Tabulacao, quebra de linha e retorno **ficam**: sao formatacao de enunciado.
+ */
+export function semCaracteresDeControle<T>(valor: T): T {
+  if (typeof valor === "string") {
+     
+    return valor.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "") as T;
+  }
+  if (Array.isArray(valor)) {
+    return valor.map((item) => semCaracteresDeControle(item)) as T;
+  }
+  if (valor !== null && typeof valor === "object") {
+    return Object.fromEntries(
+      Object.entries(valor).map(([chave, item]) => [
+        chave,
+        semCaracteresDeControle(item),
+      ]),
+    ) as T;
+  }
+  return valor;
 }
 
 function tokensDe(uso: unknown) {

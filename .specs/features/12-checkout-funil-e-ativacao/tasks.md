@@ -339,16 +339,23 @@ fila e reporta falhas.
 **Tools**: Skill `tlc-spec-driven`; padrão dos jobs existentes
 **Done when**:
 
-- [ ] Cobrança paga sem webhook é encontrada e percorre o mesmo caminho de ativação.
-- [ ] Job repetido não cria conta, matrícula ou evento duplicado.
-- [ ] Pendência vencida passa a `expirada` e não cria conta.
-- [ ] Falha de consulta/ativação fica na fila, é saneada no alerta e deixa o processo vermelho.
-- [ ] Existe script no `package.json` e documentação do segredo no workflow/`.env.example`.
+- [x] Cobrança paga sem webhook é encontrada e percorre o mesmo caminho de ativação.
+- [x] Job repetido não cria conta, matrícula ou evento duplicado.
+- [x] Pendência vencida passa a `expirada` e não cria conta.
+- [x] Falha de consulta/ativação fica na fila, é saneada no alerta e deixa o processo vermelho.
+- [x] Existe script no `package.json` e documentação do segredo no workflow/`.env.example`.
 
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(infra): reconcilia pagamentos pendentes`
-**Status**: Pending
+**Status**: Done
+
+**Execution record**
+
+- **State**: concluida; job Node fora do serverless consulta páginas de cobranças pagas, registra evento determinístico, reutiliza o orquestrador de ativação, expira pendentes e retorna código vermelho em falhas.
+- **Assumptions**: a tentativa pendente expira por default após 48 horas, com override na tabela de configuração; o limite da página do Asaas é 100 e a varredura para quando a página vem menor.
+- **Files**: `scripts/jobs/reconciliacao-pagamentos.mts`, `scripts/jobs/reconciliacao-pagamentos.test.ts`, `package.json`, `.github/workflows/reconciliacao-pagamentos.yml`, `.env.example`, `src/modules/config/catalogo.ts`, `src/modules/config/catalogo.test.ts`.
+- **Success evidence**: `npm run test:unit -- scripts/jobs/reconciliacao-pagamentos.test.ts src/modules/config/catalogo.test.ts` — 2 arquivos, 13 testes verdes; `npx tsc --noEmit` — verde; `npm run lint` — 0 erros e 0 avisos.
 
 ### T116: Entregar garantia, pedido de reembolso e encerramento de acesso
 

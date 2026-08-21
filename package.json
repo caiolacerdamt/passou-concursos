@@ -16,6 +16,7 @@
     "jobs:ingestao": "tsx scripts/jobs/ingestao-de-prova.mts",
     "jobs:gabarito": "tsx scripts/jobs/cruzar-gabarito.mts",
     "jobs:explicacoes": "tsx scripts/jobs/explicacoes.mts",
+    "jobs:reconciliacao": "tsx scripts/jobs/reconciliacao-pagamentos.mts",
     "advisors": "node scripts/advisors.mjs",
     "ia:matriz": "node scripts/matriz-de-modelos.mjs"
   },

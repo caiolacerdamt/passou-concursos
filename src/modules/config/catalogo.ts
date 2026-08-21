@@ -355,6 +355,13 @@ export const CATALOGO = {
     descricao:
       "Quantidade de dias corridos da garantia contados a partir da confirmacao do pagamento.",
   }),
+  "param.m8.pagamento_pendente_expira_horas": chave({
+    tipo: z.number().int().positive(),
+    padrao: 48,
+    moduloDono: "m8",
+    descricao:
+      "Horas sem confirmação externa depois das quais uma tentativa pendente pode ser expirada pelo job de reconciliação.",
+  }),
 
   // ── M9 · infra e operacoes ────────────────────────────────────────────────
   "flag.m9.rota_de_erro_proposital": chave({

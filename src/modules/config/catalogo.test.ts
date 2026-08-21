@@ -77,6 +77,7 @@ describe("catalogo de chaves", () => {
       "param.m8.preco_anual_centavos",
       "param.m8.desconto_a_vista_percentual",
       "param.m8.garantia_dias",
+      "param.m8.pagamento_pendente_expira_horas",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 
@@ -118,6 +119,7 @@ describe("catalogo de chaves", () => {
     expect(CATALOGO["param.m8.preco_anual_centavos"].padrao).toBe(19_700);
     expect(CATALOGO["param.m8.desconto_a_vista_percentual"].padrao).toBe(0.1);
     expect(CATALOGO["param.m8.garantia_dias"].padrao).toBe(7);
+    expect(CATALOGO["param.m8.pagamento_pendente_expira_horas"].padrao).toBe(48);
     expect(CATALOGO["flag.m9.analytics_logado"].padrao).toBe(false);
 
     expect(

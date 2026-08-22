@@ -28,6 +28,7 @@ export async function pedirReembolso() {
   const resultado = await solicitarReembolso(user.id, precos.garantiaDias, new Date(), {
     buscarPagamentoDoUsuario: repositorio.buscarUltimoPagamentoDoUsuario,
     estornarCobranca: repositorioEstorno(gateway!),
+    registrarPedidoDeReembolso: repositorio.registrarPedidoDeReembolso,
     confirmarReembolsoLocal: repositorio.confirmarReembolsoLocal,
     buscarFatura: repositorio.buscarFatura,
     cancelarNotaFiscal: async (faturaId) => {

@@ -327,99 +327,86 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-103
+- **Decision**: **Integração de dinheiro trata confirmação do gateway como assíncrona por padrão.**
+  Nenhuma operação financeira externa pode depender de a resposta da própria chamada já trazer o
+  estado final: pede-se, registra-se o pedido com a hora local, e o fechamento acontece quando o
+  evento de confirmação chega. Vale para estorno (implementado na SPEC 12) e SHALL valer para
+  antecipação, renovação e conciliação de NF na SPEC 28. Junto disso, três regras de método para
+  spec de dinheiro: **(a)** o gateway falso prova o fluxo, nunca o contrato externo — nem o endereço
+  da chamada nem o tempo da resposta; **(b)** homologação em sandbox exige **lastro real** no
+  ambiente (no Asaas, pagar a própria cobrança por Pix copia e cola; confirmar por botão ativa mas
+  não estorna); **(c)** dependência que o caminho principal precisa é **obrigatória no tipo** — a
+  opcional que ninguém ligou vira no-op silenciosa em produção, e nenhum teste pega, porque o teste
+  liga a sua própria.
+- **Reason**: Os quatro defeitos da homologação da SPEC 12 têm a mesma raiz. F-11 (endpoint errado do
+  estorno de parcelamento), F-15 (reembolso nunca fechava porque nada tratava a confirmação tardia) e
+  F-16 (registro do pedido nulo porque a dependência opcional não foi ligada) passaram por toda a
+  bateria de testes com gateway falso — que aceitava qualquer id, respondia na hora e trazia as
+  próprias dependências. O dia de homologação também custou duas tentativas de estorno perdidas por
+  uma instrução errada registrada na rodada anterior ("use Confirmar pagamento"), que ativa a conta
+  sem criar lastro.
+- **Trade-off**: Assumir assincronia encarece o caminho simples: exige evento de confirmação
+  assinado, estado intermediário visível ao usuário ("pedido em análise") e pendência operacional
+  para o que não fecha sozinho. Aceito — o custo do contrário é dinheiro devolvido com acesso ligado.
+  Fica em aberto o estorno de **cartão parcelado**, provado só por teste e doc; o primeiro em
+  produção SHALL ser acompanhado.
+- **Scope**: `.specs/features/12-*`, SPEC 28, e toda integração de pagamento futura.
+- **Date**: 2026-08-22
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: SPEC 12 — checkout, funil e ativação (`.specs/features/12-checkout-funil-e-ativacao`)
-- **Phase / Task**: homologação externa no Asaas Sandbox concluída, **menos o estorno**. A spec
-  **não fecha** enquanto o defeito F-11 (abaixo) não for corrigido.
-- **Completed**: T106–T117 e F-07–F-10 (rodadas anteriores). Nesta rodada, em produção real:
-  **boleto E2E PASS** (confirmado 19:25:34 → ativado 19:25:37, matrícula até 2027-08-22);
-  **PostHog PASS** — os quatro eventos (`pagina_vista`, `checkout_iniciado`, `meio_escolhido`,
-  `pagamento_confirmado`) com `distinct_id` anônimo e **propriedades vazias**, sem URL nem library;
-  **cartão E2E PASS** duas vezes. PR #23 mergeado na `main` e publicado na Vercel; CI 6/6 verde.
-- **In-progress**: correção do **F-11**, e a decisão pendente sobre o **F-12**.
-- **Next step**: corrigir F-11, depois homologar o estorno **por Pix** (o Sandbox não estorna
-  cartão), depois fechar `validation.md` / `spec.md` / este handoff / ROADMAP e rodar os gates.
-- **Blockers**: CNPJ/regime fiscal para NF (não bloqueia a spec, fica declarado); estorno de cartão
-  **não é homologável no Sandbox** por limitação do ambiente — só em produção.
+- **Feature**: SPEC 12 — checkout, funil e ativação — **CONCLUÍDA** (`.specs/features/12-checkout-funil-e-ativacao`)
+- **Phase / Task**: encerrada em 2026-08-22 após homologação externa completa no Asaas Sandbox.
+- **Completed**: T106–T117, F-07–F-10 e, nesta rodada, **F-11** (estorno de parcelamento usava o
+  endpoint da parcela), **F-12** (`asaas_status` congelado em `PENDING` e vazando na tela do
+  comprador), **F-15** (reembolso nunca fechava — nada tratava a confirmação tardia do gateway) e
+  **F-16** (registro do pedido de reembolso nulo: dependência opcional nunca ligada na action).
+  **Estorno PASS com dado real**: `PAYMENT_REFUNDED` às 22:12:46 UTC levou pagamento e matrícula a
+  `reembolsada` sozinho, com `ultima_falha_codigo = reembolso_confirmado_webhook`. Antes já estavam
+  PASS: Pix, cartão e boleto ponta a ponta, webhook idempotente, reconciliação sem webhook,
+  transição inválida com alerta, e os quatro eventos do funil anônimos no PostHog.
+- **In-progress**: nada.
+- **Next step**: **SPEC 13** — onboarding, plano do 1º dia e sessão de questões. É o loop central.
+- **Blockers**: nenhum para a 13. Seguem pendências externas declaradas: CNPJ/regime fiscal para NF
+  (5 pendências `nota_fiscal/configuracao_nf_ausente` provam que o caminho degradado funciona — a
+  compra ativa e a nota espera) e free tier do PostHog em fonte primária antes de ligar.
 - **Uncommitted files**: none
-- **Branch**: `main` (a `codex-spec-12` foi mergeada e deletada)
+- **Branch**: `main`
 
-### Defeitos abertos da SPEC 12
+### Herdado pela SPEC 13
 
-**F-11 — estorno de cartão parcelado chama o endpoint errado. Bloqueia o fechamento.**
-O cartão é criado como parcelamento de 12x (`installmentCount`, `src/modules/pagamentos/asaas.ts:142`),
-então o Asaas cria um **parcelamento** e devolve uma parcela. O id do parcelamento (`installment`)
-é descartado: não existe em `RespostaCobranca` (`asaas.ts:366`) nem em `normalizarCobranca`
-(`asaas.ts:398`). No estorno chamamos `POST /payments/{id}/refund` com o id **da parcela**
-(`asaas.ts:219`), e o Asaas recusa — o painel responde *"acesse a tela de detalhes desse
-parcelamento para solicitar o estorno"*. A doc oficial exige `POST /installments/{id}/refund`
-para parcelamento.
-- **Impacto**: a garantia de 7 dias (PAG-03) não conclui sozinha no meio principal de pagamento.
-  O pedido **não some** — abre pendência `falha_no_estorno`, alerta a operação e mantém o acesso
-  ligado até o estorno sair —, mas a devolução vira processo manual. Reproduzido duas vezes com
-  dado real (pendências de 19:31:34, 20:09:22).
-- **Correção**: capturar `installment` na resposta; persistir em coluna nova
-  `pagamentos.asaas_parcelamento_id` (migration); em `estornarCobranca`, usar
-  `/installments/{id}/refund` quando houver parcelamento e manter `/payments/{id}/refund` (Pix) e
-  `/bankSlip/refund` (boleto); teste que prova a **escolha do endpoint** em cada caso.
-- **Por que escapou**: o teste do estorno usa gateway falso, que aceita qualquer id e devolve
-  sucesso. Ele prova que chamamos o gateway, não que acertamos o endpoint de uma compra parcelada.
-  Nenhum mock pegaria isso — só pagamento real. Lição para as specs de dinheiro.
+- **F-13 — o aviso de reembolso fica preso na URL.** `/app/reembolso` deriva a mensagem de
+  `?resultado=pendente` (`src/app/app/reembolso/page.tsx:96`). Recarregar reexibe *"O pedido ficou em
+  análise"* sem nova tentativa. Custou duas confusões de diagnóstico na homologação.
+- **F-14 — UX da definição de senha.** Adicionar o botão de revelar a senha. **Não** adicionar
+  confirmação de senha (padrão em desuso, não evita o erro que promete e aumenta abandono) nem
+  redirecionar ao login depois (a pessoa acabou de provar identidade pelo link do e-mail).
 
-**F-12 — `asaas_status` congela em `PENDING`. Decisão pendente do dono do produto.**
-O campo só é escrito na criação da cobrança (`src/modules/pagamentos/repositorio.ts:117`); o webhook
-nunca o atualiza. Está `PENDING` nos 8 pagamentos do banco, inclusive nos ativados. A tela pública
-mostra *"Status operacional: ativada · retorno do provedor: PENDING"*, que se contradiz e assusta
-quem acabou de pagar. **Correção proposta** (não autorizada ainda): (a) remover o bloco de
-diagnóstico da tela do comprador — é detalhe operacional, não informação de cliente; (b) atualizar
-`asaas_status` no webhook, para o dado servir à operação e à reconciliação.
+### Acompanhar em produção
 
-**F-13 — o aviso de reembolso fica preso na URL.** `/app/reembolso` deriva a mensagem de
-`?resultado=pendente` (`src/app/app/reembolso/page.tsx:96`). Recarregar a página reexibe
-*"O pedido ficou em análise"* sem que nova tentativa tenha ocorrido — a tela mente sobre o estado
-atual. Custou uma confusão de diagnóstico nesta rodada. **Destino sugerido: SPEC 13.**
-
-**F-14 — UX da definição de senha.** A tela pede a senha uma vez e entra direto.
-**Recomendado**: adicionar o botão de revelar a senha (olho). **Não recomendado**: pedir confirmação
-da senha (padrão em desuso — não evita o erro que promete evitar e aumenta abandono; revelar
-resolve melhor) nem redirecionar para o login depois (a pessoa acabou de provar identidade pelo
-link do e-mail; relogar é fricção logo após pagar). **Destino: SPEC 13.**
-
-### Homologação — o que já é evidência e o que falta
-
-| Item | Estado |
-| --- | --- |
-| Pix, cartão e **boleto** ponta a ponta | PASS real no Sandbox |
-| Webhook idempotente, replay, reconciliação sem webhook | PASS (testes automatizados) |
-| Transição inválida rejeitada com alerta | PASS **com dado real** — pendências `evento_fora_de_ordem` de 19:43:33 e 20:07:21, geradas por segundo evento do Asaas após ativação |
-| Quatro eventos do funil anônimos no PostHog | PASS visual |
-| NF real | **pendente de CNPJ** — 5 pendências `nota_fiscal/configuracao_nf_ausente` provam que o caminho degradado funciona: a compra ativa e a nota espera |
-| Estorno (garantia AC3) | **FALTA** — bloqueado pelo F-11. Homologar por **Pix** após a correção |
-
-**Como confirmar o Pix no Sandbox:** use **"Confirmar pagamento"**, não "Receber pagamento" — este
-segundo é baixa manual em dinheiro, e a doc do Asaas separa `undoReceivedInCash` de `refund`,
-que só vale para pagamento real. Foi o que travou o teste do boleto.
-
-### Correções entregues nesta rodada (já na `main`)
-
-| Commit | O quê |
-| --- | --- |
-| `202ad04` | `fix(infra)`: job do partman em dois. Falhava diariamente desde 17/08 com `invalid transaction termination` — pg_cron envolve comando multi-instrução em transação implícita e `run_maintenance_proc` faz COMMIT no corpo. A manutenção de partição de `tentativas` **não rodava** nesse período |
-| `fa26e19` | `test(db)`: `comTransacaoSemPerfilConcurso`. Um perfil de demonstração comitado no banco de dev derrubava 6 arquivos por 3 motivos (índice único parcial, porteiro do edital, varredura de todo perfil em `recalcula_raiox`) |
-| `9cdc5f3` | `fix(pag)`: aviso do e-mail de senha com endereço mascarado. A tela dizia "já pode entrar" a quem não tem senha |
-| `560e692` | `fix(pag)`: "Acompanhar cobrança" → "Pagar agora", em aba nova |
+- **Estorno de cartão parcelado** (`/v3/installments/{id}/refund`) está provado por teste e pela doc
+  oficial, **não** por dinheiro real. O primeiro estorno de cartão em produção SHALL ser
+  acompanhado. O caminho para homologá-lo em Sandbox existe (a doc diz que cartão e boleto seguem o
+  fluxo padrão via API, idêntico ao de produção) e fica registrado para a SPEC 28.
+- **Alerta com motivo desatualizado.** Só cabe uma pendência aberta por (pagamento, tipo), e
+  `abrirPendencia` desiste em silêncio se já existe uma. Um `estorno_negado` chegando depois de um
+  `estorno_aguardando_confirmacao` não atualiza o motivo — a fila da operação passa a mentir sobre o
+  estado atual. Visto com dado real em 21:50 UTC. **Destino: SPEC 15 (painel do operador).**
 
 ### Dívidas registradas fora da spec
 
-- **Testes de banco levam ~10 min na CI** (580s; 344 testes = 97% do tempo do job). A causa é
-  latência, não lentidão do teste: 326 conexões novas de um runner nos EUA para o Postgres em
-  `sa-east-1`. Correção: reaproveitar conexão por arquivo em `tests/db/conexao.ts`, preservando o
-  isolamento por transação revertida e o fechamento do cliente. Local: 137s.
-- **Segredos do repositório** cadastrados nesta rodada (Asaas, Supabase, PostHog, site). A
-  reconciliação a cada 30 min ficou verde; antes falhava e gerava ~48 e-mails/dia.
-- **Dados de teste**: contas `caiolacerda07@` e `suporte.vektor.ia@` foram apagadas e recriadas ao
-  longo da homologação. `caiolacerdamt@` **não pode ser apagada** — é autora de linhas em
-  `configuracoes`, que é imutável (INFRA-11). `raiox-demo@passou.dev` e o perfil ativo do Raio-X
-  são dados de demonstração: **preservar**. O log de `pagamentos` não é apagável (append-only por
-  gatilho) — tensão real que a SPEC 18 vai enfrentar no esquecimento LGPD.
+- **Testes de banco levam ~10 min na CI** (580s; ~97% do tempo do job). A causa é latência, não
+  lentidão do teste: 326 conexões novas de um runner nos EUA para o Postgres em `sa-east-1`.
+  Correção: reaproveitar conexão por arquivo em `tests/db/conexao.ts`, preservando o isolamento por
+  transação revertida e o fechamento do cliente. Local: 137s.
+- **CI roda duas vezes por mudança** — uma no `pull_request` e outra no `push` para a `main`
+  (`.github/workflows/ci.yml`). A segunda testa o commit de merge, que ninguém testou antes de
+  existir; com `main` recebendo só merge de PR verde, ela quase sempre repete o resultado. Cortar é
+  uma linha. Não decidido.
+- **Dados de teste**: `caiolacerdamt@` **não pode ser apagada** — é autora de linhas em
+  `configuracoes`, que é imutável (INFRA-11). `raiox-demo@passou.dev` e o perfil ativo do Raio-X são
+  dados de demonstração: **preservar**. O log de `pagamentos` não é apagável (append-only por
+  gatilho) e sobrevive ao DELETE do usuário com `user_id` nulo — tensão real que a SPEC 18 vai
+  enfrentar no esquecimento LGPD.

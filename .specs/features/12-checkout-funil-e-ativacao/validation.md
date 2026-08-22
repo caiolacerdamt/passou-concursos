@@ -413,3 +413,61 @@ degrau acima: o gateway falso não prova o **tempo** da resposta. Todo teste de 
 status final na mesma chamada, então a hipótese "o gateway confirma na hora" nunca foi questionada —
 e ela era falsa no meio de pagamento mais comum do país. **Em spec de dinheiro, assumir resposta
 síncrona de gateway externo é assumir errado até prova real em contrário.**
+
+## Homologação do estorno — PASS com dado real, 2026-08-22
+
+**AC3 da garantia (PAG-03) fechado.** Sequência gravada no banco, pagamento
+`c4ce2174-ee7c-4ad4-89c8-9ee49e2b4081` (horários em UTC; subtrair 3h para Brasília):
+
+| UTC | Evento |
+| --- | --- |
+| 22:09:46 | `PAYMENT_RECEIVED` — Pix **pago de verdade** dentro do Sandbox; ativação automática |
+| 22:10:27 | pedido de reembolso pelo app; Asaas aceita e deixa pendente |
+| 22:12:46 | **`PAYMENT_REFUNDED`** no webhook |
+
+Estado final: pagamento `reembolsada`, matrícula `reembolsada`, `asaas_status` `REFUNDED`,
+`ultima_falha_codigo` = **`reembolso_confirmado_webhook`**. Esse código só existe no caminho
+assíncrono criado no F-15 — é a prova de que o fechamento veio pelo webhook, sozinho.
+
+### A instrução errada que custou a rodada — corrigida
+
+A rodada anterior registrou aqui: *"para confirmar o Pix no Sandbox use **Confirmar pagamento**"*.
+**Está errado para quem vai testar estorno depois**, e foi a causa de duas tentativas de reembolso
+falharem. A doc do Asaas (`recipes/estorno-de-cobranças-em-sandbox`) é explícita:
+
+> **Pix: exige pagamento manual prévio para simular o lastro financeiro.** […] Na interface, acesse
+> **Pix → Transferências → Pix Copia e Cola** e pague a própria cobrança. **Nota: Se você apenas
+> confirmar a cobrança via botão ou API, o estorno falhará, pois não houve entrada real de valores.**
+
+"Confirmar pagamento" ativa a conta mas **não põe dinheiro na conta de teste**. Sem lastro, o estorno
+vira uma transferência Pix de saída que cai em `Falhou` — foi o que aconteceu às 18:14 e às 18:59.
+Pré-requisito adicional da mesma página: **chave Pix cadastrada na conta Sandbox**.
+
+**Procedimento correto para homologar estorno de Pix no Sandbox:**
+1. chave Pix cadastrada na conta Sandbox;
+2. compra por Pix pelo app; copiar o "Pix copia e cola" da tela de resultado;
+3. no Asaas, **Pix → Transferências → Pix Copia e Cola**, pagar a própria cobrança;
+4. pedir o reembolso pelo app;
+5. autorizar o evento crítico ("Enviar código"), se a conta exigir.
+
+**Correção de fato registrada na rodada anterior:** dizer que o Sandbox "não estorna cartão" estava
+impreciso. A doc diz que **cartão e boleto seguem o fluxo padrão via API, idêntico ao de produção** —
+o que o painel bloqueia é o botão, não a chamada. O estorno de cartão parcelado (F-11) continua
+provado só por teste e doc, mas o caminho para homologá-lo no Sandbox **existe** e fica registrado
+para a SPEC 28.
+
+### F-16 — o registro do pedido ficava nulo. Corrigido
+
+`reembolso_solicitado_em` gravou `22:12:46` (hora da confirmação) em vez de `22:10:27` (hora do
+clique). Causa: `registrarPedidoDeReembolso` foi criada no banco, no repositório e na interface de
+dependências — e **não foi ligada na action** `app/reembolso/acoes.ts`. Como nasceu opcional
+(`registrarPedidoDeReembolso?`), a chamada virou no-op e **o compilador não disse nada**. O
+fechamento caiu no `coalesce` e usou a hora do gateway.
+
+Dois minutos de diferença não mudam nada; **dois dias mudam** — a auditoria diria que o aluno pediu
+fora da janela quando ele pediu dentro. É precisamente o cenário que essa gravação existe para
+cobrir.
+
+Correção: dependência **obrigatória** (o compilador passa a exigir a ligação) e a action ligada.
+A garantia contra a repetição é de tipo, não de teste: nenhum teste pega uma dependência opcional que
+ninguém ligou, porque o teste liga a sua própria.

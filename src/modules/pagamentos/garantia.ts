@@ -64,8 +64,12 @@ export type DependenciasDeReembolso = {
    * Grava quem pediu e quando, sem mexer no acesso. Existe porque a confirmacao
    * do estorno pode chegar horas depois: sem isto, a auditoria da janela de 7
    * dias registraria a hora do gateway, nao a do aluno (F-15).
+   *
+   * **Obrigatoria de proposito.** Nasceu opcional e ficou desligada na action
+   * por esquecimento: a chamada virou no-op silenciosa e o campo continuou
+   * nulo em producao, sem o compilador dizer nada (F-16).
    */
-  registrarPedidoDeReembolso?(input: {
+  registrarPedidoDeReembolso(input: {
     pagamentoId: string;
     userId: string;
     meio: MeioDePagamento;
@@ -321,7 +325,7 @@ async function registrarPedidoSeguro(
   agora: Date,
 ): Promise<void> {
   try {
-    await dependencias.registrarPedidoDeReembolso?.({
+    await dependencias.registrarPedidoDeReembolso({
       pagamentoId: pagamento.id,
       userId,
       meio: pagamento.meio,

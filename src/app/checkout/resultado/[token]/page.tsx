@@ -26,6 +26,7 @@ export default async function ResultadoCheckout({
 
   const resultado = apresentarResultado({
     estado: pagamento.estado,
+    email: pagamento.email,
     meio: pagamento.meio,
     statusGateway: pagamento.asaas_status,
     url: pagamento.resultado_url,
@@ -73,8 +74,21 @@ export default async function ResultadoCheckout({
           </a>
         </p>
       ) : null}
+      {resultado.avisoDeSenha ? (
+        <section
+          aria-labelledby="proximo-passo"
+          className="mt-6 rounded-lg border border-marca bg-fundo-suave p-5"
+        >
+          <h2 id="proximo-passo" className="font-semibold">Próximo passo: crie sua senha</h2>
+          <p className="mt-2 leading-7 text-suave">{resultado.avisoDeSenha}</p>
+        </section>
+      ) : null}
       {resultado.acessoLiberado ? (
-        <p className="mt-6"><Link href="/app" className="rounded-md bg-marca px-5 py-3 font-medium text-fundo">Entrar no estudo</Link></p>
+        <p className="mt-6">
+          <Link href="/app" className="rounded-md bg-marca px-5 py-3 font-medium text-fundo">
+            Já tenho senha — entrar
+          </Link>
+        </p>
       ) : null}
     </Shell>
   );

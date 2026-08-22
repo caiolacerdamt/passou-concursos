@@ -191,27 +191,52 @@ descreveComBanco("endurecer_particoes_de_tentativas() — a funcao", () => {
 });
 
 descreveComBanco("manutencao da particao no pg_cron (INFRA-04 AC3)", () => {
-  it("existe job diario que roda o partman e endurece o que ele criou, nessa ordem", async () => {
+  it("roda o partman e o endurecimento em jobs SEPARADOS, nessa ordem", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const { rows } = await cliente.query<{
+        jobname: string;
         schedule: string;
         command: string;
         active: boolean;
       }>(
-        "select schedule, command, active from cron.job where jobname = $1",
-        ["tentativas-manutencao-particao"],
+        `select jobname, schedule, command, active
+           from cron.job
+          where jobname in ('tentativas-manutencao-particao',
+                            'tentativas-endurece-particao')
+          order by schedule`,
       );
-      expect(rows).toHaveLength(1);
-      expect(rows[0].active).toBe(true);
-      // Diario: com premake = 3, execucao perdida vira alerta, nao INSERT perdido.
-      expect(rows[0].schedule).toBe("17 5 * * *");
+      expect(rows).toHaveLength(2);
+      expect(rows.every((linha) => linha.active)).toBe(true);
 
-      const comando = rows[0].command;
-      expect(comando).toContain("partman.run_maintenance_proc()");
-      expect(comando).toContain("public.endurecer_particoes_de_tentativas()");
-      // A ordem importa: endurecer antes de criar nao protegeria a particao nova.
-      expect(comando.indexOf("run_maintenance_proc")).toBeLessThan(
-        comando.indexOf("endurecer_particoes_de_tentativas"),
+      const [manutencao, endurecimento] = rows;
+
+      // Diario: com premake = 3, execucao perdida vira alerta, nao INSERT perdido.
+      expect(manutencao.schedule).toBe("17 5 * * *");
+      expect(manutencao.command).toContain("partman.run_maintenance_proc()");
+
+      expect(endurecimento.schedule).toBe("27 5 * * *");
+      expect(endurecimento.command).toContain(
+        "public.endurecer_particoes_de_tentativas()",
+      );
+
+      // O ponto do teste. Juntar as duas instrucoes numa string so foi o bug de
+      // 2026-08-17: `run_maintenance_proc` faz COMMIT no corpo, e o pg_cron
+      // envolve comando de multiplas instrucoes numa transacao implicita, onde
+      // COMMIT e "invalid transaction termination". O job abortava todo dia
+      // antes da primeira linha. Cada job carrega UMA instrucao.
+      expect(manutencao.command).not.toContain(
+        "endurecer_particoes_de_tentativas",
+      );
+      expect(endurecimento.command).not.toContain("run_maintenance_proc");
+
+      // A ordem continua importando: endurecer antes de criar nao protegeria a
+      // particao nova.
+      const minuto = (agendamento: string) => {
+        const [m, h] = agendamento.split(" ");
+        return Number(h) * 60 + Number(m);
+      };
+      expect(minuto(manutencao.schedule)).toBeLessThan(
+        minuto(endurecimento.schedule),
       );
     });
   });

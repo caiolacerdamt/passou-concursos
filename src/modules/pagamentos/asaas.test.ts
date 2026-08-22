@@ -27,6 +27,64 @@ describe("adapter Asaas", () => {
     );
   });
 
+  // Defeito F-11 da homologacao de 2026-08-22: o cartao vira parcelamento, e o
+  // Asaas recusa o estorno pelo id da parcela. O que o teste do gateway falso
+  // nunca provou foi o ENDERECO da chamada — e era so isso que estava errado.
+  it("escolhe o endpoint do estorno pelo tipo da compra", async () => {
+    const chamadas: { url: string; corpo: string | null }[] = [];
+    const gateway = new AsaasGateway({
+      apiKey: "chave-de-teste",
+      apiUrl: "https://api-sandbox.asaas.com",
+      fetchImpl: async (url, init = {}) => {
+        chamadas.push({
+          url: String(url),
+          corpo: typeof init.body === "string" ? init.body : null,
+        });
+        return respostaJson({ id: "ref_1", status: "DONE" });
+      },
+    });
+
+    // Cartao parcelado: o id do parcelamento manda, e o da parcela nem aparece.
+    await gateway.estornarCobranca("pay_1", "CREDIT_CARD", "garantia", "d1b2c3");
+    // Pix e boleto continuam nos endpoints de cobranca avulsa.
+    await gateway.estornarCobranca("pay_2", "PIX", "garantia", null);
+    await gateway.estornarCobranca("pay_3", "BOLETO", undefined, null);
+
+    expect(chamadas.map(({ url }) => url)).toEqual([
+      "https://api-sandbox.asaas.com/v3/installments/d1b2c3/refund",
+      "https://api-sandbox.asaas.com/v3/payments/pay_2/refund",
+      "https://api-sandbox.asaas.com/v3/payments/pay_3/bankSlip/refund",
+    ]);
+    // /installments/{id}/refund so aceita `value`; sem corpo = estorno total.
+    expect(chamadas[0].corpo).toBeNull();
+    expect(chamadas[1].corpo).toBe(JSON.stringify({ description: "garantia" }));
+  });
+
+  it("guarda o id do parcelamento devolvido na criação do cartão", async () => {
+    const gateway = new AsaasGateway({
+      apiKey: "chave-de-teste",
+      apiUrl: "https://api-sandbox.asaas.com",
+      fetchImpl: async () =>
+        respostaJson({
+          id: "pay_1",
+          installment: "d1b2c3",
+          status: "PENDING",
+          billingType: "CREDIT_CARD",
+        }),
+    });
+
+    const cobranca = await gateway.criarCobranca({
+      clienteId: "cus_1",
+      meio: "CREDIT_CARD",
+      valorCentavos: 19_700,
+      referenciaExterna: "checkout-1",
+      vencimento: "2026-09-01",
+      descricao: "Passou Concursos — plano anual",
+    });
+
+    expect(cobranca.parcelamentoId).toBe("d1b2c3");
+  });
+
   it("cria cartão em 12 parcelas e envia somente o token de API", async () => {
     const chamadas: { url: string; init: RequestInit }[] = [];
     const gateway = new AsaasGateway({

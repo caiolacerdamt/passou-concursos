@@ -305,3 +305,50 @@ PR #23, mergeado na `main`, CI 6/6 verde (576 unit, 344 db, lint, build), public
 | `fa26e19` | isolamento de `perfil_concurso` nos testes — um perfil de demonstração derrubava 6 arquivos na CI |
 | `9cdc5f3` | aviso do e-mail de senha, com endereço mascarado — a tela mandava entrar quem não tinha senha |
 | `560e692` | "Acompanhar cobrança" → "Pagar agora", em aba nova |
+
+## Rodada de correção — F-11 e F-12 (2026-08-22)
+
+Branch `fix-spec-12-estorno-parcelamento`. Migration `20260822200000_spec12_parcelamento_e_status.sql`.
+
+### F-11 — corrigido
+
+O que mudou, e por quê cada peça:
+
+| Onde | Mudança |
+| --- | --- |
+| `src/modules/pagamentos/asaas.ts` | `CobrancaAsaas.parcelamentoId` lê o campo `installment` da resposta de `POST /v3/payments`. Era ele que estava sendo descartado |
+| `src/modules/pagamentos/asaas.ts` | `estornarCobranca` ganha `parcelamentoId` e passa a escolher entre três endereços: `/v3/installments/{id}/refund` (parcelamento), `/v3/payments/{id}/refund` (Pix/cartão avulso) e `/v3/payments/{id}/bankSlip/refund` (boleto) |
+| migration | `pagamentos.asaas_parcelamento_id` + índice parcial. Sem persistir o id não há como escolher o endereço no dia do reembolso |
+| `repositorio.ts` · `checkout.ts` · `garantia.ts` · `app/reembolso/acoes.ts` | o id atravessa criação → persistência → estorno |
+
+Contrato conferido na doc oficial (Context7, `docs.asaas.com/reference/refund-installment`): o corpo
+de `/installments/{id}/refund` aceita **somente** `value`, para estorno parcial. A garantia é estorno
+total, então a chamada vai **sem corpo** — não com o `description` que o endpoint de cobrança avulsa
+aceita. Enviar campo que o DTO não declara é o tipo de detalhe que devolve 400 no dia do reembolso.
+
+**Teste que prova a correção** (`asaas.test.ts`, *"escolhe o endpoint do estorno pelo tipo da
+compra"*): captura a **URL** de cada chamada, não só o fato de ter chamado. É a superfície que
+faltava — o gateway falso antigo aceitava qualquer id e devolvia sucesso, então provava o fluxo e
+nunca o endereço. Um segundo teste prova que `installment` sobrevive à normalização da cobrança, e
+`garantia.test.ts` prova que o id do parcelamento chega ao gateway numa compra por cartão.
+
+**Limite honesto desta correção:** o endpoint certo está provado contra a **documentação** e contra
+teste automatizado, **não** contra o gateway real — o Sandbox do Asaas não estorna cartão. O
+primeiro estorno de cartão em produção é o teste de verdade e SHALL ser acompanhado.
+
+### F-12 — corrigido (decisão do dono do produto, 2026-08-22: fazer (a) e (b))
+
+- **(a)** o bloco *"Status operacional: … · retorno do provedor: PENDING"* saiu de
+  `/checkout/resultado/[token]`. É detalhe operacional; para quem acabou de pagar ele só se
+  contradizia. `statusGateway` saiu junto do contrato `DadosDoResultado` — não era lido por
+  `apresentarResultado`, era plumbing morto.
+- **(b)** o webhook passa a gravar `asaas_status` (`webhook.ts`, `registrarStatusDoGateway`), uma vez
+  por evento não-duplicado. A escrita é **deliberadamente engolida em caso de falha**: o evento já
+  foi registrado como recebido, então devolver 202 faria o Asaas reenviar e o replay seria
+  descartado como duplicado — o acesso nunca abriria. Status de diagnóstico não pode derrubar
+  ativação. Teste em `webhook.test.ts` cobre as duas metades.
+
+### O que falta para fechar a spec
+
+Homologar o **estorno por Pix** com dado real no Sandbox (AC3 da garantia). O cartão fica coberto
+por teste automatizado + doc, com a ressalva acima registrada.

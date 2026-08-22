@@ -91,6 +91,7 @@ export async function executarCheckout(
   await dependencias.repositorio.salvarResultadoGateway(pagamento.id, {
     clienteId: cliente.id,
     cobrancaId: cobranca.id,
+    parcelamentoId: cobranca.parcelamentoId,
     status: cobranca.status,
     invoiceUrl: cobranca.invoiceUrl,
     bankSlipUrl: cobranca.bankSlipUrl,

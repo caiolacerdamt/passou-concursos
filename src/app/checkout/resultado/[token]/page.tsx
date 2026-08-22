@@ -28,7 +28,6 @@ export default async function ResultadoCheckout({
     estado: pagamento.estado,
     email: pagamento.email,
     meio: pagamento.meio,
-    statusGateway: pagamento.asaas_status,
     url: pagamento.resultado_url,
     boletoUrl: pagamento.resultado_boleto_url,
     pixQrCode: pagamento.resultado_pix_qr_code,
@@ -40,10 +39,6 @@ export default async function ResultadoCheckout({
       <p className="text-sm font-semibold uppercase tracking-wide text-marca">Resultado do pagamento</p>
       <h1 className="mt-2 text-3xl font-semibold">{resultado.titulo}</h1>
       <p className="mt-4 leading-7 text-suave">{resultado.mensagem}</p>
-      <p className="mt-5 rounded-md border border-linha bg-fundo-suave p-4 text-sm" role="status">
-        Status operacional: <strong>{pagamento.estado}</strong>
-        {pagamento.asaas_status ? ` · retorno do provedor: ${pagamento.asaas_status}` : ""}
-      </p>
 
       {resultado.mostraPix ? (
         <section aria-labelledby="pix-instrucoes" className="mt-6 rounded-lg border border-linha p-5">

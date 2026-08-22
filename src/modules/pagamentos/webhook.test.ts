@@ -29,6 +29,7 @@ function dependencias(estado: string = "pendente") {
       estado,
       asaas_cliente_id: "cus_1",
       asaas_cobranca_id: "pay_1",
+      asaas_parcelamento_id: null,
       asaas_status: "PENDING",
       resultado_url: null,
       resultado_boleto_url: null,
@@ -48,6 +49,7 @@ function dependencias(estado: string = "pendente") {
     mudarEstado: vi.fn(async () => undefined),
     abrirPendencia: vi.fn(async () => undefined),
     encaminharParaAtivacao: vi.fn(async () => undefined),
+    atualizarStatusGateway: vi.fn(async () => undefined),
     emitirPagamentoConfirmado: vi.fn(),
   };
 }
@@ -91,6 +93,24 @@ describe("contratos do webhook Asaas", () => {
 
     await expect(processarEventoAsaas(evento, deps)).rejects.toThrow("fila indisponivel");
     expect(deps.emitirPagamentoConfirmado).toHaveBeenCalledTimes(1);
+  });
+
+  // F-12: o `asaas_status` so era escrito na criacao da cobranca e ficava
+  // PENDING para sempre — inclusive nos pagamentos ja ativados.
+  it("grava o status do gateway uma vez, e uma falha ali não derruba a ativação", async () => {
+    const deps = dependencias();
+
+    await processarEventoAsaas(evento, deps);
+    await processarEventoAsaas(evento, deps);
+
+    expect(deps.atualizarStatusGateway).toHaveBeenCalledTimes(1);
+    expect(deps.atualizarStatusGateway).toHaveBeenCalledWith("pag_1", "RECEIVED");
+
+    const comFalha = dependencias();
+    comFalha.atualizarStatusGateway.mockRejectedValueOnce(new Error("banco fora"));
+
+    expect(await processarEventoAsaas(evento, comFalha)).toBe("encaminhado");
+    expect(comFalha.encaminharParaAtivacao).toHaveBeenCalledTimes(1);
   });
 
   it("evento desconhecido é ignorado sem liberar conteúdo", async () => {

@@ -158,6 +158,54 @@ descreveComBanco("schema de pagamentos", () => {
     });
   });
 
+  // F-11 e F-12: o id do parcelamento precisa existir para o estorno de cartao
+  // achar o endpoint certo, e o webhook escreve `asaas_status` num pagamento ja
+  // ativado — a maquina de estados nao pode barrar essa escrita.
+  it("guarda o parcelamento e aceita atualizar o status do gateway sem mudar de estado", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const pagamento = await criarPagamento(cliente);
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'confirmada'::public.pagamento_estado, 'webhook')",
+        [pagamento],
+      );
+      await cliente.query(
+        "select public.mudar_estado_pagamento($1, 'ativada'::public.pagamento_estado, null)",
+        [pagamento],
+      );
+
+      await cliente.query(
+        `update public.pagamentos
+            set asaas_parcelamento_id = $2, asaas_status = 'RECEIVED'
+          where id = $1`,
+        [pagamento, "d1b2c3"],
+      );
+
+      const { rows } = await cliente.query<{
+        asaas_parcelamento_id: string | null;
+        asaas_status: string | null;
+        estado: string;
+        transicoes: string;
+      }>(
+        `select p.asaas_parcelamento_id,
+                p.asaas_status,
+                p.estado::text,
+                (select count(*)::text
+                   from public.pagamento_transicoes t
+                  where t.pagamento_id = p.id) as transicoes
+           from public.pagamentos p
+          where p.id = $1`,
+        [pagamento],
+      );
+      expect(rows[0]).toEqual({
+        asaas_parcelamento_id: "d1b2c3",
+        asaas_status: "RECEIVED",
+        estado: "ativada",
+        // A escrita de status nao pode inventar transicao no log append-only.
+        transicoes: "2",
+      });
+    });
+  });
+
   it("só a RPC de reconciliação permite expirada para confirmada", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const pagamento = await criarPagamento(cliente, "expirada");

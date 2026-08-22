@@ -8,7 +8,6 @@ export type DadosDoResultado = {
    */
   email?: string | null;
   meio: string;
-  statusGateway: string | null;
   url: string | null;
   boletoUrl: string | null;
   pixQrCode: string | null;

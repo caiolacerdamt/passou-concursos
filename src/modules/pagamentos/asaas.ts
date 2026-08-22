@@ -12,6 +12,7 @@ const HOSTS_OFICIAIS_ASAAS = new Set([
 const CAMINHO_PAGAMENTOS = "/v3/payments";
 const CAMINHO_CLIENTES = "/v3/customers";
 const CAMINHO_FATURAS = "/v3/invoices";
+const CAMINHO_PARCELAMENTOS = "/v3/installments";
 
 type MetodoHTTP = "GET" | "POST";
 
@@ -45,6 +46,12 @@ export type ClienteAsaas = {
 
 export type CobrancaAsaas = {
   id: string;
+  /**
+   * Id do parcelamento (campo `installment`). O cartao e criado como
+   * parcelamento de 12x, entao o Asaas devolve UMA parcela e este id agrupa
+   * todas. E ele — nao o id da parcela — que o estorno de cartao exige.
+   */
+  parcelamentoId: string | null;
   status: string;
   billingType: string | null;
   externalReference: string | null;
@@ -203,21 +210,39 @@ export class AsaasGateway {
     return [...cobrancasPorId.values()];
   }
 
+  /**
+   * `parcelamentoId` decide o endereco do estorno. Uma compra parcelada nao se
+   * estorna pela parcela: o Asaas recusa `/payments/{parcela}/refund` e manda
+   * abrir o parcelamento. Homologacao de 2026-08-22, defeito F-11.
+   */
   async estornarCobranca(
     id: string,
     meio: MeioDePagamento,
     descricao?: string,
+    parcelamentoId?: string | null,
   ): Promise<EstornoAsaas> {
     const identificador = validarIdentificador(id);
     if (!MEIOS_DE_PAGAMENTO.includes(meio)) {
       throw new ErroAsaas("entrada_invalida");
     }
 
-    const caminho =
-      meio === "BOLETO"
-        ? `${CAMINHO_PAGAMENTOS}/${encodeURIComponent(identificador)}/bankSlip/refund`
-        : `${CAMINHO_PAGAMENTOS}/${encodeURIComponent(identificador)}/refund`;
-    const corpo = meio === "BOLETO" || !descricao ? undefined : { description: descricao };
+    const parcelamento = parcelamentoId ? validarIdentificador(parcelamentoId) : null;
+    const { caminho, corpo } = parcelamento
+      // O corpo de /installments/{id}/refund so aceita `value` (estorno
+      // parcial). Sem corpo = estorno total, que e o da garantia.
+      ? {
+          caminho: `${CAMINHO_PARCELAMENTOS}/${encodeURIComponent(parcelamento)}/refund`,
+          corpo: undefined,
+        }
+      : meio === "BOLETO"
+        ? {
+            caminho: `${CAMINHO_PAGAMENTOS}/${encodeURIComponent(identificador)}/bankSlip/refund`,
+            corpo: undefined,
+          }
+        : {
+            caminho: `${CAMINHO_PAGAMENTOS}/${encodeURIComponent(identificador)}/refund`,
+            corpo: descricao ? { description: descricao } : undefined,
+          };
     const resposta = await this.request<RespostaEstorno>("POST", caminho, corpo);
 
     return {
@@ -365,6 +390,7 @@ export function validarUrlAsaas(valor: string): URL {
 
 type RespostaCobranca = Partial<{
   id: unknown;
+  installment: unknown;
   status: unknown;
   billingType: unknown;
   externalReference: unknown;
@@ -397,6 +423,7 @@ function normalizarCobranca(resposta: RespostaCobranca): CobrancaAsaas {
 
   return {
     id: resposta.id,
+    parcelamentoId: textoOuNulo(resposta.installment),
     status: typeof resposta.status === "string" ? resposta.status : "UNKNOWN",
     billingType:
       typeof resposta.billingType === "string" ? resposta.billingType : null,

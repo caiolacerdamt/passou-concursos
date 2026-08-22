@@ -496,6 +496,90 @@ descreveComBanco("schema de pagamentos", () => {
     });
   });
 
+  // F-15: o estorno confirma depois, por webhook. O pedido tem que ficar
+  // gravado na hora do clique — é a data do pedido que prova a janela de 7 dias.
+  it("registra o pedido de reembolso sem cortar o acesso e o fechamento preserva essa data", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const matricula = await criarMatricula(cliente, aluno);
+      const pagamento = await criarPagamento(cliente, "ativada");
+      await cliente.query(
+        "update public.pagamentos set user_id = $2, matricula_id = $3 where id = $1",
+        [pagamento, aluno, matricula.id],
+      );
+
+      await cliente.query(
+        `select public.registrar_pedido_de_reembolso(
+          $1, $2, 'PIX'::public.pagamento_meio, '2026-08-21T12:00:00Z'::timestamptz
+        )`,
+        [pagamento, aluno],
+      );
+
+      const pedido = await cliente.query<{
+        estado: string;
+        solicitado_em: string;
+        matricula: string;
+      }>(
+        `select p.estado::text, p.reembolso_solicitado_em::text as solicitado_em,
+                m.estado::text as matricula
+           from public.pagamentos p
+           join public.matriculas m on m.id = p.matricula_id
+          where p.id = $1`,
+        [pagamento],
+      );
+      // Pedido registrado, acesso intacto: o dinheiro ainda não voltou.
+      expect(pedido.rows[0].estado).toBe("ativada");
+      expect(pedido.rows[0].matricula).toBe("ativa");
+      expect(pedido.rows[0].solicitado_em).toContain("2026-08-21 12:00:00");
+
+      // A confirmação chega horas depois, pelo webhook.
+      await cliente.query(
+        `select public.confirmar_reembolso_pagamento(
+          $1, $2, 'PIX'::public.pagamento_meio,
+          '2026-08-21T20:00:00Z'::timestamptz, 'reembolso_confirmado_webhook'
+        )`,
+        [pagamento, aluno],
+      );
+
+      const fechado = await cliente.query<{
+        estado: string;
+        solicitado_em: string;
+        matricula: string;
+      }>(
+        `select p.estado::text, p.reembolso_solicitado_em::text as solicitado_em,
+                m.estado::text as matricula
+           from public.pagamentos p
+           join public.matriculas m on m.id = p.matricula_id
+          where p.id = $1`,
+        [pagamento],
+      );
+      expect(fechado.rows[0].estado).toBe("reembolsada");
+      expect(fechado.rows[0].matricula).toBe("reembolsada");
+      // A hora do gateway NÃO sobrescreve a hora do aluno.
+      expect(fechado.rows[0].solicitado_em).toContain("2026-08-21 12:00:00");
+    });
+  });
+
+  it("recusa registrar pedido de reembolso em pagamento ainda pendente", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const pagamento = await criarPagamento(cliente);
+      await cliente.query(
+        "update public.pagamentos set user_id = $2 where id = $1",
+        [pagamento, aluno],
+      );
+
+      await expect(
+        cliente.query(
+          `select public.registrar_pedido_de_reembolso(
+            $1, $2, 'PIX'::public.pagamento_meio, now()
+          )`,
+          [pagamento, aluno],
+        ),
+      ).rejects.toThrow(/estado reembolsável/);
+    });
+  });
+
   it("fecha pagamento e matrícula na mesma RPC e permite retry idempotente", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = await criarUsuario(cliente);

@@ -185,6 +185,16 @@ describe("garantia de pagamento", () => {
       "alerta",
       "estorno_aguardando_confirmacao",
     );
+    // F-15: o pedido tem que ficar gravado com a hora do ALUNO. A confirmação
+    // pode chegar dias depois, e é a data do pedido que prova a janela de 7 dias.
+    expect(aguardando.registrarPedidoDeReembolso).toHaveBeenCalledWith({
+      pagamentoId: "pag_1",
+      userId: "user_1",
+      meio: "PIX",
+      quando: "2026-08-06T01:00:00.000Z",
+    });
+    // Gateway que nem aceitou o estorno não gera pedido registrado.
+    expect(gatewayFalhou.registrarPedidoDeReembolso).not.toHaveBeenCalled();
   });
 
   it("permite retry local quando pagamento reembolsado ainda deixou matrícula ativa", async () => {
@@ -318,6 +328,7 @@ function criarDependencias(
     ),
     cancelarNotaFiscal: vi.fn(async () => cancelamentoNF),
     registrarResultadoCancelamentoNF: vi.fn(async () => undefined),
+    registrarPedidoDeReembolso: vi.fn(async () => undefined),
     abrirPendencia: vi.fn(async () => undefined),
   };
 }

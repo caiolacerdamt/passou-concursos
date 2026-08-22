@@ -184,6 +184,23 @@ export function criarRepositorioDePagamentos(
       return data as PagamentoOperacional | null;
     },
 
+    async registrarPedidoDeReembolso(input: {
+      pagamentoId: string;
+      userId: string;
+      meio: MeioDePagamento;
+      quando: string;
+    }): Promise<void> {
+      const { data, error } = await cliente.rpc("registrar_pedido_de_reembolso", {
+        p_pagamento_id: input.pagamentoId,
+        p_user_id: input.userId,
+        p_meio: input.meio,
+        p_quando: input.quando,
+      });
+      if (error || data !== true) {
+        throw error ?? new Error("registro do pedido de reembolso falhou");
+      }
+    },
+
     async confirmarReembolsoLocal(input: {
       pagamentoId: string;
       userId: string;

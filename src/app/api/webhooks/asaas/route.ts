@@ -6,6 +6,7 @@ import {
   ativarPagamentoConfirmado,
   criarDependenciasDeAtivacao,
 } from "@/modules/pagamentos/ativacao";
+import { fecharReembolsoConfirmado } from "@/modules/pagamentos/garantia";
 import {
   criarRepositorioDePagamentos,
   type PagamentoOperacional,
@@ -40,6 +41,41 @@ export async function POST(request: Request): Promise<Response> {
         ...repositorio,
         emitirPagamentoConfirmado: () =>
           emitirEventoDoFunilNaoBloqueante("pagamento_confirmado"),
+        fecharReembolso: async (pagamento) => {
+          // Sem dono nao ha o que encerrar: o acesso ja nao existe. Vira
+          // pendencia para a operacao olhar, nunca silencio.
+          if (!pagamento.user_id) {
+            await repositorio.abrirPendencia(
+              pagamento.id,
+              "alerta",
+              "estorno_sem_dono",
+            );
+            return;
+          }
+          await fecharReembolsoConfirmado(
+            pagamento,
+            pagamento.user_id,
+            new Date(),
+            "reembolso_confirmado_webhook",
+            {
+              confirmarReembolsoLocal: repositorio.confirmarReembolsoLocal,
+              buscarFatura: repositorio.buscarFatura,
+              cancelarNotaFiscal: gateway
+                ? async (faturaId) => ({
+                    status: (await gateway.cancelarNotaFiscal(faturaId)).status,
+                  })
+                : undefined,
+              registrarResultadoCancelamentoNF: async (input) =>
+                repositorio.registrarResultadoCancelamentoFatura(input.pagamentoId, {
+                  estado: input.estado,
+                  statusGateway: input.statusGateway,
+                  codigo: input.codigo,
+                }),
+              abrirPendencia: (pagamentoId, tipo, codigo) =>
+                repositorio.abrirPendencia(pagamentoId, tipo, codigo),
+            },
+          );
+        },
         encaminharParaAtivacao: async (pagamentoId) => {
           await ativarPagamentoConfirmado(
             pagamentoId,

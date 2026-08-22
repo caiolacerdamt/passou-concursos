@@ -329,37 +329,13 @@
 
 ## Handoff
 
-- **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
-  sequência oficial de **36 specs**; **as 01–14 são o MVP** e o lançamento é o fim da 14 (AD-089).
-  Para trabalhar: *"Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`"*, respeitando o `Ritual`
-  declarado no cabeçalho da spec (AD-090).
-- **Concluído**:
-  | Spec | Tasks | Estado |
-  | --- | --- | --- |
-  | **01 — Fundação** | T1–T4 | ✅ build, lint, teste e CI de pé |
-  | **02 — Configuração e flags** | T5–T9 | ✅ **PASS** independente — 8/8 AC, sensor 4/4, 41 testes |
-  | **03 — Observabilidade e segredos** | T23–T32 | ✅ **PASS** independente — sensor 6/6, 143 testes, 7 gaps não bloqueantes |
-  | **04 — Acervo: schema, taxonomia e proveniência** | T33–T40 | ✅ **PASS** — 9/9 AC + 4 Success Criteria com evidência, **251 testes**. **Verificação NÃO independente** |
-  | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
-  | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
-  | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
-  | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
-  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
-  | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
-  | **11 — Raio-X: frequência, peso e tela** | T98–T105 | ✅ **490 unit + 332 db**. Lint e build verdes. Ritual B — **PASS parcial** independente; limitações de ranking absoluto e timestamp registradas em `.specs/features/11-*/validation.md`. |
-  | **12 — Checkout, funil e ativação** | T106–T117 | ✅ **Implementada; gates técnicos PASS** — 80 arquivos/567 unitários, 24/24 DB específicos, TypeScript e build verdes. O webhook Asaas foi exercitado no Sandbox e ativou a conta; falta concluir o reteste do e-mail de senha após a configuração SSR do template Supabase, além das integrações externas opcionais e da tela autenticada de reembolso. |
-- **Retomada imediata da SPEC 12**: aplicar no Supabase o template documentado em
-  `docs/DEPLOY.md` (*Reset Password* com `{{ .TokenHash }}`), acrescentar
-  `http://localhost:3000/auth/confirm` nas Redirect URLs, pedir um novo link em
-  `/recuperar-senha`, clicar nele e confirmar que `/definir-senha` aparece e leva ao login com a senha
-  nova. O código e o handoff técnico desta correção estão no commit `fd896a3`;
-  depois do reteste, atualizar `validation.md` e criar o commit de fechamento E2E.
-- **O que ainda falta para fechar oficialmente**: (1) reteste E2E do link de definição de senha;
-  (2) conferência autenticada de `/app/reembolso`; (3) testes externos adicionais Asaas Sandbox
-  (cartão/boleto, reconciliação e reembolso); (4) CNPJ/regime/configuração fiscal para NF; e
-  (5) configurar PostHog e conferir os quatro eventos anônimos. Nenhum segredo deve entrar nos
-  documentos ou commits.
-- **Next step depois do fechamento**: **SPEC 13 — Onboarding, plano e sessão**
-  (`.specs/features/13-*/spec.md`, conforme `.specs/ROADMAP.md`). A SPEC 12 deixa
-  checkout, webhook, ativação, reconciliação, garantia, fatura e paywall prontos; a SPEC 13 pode
-  consumir a matrícula ativa sem criar dependência para uma spec de número maior.
+- **Feature**: SPEC 12 — checkout, funil e ativação (`.specs/features/12-checkout-funil-e-ativacao`)
+- **Phase / Task**: homologação externa; correções locais F-08, F-09 e F-10 concluídas
+- **Completed**: T106–T117, F-08, F-09, F-10; commits `362b397`, `b2fdc78`, `e5c2559`
+- **In-progress** (file:line): none; aguardando configuração do template de recuperação no Supabase
+- **Next step**: configurar SMTP próprio ou plano compatível no Supabase, salvar o template `token_hash`,
+  solicitar novo link em `/recuperar-senha` e validar `/definir-senha` → `/app`
+- **Blockers**: projeto usa SMTP padrão do Supabase, que bloqueia edição de templates; ainda faltam
+  E2E Asaas/PostHog, tela autenticada de reembolso e dados fiscais para NF
+- **Uncommitted files**: none
+- **Branch**: `codex-spec-12`

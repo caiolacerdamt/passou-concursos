@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 13, 16, 17, 28, 34 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ✅ Implementada; gates técnicos concluídos; fechamento E2E pendente da configuração do template de recuperação no Supabase |
+| **Status** | ✅ Implementada; gates técnicos concluídos; E2E real confirmado para Pix e cartão; homologação externa restante registrada em `validation.md` |
 | **Requisitos** | **PAG-08**, **PAG-17**, **INFRA-12**, **PAG-02**, **PAG-05**, **PAG-09**, **PAG-06**, **PAG-13**, **PAG-12**, **DADOS-11**, **PAG-03**, **INFRA-10** (webhook) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` (DADOS-11) |
 | **Vem de** | SPEC 19 + SPEC 21 + a garantia da SPEC 20 do recorte de 42 (AD-089) |
@@ -149,7 +149,7 @@ checkout já foram conferidos no navegador local.
 ## Success Criteria
 
 - [x] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique — conferido em desktop e viewport de 360 px
-- [ ] Compra de ponta a ponta em cada meio de pagamento — depende de credenciais e contrato reais do Asaas
+- [ ] Compra de ponta a ponta em cada meio de pagamento — Pix e cartão PASS no Sandbox; boleto ainda pendente
 - [x] Mesmo webhook disparado três vezes → **uma** conta e **uma** matrícula
 - [x] Webhook apagado → o job de reconciliação ativa a compra sozinho
 - [x] E-mail com matrícula ativa comprando de novo é avisado, não cobrado

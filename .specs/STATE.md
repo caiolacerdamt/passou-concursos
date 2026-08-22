@@ -330,13 +330,16 @@
 ## Handoff
 
 - **Feature**: SPEC 12 — checkout, funil e ativação (`.specs/features/12-checkout-funil-e-ativacao`)
-- **Phase / Task**: homologação externa Asaas; correções locais F-08, F-09 e F-10 concluídas
-- **Completed**: T106–T117, F-08, F-09, F-10; Resend/Supabase Auth E2E; PostHog com
-  `pagina_vista`, `checkout_iniciado` e `meio_escolhido`; commits `362b397`, `b2fdc78`, `e5c2559`
-- **In-progress** (file:line): homologação Asaas e evento `pagamento_confirmado`
-- **Next step**: configurar conta/CNPJ/contrato Asaas, credenciais sandbox, webhook público HTTPS
-  e executar a matriz cartão/Pix/boleto, replay, reconciliação e reembolso
-- **Blockers**: credenciais e configuração externa do Asaas; ainda faltam a tela autenticada de
-  reembolso com conta de teste ativa e dados fiscais para NF
+- **Phase / Task**: homologação externa Asaas; Pix e cartão E2E concluídos; correções locais F-08,
+  F-09 e F-10 concluídas
+- **Completed**: T106–T117, F-07–F-10; Resend/Supabase Auth E2E; Pix e cartão Sandbox com
+  webhook HTTP 200, criação de senha e login; PostHog com `pagina_vista`, `checkout_iniciado`
+  e `meio_escolhido`; commits `362b397`, `b2fdc78`, `e5c2559`
+- **In-progress** (file:line): boleto Sandbox, conferência visual de `pagamento_confirmado`,
+  reembolso externo e NF fiscal
+- **Next step**: executar boleto, replay, reconciliação sem webhook e reembolso; depois rodar os
+  gates finais e fechar a documentação
+- **Blockers**: CNPJ/regime fiscal e dados fiscais para NF; a UX futura do cartão/e-mail/retorno
+  está registrada em `validation.md` como candidata à SPEC 13
 - **Uncommitted files**: none
 - **Branch**: `codex-spec-12`

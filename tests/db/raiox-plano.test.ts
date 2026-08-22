@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 
 import { criarTopico, inserirQuestao } from "./acervo";
 import { novoAluno } from "./aluno";
-import { comTransacaoRevertida } from "./conexao";
+import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 const HOJE = "2026-08-21";
@@ -59,7 +59,7 @@ async function primeiroBloco(cliente: Client, aluno: string) {
 
 descreveComBanco("contrato Raio-X → plano", () => {
   it("a view reordena o plano sem alterar o motor SQL do M4", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const primeiro = await criarTopico(cliente);
       const segundo = await criarTopico(cliente);

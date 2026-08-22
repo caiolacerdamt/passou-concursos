@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 
 import { criarTopico } from "./acervo";
-import { comBanco, comTransacaoRevertida } from "./conexao";
+import { comBanco, comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 type Job = { jobname: string; schedule: string; command: string; active: boolean };
@@ -18,7 +18,7 @@ async function job(nome: string): Promise<Job | undefined> {
 
 descreveComBanco("raiox_peso_topico — assinatura e fallback", () => {
   it("mantém exatamente topico_id e peso e usa 1.0 sem perfil ativo", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const { rows: colunas } = await cliente.query<{ column_name: string }>(
         `select column_name
@@ -42,7 +42,7 @@ descreveComBanco("raiox_peso_topico — assinatura e fallback", () => {
 
 descreveComBanco("raiox_peso_topico — porteiro do edital", () => {
   it("entrega o programa ativo e deixa o tópico fora dele fora do plano", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const dentro = await criarTopico(cliente);
       const fora = await criarTopico(cliente);
       const { rows: perfis } = await cliente.query<{ id: string }>(

@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 
 import { criarProva, inserirQuestao, sufixo } from "./acervo";
 import { novoAluno } from "./aluno";
-import { comTransacaoRevertida } from "./conexao";
+import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 /**
@@ -113,7 +113,7 @@ async function dominio(
 
 descreveComBanco("gera_plano_do_dia — os dois niveis (ALUNO-11)", () => {
   it("com revisao vencida, `piso` traz SO ela e `meta_cheia` traz o dia inteiro", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const vencido = await topicoComQuestao(cliente);
       const novo = await topicoComQuestao(cliente);
@@ -140,7 +140,7 @@ descreveComBanco("gera_plano_do_dia — os dois niveis (ALUNO-11)", () => {
   });
 
   it("sem revisao vencida o `piso` fica VAZIO, e isso e correto", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -156,7 +156,7 @@ descreveComBanco("gera_plano_do_dia — os dois niveis (ALUNO-11)", () => {
   });
 
   it("o bloco Revisar carrega o porque (ALUNO-08 AC5)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const vencido = await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -173,7 +173,7 @@ descreveComBanco("gera_plano_do_dia — os dois niveis (ALUNO-11)", () => {
 
 descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () => {
   it("a meta cheia CABE no `minutos_por_dia` declarado", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       // 6 topicos disponiveis, 40 minutos por dia. Bloco padrao = 10 questoes x
       // 2 min = 20 min, entao so 2 blocos cabem.
@@ -192,7 +192,7 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
   });
 
   it("mais tempo declarado significa mais bloco", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const curto = novoAluno();
       const longo = novoAluno();
       for (let i = 0; i < 6; i += 1) await topicoComQuestao(cliente);
@@ -209,7 +209,7 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
   });
 
   it("a revisao vencida entra mesmo estourando o tempo — ela e o piso", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const a = await topicoComQuestao(cliente);
       const b = await topicoComQuestao(cliente);
@@ -230,7 +230,7 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
 
 descreveComBanco("gera_plano_do_dia — a nota do topico (ALUNO-07)", () => {
   it("topico mais fraco vem antes de topico mais forte", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const forte = await topicoComQuestao(cliente);
       const fraco = await topicoComQuestao(cliente);
@@ -250,7 +250,7 @@ descreveComBanco("gera_plano_do_dia — a nota do topico (ALUNO-07)", () => {
   });
 
   it("topico com revisao vencida ganha do topico so fraco — o multiplicador manda", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const fraco = await topicoComQuestao(cliente);
       const vencido = await topicoComQuestao(cliente);
@@ -276,7 +276,7 @@ descreveComBanco("gera_plano_do_dia — a nota do topico (ALUNO-07)", () => {
   });
 
   it("revisao com `due` no futuro NAO conta como vencida", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const topico = await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -292,7 +292,7 @@ descreveComBanco("gera_plano_do_dia — a nota do topico (ALUNO-07)", () => {
 
 descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   it("topico SEM questao publicada e pulado; o motor pega o proximo", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const semQuestao = await topicoComQuestao(cliente, { publicada: false });
       const comQuestao = await topicoComQuestao(cliente);
@@ -311,7 +311,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("retrato frio — so o nivel declarado — ainda gera o plano do 1o dia (ALUNO-05)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
       await topicoComQuestao(cliente);
@@ -329,7 +329,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("a semente do nivel E a fraqueza: iniciante prioriza topico virgem, avancado nao", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const iniciante = novoAluno();
       const avancado = novoAluno();
       const virgem = await topicoComQuestao(cliente);
@@ -360,7 +360,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("aluno sem perfil nao ganha plano nenhum", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
 
@@ -370,7 +370,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("rerodar no mesmo dia SUBSTITUI o plano, nao duplica", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -390,7 +390,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("plano novo zera a frase da IA — texto velho nao descreve plano novo", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -411,7 +411,7 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
   });
 
   it("bloco `simulado` nao sai com a flag desligada (P3 / SPEC 32)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 60);
@@ -447,7 +447,7 @@ descreveComBanco("gera_plano_do_dia — reentrancia", () => {
       await segurando.query("begin");
       await segurando.query("select pg_advisory_xact_lock(8406, 2)");
 
-      await comTransacaoRevertida(async (cliente) => {
+      await comTransacaoSemPerfilConcurso(async (cliente) => {
         expect(await gerar(cliente, novoAluno())).toBe(-1);
       });
     } finally {
@@ -464,7 +464,7 @@ descreveComBanco("gera_plano_do_dia — reentrancia", () => {
       // Lock do `recalcula_projecoes`.
       await segurando.query("select pg_advisory_xact_lock(8406, 1)");
 
-      await comTransacaoRevertida(async (cliente) => {
+      await comTransacaoSemPerfilConcurso(async (cliente) => {
         // O plano roda mesmo assim: chaves iguais fariam um job atrasado
         // cancelar o outro em silencio.
         expect(await gerar(cliente, novoAluno())).toBe(0);

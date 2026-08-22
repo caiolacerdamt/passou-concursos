@@ -2,7 +2,7 @@ import type { Client } from "pg";
 import { expect, it } from "vitest";
 
 import { criarTopico, inserirQuestao } from "./acervo";
-import { comTransacaoRevertida } from "./conexao";
+import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 async function criarPerfil(
@@ -75,7 +75,7 @@ async function lerProjecoes(cliente: Client, perfil: string): Promise<Projecao[]
 
 descreveComBanco("recalcula_raiox — fonte e taxa", () => {
   it("conta real publicada vigente, mantém anulada e ignora inédita e versão antiga", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const perfil = await criarPerfil(cliente, [topico]);
       const primeira = await criarQuestaoPublicada(cliente, topico);
@@ -119,7 +119,7 @@ descreveComBanco("recalcula_raiox — fonte e taxa", () => {
 
 descreveComBanco("recalcula_raiox — decaimento e tendência", () => {
   it("dá mais peso ao recente e produz as três tendências", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const recente = await criarTopico(cliente);
       const anterior = await criarTopico(cliente);
       const antigo = await criarTopico(cliente);
@@ -149,7 +149,7 @@ descreveComBanco("recalcula_raiox — decaimento e tendência", () => {
 
 descreveComBanco("recalcula_raiox — amortecimento e idempotência", () => {
   it("puxa amostra pequena para a média e dá média ao tópico sem questão", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const pequeno = await criarTopico(cliente);
       const robusto = await criarTopico(cliente);
       const semQuestao = await criarTopico(cliente);
@@ -181,7 +181,7 @@ descreveComBanco("recalcula_raiox — amortecimento e idempotência", () => {
   });
 
   it("reroda com o mesmo resultado e preserva a projeção se uma execução falhar", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const perfil = await criarPerfil(cliente, [topico]);
       await criarQuestaoPublicada(cliente, topico);

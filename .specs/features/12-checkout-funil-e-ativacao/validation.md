@@ -1,15 +1,16 @@
 # Validação da SPEC 12 — Checkout, funil e ativação
 
-## Validation: PASS técnico — fechamento E2E pendente
+## Validation: PASS técnico — E2E real parcial concluído
 
 Resultado: PASS técnico local. Os defeitos F-01 a F-06 do relatório anterior
 foram corrigidos, os contratos da SPEC 12 passaram pelos gates unitários e de
 banco, o sensor de discriminação matou os seis mutantes introduzidos e as rotas
-públicas foram conferidas em desktop e em viewport de 360 px. Um teste E2E real
-revelou o F-07 no link de definição de senha; a correção de código foi aplicada,
-mas a configuração do template de e-mail no Supabase e o reteste ainda faltam.
+públicas foram conferidas em desktop e em viewport de 360 px. O reteste E2E
+externo confirmou Pix e cartão no Sandbox, webhook HTTP 200, criação de senha e
+login no aplicativo. Boleto, reembolso externo, reconciliação real e NF ainda
+ficam na homologação posterior.
 
-Data: 2026-08-21
+Data: 2026-08-22
 Escopo: T106–T117, migrations, gateway Asaas, webhook, ativação,
 reconciliação, garantia, fatura, funil anônimo e páginas da SPEC 12.
 Ritual: A.
@@ -27,6 +28,7 @@ não uma lacuna funcional encontrada.
 | Worktree de sensor | diretório temporário fora do workspace | Removido ao final |
 | Workspace durante a revisão | branch codex-spec-12 | F-07 foi corrigido no código e documentado; não há alteração de segredo |
 | Verificação de patch | git diff --check | PASS |
+| E2E externo Sandbox | Asaas → webhook → Supabase Auth → `/app` | Pix e cartão confirmados; webhook HTTP 200; senha e login concluídos |
 
 A alteração de código desta rodada é exclusivamente a correção F-07, descoberta
 no teste E2E do e-mail. O sensor anterior foi executado em uma cópia descartável
@@ -80,25 +82,42 @@ SSR diretamente.
 | SEC-04/SEC-05/SEC-06 | PASS local: credenciais server-only, HTTPS/allowlist e nenhum nome de modelo ou segredo hardcoded | src/modules/pagamentos/asaas.test.ts:17 · src/modules/pagamentos/asaas.test.ts:214 |
 | SEC-07/SEC-08 | PASS: logs/erros saneados e tipos de conteúdo coerentes | src/app/api/webhooks/asaas/route.test.ts:20 · src/app/api/analytics/route.test.ts:70 |
 
-## Reteste manual pendente do F-07
+## F-07 — Reteste manual concluído
 
-O teste manual de pagamento confirmou o webhook Asaas e a ativação da conta, mas
-o e-mail padrão do Supabase levou à home/login em vez de mostrar a definição de
-senha. A causa está isolada: o e-mail enviado pelo cliente de serviço usa o
-fluxo implícito, enquanto o callback anterior esperava `?code` PKCE.
+O primeiro teste manual revelou que o e-mail padrão do Supabase levava à
+home/login em vez de mostrar a definição de senha. A causa foi isolada: o
+e-mail enviado pelo cliente de serviço usa o fluxo implícito, enquanto o
+callback anterior esperava `?code` PKCE.
 
 A correção está implementada e coberta por `src/app/auth/confirm/route.test.ts`.
-Para fechar o E2E, ainda é necessário:
+O template com `token_hash`, as Redirect URLs e o fluxo real foram conferidos:
 
-1. Em **Authentication → Email Templates → Reset Password**, salvar o link com
-   `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`.
-2. Em **Authentication → URL Configuration → Redirect URLs**, incluir
-   `http://localhost:3000/auth/confirm` (e o domínio de produção quando existir).
-3. Solicitar um novo link em `/recuperar-senha`, clicar no e-mail e confirmar a
-   tela **Defina sua senha**; depois salvar a senha e entrar no `/app`.
+1. O e-mail abriu **Defina sua senha**.
+2. A nova senha foi salva.
+3. O usuário entrou no `/app` após a ativação do pagamento.
 
-O link antigo não serve como evidência do conserto; ele pode ter sido consumido
-ou foi criado com o template anterior.
+O F-07 está PASS. O link antigo não é usado como evidência; a evidência é o
+reteste real descrito acima.
+
+## Melhoria futura — UX do pagamento e entrada
+
+Observada na homologação externa de 2026-08-22. Não bloqueia a implementação da
+SPEC 12, mas deve virar uma tarefa de UX na SPEC 13 ou em uma rodada posterior
+de checkout:
+
+- No cartão, a cobrança é criada primeiro e o comprador precisa descobrir o
+  link **Acompanhar cobrança** para chegar ao formulário de cartão hospedado
+  pelo Asaas. O resultado precisa explicar esse próximo passo de forma direta
+  ou abrir o pagamento automaticamente.
+- Após a confirmação, a tela não informa claramente que o e-mail para criar a
+  senha foi enviado. Deve existir uma mensagem explícita, endereço mascarado e
+  ação para reenviar o e-mail.
+- Depois do pagamento hospedado, o retorno ao Passou Concursos não é evidente.
+  O fluxo futuro deve oferecer retorno explícito, consulta da cobrança e uma
+  forma de retomar o resultado sem depender do histórico do navegador.
+
+Esses itens são melhoria de experiência, não correção de segurança nem mudança
+do contrato de ativação. O fluxo atual foi concluído com sucesso.
 
 ## Casos de borda exercitados
 
@@ -174,24 +193,27 @@ por rede; a repetição com autorização de acesso ao Postgres Supabase passou.
 As 20 falhas da suíte DB geral permanecem concentradas nos módulos antigos
 gera-plano/plano e Raio-X; não foram alteradas para mascarar a SPEC 12.
 
-## Evidência externa — 2026-08-21
+## Evidência externa — 2026-08-22
 
 - **Supabase Auth + Resend — PASS manual:** domínio `auth.passouconcursos.com` verificado;
   SMTP próprio configurado; template `Reset Password` com `token_hash` salvo; recuperação,
   definição de senha e novo login testados pelo responsável do produto.
+- **Asaas Sandbox — PASS manual parcial:** uma compra Pix e uma compra em cartão foram
+  confirmadas; o webhook corrigido retornou HTTP 200; a conta foi ativada, o e-mail de
+  definição de senha chegou e o novo login abriu `/app`.
 - **PostHog — PASS parcial manual:** o projeto US recebeu o token; a tela Activity mostrou
   `pagina_vista`, `checkout_iniciado` e `meio_escolhido`. Os três eventos apareceram com a
-  pessoa `anonimo`, sem dado pessoal visível. O evento `pagamento_confirmado` depende do
-  webhook real do Asaas e permanece pendente.
+  pessoa `anonimo`, sem dado pessoal visível. O evento `pagamento_confirmado` foi emitido
+  no caminho do webhook real; a conferência visual do evento no painel ainda fica pendente.
 
 ## Dependências externas e teste manual posterior
 
-O código local está pronto, mas a validação ponta a ponta ainda precisa de:
+O código local está pronto. Para completar a homologação externa, ainda falta:
 
 1. CNPJ, regime fiscal, conta Asaas, contrato lido, credenciais de sandbox,
    token do webhook e configuração dos campos fiscais.
-2. Uma compra de teste em cartão, Pix e boleto; repetição do webhook; ausência
-   de webhook para a reconciliação; reembolso no 5º e no 9º dia; e NF sem,
+2. Uma compra de teste em boleto; repetição do webhook; ausência de webhook
+   para a reconciliação; reembolso no 5º e no 9º dia; e NF sem,
    processando e com cancelamento negado.
 3. O quarto evento PostHog, `pagamento_confirmado`, durante a homologação do webhook Asaas,
    conferindo a ausência de CPF, e-mail e meio de pagamento.
@@ -202,9 +224,8 @@ documentos, testes ou commits.
 
 ## Conclusão
 
-A SPEC 12 está implementada e passou nos gates técnicos locais. Ela entrega o
-caminho visitante → checkout → pagamento → webhook → conta/matrícula, a
-reconciliação das cobranças, a garantia/reembolso, a fatura/NF, o funil anônimo
-e as proteções de segurança correspondentes. Para declarar fechamento oficial
-ainda faltam a homologação externa do Asaas, o evento `pagamento_confirmado`,
-a NF fiscal real e a tela autenticada de reembolso com uma conta de teste ativa.
+A SPEC 12 está implementada e passou nos gates técnicos locais. O caminho
+visitante → checkout → pagamento → webhook → conta/matrícula → senha → login foi
+confirmado no Sandbox para Pix e cartão. Para declarar fechamento oficial ainda
+faltam o boleto, a conferência visual do evento `pagamento_confirmado`, a NF
+fiscal real e a tela autenticada de reembolso com uma conta de teste ativa.

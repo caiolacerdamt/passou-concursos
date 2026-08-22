@@ -413,7 +413,7 @@ verificação independente.
 - **State**: concluida; o contrato integrado de checkout, webhook, ativação, reconciliação, garantia, fatura, retenção e paywall foi exercitado por testes unitários e de banco; rastreabilidade e gates foram atualizados.
 - **Assumptions**: o Postgres de desenvolvimento é o banco de contrato; `/` e `/checkout` foram conferidos em desktop e viewport de 360 px, enquanto a tela autenticada de reembolso depende de uma conta de teste; o Verifier independente separado não foi iniciado por instrução explícita do usuário, então o relatório final identifica a revisão fresh-eyes do agente principal e o sensor scratch executado.
 - **Files**: `tests/db/pagamentos-schema.test.ts`, `tests/db/matricula.test.ts`, `.specs/features/12-checkout-funil-e-ativacao/spec.md`, `.specs/features/12-checkout-funil-e-ativacao/tasks.md`, `.specs/features/12-checkout-funil-e-ativacao/validation.md`.
-- **Success evidence**: `tests/db/pagamentos-schema.test.ts` + `tests/db/matricula.test.ts` — 24/24 testes verdes com conexão autorizada; unitários 78/563; lint, TypeScript, build, validação visual local, sensor e validadores registrados em `validation.md`.
+- **Success evidence**: `tests/db/pagamentos-schema.test.ts` + `tests/db/matricula.test.ts` — 24/24 testes verdes com conexão autorizada; unitários 80/567; lint, TypeScript, build, validação visual local, sensor e validadores registrados em `validation.md`.
 
 ## Correções pós-validação independente
 
@@ -428,6 +428,20 @@ scratch e a validação visual local.
 | F-03 | Reabertura exclusiva `expirada → confirmada` na reconciliação, seguida de ativação idempotente | `supabase/migrations/20260821131000_spec12_reconciliacao.sql`, `supabase/migrations/20260821133000_spec12_guards.sql`, `scripts/jobs/reconciliacao-pagamentos.mts` | Unit direcionado verde; DB schema 12/12 |
 | F-04 | Cancelamento oficial de NF, estados persistidos e fila segura; ausência de NF não bloqueia reembolso | `src/modules/pagamentos/asaas.ts`, `src/modules/pagamentos/garantia.ts`, `src/modules/pagamentos/repositorio.ts` | Unit direcionado verde; DB schema 12/12 |
 | F-05 | Capability token aleatório, hash-only, TTL e lookup server-side; UUID não é aceito na rota pública | `src/modules/pagamentos/resultado-token.ts`, `src/modules/pagamentos/repositorio.ts`, `src/app/checkout/resultado/[token]/page.tsx`, `supabase/migrations/20260821132000_spec12_resultado_token.sql`, `supabase/migrations/20260821133000_spec12_guards.sql` | Unit direcionado verde; DB schema 12/12; build reconhece `/checkout/resultado/[token]` |
+
+### F-07 — link de definição de senha caía na home/login
+
+- **Diagnóstico**: a ativação dispara `resetPasswordForEmail` pelo cliente de serviço. O cliente usa
+  o fluxo implícito; o template padrão devolve o token em fragmento, invisível ao servidor, enquanto
+  `/auth/callback` só tratava `code` PKCE.
+- **Correção**: `/auth/confirm` valida `token_hash` com `verifyOtp`, grava a sessão SSR e encaminha
+  para `/definir-senha`; o envio de ativação aponta para esse contrato. O template Reset Password
+  exigido e as Redirect URLs estão documentados em `docs/DEPLOY.md`.
+- **Evidência técnica**: `src/app/auth/confirm/route.ts`,
+  `src/app/auth/confirm/route.test.ts`, `src/modules/pagamentos/repositorio.ts`;
+  3 testes direcionados, 80 arquivos/567 testes unitários, TypeScript e build verdes.
+- **Pendente externo**: salvar o template no projeto Supabase e repetir o link com uma conta de teste;
+  até essa confirmação, a SPEC fica com fechamento E2E pendente, não com falha de código conhecida.
 
 ## Diagram-Definition Cross-Check
 

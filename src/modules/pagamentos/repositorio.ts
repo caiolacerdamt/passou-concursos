@@ -306,7 +306,9 @@ export function criarRepositorioDePagamentos(
     async enviarDefinicaoDeSenha(email: string): Promise<void> {
       const origem = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
       const { error } = await cliente.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origem}/auth/callback?proximo=%2Fdefinir-senha`,
+        // O cliente de serviço não compartilha verifier PKCE com o navegador.
+        // O template Reset Password deve enviar token_hash para /auth/confirm.
+        redirectTo: `${origem}/auth/confirm`,
       });
       if (error) throw error;
     },

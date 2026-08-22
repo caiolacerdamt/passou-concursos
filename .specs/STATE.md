@@ -309,6 +309,24 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-102
+- **Decision**: O e-mail de definição/recuperação de senha disparado por código de servidor usa o
+  fluxo SSR de **`token_hash`**: o template do Supabase aponta para `/auth/confirm`, o handler aceita
+  somente `type=recovery`, chama `verifyOtp` no cliente de sessão e encaminha para `/definir-senha`.
+  O callback PKCE `/auth/callback` continua sendo o caminho de OAuth e das recuperações iniciadas
+  pelo navegador.
+- **Reason**: O cliente de serviço que roda após o webhook não compartilha com o navegador o verifier
+  PKCE. Com o template padrão, o Supabase devolve os tokens em um fragmento (`#...`), que nunca chega
+  ao servidor; o teste manual comprovou que o aluno caía na home/login em vez de definir a senha.
+  `token_hash` é o formato que o fluxo SSR consegue verificar no servidor e transformar em cookie.
+- **Trade-off**: A instalação precisa trocar uma vez o link do template **Reset Password** e incluir
+  `/auth/confirm` nas Redirect URLs do Supabase. Se isso não for feito, o código permanece seguro,
+  mas o link falha fechado e volta ao login. O token não é repassado à tela nem gravado em log.
+- **Scope**: SPEC 12 · `src/app/auth/confirm/route.ts`, `src/modules/pagamentos/repositorio.ts`,
+  template de e-mail e `docs/DEPLOY.md`. Complementa o contrato de sessão das specs 07/12.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
 - **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
@@ -329,8 +347,19 @@
   | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
   | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
   | **11 — Raio-X: frequência, peso e tela** | T98–T105 | ✅ **490 unit + 332 db**. Lint e build verdes. Ritual B — **PASS parcial** independente; limitações de ranking absoluto e timestamp registradas em `.specs/features/11-*/validation.md`. |
-  | **12 — Checkout, funil e ativação** | T106–T117 | ✅ **PASS local** — 78 arquivos/563 unitários, 24/24 DB específicos, lint, TypeScript, build, validação visual local e sensor 6/6. Integrações reais Asaas/PostHog e tela autenticada de reembolso aguardam configuração externa. |
-- **Next step**: **SPEC 13 — Onboarding, plano e sessão**
-  (`.specs/features/13-*/spec.md`, conforme `.specs/ROADMAP.md`). A SPEC 12 deixou
-  checkout, webhook, ativação, reconciliação, garantia, fatura e paywall prontos; o próximo passo
-  pode consumir a matrícula ativa sem criar dependência para uma spec de número maior.
+  | **12 — Checkout, funil e ativação** | T106–T117 | ✅ **Implementada; gates técnicos PASS** — 80 arquivos/567 unitários, 24/24 DB específicos, TypeScript e build verdes. O webhook Asaas foi exercitado no Sandbox e ativou a conta; falta concluir o reteste do e-mail de senha após a configuração SSR do template Supabase, além das integrações externas opcionais e da tela autenticada de reembolso. |
+- **Retomada imediata da SPEC 12**: aplicar no Supabase o template documentado em
+  `docs/DEPLOY.md` (*Reset Password* com `{{ .TokenHash }}`), acrescentar
+  `http://localhost:3000/auth/confirm` nas Redirect URLs, pedir um novo link em
+  `/recuperar-senha`, clicar nele e confirmar que `/definir-senha` aparece e leva ao login com a senha
+  nova. O código da correção está no commit `f15b1b8` mais as alterações não commitadas desta rodada;
+  depois do reteste, atualizar `validation.md` e criar o commit de fechamento.
+- **O que ainda falta para fechar oficialmente**: (1) reteste E2E do link de definição de senha;
+  (2) conferência autenticada de `/app/reembolso`; (3) testes externos adicionais Asaas Sandbox
+  (cartão/boleto, reconciliação e reembolso); (4) CNPJ/regime/configuração fiscal para NF; e
+  (5) configurar PostHog e conferir os quatro eventos anônimos. Nenhum segredo deve entrar nos
+  documentos ou commits.
+- **Next step depois do fechamento**: **SPEC 13 — Onboarding, plano e sessão**
+  (`.specs/features/13-*/spec.md`, conforme `.specs/ROADMAP.md`). A SPEC 12 deixa
+  checkout, webhook, ativação, reconciliação, garantia, fatura e paywall prontos; a SPEC 13 pode
+  consumir a matrícula ativa sem criar dependência para uma spec de número maior.

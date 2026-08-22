@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 13, 16, 17, 28, 34 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ✅ Implementada; validação local concluída; integrações externas pendentes |
+| **Status** | ✅ Implementada; gates técnicos concluídos; fechamento E2E pendente da configuração do template de recuperação no Supabase |
 | **Requisitos** | **PAG-08**, **PAG-17**, **INFRA-12**, **PAG-02**, **PAG-05**, **PAG-09**, **PAG-06**, **PAG-13**, **PAG-12**, **DADOS-11**, **PAG-03**, **INFRA-10** (webhook) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` (DADOS-11) |
 | **Vem de** | SPEC 19 + SPEC 21 + a garantia da SPEC 20 do recorte de 42 (AD-089) |

@@ -374,23 +374,20 @@
 
 ## Handoff
 
-- **Feature**: SPEC 12 — checkout, funil e ativação — **CONCLUÍDA** (`.specs/features/12-checkout-funil-e-ativacao`)
-- **Phase / Task**: encerrada em 2026-08-22 após homologação externa completa no Asaas Sandbox.
-- **Completed**: T106–T117, F-07–F-10 e, nesta rodada, **F-11** (estorno de parcelamento usava o
-  endpoint da parcela), **F-12** (`asaas_status` congelado em `PENDING` e vazando na tela do
-  comprador), **F-15** (reembolso nunca fechava — nada tratava a confirmação tardia do gateway) e
-  **F-16** (registro do pedido de reembolso nulo: dependência opcional nunca ligada na action).
-  **Estorno PASS com dado real**: `PAYMENT_REFUNDED` às 22:12:46 UTC levou pagamento e matrícula a
-  `reembolsada` sozinho, com `ultima_falha_codigo = reembolso_confirmado_webhook`. Antes já estavam
-  PASS: Pix, cartão e boleto ponta a ponta, webhook idempotente, reconciliação sem webhook,
-  transição inválida com alerta, e os quatro eventos do funil anônimos no PostHog.
+- **Feature**: otimização da suíte de banco — **CONCLUÍDA** (AD-104).
+- **Phase / Task**: implementação e validação independentes encerradas em 2026-08-22.
+- **Completed**: pool local de tamanho 1 no worker sequencial; transação revertida por teste;
+  configuração Vitest compartilhada entre arquivos; métrica acumulada no comando oficial;
+  jobs de app e banco em paralelo com check agregado preservado; cancelamento de CI obsoleta e
+  exclusão mútua do Supabase de desenvolvimento. Gates: build/typecheck e lint verdes, 589/589
+  unitários, 348/348 testes de banco em 72,88 s, 350 usos do helper e 1 conexão física. Validação
+  independente: 6/6 critérios e 5/5 mutações detectadas.
 - **In-progress**: nada.
-- **Next step**: **SPEC 13** — onboarding, plano do 1º dia e sessão de questões. É o loop central.
-- **Blockers**: nenhum para a 13. Seguem pendências externas declaradas: CNPJ/regime fiscal para NF
-  (5 pendências `nota_fiscal/configuracao_nf_ausente` provam que o caminho degradado funciona — a
-  compra ativa e a nota espera) e free tier do PostHog em fonte primária antes de ligar.
+- **Next step**: enviar a branch e medir o job `Testes de banco` no GitHub; depois, **SPEC 13** —
+  onboarding, plano do 1º dia e sessão de questões.
+- **Blockers**: nenhum. A medição no runner do GitHub depende apenas de push/PR autorizado.
 - **Uncommitted files**: none
-- **Branch**: `main`
+- **Branch**: `codex/otimiza-testes-db`
 
 ### Herdado pela SPEC 13
 

@@ -36,7 +36,11 @@ export default defineConfig({
           name: "db",
           include: ["tests/db/**/*.test.ts"],
           setupFiles: ["tests/db/setup.ts"],
+          runner: "tests/db/runner.ts",
           fileParallelism: false,
+          // Um unico worker e um unico grafo de modulos: o Pool de conexao em
+          // tests/db/conexao.ts sobrevive entre arquivos e reutiliza o socket.
+          isolate: false,
           environment: "node",
           // O default de 5s e curto para teste de banco **na CI**, e nao por
           // lentidao do teste: o runner do GitHub fica longe de sa-east-1, e cada

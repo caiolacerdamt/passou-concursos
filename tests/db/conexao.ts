@@ -1,21 +1,76 @@
-import { Client } from "pg";
+import { Client, Pool } from "pg";
+
+const estatisticas = {
+  conexoes: 0,
+  usos: 0,
+};
+
+/**
+ * Um socket para o worker sequencial inteiro.
+ *
+ * `allowExitOnIdle` deixa o processo do Vitest terminar sem chamar `pool.end()`;
+ * `idleTimeoutMillis: 0` impede que o socket seja descartado entre dois arquivos
+ * lentos. O limite 1 e parte do contrato: a suite de banco continua sequencial.
+ */
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 1,
+  idleTimeoutMillis: 0,
+  allowExitOnIdle: true,
+});
+
+let clienteAtivo: Awaited<ReturnType<typeof pool.connect>> | null = null;
+
+/**
+ * Fachada unica do worker. O `pg` deixa o objeto do PoolClient consultavel
+ * depois de `release()`, o que permitiria uma query escapar do callback. Esta
+ * fronteira recusa o uso quando nao existe uma locacao ativa.
+ */
+const clienteCompartilhado = {
+  query(...argumentos: unknown[]) {
+    if (clienteAtivo === null) {
+      return Promise.reject(
+        new Error("cliente de teste usado fora do callback de comBanco"),
+      );
+    }
+    return Reflect.apply(clienteAtivo.query, clienteAtivo, argumentos);
+  },
+} as unknown as Client;
+
+pool.on("connect", () => {
+  estatisticas.conexoes += 1;
+});
+
+pool.on("error", (erro) => {
+  console.error(`[db] conexao ociosa falhou: ${erro.message}`);
+});
+
+export function resumoDasConexoes(): Readonly<typeof estatisticas> {
+  return { ...estatisticas };
+}
 
 /**
  * Conexao com o banco de desenvolvimento para os testes do projeto `db`.
  *
- * Abre uma conexao, entrega ao teste e **fecha sempre** — inclusive quando o
- * teste falha. Cada teste abre a sua: um cliente vazado segura o processo do
- * Vitest aberto no fim da suite.
+ * Reserva a conexao compartilhada, entrega ao teste e **libera sempre** —
+ * inclusive quando o teste falha. Depois que o callback termina, o mesmo objeto
+ * nao pode mais ser usado ate o pool entrega-lo de novo.
  */
 export async function comBanco<T>(
   uso: (cliente: Client) => Promise<T>,
 ): Promise<T> {
-  const cliente = new Client({ connectionString: process.env.DATABASE_URL });
-  await cliente.connect();
+  if (clienteAtivo !== null) {
+    throw new Error("comBanco nao aceita uso aninhado no worker sequencial");
+  }
+
+  clienteAtivo = await pool.connect();
+  estatisticas.usos += 1;
   try {
-    return await uso(cliente);
+    return await uso(clienteCompartilhado);
   } finally {
-    await cliente.end();
+    const clienteParaLiberar = clienteAtivo;
+    clienteAtivo = null;
+    clienteParaLiberar.release();
   }
 }
 

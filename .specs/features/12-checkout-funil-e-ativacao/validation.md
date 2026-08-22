@@ -229,3 +229,79 @@ visitante → checkout → pagamento → webhook → conta/matrícula → senha 
 confirmado no Sandbox para Pix e cartão. Para declarar fechamento oficial ainda
 faltam o boleto, a conferência visual do evento `pagamento_confirmado`, a NF
 fiscal real e a tela autenticada de reembolso com uma conta de teste ativa.
+
+---
+
+## Homologação externa — 2026-08-22 (rodada final)
+
+Resultado: **NÃO fecha ainda.** A homologação com dinheiro real no Sandbox confirmou tudo o que
+faltava, exceto o estorno, e revelou um defeito de produção (F-11) que nenhum teste local pegaria.
+
+### O que passou com dado real
+
+| Item | Evidência |
+| --- | --- |
+| **Boleto ponta a ponta** | `pay_vcvhgr43rku5ffw8`: confirmado 19:25:34 → ativado 19:25:37, sem intervenção manual; matrícula `ativa` até 2027-08-22. Era o último Success Criteria em aberto |
+| **Cartão ponta a ponta** | duas compras ativadas (19:43:32 e 20:07:20) |
+| **Funil anônimo no PostHog** | os quatro eventos com `PERSON = anônimo` e **propriedades vazias** — inclusive `URL/SCREEN` e `LIBRARY` em branco, ou seja nem as propriedades automáticas passaram. PAG-17 / INFRA-12 |
+| **Transição inválida rejeitada com alerta** | pendências `reconciliacao/evento_fora_de_ordem` em 19:43:33 e 20:07:21: um segundo evento do Asaas chegou para pagamento já ativado, a máquina de estados recusou a transição e abriu pendência visível **em vez de corromper o estado**. É o AC acontecendo fora de teste |
+| **NF ausente não trava a compra** | 5 pendências `nota_fiscal/configuracao_nf_ausente` com os pagamentos em `ativada`: o caminho degradado sem CNPJ funciona como projetado |
+
+### F-11 — estorno de cartão parcelado usa o endpoint errado (BLOQUEIA)
+
+O cartão é criado como parcelamento de 12x (`asaas.ts:142`). O Asaas cria um **parcelamento** e
+devolve uma parcela; o id do parcelamento (`installment`) é descartado — não está em
+`RespostaCobranca` (`asaas.ts:366`) nem em `normalizarCobranca` (`asaas.ts:398`). O estorno chama
+`POST /payments/{id}/refund` com o id da parcela (`asaas.ts:219`) e o Asaas recusa: *"acesse a tela
+de detalhes desse parcelamento para solicitar o estorno"*. A doc oficial exige
+`POST /installments/{id}/refund`.
+
+Reproduzido duas vezes com dado real: pendências `falha_no_estorno` em 19:31:34 e 20:09:22.
+
+**Não é limitação do Sandbox — quebraria em produção**, no meio principal de pagamento. A garantia
+de 7 dias (PAG-03) deixa de concluir sozinha. O pedido não se perde (abre pendência, alerta a
+operação e mantém o acesso ligado até o estorno sair), mas a devolução vira processo manual.
+
+**Correção**: capturar `installment`; persistir em `pagamentos.asaas_parcelamento_id` (migration);
+em `estornarCobranca`, escolher `/installments/{id}/refund` quando houver parcelamento, mantendo
+`/payments/{id}/refund` (Pix) e `/bankSlip/refund` (boleto); teste que prova a escolha do endpoint.
+
+**Por que escapou:** o teste do estorno usa gateway falso, que aceita qualquer id e devolve sucesso.
+Ele prova que chamamos o gateway, não que acertamos o endpoint de uma compra parcelada. O sensor de
+mutação da rodada anterior mediu a mesma superfície e por isso também não pegou. Nenhum teste com
+peça simulada acharia — só pagamento real. **Lição para as specs de dinheiro: o gateway falso prova
+o fluxo, nunca o contrato externo.**
+
+### Limitação do ambiente, registrada
+
+O Sandbox do Asaas **não estorna cartão** — o próprio painel informa: *"Esta ação Sandbox permite
+estorno apenas de pagamentos via PIX ou boleto"*. Depois da correção do F-11, o estorno será
+homologado **por Pix**; o de cartão parcelado ficará coberto por teste automatizado da escolha do
+endpoint e **só pode ser confirmado em produção**.
+
+Para confirmar Pix no Sandbox use **"Confirmar pagamento"**, não "Receber pagamento": este é baixa
+manual em dinheiro, e a doc do Asaas separa `undoReceivedInCash` de `refund`. Foi o que impediu o
+estorno do boleto nesta rodada — e não é defeito nosso.
+
+### Defeitos menores abertos
+
+- **F-12 — `asaas_status` congela em `PENDING`** (`repositorio.ts:117`): só é escrito na criação da
+  cobrança; o webhook nunca atualiza. A tela mostra *"Status operacional: ativada · retorno do
+  provedor: PENDING"*, contradizendo a si mesma para quem acabou de pagar. Proposta: remover o bloco
+  de diagnóstico da tela do comprador e atualizar o campo no webhook. **Aguarda decisão.**
+- **F-13 — aviso preso na URL** (`app/reembolso/page.tsx:96`): recarregar a página reexibe *"O pedido
+  ficou em análise"* sem nova tentativa. → SPEC 13.
+- **F-14 — UX de definir senha**: adicionar o botão de revelar a senha. **Não** adicionar confirmação
+  de senha (padrão em desuso; não evita o erro que promete e aumenta abandono) nem redirecionar ao
+  login (a pessoa acabou de provar identidade pelo link do e-mail). → SPEC 13.
+
+### Correções entregues nesta rodada
+
+PR #23, mergeado na `main`, CI 6/6 verde (576 unit, 344 db, lint, build), publicado na Vercel:
+
+| Commit | O quê |
+| --- | --- |
+| `202ad04` | job do partman em dois — falhava diariamente desde 17/08 e a manutenção de partição de `tentativas` não rodava |
+| `fa26e19` | isolamento de `perfil_concurso` nos testes — um perfil de demonstração derrubava 6 arquivos na CI |
+| `9cdc5f3` | aviso do e-mail de senha, com endereço mascarado — a tela mandava entrar quem não tinha senha |
+| `560e692` | "Acompanhar cobrança" → "Pagar agora", em aba nova |

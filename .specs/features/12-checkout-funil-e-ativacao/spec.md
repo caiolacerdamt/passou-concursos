@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 13, 16, 17, 28, 34 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ✅ Implementada; gates técnicos concluídos; E2E real confirmado para Pix e cartão; homologação externa restante registrada em `validation.md` |
+| **Status** | 🔄 **Em homologação.** Implementada e mergeada na `main` (PR #23). Pix, cartão, boleto, funil e reconciliação PASS com dado real. **Bloqueada pelo F-11** — estorno de cartão parcelado chama o endpoint errado do Asaas. Detalhe em `validation.md` e no handoff do `STATE.md` |
 | **Requisitos** | **PAG-08**, **PAG-17**, **INFRA-12**, **PAG-02**, **PAG-05**, **PAG-09**, **PAG-06**, **PAG-13**, **PAG-12**, **DADOS-11**, **PAG-03**, **INFRA-10** (webhook) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` (DADOS-11) |
 | **Vem de** | SPEC 19 + SPEC 21 + a garantia da SPEC 20 do recorte de 42 (AD-089) |
@@ -149,12 +149,12 @@ checkout já foram conferidos no navegador local.
 ## Success Criteria
 
 - [x] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique — conferido em desktop e viewport de 360 px
-- [ ] Compra de ponta a ponta em cada meio de pagamento — Pix e cartão PASS no Sandbox; boleto ainda pendente
+- [x] Compra de ponta a ponta em cada meio de pagamento — Pix, cartão e **boleto** PASS no Sandbox
 - [x] Mesmo webhook disparado três vezes → **uma** conta e **uma** matrícula
 - [x] Webhook apagado → o job de reconciliação ativa a compra sozinho
 - [x] E-mail com matrícula ativa comprando de novo é avisado, não cobrado
 - [x] Checkout sem a declaração de 18+ não conclui
 - [x] Transição inválida (reembolso antes da confirmação) é rejeitada com alerta
-- [x] Reembolso no 5º dia devolve e encerra; no 9º, recusa com mensagem clara
-- [x] Os quatro eventos aparecem sem nenhum dado pessoal nas propriedades
+- [ ] Reembolso no 5º dia devolve e encerra; no 9º, recusa com mensagem clara — **F-11**: no cartão parcelado o estorno falha e cai em pendência manual. A recusa fora da janela e a auditoria estão PASS; o que falta é a devolução concluir sozinha
+- [x] Os quatro eventos aparecem sem nenhum dado pessoal nas propriedades — conferido no PostHog em 2026-08-22
 - [x] Bloquear o analytics no navegador e concluir a compra normalmente

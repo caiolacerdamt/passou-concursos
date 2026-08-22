@@ -352,3 +352,64 @@ primeiro estorno de cartão em produção é o teste de verdade e SHALL ser acom
 
 Homologar o **estorno por Pix** com dado real no Sandbox (AC3 da garantia). O cartão fica coberto
 por teste automatizado + doc, com a ressalva acima registrada.
+
+## F-15 — o reembolso nunca fechava. Corrigido
+
+Descoberto na homologação do estorno por Pix, 2026-08-22, **depois** da correção do F-11.
+Branch `fix-spec-12-reembolso-assincrono`. Migration `20260822210000_spec12_reembolso_assincrono.sql`.
+
+### O que aconteceu
+
+O aluno pediu o reembolso e a tela respondeu *"O pedido ficou em análise"*. Evidência no banco:
+pendência `estorno_aguardando_confirmacao` às 21:14:10 — e **não** `falha_no_estorno`. A diferença é
+o diagnóstico inteiro: **o Asaas aceitou o estorno**, o endpoint estava certo (F-11 confirmado em
+produção), mas o gateway **não confirmou na mesma chamada**.
+
+No painel: *"Você possui 1 evento crítico pendente — Criação de reembolso de crédito Pix"*, com
+autorização por código do titular. É o status `AWAITING_CRITICAL_ACTION_AUTHORIZATION` do enum de
+estorno da doc, ao lado de `PENDING`. Estorno de Pix **é assíncrono por natureza**, e a conta ainda
+pode exigir autorização humana.
+
+E o nosso código só fechava o reembolso local se o gateway respondesse confirmado **na mesma
+chamada**. Nada fechava depois: o webhook só tratava `PAYMENT_RECEIVED`/`PAYMENT_CONFIRMED` e o job
+de reconciliação só ativa quem pagou. **Resultado: dinheiro devolvido, aluno com acesso, sistema sem
+saber** — e o pedido pendurado para sempre. AC3 da garantia (PAG-03) não fechava.
+
+Somando: a assinatura de webhooks no Asaas tinha só `PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED`. Mesmo
+com o código certo, a confirmação não chegaria. **Passo de configuração, não de código** — registrado
+abaixo.
+
+### Correção
+
+| Onde | O quê |
+| --- | --- |
+| `webhook.ts` | `PAYMENT_REFUNDED` encerra o acesso, fecha pagamento e matrícula e trata a NF |
+| `webhook.ts` | `PAYMENT_REFUND_DENIED` e `PAYMENT_PARTIALLY_REFUNDED` abrem alerta **sem** cortar acesso — negado não devolveu dinheiro, e parcial é decisão humana |
+| `webhook.ts` | evento de estorno em cobrança ainda `pendente` é rejeitado e vai para reconciliação, como qualquer evento fora de ordem |
+| `garantia.ts` | `fecharReembolsoConfirmado` extraído: um caminho só, usado pelo estorno síncrono e pelo assíncrono |
+| `garantia.ts` + migration | o **pedido** passa a ser gravado na hora do clique do aluno (`registrar_pedido_de_reembolso`), sem mexer no acesso |
+| migration | `confirmar_reembolso_pagamento` preserva o pedido original em vez de sobrescrever com a hora do gateway |
+
+**Por que a data do pedido importa:** é ela que prova a janela de 7 dias. Se o fechamento gravasse a
+hora da confirmação — que pode chegar dias depois —, a auditoria diria que o aluno pediu fora do
+prazo quando ele pediu dentro.
+
+**Falha no fechamento estoura de propósito.** O handler devolve 202, o Asaas reenvia, e o reenvio é o
+único caminho para o acesso cair sozinho depois que o dinheiro voltou. É o oposto da escolha do F-12,
+onde engolir era o certo — lá o evento já estava registrado e o replay seria descartado como
+duplicado. A regra: **engole o que é diagnóstico, estoura o que é dinheiro.**
+
+### Passo de configuração no Asaas — obrigatório
+
+Em Integrações → Webhooks, os eventos assinados SHALL incluir `PAYMENT_REFUNDED` e
+`PAYMENT_REFUND_DENIED` (e `PAYMENT_PARTIALLY_REFUNDED`, se houver estorno parcial), além de
+`PAYMENT_CONFIRMED` e `PAYMENT_RECEIVED`. Sem isso o reembolso não fecha, por mais correto que o
+código esteja. Marcado em 2026-08-22.
+
+### Lição
+
+O F-11 escapou porque o gateway falso não prova o **endereço** da chamada. O F-15 escapou por um
+degrau acima: o gateway falso não prova o **tempo** da resposta. Todo teste de estorno devolvia um
+status final na mesma chamada, então a hipótese "o gateway confirma na hora" nunca foi questionada —
+e ela era falsa no meio de pagamento mais comum do país. **Em spec de dinheiro, assumir resposta
+síncrona de gateway externo é assumir errado até prova real em contrário.**

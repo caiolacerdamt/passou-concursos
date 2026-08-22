@@ -50,6 +50,7 @@ function dependencias(estado: string = "pendente") {
     abrirPendencia: vi.fn(async () => undefined),
     encaminharParaAtivacao: vi.fn(async () => undefined),
     atualizarStatusGateway: vi.fn(async () => undefined),
+    fecharReembolso: vi.fn(async () => undefined),
     emitirPagamentoConfirmado: vi.fn(),
   };
 }
@@ -111,6 +112,69 @@ describe("contratos do webhook Asaas", () => {
 
     expect(await processarEventoAsaas(evento, comFalha)).toBe("encaminhado");
     expect(comFalha.encaminharParaAtivacao).toHaveBeenCalledTimes(1);
+  });
+
+  // F-15: o estorno do Asaas nao conclui na mesma chamada. Sem tratar o evento
+  // de confirmacao, o dinheiro voltava e o acesso continuava ligado.
+  it("estorno confirmado encerra o acesso uma vez, mesmo com replay", async () => {
+    const deps = dependencias("ativada");
+    const estorno = { ...evento, id: "evt_ref", tipo: "PAYMENT_REFUNDED", status: "REFUNDED" };
+
+    expect(await processarEventoAsaas(estorno, deps)).toBe("reembolsado");
+    expect(await processarEventoAsaas(estorno, deps)).toBe("duplicado");
+
+    expect(deps.fecharReembolso).toHaveBeenCalledTimes(1);
+    expect(deps.fecharReembolso).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "pag_1" }),
+    );
+    expect(deps.encaminharParaAtivacao).not.toHaveBeenCalled();
+  });
+
+  it("falha ao fechar o estorno estoura, para o Asaas reenviar", async () => {
+    const deps = dependencias("ativada");
+    deps.fecharReembolso.mockRejectedValueOnce(new Error("banco fora"));
+
+    await expect(
+      processarEventoAsaas(
+        { ...evento, id: "evt_ref", tipo: "PAYMENT_REFUNDED", status: "REFUNDED" },
+        deps,
+      ),
+    ).rejects.toThrow("banco fora");
+  });
+
+  it("estorno negado e estorno parcial alertam sem encerrar o acesso", async () => {
+    for (const [tipo, codigo] of [
+      ["PAYMENT_REFUND_DENIED", "estorno_negado"],
+      ["PAYMENT_PARTIALLY_REFUNDED", "estorno_parcial"],
+    ]) {
+      const deps = dependencias("ativada");
+
+      const resultado = await processarEventoAsaas(
+        { ...evento, id: `evt_${codigo}`, tipo, status: "RECEIVED" },
+        deps,
+      );
+
+      expect(resultado).toBe("rejeitado");
+      expect(deps.abrirPendencia).toHaveBeenCalledWith("pag_1", "alerta", codigo);
+      expect(deps.fecharReembolso).not.toHaveBeenCalled();
+    }
+  });
+
+  it("estorno de cobrança ainda pendente é rejeitado, não fecha nada", async () => {
+    const deps = dependencias("pendente");
+
+    const resultado = await processarEventoAsaas(
+      { ...evento, id: "evt_ref", tipo: "PAYMENT_REFUNDED", status: "REFUNDED" },
+      deps,
+    );
+
+    expect(resultado).toBe("rejeitado");
+    expect(deps.fecharReembolso).not.toHaveBeenCalled();
+    expect(deps.abrirPendencia).toHaveBeenCalledWith(
+      "pag_1",
+      "reconciliacao",
+      "evento_fora_de_ordem",
+    );
   });
 
   it("evento desconhecido é ignorado sem liberar conteúdo", async () => {

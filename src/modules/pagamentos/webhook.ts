@@ -7,6 +7,23 @@ const EVENTOS_DE_CONFIRMACAO = new Set([
   "PAYMENT_CONFIRMED",
 ]);
 
+/**
+ * O estorno do Asaas nao conclui na mesma chamada: em Pix nasce pendente e a
+ * conta pode exigir autorizacao por codigo do titular. A confirmacao chega
+ * aqui, e so aqui o acesso cai (F-15).
+ */
+const EVENTOS_DE_ESTORNO = new Set(["PAYMENT_REFUNDED"]);
+
+/**
+ * Estorno que nao concluiu como esperado. Nenhum deles encerra acesso sozinho:
+ * negado nao devolveu dinheiro, e parcial e decisao humana — devolver metade
+ * nao diz o que fazer com a matricula.
+ */
+const EVENTOS_DE_ESTORNO_SEM_FECHAMENTO = new Map([
+  ["PAYMENT_REFUND_DENIED", "estorno_negado"],
+  ["PAYMENT_PARTIALLY_REFUNDED", "estorno_parcial"],
+]);
+
 export type EventoAsaas = {
   id: string;
   tipo: string;
@@ -19,7 +36,8 @@ export type ResultadoDoWebhook =
   | "duplicado"
   | "ignorado"
   | "rejeitado"
-  | "encaminhado";
+  | "encaminhado"
+  | "reembolsado";
 
 export type DependenciasDoWebhook = {
   buscarPagamentoPorCobranca(cobrancaId: string): Promise<PagamentoOperacional | null>;
@@ -38,11 +56,12 @@ export type DependenciasDoWebhook = {
   ): Promise<void>;
   abrirPendencia(
     pagamentoId: string,
-    tipo: "ativacao" | "reconciliacao" | "alerta",
+    tipo: "ativacao" | "reconciliacao" | "alerta" | "nota_fiscal",
     codigo: string,
   ): Promise<void>;
   encaminharParaAtivacao(pagamentoId: string): Promise<void>;
   atualizarStatusGateway(pagamentoId: string, status: string): Promise<void>;
+  fecharReembolso?(pagamento: PagamentoOperacional): Promise<void>;
   emitirPagamentoConfirmado?: () => void;
 };
 
@@ -91,7 +110,10 @@ export async function processarEventoAsaas(
   dependencias: DependenciasDoWebhook,
 ): Promise<ResultadoDoWebhook> {
   const pagamento = await localizarPagamento(evento, dependencias);
-  const conhecido = EVENTOS_DE_CONFIRMACAO.has(evento.tipo);
+  const conhecido =
+    EVENTOS_DE_CONFIRMACAO.has(evento.tipo)
+    || EVENTOS_DE_ESTORNO.has(evento.tipo)
+    || EVENTOS_DE_ESTORNO_SEM_FECHAMENTO.has(evento.tipo);
 
   if (!conhecido || !pagamento) {
     const inserido = await dependencias.registrarEvento({
@@ -104,7 +126,7 @@ export async function processarEventoAsaas(
     return inserido ? "ignorado" : "duplicado";
   }
 
-  const estadoAceitavel = pagamento.estado === "pendente" || pagamento.estado === "confirmada";
+  const estadoAceitavel = estadoAceitaOEvento(evento.tipo, pagamento.estado);
   const inserido = await dependencias.registrarEvento({
     eventoId: evento.id,
     tipo: evento.tipo,
@@ -119,6 +141,23 @@ export async function processarEventoAsaas(
   if (!estadoAceitavel) {
     await dependencias.abrirPendencia(pagamento.id, "reconciliacao", "evento_fora_de_ordem");
     return "rejeitado";
+  }
+
+  const codigoSemFechamento = EVENTOS_DE_ESTORNO_SEM_FECHAMENTO.get(evento.tipo);
+  if (codigoSemFechamento) {
+    await dependencias.abrirPendencia(pagamento.id, "alerta", codigoSemFechamento);
+    return "rejeitado";
+  }
+
+  if (EVENTOS_DE_ESTORNO.has(evento.tipo)) {
+    if (!dependencias.fecharReembolso) {
+      await dependencias.abrirPendencia(pagamento.id, "alerta", "fechamento_reembolso_indisponivel");
+      return "rejeitado";
+    }
+    // Deixa estourar de proposito: um 202 faz o Asaas reenviar, e o reenvio
+    // e o unico jeito de o acesso cair sozinho depois de o dinheiro voltar.
+    await dependencias.fecharReembolso(pagamento);
+    return "reembolsado";
   }
 
   if (pagamento.estado === "pendente") {
@@ -147,6 +186,18 @@ async function registrarStatusDoGateway(
   } catch {
     // silencio proposital: ver comentario acima.
   }
+}
+
+/**
+ * Confirmacao so vale antes de o acesso abrir; estorno so vale depois. Repetir
+ * um estorno ja fechado nao e erro — a linha ja esta `reembolsada` e a RPC de
+ * fechamento e idempotente.
+ */
+function estadoAceitaOEvento(tipo: string, estado: string): boolean {
+  if (EVENTOS_DE_CONFIRMACAO.has(tipo)) {
+    return estado === "pendente" || estado === "confirmada";
+  }
+  return estado === "confirmada" || estado === "ativada" || estado === "reembolsada";
 }
 
 async function localizarPagamento(

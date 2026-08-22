@@ -26,8 +26,51 @@ export type ResultadoDoReembolso =
   | { estado: "recusado"; mensagem: string }
   | { estado: "pendente"; mensagem: string };
 
+/**
+ * O que basta para FECHAR um reembolso ja confirmado pelo gateway. E menos do
+ * que pedir um reembolso: nao ha janela para conferir nem gateway para chamar.
+ * O webhook usa exatamente isto quando a confirmacao chega depois (F-15).
+ */
+export type DependenciasDoFechamentoDeReembolso = {
+  confirmarReembolsoLocal(input: {
+    pagamentoId: string;
+    userId: string;
+    meio: MeioDePagamento;
+    quando: string;
+    motivo: string;
+  }): Promise<void>;
+  buscarFatura?(pagamentoId: string): Promise<FaturaOperacional | null>;
+  cancelarNotaFiscal?(faturaId: string): Promise<{ status: string | null }>;
+  registrarResultadoCancelamentoNF?(input: {
+    pagamentoId: string;
+    estado:
+      | "cancelamento_processando"
+      | "cancelada"
+      | "cancelamento_negado"
+      | "falha_cancelamento";
+    statusGateway: string | null;
+    codigo: string | null;
+  }): Promise<void>;
+  abrirPendencia(
+    pagamentoId: string,
+    tipo: "alerta" | "nota_fiscal",
+    codigo: string,
+  ): Promise<void>;
+};
+
 export type DependenciasDeReembolso = {
   buscarPagamentoDoUsuario(userId: string): Promise<PagamentoOperacional | null>;
+  /**
+   * Grava quem pediu e quando, sem mexer no acesso. Existe porque a confirmacao
+   * do estorno pode chegar horas depois: sem isto, a auditoria da janela de 7
+   * dias registraria a hora do gateway, nao a do aluno (F-15).
+   */
+  registrarPedidoDeReembolso?(input: {
+    pagamentoId: string;
+    userId: string;
+    meio: MeioDePagamento;
+    quando: string;
+  }): Promise<void>;
   estornarCobranca(
     cobrancaId: string,
     meio: MeioDePagamento,
@@ -221,6 +264,10 @@ export async function solicitarReembolso(
       pagamento.asaas_parcelamento_id,
     );
     if (!estornoConfirmado(estorno.status)) {
+      // O estorno foi aceito, so nao concluiu ainda — em Pix ele nasce
+      // `PENDING`, e a conta pode ainda exigir autorizacao por codigo do
+      // titular. O acesso continua ligado ate o `PAYMENT_REFUNDED` chegar.
+      await registrarPedidoSeguro(dependencias, pagamento, userId, agora);
       await abrirPendenciaSegura(
         dependencias,
         pagamento.id,
@@ -234,16 +281,11 @@ export async function solicitarReembolso(
     }
     gatewayConfirmado = true;
 
-    const quando = agora.toISOString();
-    await dependencias.confirmarReembolsoLocal({
-      pagamentoId: pagamento.id,
-      userId,
-      meio: pagamento.meio,
-      quando,
-      motivo: "reembolso_confirmado",
-    });
-    const notaFiscal = await processarCancelamentoDaNotaFiscal(
+    const notaFiscal = await fecharReembolsoConfirmado(
       pagamento,
+      userId,
+      agora,
+      "reembolso_confirmado",
       dependencias,
     );
 
@@ -272,12 +314,34 @@ export async function solicitarReembolso(
   }
 }
 
+async function registrarPedidoSeguro(
+  dependencias: DependenciasDeReembolso,
+  pagamento: PagamentoOperacional,
+  userId: string,
+  agora: Date,
+): Promise<void> {
+  try {
+    await dependencias.registrarPedidoDeReembolso?.({
+      pagamentoId: pagamento.id,
+      userId,
+      meio: pagamento.meio,
+      quando: agora.toISOString(),
+    });
+  } catch (erro) {
+    reportarErro(erro, {
+      modulo: "pagamentos",
+      operacao: "registrar_pedido_reembolso",
+      pagamento_id: pagamento.id,
+    });
+  }
+}
+
 function estornoConfirmado(status: string | null): boolean {
   return status !== null && ["DONE", "CONFIRMED", "REFUNDED"].includes(status.toUpperCase());
 }
 
 async function abrirPendenciaSegura(
-  dependencias: Pick<DependenciasDeReembolso, "abrirPendencia">,
+  dependencias: Pick<DependenciasDoFechamentoDeReembolso, "abrirPendencia">,
   pagamentoId: string,
   tipo: "alerta" | "nota_fiscal",
   codigo: string,
@@ -294,6 +358,29 @@ async function abrirPendenciaSegura(
   }
 }
 
+/**
+ * Fecha um reembolso que o gateway JA confirmou: encerra o acesso, registra a
+ * auditoria e trata a NF. Serve os dois caminhos — o sincrono (o Asaas
+ * confirmou na hora) e o assincrono (a confirmacao chegou por webhook horas
+ * depois). Nao decide nada sobre janela de garantia: quem chama ja decidiu.
+ */
+export async function fecharReembolsoConfirmado(
+  pagamento: PagamentoOperacional,
+  userId: string,
+  quando: Date,
+  motivo: string,
+  dependencias: DependenciasDoFechamentoDeReembolso,
+): Promise<ResultadoDoCancelamentoDaNota> {
+  await dependencias.confirmarReembolsoLocal({
+    pagamentoId: pagamento.id,
+    userId,
+    meio: pagamento.meio,
+    quando: quando.toISOString(),
+    motivo,
+  });
+  return processarCancelamentoDaNotaFiscal(pagamento, dependencias);
+}
+
 type ResultadoDoCancelamentoDaNota =
   | "ausente"
   | "cancelada"
@@ -303,7 +390,7 @@ type ResultadoDoCancelamentoDaNota =
 
 async function processarCancelamentoDaNotaFiscal(
   pagamento: PagamentoOperacional,
-  dependencias: DependenciasDeReembolso,
+  dependencias: DependenciasDoFechamentoDeReembolso,
 ): Promise<ResultadoDoCancelamentoDaNota> {
   if (!dependencias.buscarFatura || !dependencias.registrarResultadoCancelamentoNF) {
     return "ausente";
@@ -417,7 +504,7 @@ async function registrarFalhaDeCancelamentoNF(
   pagamentoId: string,
   statusGateway: string | null,
   codigo: string,
-  dependencias: DependenciasDeReembolso,
+  dependencias: DependenciasDoFechamentoDeReembolso,
 ): Promise<void> {
   try {
     await dependencias.registrarResultadoCancelamentoNF?.({

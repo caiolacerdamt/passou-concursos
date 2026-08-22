@@ -34,6 +34,8 @@ jobs:
           ASAAS_NF_NOME_SERVICO: ${{ secrets.ASAAS_NF_NOME_SERVICO }}
           ASAAS_NF_CODIGO_SERVICO: ${{ secrets.ASAAS_NF_CODIGO_SERVICO }}
           ASAAS_NF_IMPOSTOS_JSON: ${{ secrets.ASAAS_NF_IMPOSTOS_JSON }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_API_URL: ${{ secrets.POSTHOG_API_URL }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: job
         run: npm run jobs:reconciliacao

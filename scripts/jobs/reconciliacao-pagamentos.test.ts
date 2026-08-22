@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -174,6 +177,20 @@ describe("job de reconciliação de pagamentos", () => {
 });
 
 describe("configuração e entrada do job", () => {
+  it("workflow repassa as credenciais do PostHog para a reconciliação", () => {
+    const workflow = readFileSync(
+      path.resolve(process.cwd(), ".github/workflows/reconciliacao-pagamentos.yml"),
+      "utf8",
+    );
+
+    expect(workflow).toContain(
+      "POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}",
+    );
+    expect(workflow).toContain(
+      "POSTHOG_API_URL: ${{ secrets.POSTHOG_API_URL }}",
+    );
+  });
+
   it("para vermelho sem banco ou sem credenciais Asaas", () => {
     expect(motivoDeParada({})).toContain("DATABASE_URL");
     expect(motivoDeParada({ DATABASE_URL: "postgres://x" })).toContain("ASAAS");

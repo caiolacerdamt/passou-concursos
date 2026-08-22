@@ -465,6 +465,15 @@ scratch e a validação visual local.
   `src/modules/analytics/posthog.test.ts:57`.
 - **Gate**: `npm.cmd run test:unit` — 80 arquivos, 569 testes verdes.
 
+### F-10 — workflow não repassava PostHog à reconciliação
+
+- **Diagnóstico**: o job copiava `POSTHOG_API_KEY` e `POSTHOG_API_URL` quando existissem,
+  mas o workflow não as recebia dos secrets do GitHub.
+- **Correção**: o passo de reconciliação injeta os dois secrets e o teste estático protege o contrato.
+- **Evidência técnica**: `.github/workflows/reconciliacao-pagamentos.yml:34`,
+  `scripts/jobs/reconciliacao-pagamentos.test.ts:163`.
+- **Gate**: `npm.cmd run test:unit` — 80 arquivos, 570 testes verdes.
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |

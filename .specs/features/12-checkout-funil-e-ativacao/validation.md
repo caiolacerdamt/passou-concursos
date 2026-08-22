@@ -46,6 +46,7 @@ SSR diretamente.
 | F-07 — link de definição de senha caía na home/login | O cliente de serviço usa fluxo implícito e o template padrão entrega tokens no fragmento, que o servidor não recebe. O novo `/auth/confirm` valida `token_hash` via `verifyOtp`, cria a sessão SSR e encaminha para `/definir-senha`. | src/app/auth/confirm/route.ts · src/app/auth/confirm/route.test.ts · src/modules/pagamentos/repositorio.ts |
 | F-08 — reconciliação ignorava cobranças confirmadas | A listagem consulta `RECEIVED` e `CONFIRMED`, combina por ID e o job ativa uma cobrança `CONFIRMED` sem webhook. | src/modules/pagamentos/asaas.ts:192 · src/modules/pagamentos/asaas.test.ts:144 · scripts/jobs/reconciliacao-pagamentos.test.ts:81 |
 | F-09 — transporte PostHog usava contrato legado e host amplo | O publicador usa `/i/v0/e/`, envia `distinct_id` no campo próprio, mantém `properties` vazio e rejeita o domínio da interface. | src/modules/analytics/posthog.ts:8 · src/modules/analytics/posthog.ts:82 · src/modules/analytics/posthog.test.ts:57 |
+| F-10 — workflow não repassava PostHog à reconciliação | O workflow injeta `POSTHOG_API_KEY` e `POSTHOG_API_URL`, e o teste estático protege os dois nomes de secret. | .github/workflows/reconciliacao-pagamentos.yml:34 · scripts/jobs/reconciliacao-pagamentos.test.ts:163 |
 
 ## Acceptance criteria
 

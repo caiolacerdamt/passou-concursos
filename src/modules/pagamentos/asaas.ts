@@ -189,13 +189,18 @@ export class AsaasGateway {
       throw new ErroAsaas("entrada_invalida");
     }
 
-    const resposta = await this.request<RespostaListaDeCobrancas>(
-      "GET",
-      `${CAMINHO_PAGAMENTOS}?status=RECEIVED&offset=${offset}&limit=${limite}`,
-    );
-    return (Array.isArray(resposta.data) ? resposta.data : []).map(
-      normalizarCobrancaListada,
-    );
+    const cobrancasPorId = new Map<string, ListagemDeCobrancasAsaas>();
+    for (const status of ["RECEIVED", "CONFIRMED"] as const) {
+      const resposta = await this.request<RespostaListaDeCobrancas>(
+        "GET",
+        `${CAMINHO_PAGAMENTOS}?status=${status}&offset=${offset}&limit=${limite}`,
+      );
+      for (const cobranca of Array.isArray(resposta.data) ? resposta.data : []) {
+        const normalizada = normalizarCobrancaListada(cobranca);
+        cobrancasPorId.set(normalizada.id, normalizada);
+      }
+    }
+    return [...cobrancasPorId.values()];
   }
 
   async estornarCobranca(

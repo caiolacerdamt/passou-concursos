@@ -141,12 +141,19 @@ describe("adapter Asaas", () => {
         if (String(url).includes("status=RECEIVED")) {
           return respostaJson({ data: [{ id: "pay_1", status: "RECEIVED" }] });
         }
+        if (String(url).includes("status=CONFIRMED")) {
+          return respostaJson({ data: [{ id: "pay_2", status: "CONFIRMED" }] });
+        }
         return respostaJson({ id: "pay_1", status: "RECEIVED" });
       },
     });
 
     await gateway.consultarCobranca("pay_1");
-    await gateway.listarCobrancasPagas();
+    const cobrancas = await gateway.listarCobrancasPagas();
+    expect(cobrancas.map(({ id, status }) => ({ id, status }))).toEqual([
+      { id: "pay_1", status: "RECEIVED" },
+      { id: "pay_2", status: "CONFIRMED" },
+    ]);
     await gateway.estornarCobranca("pay_1", "PIX", "garantia");
     await gateway.estornarCobranca("pay_2", "BOLETO");
     const nota = await gateway.agendarNotaFiscal({
@@ -165,6 +172,7 @@ describe("adapter Asaas", () => {
     expect(chamadas).toEqual([
       "https://api-sandbox.asaas.com/v3/payments/pay_1",
       "https://api-sandbox.asaas.com/v3/payments?status=RECEIVED&offset=0&limit=100",
+      "https://api-sandbox.asaas.com/v3/payments?status=CONFIRMED&offset=0&limit=100",
       "https://api-sandbox.asaas.com/v3/payments/pay_1/refund",
       "https://api-sandbox.asaas.com/v3/payments/pay_2/bankSlip/refund",
       "https://api-sandbox.asaas.com/v3/invoices",

@@ -17,7 +17,7 @@ function pagamento(estado = "pendente"): PagamentoRecon {
   };
 }
 
-function dependencias() {
+function dependencias(status: "RECEIVED" | "CONFIRMED" = "RECEIVED") {
   let linha = pagamento();
   const eventos = new Set<string>();
   const ativacoes = new Set<string>();
@@ -43,7 +43,7 @@ function dependencias() {
   const gateway = {
     listarCobrancasPagas: vi.fn(async () => [{
       id: "pay_1",
-      status: "RECEIVED",
+      status,
       billingType: "PIX",
       externalReference: "checkout-1",
     }]),
@@ -59,6 +59,27 @@ function dependencias() {
 describe("job de reconciliação de pagamentos", () => {
   it("encontra pagamento pago sem webhook, confirma e solicita ativação", async () => {
     const deps = dependencias();
+
+    const resumo = await executarReconciliacao({
+      gateway: deps.gateway,
+      repositorio: deps.repo,
+      ativar: deps.ativar,
+      agora: new Date("2026-08-21T12:00:00.000Z"),
+      horasParaExpirar: 48,
+    });
+
+    expect(resumo).toMatchObject({
+      cobrancasConsultadas: 1,
+      pagamentosEncontrados: 1,
+      ativacoesSolicitadas: 1,
+      falhas: 0,
+    });
+    expect(deps.linha().estado).toBe("confirmada");
+    expect(deps.ativar).toHaveBeenCalledWith("pag_1");
+  });
+
+  it("encontra pagamento CONFIRMED sem webhook, confirma e solicita ativação", async () => {
+    const deps = dependencias("CONFIRMED");
 
     const resumo = await executarReconciliacao({
       gateway: deps.gateway,

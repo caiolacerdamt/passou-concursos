@@ -443,6 +443,17 @@ scratch e a validação visual local.
 - **Pendente externo**: salvar o template no projeto Supabase e repetir o link com uma conta de teste;
   até essa confirmação, a SPEC fica com fechamento E2E pendente, não com falha de código conhecida.
 
+### F-08 — reconciliação ignorava cobranças confirmadas
+
+- **Diagnóstico**: a listagem consultava apenas `RECEIVED`, mas o Asaas considera
+  `CONFIRMED` um pagamento efetuado; no cartão, `RECEIVED` pode ocorrer 32 dias depois.
+- **Correção**: a listagem consulta `RECEIVED` e `CONFIRMED`, combina as páginas por ID e
+  mantém o caminho de ativação idempotente.
+- **Evidência técnica**: `src/modules/pagamentos/asaas.ts:192`,
+  `src/modules/pagamentos/asaas.test.ts:144`,
+  `scripts/jobs/reconciliacao-pagamentos.test.ts:81`.
+- **Gate**: `npm.cmd run test:unit` — 80 arquivos, 568 testes verdes.
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |

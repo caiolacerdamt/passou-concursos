@@ -44,6 +44,7 @@ SSR diretamente.
 | F-05 — resultado público aceitava UUID sem contrato explícito | A URL usa capability token aleatório, guarda somente hash, aplica TTL de 48 horas e faz lookup server-side. UUID não é aceito. | src/modules/pagamentos/resultado-token.ts:10 · src/modules/pagamentos/repositorio.ts:128 · src/app/checkout/resultado/[token]/page.tsx:10 · supabase/migrations/20260821132000_spec12_resultado_token.sql:4 |
 | F-06 — analytics permitia meio de pagamento | O DTO público aceita somente quatro nomes de evento e remove propriedades; PostHog recebe distinct_id anônimo e objeto de propriedades vazio. | src/modules/analytics/funil.ts:3 · src/modules/analytics/posthog.ts:82 · src/app/api/analytics/route.ts:28 |
 | F-07 — link de definição de senha caía na home/login | O cliente de serviço usa fluxo implícito e o template padrão entrega tokens no fragmento, que o servidor não recebe. O novo `/auth/confirm` valida `token_hash` via `verifyOtp`, cria a sessão SSR e encaminha para `/definir-senha`. | src/app/auth/confirm/route.ts · src/app/auth/confirm/route.test.ts · src/modules/pagamentos/repositorio.ts |
+| F-08 — reconciliação ignorava cobranças confirmadas | A listagem consulta `RECEIVED` e `CONFIRMED`, combina por ID e o job ativa uma cobrança `CONFIRMED` sem webhook. | src/modules/pagamentos/asaas.ts:192 · src/modules/pagamentos/asaas.test.ts:144 · scripts/jobs/reconciliacao-pagamentos.test.ts:81 |
 
 ## Acceptance criteria
 

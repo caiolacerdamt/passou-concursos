@@ -411,14 +411,15 @@ verificação independente.
 **Execution record**
 
 - **State**: concluida; o contrato integrado de checkout, webhook, ativação, reconciliação, garantia, fatura, retenção e paywall foi exercitado por testes unitários e de banco; rastreabilidade e gates foram atualizados.
-- **Assumptions**: o Postgres de desenvolvimento é o banco de contrato; o teste visual manual não foi executado pelo agente e fica explicitamente pendente para conferência humana; o Verifier independente não foi iniciado por instrução explícita do usuário, então o relatório final identifica a auto-verificação do agente principal e esse desvio.
+- **Assumptions**: o Postgres de desenvolvimento é o banco de contrato; `/` e `/checkout` foram conferidos em desktop e viewport de 360 px, enquanto a tela autenticada de reembolso depende de uma conta de teste; o Verifier independente separado não foi iniciado por instrução explícita do usuário, então o relatório final identifica a revisão fresh-eyes do agente principal e o sensor scratch executado.
 - **Files**: `tests/db/pagamentos-schema.test.ts`, `tests/db/matricula.test.ts`, `.specs/features/12-checkout-funil-e-ativacao/spec.md`, `.specs/features/12-checkout-funil-e-ativacao/tasks.md`, `.specs/features/12-checkout-funil-e-ativacao/validation.md`.
-- **Success evidence**: `tests/db/pagamentos-schema.test.ts` — 9 testes verdes com conexão autorizada; `npm run test:unit` — contagem final registrada em `validation.md`; `npm run lint`, `npx tsc --noEmit`, `npm run build`, `validate_spec.py`, `validate_tasks.py` e `validate_state.py` registrados em `validation.md`.
+- **Success evidence**: `tests/db/pagamentos-schema.test.ts` + `tests/db/matricula.test.ts` — 24/24 testes verdes com conexão autorizada; unitários 78/563; lint, TypeScript, build, validação visual local, sensor e validadores registrados em `validation.md`.
 
 ## Correções pós-validação independente
 
 Esta seção registra somente as correções solicitadas após o relatório independente.
-O arquivo `validation.md` permanece histórico e não é editado por esta rodada.
+Após as correções, `validation.md` foi atualizado com a revisão final, o sensor
+scratch e a validação visual local.
 
 | ID | Correção | Evidência de implementação | Evidência de gate |
 | --- | --- | --- | --- |
@@ -490,8 +491,9 @@ O arquivo `validation.md` permanece histórico e não é editado por esta rodada
 
 ## Closing Protocol
 
-Por instrução explícita do usuário, nenhum Verifier independente ou subagent foi
-iniciado neste lote. O agente principal executou os gates disponíveis, registrou
-as limitações e escreveu `validation.md` com essa divergência explícita. Em um
-fluxo normal, o Verifier independente com sensor de mutação scratch seria o
-último passo antes de `validate_state.py`.
+Por instrução explícita do usuário, nenhum Verifier independente separado ou
+subagent foi iniciado neste lote. O agente principal executou a revisão
+fresh-eyes, os gates disponíveis, a validação visual local e um sensor de
+mutação em worktree temporário: 6/6 mutantes foram mortos. `validation.md`
+registra essa limitação de processo, as evidências e as dependências externas
+que ainda exigem Asaas/PostHog reais.

@@ -329,7 +329,8 @@
   | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
   | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
   | **11 — Raio-X: frequência, peso e tela** | T98–T105 | ✅ **490 unit + 332 db**. Lint e build verdes. Ritual B — **PASS parcial** independente; limitações de ranking absoluto e timestamp registradas em `.specs/features/11-*/validation.md`. |
-- **Next step**: **SPEC 12 — Checkout, funil e ativação**
-  (`.specs/features/12-checkout-funil-e-ativacao/spec.md`). Depende das specs 07 e 10. A SPEC 11 deixou
-  o perfil do concurso, a frequência real, o peso do plano e a tela do Raio-X construídos atrás de flag;
-  o próximo passo implementa a conversão e a ativação sem criar dependência para uma spec de número maior.
+  | **12 — Checkout, funil e ativação** | T106–T117 | ✅ **PASS local** — 78 arquivos/563 unitários, 24/24 DB específicos, lint, TypeScript, build, validação visual local e sensor 6/6. Integrações reais Asaas/PostHog e tela autenticada de reembolso aguardam configuração externa. |
+- **Next step**: **SPEC 13 — Onboarding, plano e sessão**
+  (`.specs/features/13-*/spec.md`, conforme `.specs/ROADMAP.md`). A SPEC 12 deixou
+  checkout, webhook, ativação, reconciliação, garantia, fatura e paywall prontos; o próximo passo
+  pode consumir a matrícula ativa sem criar dependência para uma spec de número maior.

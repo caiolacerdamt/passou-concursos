@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 13, 16, 17, 28, 34 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ✅ Implementada; validação visual manual e dependências externas pendentes |
+| **Status** | ✅ Implementada; validação local concluída; integrações externas pendentes |
 | **Requisitos** | **PAG-08**, **PAG-17**, **INFRA-12**, **PAG-02**, **PAG-05**, **PAG-09**, **PAG-06**, **PAG-13**, **PAG-12**, **DADOS-11**, **PAG-03**, **INFRA-10** (webhook) |
 | **Fonte dos requisitos** | `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m9-infra/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` (DADOS-11) |
 | **Vem de** | SPEC 19 + SPEC 21 + a garantia da SPEC 20 do recorte de 42 (AD-089) |
@@ -124,7 +124,7 @@ tem a única abertura controlada de pagamento expirado.
 | PAG-03 | Garantia de 7 dias, reembolso e encerramento de acesso | Testes unitários, banco e fluxo de reembolso | Verified |
 | PAG-05 | Checkout próprio integrado ao Asaas e NF nativa | Testes do adaptador e registro de fatura | Verified — NF real depende de CNPJ/configuração externa |
 | PAG-06 | Buy-then-activate, matrícula de 12 meses e estados | Testes de transição, idempotência e ativação | Verified |
-| PAG-08 | Página de vendas responsiva e honesta | Teste de renderização e teste visual manual | Verified — visual manual pendente |
+| PAG-08 | Página de vendas responsiva e honesta | Teste de renderização e teste visual manual | Verified — visual local concluído; tela autenticada de reembolso ainda requer conta de teste |
 | PAG-09 | Preço e desconto à vista em configuração | Testes do catálogo e da leitura de preço | Verified |
 | PAG-12 | Declaração afirmativa de 18+ sem data de nascimento | Testes do checkout e banco | Verified |
 | PAG-13 | Webhook verificado, idempotente e reconciliação | Testes de rota, banco e job | Verified |
@@ -142,13 +142,13 @@ tem a única abertura controlada de pagamento expirado.
 | SEC-08 | Rotas HTTP respondem com tipo de conteúdo coerente | `v5.0.0-4.1.1` · testes de Route Handler | Verified |
 | SEC-09 | Operações da garantia verificam a sessão por serviço confiável | `v5.0.0-7.2.1` · testes da action | Verified |
 
-`Verified` significa que a implementação local e os testes correspondentes passaram. A conferência
-visual manual e a ativação real de Asaas/NF continuam explicitamente fora do que foi executado neste
-workspace.
+`Verified` significa que a implementação local e os testes correspondentes passaram. A ativação real
+de Asaas/NF continua dependente de credenciais, CNPJ e configuração fiscal externos; a oferta e o
+checkout já foram conferidos no navegador local.
 
 ## Success Criteria
 
-- [ ] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique — conferência manual pendente
+- [x] Abrir no celular, entender método/preço/garantia e chegar ao checkout em um clique — conferido em desktop e viewport de 360 px
 - [ ] Compra de ponta a ponta em cada meio de pagamento — depende de credenciais e contrato reais do Asaas
 - [x] Mesmo webhook disparado três vezes → **uma** conta e **uma** matrícula
 - [x] Webhook apagado → o job de reconciliação ativa a compra sozinho

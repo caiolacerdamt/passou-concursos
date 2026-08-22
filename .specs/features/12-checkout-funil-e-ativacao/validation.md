@@ -23,7 +23,7 @@ não uma lacuna funcional encontrada.
 | Marco | Evidência | Resultado |
 | --- | --- | --- |
 | Baseline do relatório anterior | e348753 | O relatório antigo apontava F-01 a F-06 |
-| Código após as correções | 11c925b + f15b1b8 + F-07 desta rodada | F-01 a F-07 implementados; F-07 será commitado no fechamento desta rodada |
+| Código após as correções | 11c925b + f15b1b8 + fd896a3 | F-01 a F-07 implementados e commitados |
 | Worktree de sensor | diretório temporário fora do workspace | Removido ao final |
 | Workspace durante a revisão | branch codex-spec-12 | F-07 foi corrigido no código e documentado; não há alteração de segredo |
 | Verificação de patch | git diff --check | PASS |

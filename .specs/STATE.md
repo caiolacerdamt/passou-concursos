@@ -352,8 +352,8 @@
   `docs/DEPLOY.md` (*Reset Password* com `{{ .TokenHash }}`), acrescentar
   `http://localhost:3000/auth/confirm` nas Redirect URLs, pedir um novo link em
   `/recuperar-senha`, clicar nele e confirmar que `/definir-senha` aparece e leva ao login com a senha
-  nova. O código da correção está no commit `f15b1b8` mais as alterações não commitadas desta rodada;
-  depois do reteste, atualizar `validation.md` e criar o commit de fechamento.
+  nova. O código e o handoff técnico desta correção estão no commit `fd896a3`;
+  depois do reteste, atualizar `validation.md` e criar o commit de fechamento E2E.
 - **O que ainda falta para fechar oficialmente**: (1) reteste E2E do link de definição de senha;
   (2) conferência autenticada de `/app/reembolso`; (3) testes externos adicionais Asaas Sandbox
   (cartão/boleto, reconciliação e reembolso); (4) CNPJ/regime/configuração fiscal para NF; e

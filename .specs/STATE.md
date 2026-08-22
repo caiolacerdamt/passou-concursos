@@ -330,12 +330,13 @@
 ## Handoff
 
 - **Feature**: SPEC 12 — checkout, funil e ativação (`.specs/features/12-checkout-funil-e-ativacao`)
-- **Phase / Task**: homologação externa; correções locais F-08, F-09 e F-10 concluídas
-- **Completed**: T106–T117, F-08, F-09, F-10; commits `362b397`, `b2fdc78`, `e5c2559`
-- **In-progress** (file:line): none; aguardando configuração do template de recuperação no Supabase
-- **Next step**: configurar SMTP próprio ou plano compatível no Supabase, salvar o template `token_hash`,
-  solicitar novo link em `/recuperar-senha` e validar `/definir-senha` → `/app`
-- **Blockers**: projeto usa SMTP padrão do Supabase, que bloqueia edição de templates; ainda faltam
-  E2E Asaas/PostHog, tela autenticada de reembolso e dados fiscais para NF
+- **Phase / Task**: homologação externa Asaas; correções locais F-08, F-09 e F-10 concluídas
+- **Completed**: T106–T117, F-08, F-09, F-10; Resend/Supabase Auth E2E; PostHog com
+  `pagina_vista`, `checkout_iniciado` e `meio_escolhido`; commits `362b397`, `b2fdc78`, `e5c2559`
+- **In-progress** (file:line): homologação Asaas e evento `pagamento_confirmado`
+- **Next step**: configurar conta/CNPJ/contrato Asaas, credenciais sandbox, webhook público HTTPS
+  e executar a matriz cartão/Pix/boleto, replay, reconciliação e reembolso
+- **Blockers**: credenciais e configuração externa do Asaas; ainda faltam a tela autenticada de
+  reembolso com conta de teste ativa e dados fiscais para NF
 - **Uncommitted files**: none
 - **Branch**: `codex-spec-12`

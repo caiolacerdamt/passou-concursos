@@ -174,19 +174,27 @@ por rede; a repetição com autorização de acesso ao Postgres Supabase passou.
 As 20 falhas da suíte DB geral permanecem concentradas nos módulos antigos
 gera-plano/plano e Raio-X; não foram alteradas para mascarar a SPEC 12.
 
+## Evidência externa — 2026-08-21
+
+- **Supabase Auth + Resend — PASS manual:** domínio `auth.passouconcursos.com` verificado;
+  SMTP próprio configurado; template `Reset Password` com `token_hash` salvo; recuperação,
+  definição de senha e novo login testados pelo responsável do produto.
+- **PostHog — PASS parcial manual:** o projeto US recebeu o token; a tela Activity mostrou
+  `pagina_vista`, `checkout_iniciado` e `meio_escolhido`. Os três eventos apareceram com a
+  pessoa `anonimo`, sem dado pessoal visível. O evento `pagamento_confirmado` depende do
+  webhook real do Asaas e permanece pendente.
+
 ## Dependências externas e teste manual posterior
 
-O código local está pronto, mas a validação ponta a ponta precisa de:
+O código local está pronto, mas a validação ponta a ponta ainda precisa de:
 
-1. Template **Reset Password** com `token_hash` e Redirect URL `/auth/confirm`,
-   seguido do reteste do link de definição de senha e entrada no `/app`.
-2. CNPJ, regime fiscal, conta Asaas, contrato lido, credenciais de sandbox,
+1. CNPJ, regime fiscal, conta Asaas, contrato lido, credenciais de sandbox,
    token do webhook e configuração dos campos fiscais.
-3. Uma compra de teste em cartão, Pix e boleto; repetição do webhook; ausência
+2. Uma compra de teste em cartão, Pix e boleto; repetição do webhook; ausência
    de webhook para a reconciliação; reembolso no 5º e no 9º dia; e NF sem,
    processando e com cancelamento negado.
-4. PostHog configurado no endpoint/região aprovados, conferindo os quatro
-   eventos anônimos e a ausência de CPF, e-mail e meio de pagamento.
+3. O quarto evento PostHog, `pagamento_confirmado`, durante a homologação do webhook Asaas,
+   conferindo a ausência de CPF, e-mail e meio de pagamento.
 
 Esses testes devem usar sandbox e dados descartáveis. As chaves devem ficar em
 arquivo de ambiente local ignorado pelo Git; nunca devem ser colocadas em
@@ -198,6 +206,5 @@ A SPEC 12 está implementada e passou nos gates técnicos locais. Ela entrega o
 caminho visitante → checkout → pagamento → webhook → conta/matrícula, a
 reconciliação das cobranças, a garantia/reembolso, a fatura/NF, o funil anônimo
 e as proteções de segurança correspondentes. Para declarar fechamento oficial
-na próxima sessão, falta primeiro configurar e retestar o link SSR de definição
-de senha; depois permanecem as integrações externas Asaas/PostHog, a NF fiscal
-real e a tela autenticada de reembolso com uma conta de teste.
+ainda faltam a homologação externa do Asaas, o evento `pagamento_confirmado`,
+a NF fiscal real e a tela autenticada de reembolso com uma conta de teste ativa.

@@ -26,6 +26,7 @@ function dependencias() {
     criarCliente: vi.fn(async () => ({ id: "cus_1" })),
     criarCobranca: vi.fn(async () => ({
       id: "pay_1",
+      parcelamentoId: null,
       status: "PENDING",
       billingType: "PIX",
       externalReference: "checkout-fixo",

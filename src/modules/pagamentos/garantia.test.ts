@@ -75,6 +75,7 @@ describe("garantia de pagamento", () => {
       "pay_1",
       "PIX",
       "Garantia do plano anual",
+      null,
     );
     expect(dependencias.confirmarReembolsoLocal).toHaveBeenCalledWith({
       pagamentoId: "pag_1",
@@ -83,6 +84,30 @@ describe("garantia de pagamento", () => {
       quando: "2026-08-06T01:00:00.000Z",
       motivo: "reembolso_confirmado",
     });
+  });
+
+  // F-11: a compra por cartao e um parcelamento. Se o id do parcelamento nao
+  // chegar ao gateway, o estorno bate no endpoint da parcela e o Asaas recusa.
+  it("repassa o id do parcelamento quando a compra foi por cartão", async () => {
+    const dependencias = criarDependencias({
+      meio: "CREDIT_CARD",
+      parcelas: 12,
+      asaas_parcelamento_id: "d1b2c3",
+    });
+
+    await solicitarReembolso(
+      "user_1",
+      7,
+      new Date("2026-08-06T01:00:00.000Z"),
+      dependencias,
+    );
+
+    expect(dependencias.estornarCobranca).toHaveBeenCalledWith(
+      "pay_1",
+      "CREDIT_CARD",
+      "Garantia do plano anual",
+      "d1b2c3",
+    );
   });
 
   it("recusa o nono dia e uma tentativa antes da confirmação sem chamar o gateway", async () => {
@@ -263,6 +288,7 @@ function criarDependencias(
     estado: "ativada",
     asaas_cliente_id: "cus_1",
     asaas_cobranca_id: "pay_1",
+    asaas_parcelamento_id: null,
     asaas_status: "RECEIVED",
     resultado_url: null,
     resultado_boleto_url: null,

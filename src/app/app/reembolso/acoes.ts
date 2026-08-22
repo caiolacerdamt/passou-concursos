@@ -48,8 +48,18 @@ export async function pedirReembolso() {
 }
 
 function repositorioEstorno(gateway: ReturnType<typeof gatewayAsaasDoAmbiente>) {
-  return async (cobrancaId: string, meio: "CREDIT_CARD" | "PIX" | "BOLETO", descricao: string) => {
-    const resultado = await gateway.estornarCobranca(cobrancaId, meio, descricao);
+  return async (
+    cobrancaId: string,
+    meio: "CREDIT_CARD" | "PIX" | "BOLETO",
+    descricao: string,
+    parcelamentoId: string | null,
+  ) => {
+    const resultado = await gateway.estornarCobranca(
+      cobrancaId,
+      meio,
+      descricao,
+      parcelamentoId,
+    );
     return { status: resultado.status };
   };
 }

@@ -22,6 +22,7 @@ export type PagamentoOperacional = PagamentoCheckout & {
   produto_id: string;
   asaas_cliente_id: string | null;
   asaas_cobranca_id: string | null;
+  asaas_parcelamento_id: string | null;
   asaas_status: string | null;
   resultado_url: string | null;
   resultado_boleto_url: string | null;
@@ -43,6 +44,7 @@ export type ProdutoPagamento = {
 export type ResultadoGatewayPersistido = {
   clienteId: string;
   cobrancaId: string;
+  parcelamentoId: string | null;
   status: string;
   invoiceUrl: string | null;
   bankSlipUrl: string | null;
@@ -114,6 +116,7 @@ export function criarRepositorioDePagamentos(
         .update({
           asaas_cliente_id: resultado.clienteId,
           asaas_cobranca_id: resultado.cobrancaId,
+          asaas_parcelamento_id: resultado.parcelamentoId,
           asaas_status: resultado.status,
           resultado_url: resultado.invoiceUrl,
           resultado_boleto_url: resultado.bankSlipUrl,
@@ -198,6 +201,22 @@ export function criarRepositorioDePagamentos(
       if (error || data !== true) {
         throw error ?? new Error("fechamento local do reembolso falhou");
       }
+    },
+
+    /**
+     * O `asaas_status` so era escrito na criacao da cobranca e congelava em
+     * PENDING mesmo depois da ativacao (defeito F-12). O webhook atualiza o
+     * campo para a operacao e a reconciliacao lerem o retorno real do gateway.
+     */
+    async atualizarStatusGateway(
+      pagamentoId: string,
+      status: string,
+    ): Promise<void> {
+      const { error } = await cliente
+        .from("pagamentos")
+        .update({ asaas_status: status })
+        .eq("id", pagamentoId);
+      if (error) throw error;
     },
 
     async registrarEvento(input: {
@@ -409,7 +428,7 @@ export function criarRepositorioDePagamentos(
 export type RepositorioDePagamentos = ReturnType<typeof criarRepositorioDePagamentos>;
 
 const COLUNAS_PAGAMENTO_OPERACIONAL =
-  "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em";
+  "id, produto_id, email, valor_centavos, meio, parcelas, referencia_interna, asaas_cliente_id, asaas_cobranca_id, asaas_parcelamento_id, asaas_status, resultado_url, resultado_boleto_url, resultado_pix_qr_code, resultado_pix_copia_e_cola, estado, user_id, matricula_id, confirmado_em, ativado_em, criado_em";
 
 async function buscarPagamentoCom(
   cliente: SupabaseClient,

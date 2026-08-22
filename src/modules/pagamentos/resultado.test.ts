@@ -7,7 +7,6 @@ describe("resultado operacional do checkout", () => {
     const resultado = apresentarResultado({
       estado: "pendente",
       meio: "PIX",
-      statusGateway: "PENDING",
       url: null,
       boletoUrl: null,
       pixQrCode: "qr",
@@ -26,7 +25,6 @@ describe("resultado operacional do checkout", () => {
       apresentarResultado({
         estado: "ativada",
         meio: "CREDIT_CARD",
-        statusGateway: "RECEIVED",
         url: null,
         boletoUrl: null,
         pixQrCode: null,
@@ -37,7 +35,6 @@ describe("resultado operacional do checkout", () => {
       apresentarResultado({
         estado: "reembolsada",
         meio: "PIX",
-        statusGateway: "REFUNDED",
         url: null,
         boletoUrl: null,
         pixQrCode: null,
@@ -53,7 +50,6 @@ describe("aviso de criação de senha (SPEC 12 · homologação 2026-08-22)", ()
       estado: "ativada",
       email,
       meio: "BOLETO",
-      statusGateway: "RECEIVED",
       url: null,
       boletoUrl: null,
       pixQrCode: null,
@@ -80,7 +76,6 @@ describe("aviso de criação de senha (SPEC 12 · homologação 2026-08-22)", ()
         estado: "pendente",
         email: "alguem@exemplo.com",
         meio: "PIX",
-        statusGateway: "PENDING",
         url: null,
         boletoUrl: null,
         pixQrCode: "qr",
@@ -93,7 +88,6 @@ describe("aviso de criação de senha (SPEC 12 · homologação 2026-08-22)", ()
         estado: "reembolsada",
         email: "alguem@exemplo.com",
         meio: "PIX",
-        statusGateway: "REFUNDED",
         url: null,
         boletoUrl: null,
         pixQrCode: null,

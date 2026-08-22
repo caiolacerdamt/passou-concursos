@@ -42,6 +42,7 @@ export type DependenciasDoWebhook = {
     codigo: string,
   ): Promise<void>;
   encaminharParaAtivacao(pagamentoId: string): Promise<void>;
+  atualizarStatusGateway(pagamentoId: string, status: string): Promise<void>;
   emitirPagamentoConfirmado?: () => void;
 };
 
@@ -113,6 +114,8 @@ export async function processarEventoAsaas(
   });
   if (!inserido) return "duplicado";
 
+  await registrarStatusDoGateway(evento, pagamento.id, dependencias);
+
   if (!estadoAceitavel) {
     await dependencias.abrirPendencia(pagamento.id, "reconciliacao", "evento_fora_de_ordem");
     return "rejeitado";
@@ -125,6 +128,25 @@ export async function processarEventoAsaas(
   dependencias.emitirPagamentoConfirmado?.();
   await dependencias.encaminharParaAtivacao(pagamento.id);
   return "encaminhado";
+}
+
+/**
+ * O status do gateway servia so a operacao e a reconciliacao, e congelava em
+ * PENDING porque so era escrito na criacao da cobranca (defeito F-12). Falhar
+ * aqui nao pode derrubar a ativacao: o evento ja foi registrado, entao um 202
+ * viraria replay descartado como duplicado e o acesso nunca abriria.
+ */
+async function registrarStatusDoGateway(
+  evento: EventoAsaas,
+  pagamentoId: string,
+  dependencias: DependenciasDoWebhook,
+): Promise<void> {
+  if (!evento.status) return;
+  try {
+    await dependencias.atualizarStatusGateway(pagamentoId, evento.status);
+  } catch {
+    // silencio proposital: ver comentario acima.
+  }
 }
 
 async function localizarPagamento(

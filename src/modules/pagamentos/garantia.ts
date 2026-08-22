@@ -32,6 +32,7 @@ export type DependenciasDeReembolso = {
     cobrancaId: string,
     meio: MeioDePagamento,
     descricao: string,
+    parcelamentoId: string | null,
   ): Promise<{ status: string | null }>;
   confirmarReembolsoLocal(input: {
     pagamentoId: string;
@@ -217,6 +218,7 @@ export async function solicitarReembolso(
       pagamento.asaas_cobranca_id,
       pagamento.meio,
       "Garantia do plano anual",
+      pagamento.asaas_parcelamento_id,
     );
     if (!estornoConfirmado(estorno.status)) {
       await abrirPendenciaSegura(

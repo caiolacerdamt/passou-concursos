@@ -19,6 +19,7 @@ function pagamento(estado: string = "confirmada") {
     estado,
     asaas_cliente_id: "cus_1",
     asaas_cobranca_id: "pay_1",
+    asaas_parcelamento_id: null,
     asaas_status: "RECEIVED",
     resultado_url: null,
     resultado_boleto_url: null,

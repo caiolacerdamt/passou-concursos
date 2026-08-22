@@ -54,17 +54,34 @@ describe("transporte do PostHog", () => {
     );
 
     expect(resultado).toEqual({ enviado: true });
-    expect(url).toBe("https://us.i.posthog.com/capture/");
+    expect(url).toBe("https://us.i.posthog.com/i/v0/e/");
     expect(corpo).toEqual({
       api_key: "phc_teste",
       event: "pagamento_confirmado",
-      properties: { distinct_id: "anonimo" },
+      distinct_id: "anonimo",
+      properties: {},
     });
   });
 
   it("recusa endpoint fora da allowlist sem rede", async () => {
     process.env.POSTHOG_API_KEY = "phc_teste";
     process.env.POSTHOG_API_URL = "https://analytics.exemplo.com";
+    let chamou = false;
+
+    const resultado = await publicarNoPostHog("pagina_vista", {}, {
+      fetchImpl: async () => {
+        chamou = true;
+        return new Response(null, { status: 200 });
+      },
+    });
+
+    expect(resultado).toEqual({ enviado: false, motivo: "desligado" });
+    expect(chamou).toBe(false);
+  });
+
+  it("recusa o domínio da interface, que não é endpoint de ingestão", async () => {
+    process.env.POSTHOG_API_KEY = "phc_teste";
+    process.env.POSTHOG_API_URL = "https://us.posthog.com";
     let chamou = false;
 
     const resultado = await publicarNoPostHog("pagina_vista", {}, {

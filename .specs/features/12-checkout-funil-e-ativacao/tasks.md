@@ -454,6 +454,17 @@ scratch e a validação visual local.
   `scripts/jobs/reconciliacao-pagamentos.test.ts:81`.
 - **Gate**: `npm.cmd run test:unit` — 80 arquivos, 568 testes verdes.
 
+### F-09 — transporte PostHog usava contrato legado e host amplo
+
+- **Diagnóstico**: o publicador enviava para `/capture/`, colocava `distinct_id` dentro de
+  `properties` e aceitava o domínio da interface como se fosse ingestão.
+- **Correção**: o transporte usa `/i/v0/e/`, envia `distinct_id` no campo próprio, mantém
+  `properties` vazio e aceita somente `us.i.posthog.com`.
+- **Evidência técnica**: `src/modules/analytics/posthog.ts:8`,
+  `src/modules/analytics/posthog.ts:82`, `src/modules/analytics/posthog.ts:106`,
+  `src/modules/analytics/posthog.test.ts:57`.
+- **Gate**: `npm.cmd run test:unit` — 80 arquivos, 569 testes verdes.
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |

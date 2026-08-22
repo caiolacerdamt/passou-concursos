@@ -5,7 +5,7 @@ import {
 } from "./funil";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 
-const HOSTS_POSTHOG_EUA = new Set(["us.i.posthog.com", "us.posthog.com"]);
+const HOSTS_POSTHOG_EUA = new Set(["us.i.posthog.com"]);
 
 export type ResultadoDoPostHog =
   | { enviado: true }
@@ -82,10 +82,8 @@ export async function publicarNoPostHog(
       body: JSON.stringify({
         api_key: chave,
         event: evento,
+        distinct_id: "anonimo",
         properties: {
-          // Identificador não pessoal e único para o funil agregado. A flag
-          // de analytics logado nunca é consultada aqui.
-          distinct_id: "anonimo",
           ...propriedades,
         },
       }),
@@ -103,7 +101,7 @@ export async function publicarNoPostHog(
 
 function validarUrlDoPostHog(valor: string): URL | null {
   try {
-    const url = new URL("/capture/", valor);
+    const url = new URL("/i/v0/e/", valor);
     if (
       url.protocol !== "https:" ||
       url.username ||

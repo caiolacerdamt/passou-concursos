@@ -62,15 +62,33 @@ export default async function ResultadoCheckout({
 
       {resultado.mostraBoleto && pagamento.resultado_boleto_url ? (
         <p className="mt-6">
-          <a href={pagamento.resultado_boleto_url} className="text-marca underline" rel="noreferrer">
-            Abrir boleto
+          <a
+            href={pagamento.resultado_boleto_url}
+            className="text-marca underline"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Abrir boleto para pagar
           </a>
         </p>
       ) : null}
+      {/*
+        O rotulo diz PAGAR, nao "acompanhar". Na homologacao de 2026-08-22 o
+        comprador de cartao nao descobriu que era ali que se paga: a cobranca ja
+        existe, mas o formulario de cartao fica hospedado no gateway, e
+        "Acompanhar cobranca" soa como consulta de status. Abre em aba nova para
+        o resultado — que carrega o token de acesso a esta pagina — nao se perder
+        no meio do pagamento.
+      */}
       {resultado.mostraAcompanhamento && pagamento.resultado_url ? (
         <p className="mt-6">
-          <a href={pagamento.resultado_url} className="text-marca underline" rel="noreferrer">
-            Acompanhar cobrança
+          <a
+            href={pagamento.resultado_url}
+            className="rounded-md bg-marca px-5 py-3 font-medium text-fundo"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Pagar agora
           </a>
         </p>
       ) : null}

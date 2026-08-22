@@ -12,6 +12,7 @@ import {
 import {
   dadosDoFormularioCheckout,
   executarCheckout,
+  type ResultadoDoCheckout,
 } from "@/modules/pagamentos/checkout";
 import { gatewayAsaasDoAmbiente } from "@/modules/pagamentos/asaas";
 import { obterPrecosPublicos } from "@/modules/pagamentos/preco";
@@ -33,18 +34,13 @@ export async function enviarCheckout(
   const email = typeof entrada.email === "string" ? entrada.email : "";
   const meio = typeof entrada.meio === "string" ? entrada.meio : "";
 
+  let resultado: ResultadoDoCheckout;
   try {
-    const resultado = await executarCheckout(entrada, {
+    resultado = await executarCheckout(entrada, {
       precos: await obterPrecosPublicos(),
       gateway: gatewayAsaasDoAmbiente(),
       repositorio: criarRepositorioDePagamentos(clienteDeServico()),
     });
-
-    if (resultado.tipo === "matricula_ativa") {
-      return { tipo: "matricula_ativa", email, meio };
-    }
-
-    redirect(`/checkout/resultado/${encodeURIComponent(resultado.resultadoToken)}`);
   } catch (erro) {
     if (erro instanceof ZodError) {
       return {
@@ -72,4 +68,10 @@ export async function enviarCheckout(
       meio,
     };
   }
+
+  if (resultado.tipo === "matricula_ativa") {
+    return { tipo: "matricula_ativa", email, meio };
+  }
+
+  redirect(`/checkout/resultado/${encodeURIComponent(resultado.resultadoToken)}`);
 }

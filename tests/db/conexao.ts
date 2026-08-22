@@ -49,6 +49,12 @@ export function resumoDasConexoes(): Readonly<typeof estatisticas> {
   return { ...estatisticas };
 }
 
+export function formatarResumoDasConexoes(
+  resumo: Readonly<typeof estatisticas>,
+): string {
+  return `[db] usos_do_helper=${resumo.usos} conexoes_fisicas=${resumo.conexoes}`;
+}
+
 /**
  * Conexao com o banco de desenvolvimento para os testes do projeto `db`.
  *

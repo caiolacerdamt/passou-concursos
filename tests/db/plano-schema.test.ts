@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 
 import { criarTopico } from "./acervo";
 import { comoAluno, novoAluno, recusa } from "./aluno";
-import { comTransacaoRevertida } from "./conexao";
+import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 /**
@@ -19,7 +19,7 @@ import { descreveComBanco } from "./setup";
 
 descreveComBanco("perfil_estudo — o caminho de quem pula o diagnostico (ALUNO-05 AC1)", () => {
   it("nivel declarado + minutos por dia bastam; data_prova pode faltar", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await cliente.query(
         `insert into public.perfil_estudo (user_id, nivel_declarado, minutos_por_dia)
@@ -41,7 +41,7 @@ descreveComBanco("perfil_estudo — o caminho de quem pula o diagnostico (ALUNO-
   });
 
   it("recusa nivel fora dos tres, e recusa perfil sem minutos", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
 
       await recusa(
@@ -94,7 +94,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
   }
 
   it("`frase` nasce nula — o plano vale sem a IA ter respondido (invariante nº7)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const plano = await criarPlano(cliente, aluno);
 
@@ -107,7 +107,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
   });
 
   it("um plano por aluno por dia — e o que faz rerodar substituir, nao duplicar", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       await criarPlano(cliente, aluno);
       await recusa(
@@ -121,7 +121,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
   });
 
   it("os dois niveis convivem na mesma ordem: piso 1 e meta_cheia 1 (ALUNO-11)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const plano = await criarPlano(cliente, aluno);
       const topico = await criarTopico(cliente);
@@ -143,7 +143,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
   });
 
   it("o bloco `treinar` pode nao ter topico — ele mistura assuntos (ALUNO-08 AC3)", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const plano = await criarPlano(cliente, aluno);
 
@@ -163,7 +163,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
   });
 
   it("apagar o plano leva os blocos junto, e nao leva a sessao", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const plano = await criarPlano(cliente, aluno);
       await cliente.query(
@@ -199,7 +199,7 @@ descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {
 
 descreveComBanco("raiox_peso_topico — a fronteira com o M5 (AD-056/AD-057)", () => {
   it("a assinatura e (topico_id, peso) — e o que a SPEC 11 tem de preservar", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const { rows } = await cliente.query<{ attname: string }>(
         `select attname from pg_attribute
           where attrelid = 'public.raiox_peso_topico'::regclass
@@ -213,7 +213,7 @@ descreveComBanco("raiox_peso_topico — a fronteira com o M5 (AD-056/AD-057)", (
   });
 
   it("devolve um peso para todo topico ativo, e nenhum para o desativado", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
 
       const peso = async () => {
@@ -241,7 +241,7 @@ descreveComBanco("raiox_peso_topico — a fronteira com o M5 (AD-056/AD-057)", (
 
 descreveComBanco("plano — RLS", () => {
   it("o aluno escreve o proprio perfil e so LE o proprio plano", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const outro = novoAluno();
 
@@ -295,7 +295,7 @@ descreveComBanco("plano — RLS", () => {
   });
 
   it("nao consegue gravar perfil no nome de outro aluno", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const outro = novoAluno();
 

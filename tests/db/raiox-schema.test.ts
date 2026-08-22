@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 
 import { criarTopico } from "./acervo";
 import { recusa } from "./aluno";
-import { comTransacaoRevertida } from "./conexao";
+import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
 async function criarPerfil(
@@ -31,7 +31,7 @@ async function criarPerfil(
 
 descreveComBanco("perfil_concurso — cadastro multi-concurso (RAIOX-08)", () => {
   it("aceita banca indefinida, programa, formato e data de prova vazia", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const { rows } = await cliente.query<{
         banca: string;
@@ -54,7 +54,7 @@ descreveComBanco("perfil_concurso — cadastro multi-concurso (RAIOX-08)", () =>
   });
 
   it("modela mais de um perfil, mas recusa dois perfis ativos", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       await criarPerfil(cliente, { ativo: true, banca: "Cesgranrio" });
       const outro = () => criarPerfil(cliente, { ativo: true, banca: "FGV" });
 
@@ -69,7 +69,7 @@ descreveComBanco("perfil_concurso — cadastro multi-concurso (RAIOX-08)", () =>
   });
 
   it("recusa programa que não seja um array JSON", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       await recusa(
         cliente,
         () =>
@@ -85,7 +85,7 @@ descreveComBanco("perfil_concurso — cadastro multi-concurso (RAIOX-08)", () =>
 
 descreveComBanco("raiox_projecoes — contrato persistido", () => {
   it("persiste taxa, peso, amostra e os três valores de tendência", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const perfil = await criarPerfil(cliente, { programa: [topico] });
 
@@ -122,7 +122,7 @@ descreveComBanco("raiox_projecoes — contrato persistido", () => {
   });
 
   it("não oferece leitura ou escrita direta para authenticated", async () => {
-    await comTransacaoRevertida(async (cliente) => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const perfil = await criarPerfil(cliente);
       await cliente.query(

@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
-    "test:db": "vitest run --project db",
+    "test:db": "vitest run --project db --disableConsoleIntercept",
     "db:push": "node scripts/db-push.mjs",
     "jobs:vigia": "node scripts/jobs/vigia-de-jobs.mjs",
     "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",

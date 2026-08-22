@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
 
+# Commit novo no mesmo PR torna a execucao anterior obsoleta. O push na main
+# usa o proprio ref como grupo e nao disputa com o PR que acabou de fechar.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   segredos:
     name: Varredura de segredos
@@ -76,7 +82,7 @@ jobs:
           echo "Verificação concluída."
 
   app:
-    name: Typecheck, teste e build
+    name: App rápido
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -100,6 +106,25 @@ jobs:
       - name: Testes unit
         run: npm run test:unit
 
+  db:
+    name: Testes de banco
+    runs-on: ubuntu-latest
+    # O projeto Supabase de desenvolvimento e compartilhado. Workflows distintos
+    # entram na fila em vez de escrever nele ao mesmo tempo.
+    concurrency:
+      group: testes-banco-supabase-dev
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
       # O teste de banco escreve no projeto Supabase de desenvolvimento. Sem o
       # segredo, PULA com aviso — ausência de credencial nunca reprova o PR.
       - name: Existe o segredo do banco?
@@ -121,14 +146,33 @@ jobs:
         run: |
           echo "::notice::segredo DATABASE_URL não configurado no repositório — testes de banco pulados."
 
+  # Preserva o nome do check que a protecao da main ja conhece. O trabalho roda
+  # nos dois jobs acima; este agrega o resultado sem reinstalar dependencias.
+  gate:
+    name: Typecheck, teste e build
+    if: always()
+    needs: [app, db]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exigir app e banco verdes
+        env:
+          RESULTADO_APP: ${{ needs.app.result }}
+          RESULTADO_DB: ${{ needs.db.result }}
+        run: |
+          if [ "$RESULTADO_APP" != "success" ] || [ "$RESULTADO_DB" != "success" ]; then
+            echo "::error::app=$RESULTADO_APP banco=$RESULTADO_DB"
+            exit 1
+          fi
+          echo "App e banco verdes."
+
   # INFRA-09 AC2: falha de workflow SHALL NOT ser silenciosa. O job vermelho na
   # tela do GitHub só é visto por quem abre a tela; o alerta é o que chega até o
-  # time. Um job só para os três, para uma execução quebrada não render três
+  # time. Um job só para todos, para uma execução quebrada não render vários
   # e-mails iguais.
   alerta:
     name: Alerta de falha
     if: failure()
-    needs: [segredos, documentos, app]
+    needs: [segredos, documentos, app, db, gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -152,4 +196,6 @@ jobs:
             segredos=${{ needs.segredos.result }}
             documentos=${{ needs.documentos.result }}
             app=${{ needs.app.result }}
+            banco=${{ needs.db.result }}
+            gate=${{ needs.gate.result }}
         run: node scripts/jobs/reportar-falha.mjs

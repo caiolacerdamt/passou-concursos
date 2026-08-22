@@ -355,6 +355,23 @@
 - **Date**: 2026-08-22
 - **Status**: active
 
+### AD-104
+- **Decision**: A suíte `db` continua sequencial contra o Supabase de desenvolvimento, mas reutiliza
+  uma conexão PostgreSQL em um pool de tamanho 1 durante o worker. Cada teste conserva sua própria
+  transação revertida. O projeto Vitest de banco compartilha módulos no worker único. Na CI, o banco
+  roda em job separado do build/lint/unitários; execução obsoleta do mesmo PR é cancelada e somente
+  um job acessa o banco de desenvolvimento por vez.
+- **Reason**: A suíte abriu e encerrou cerca de 326 conexões por execução. Na CI, o handshake remoto
+  e as viagens serializadas ao banco consumiram de 588 a 894 segundos, enquanto build, lint e testes
+  unitários ficaram perto de um minuto.
+- **Trade-off**: Estado de módulo passa a sobreviver entre arquivos do projeto `db`. A execução
+  sequencial e o `ROLLBACK` por teste preservam o isolamento de dados; módulos com cache continuam
+  responsáveis por restaurar seu próprio estado nos hooks. A reescrita de fixtures só entra depois
+  de medir esta etapa.
+- **Scope**: `tests/db/conexao.ts`, `vitest.config.mts` e `.github/workflows/ci.yml`.
+- **Date**: 2026-08-22
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: SPEC 12 — checkout, funil e ativação — **CONCLUÍDA** (`.specs/features/12-checkout-funil-e-ativacao`)

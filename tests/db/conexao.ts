@@ -1,4 +1,4 @@
-import { Client, Pool } from "pg";
+import { Client, Pool, type PoolClient } from "pg";
 
 const estatisticas = {
   conexoes: 0,
@@ -19,7 +19,7 @@ const pool = new Pool({
   allowExitOnIdle: true,
 });
 
-let clienteAtivo: Awaited<ReturnType<typeof pool.connect>> | null = null;
+let clienteAtivo: PoolClient | null = null;
 
 /**
  * Fachada unica do worker. O `pg` deixa o objeto do PoolClient consultavel
@@ -63,14 +63,14 @@ export async function comBanco<T>(
     throw new Error("comBanco nao aceita uso aninhado no worker sequencial");
   }
 
-  clienteAtivo = await pool.connect();
+  const cliente = await pool.connect();
+  clienteAtivo = cliente;
   estatisticas.usos += 1;
   try {
     return await uso(clienteCompartilhado);
   } finally {
-    const clienteParaLiberar = clienteAtivo;
     clienteAtivo = null;
-    clienteParaLiberar.release();
+    cliente.release();
   }
 }
 

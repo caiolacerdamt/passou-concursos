@@ -172,8 +172,25 @@ para o endereço errado.
 Em *Authentication → URL Configuration*:
 
 - **Site URL**: o domínio próprio.
-- **Redirect URLs**: acrescentar `https://<domínio>/auth/callback` e
-  `http://localhost:3000/auth/callback`.
+- **Redirect URLs**: acrescentar `https://<domínio>/auth/callback`,
+  `https://<domínio>/auth/confirm`, `http://localhost:3000/auth/callback` e
+  `http://localhost:3000/auth/confirm`.
+
+### Template de recuperação de senha
+
+O fluxo de autenticação é SSR e guarda a sessão em cookies. Em
+*Authentication → Email Templates → Reset Password*, o link do template deve
+usar o `token_hash`, que o servidor consegue receber:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">
+  Redefinir senha
+</a>
+```
+
+Não use `{{ .ConfirmationURL }}` nesse template: o link padrão devolve tokens
+em um fragmento (`#...`), e fragmentos não são enviados ao servidor. O handler
+`/auth/confirm` valida o token e encaminha o aluno para `/definir-senha`.
 
 Em *Authentication → Providers → Google*:
 

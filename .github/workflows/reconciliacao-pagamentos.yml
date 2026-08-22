@@ -1,0 +1,48 @@
+name: Reconciliação de pagamentos
+
+# PAG-06 · PAG-13 · INFRA-10 · AD-035/AD-036
+# Este processo roda em GitHub Actions, nunca em função serverless.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  reconciliar:
+    name: Reconciliar Asaas e Postgres
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Reconciliar pagamentos
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          ASAAS_API_KEY: ${{ secrets.ASAAS_API_KEY }}
+          ASAAS_API_URL: ${{ secrets.ASAAS_API_URL }}
+          ASAAS_NF_NOME_SERVICO: ${{ secrets.ASAAS_NF_NOME_SERVICO }}
+          ASAAS_NF_CODIGO_SERVICO: ${{ secrets.ASAAS_NF_CODIGO_SERVICO }}
+          ASAAS_NF_IMPOSTOS_JSON: ${{ secrets.ASAAS_NF_IMPOSTOS_JSON }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_API_URL: ${{ secrets.POSTHOG_API_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: npm run jobs:reconciliacao
+
+      - name: Reportar falha do job
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "reconciliacao-pagamentos terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs

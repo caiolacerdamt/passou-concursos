@@ -309,27 +309,34 @@
 - **Date**: 2026-08-21
 - **Status**: active
 
+### AD-102
+- **Decision**: O e-mail de definição/recuperação de senha disparado por código de servidor usa o
+  fluxo SSR de **`token_hash`**: o template do Supabase aponta para `/auth/confirm`, o handler aceita
+  somente `type=recovery`, chama `verifyOtp` no cliente de sessão e encaminha para `/definir-senha`.
+  O callback PKCE `/auth/callback` continua sendo o caminho de OAuth e das recuperações iniciadas
+  pelo navegador.
+- **Reason**: O cliente de serviço que roda após o webhook não compartilha com o navegador o verifier
+  PKCE. Com o template padrão, o Supabase devolve os tokens em um fragmento (`#...`), que nunca chega
+  ao servidor; o teste manual comprovou que o aluno caía na home/login em vez de definir a senha.
+  `token_hash` é o formato que o fluxo SSR consegue verificar no servidor e transformar em cookie.
+- **Trade-off**: A instalação precisa trocar uma vez o link do template **Reset Password** e incluir
+  `/auth/confirm` nas Redirect URLs do Supabase. Se isso não for feito, o código permanece seguro,
+  mas o link falha fechado e volta ao login. O token não é repassado à tela nem gravado em log.
+- **Scope**: SPEC 12 · `src/app/auth/confirm/route.ts`, `src/modules/pagamentos/repositorio.ts`,
+  template de e-mail e `docs/DEPLOY.md`. Complementa o contrato de sessão das specs 07/12.
+- **Date**: 2026-08-21
+- **Status**: active
+
 ## Handoff
 
-- **Onde o projeto está**: unidade de trabalho é a **spec numerada**. `.specs/ROADMAP.md` tem a
-  sequência oficial de **36 specs**; **as 01–14 são o MVP** e o lançamento é o fim da 14 (AD-089).
-  Para trabalhar: *"Desenvolva a SPEC XX seguindo a `/tlc-spec-driven`"*, respeitando o `Ritual`
-  declarado no cabeçalho da spec (AD-090).
-- **Concluído**:
-  | Spec | Tasks | Estado |
-  | --- | --- | --- |
-  | **01 — Fundação** | T1–T4 | ✅ build, lint, teste e CI de pé |
-  | **02 — Configuração e flags** | T5–T9 | ✅ **PASS** independente — 8/8 AC, sensor 4/4, 41 testes |
-  | **03 — Observabilidade e segredos** | T23–T32 | ✅ **PASS** independente — sensor 6/6, 143 testes, 7 gaps não bloqueantes |
-  | **04 — Acervo: schema, taxonomia e proveniência** | T33–T40 | ✅ **PASS** — 9/9 AC + 4 Success Criteria com evidência, **251 testes**. **Verificação NÃO independente** |
-  | **05 — Log de tentativas** | T41–T47 | ✅ **333 testes**. Ritual A — verificação independente em `.specs/features/05-*/validation.md` |
-  | **06 — Projeções, revisão e plano** | T48–T53 | ✅ **412 testes**. Ritual B — verificação independente no fim de `.specs/features/06-*/tasks.md`. FAIL na 1ª passada (2 `Major`), **corrigidos e reverificados** |
-  | **07 — Interface, conta e deploy** | T54–T64 | ✅ **465 testes** (199 unit + 266 db). Ritual B — **PASS** independente, 0 `Major`, 6 `Minor` (3 fechados na rodada). Relatório no fim de `.specs/features/07-*/tasks.md` |
-  | **08 — Gateway de IA** | T65–T74 | ✅ **562 testes** (284 unit + 278 db). Ritual B — **PASS** independente, 1 `Major` e 4 `Minor`; o `Major` e 3 `Minor` fechados na rodada, relatório no fim de `.specs/features/08-*/tasks.md` |
-  | **09 — Ingestão do primeiro lote** | T75–T86 | ✅ **449 unit + 306 db**. Ritual B — **PASS** independente. **Rodou com as 3 provas reais do BB 2021**: 205 questões no acervo, US$ 0,045/prova. Cinco defeitos que só apareceram com prova de verdade, todos corrigidos — ver o fim de `.specs/features/09-*/tasks.md` |
-  | **10 — Publicação e explicações** | T87–T97 | ✅ **480 unit + 319 db**. Verificador independente encontrou duas lacunas na 1ª rodada; ambas foram corrigidas e os gates finais passaram. Porta de publicação, fila, referência, citações e job entregues. |
-  | **11 — Raio-X: frequência, peso e tela** | T98–T105 | ✅ **490 unit + 332 db**. Lint e build verdes. Ritual B — **PASS parcial** independente; limitações de ranking absoluto e timestamp registradas em `.specs/features/11-*/validation.md`. |
-- **Next step**: **SPEC 12 — Checkout, funil e ativação**
-  (`.specs/features/12-checkout-funil-e-ativacao/spec.md`). Depende das specs 07 e 10. A SPEC 11 deixou
-  o perfil do concurso, a frequência real, o peso do plano e a tela do Raio-X construídos atrás de flag;
-  o próximo passo implementa a conversão e a ativação sem criar dependência para uma spec de número maior.
+- **Feature**: SPEC 12 — checkout, funil e ativação (`.specs/features/12-checkout-funil-e-ativacao`)
+- **Phase / Task**: homologação externa Asaas; correções locais F-08, F-09 e F-10 concluídas
+- **Completed**: T106–T117, F-08, F-09, F-10; Resend/Supabase Auth E2E; PostHog com
+  `pagina_vista`, `checkout_iniciado` e `meio_escolhido`; commits `362b397`, `b2fdc78`, `e5c2559`
+- **In-progress** (file:line): homologação Asaas e evento `pagamento_confirmado`
+- **Next step**: configurar conta/CNPJ/contrato Asaas, credenciais sandbox, webhook público HTTPS
+  e executar a matriz cartão/Pix/boleto, replay, reconciliação e reembolso
+- **Blockers**: credenciais e configuração externa do Asaas; ainda faltam a tela autenticada de
+  reembolso com conta de teste ativa e dados fiscais para NF
+- **Uncommitted files**: none
+- **Branch**: `codex-spec-12`

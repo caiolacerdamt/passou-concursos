@@ -427,8 +427,8 @@ descreveComBanco("gera_plano_do_dia — os edge cases da spec", () => {
         "insert into auth.users (id) values (gen_random_uuid()) returning id",
       );
       await cliente.query(
-        `insert into public.configuracoes (chave, valor, modulo_dono, alterado_por)
-         values ('flag.m4.simulado_semanal', 'true'::jsonb, 'm4', $1)`,
+        `insert into public.configuracoes (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m4.simulado_semanal', 'true'::jsonb, 'm4', $1, 'teste do simulado')`,
         [autor[0].id],
       );
       await gerar(cliente, aluno);

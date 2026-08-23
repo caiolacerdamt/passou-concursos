@@ -37,4 +37,13 @@ export {
   restaurarLeitorPadrao,
 } from "./leitura";
 
-export { ConfiguracaoRecusada, setConfig } from "./escrita";
+export {
+  ConfiguracaoRecusada,
+  type ConfiguracaoAdministrativa,
+  type EstadoVigenteDeConfig,
+  type LinhaHistoricoDeConfig,
+  definirLeitorAdministrativoDeConfig,
+  lerConfiguracoesAdministrativas,
+  restaurarLeitorAdministrativoPadrao,
+  setConfig,
+} from "./escrita";

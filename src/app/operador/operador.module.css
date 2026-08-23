@@ -1,0 +1,28 @@
+.navLink {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  border: 1px solid rgb(247 248 246 / 0.18);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  color: rgb(247 248 246 / 0.78);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.1;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.navLink:hover {
+  border-color: rgb(247 248 246 / 0.5);
+  background: rgb(247 248 246 / 0.1);
+  color: #f7f8f6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navLink {
+    transition: none;
+  }
+}

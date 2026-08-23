@@ -250,13 +250,13 @@ cliente da sessão, exige causa no erro e devolve correção/explanação da ver
 **Tools**: MCP: NONE · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Usuário e contexto são derivados da sessão, nunca aceitos como autoridade do formulário.
-- [ ] Duplo-clique devolve o resultado existente sem novo INSERT.
-- [ ] Erro no treino sem causa retorna estado nomeado e não avança; `nao_sei_dizer` passa.
-- [ ] Correção mostra alternativa correta, fontes da explicação aprovada e aviso `em revisão` quando a
+- [x] Usuário e contexto são derivados da sessão, nunca aceitos como autoridade do formulário.
+- [x] Duplo-clique devolve o resultado existente sem novo INSERT.
+- [x] Erro no treino sem causa retorna estado nomeado e não avança; `nao_sei_dizer` passa.
+- [x] Correção mostra alternativa correta, fontes da explicação aprovada e aviso `em revisão` quando a
       versão não tem explicação válida.
-- [ ] Ao responder o último item, a sessão é encerrada; ao sair antes, os itens pendentes permanecem.
-- [ ] Testes unitários cobrem caminho feliz, recusa de causa, duplicidade, versão e falha segura.
+- [x] Ao responder o último item, a sessão é encerrada; ao sair antes, os itens pendentes permanecem.
+- [x] Testes unitários cobrem caminho feliz, recusa de causa, duplicidade, versão e falha segura.
 
 **Tests**: unit (`src/app/app/sessao/acoes.test.ts`)
 **Gate**: quick

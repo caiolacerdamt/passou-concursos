@@ -34,6 +34,54 @@ define a senha, diz a meta e cai no primeiro bloco sem sair da tela.
 | IA-04 (superfície) | explicação servida do banco por `(questao_id, questao_versao)`, com `fontes_citadas` visíveis | m2 §P1: Explicação conferida (AC7) |
 | IA-09 (AC5) | questão sem explicação válida aparece com aviso de **"em revisão"** — nunca com a explicação antiga | m2 §P1: Explicação amarrada à versão |
 
+## User Stories
+
+### P1: Ativação até o primeiro plano
+
+**User Story**: Como aluno que acabou de pagar, quero definir minha meta, declarar meu nível e receber o
+plano do primeiro dia sem depender de suporte ou de um diagnóstico longo.
+
+**Acceptance Criteria**:
+
+1. WHEN a matrícula é válida e o aluno entra pela primeira vez, THEN o sistema SHALL apresentar o
+   onboarding com concurso-alvo, minutos por dia, agenda declarada e nível declarado.
+2. WHEN o aluno conclui o onboarding, THEN o sistema SHALL gerar e exibir o plano do primeiro dia na
+   mesma sessão, mesmo que a frase opcional da IA esteja ausente.
+3. WHEN o aluno opta por não fazer diagnóstico, THEN o sistema SHALL aceitar o nível declarado como
+   semente e SHALL permitir o acesso ao plano.
+
+### P1: Sessão de questões com resposta rastreável
+
+**User Story**: Como aluno, quero responder uma questão por vez, entender meu erro e poder sair e voltar
+   sem perder ou duplicar respostas.
+
+**Acceptance Criteria**:
+
+1. WHEN o aluno inicia um bloco, THEN o sistema SHALL criar ou retomar uma sessão própria com questões
+   publicadas, vigentes e não anuladas.
+2. WHEN o aluno responde, THEN o sistema SHALL registrar a tentativa com o contexto, o tempo, o chute e
+   o snapshot da versão respondida, SHALL NOT registrar duas tentativas para o mesmo clique repetido e
+   SHALL exigir a causa antes de avançar quando houver erro no treino.
+3. WHEN o aluno sai antes do fim, THEN o sistema SHALL manter as respostas já registradas e SHALL deixar
+   sem `respondido_em` cada item ainda não respondido.
+
+### P1: Conteúdo confiável na correção
+
+**User Story**: Como aluno, quero ver a origem da questão e uma explicação confiável ligada exatamente
+   à versão que respondi.
+
+**Acceptance Criteria**:
+
+1. WHEN uma questão real é exibida, THEN o sistema SHALL mostrar sua proveniência e SHALL servir suas
+   imagens quando existirem.
+2. WHEN a resposta é registrada, THEN o sistema SHALL exibir a explicação aprovada e suas fontes para
+   o mesmo par `(questao_id, questao_versao)`.
+3. WHEN não existe explicação aprovada para a versão respondida, THEN o sistema SHALL mostrar o aviso
+   **"em revisão"** e SHALL NOT mostrar uma explicação de outra versão.
+
+Open questions: none. O formato visual, a paleta, a tipografia e os componentes são decisões de design
+   da implementação e ficam centralizados em tokens.
+
 ## Out of Scope
 
 | O que | Onde entra |
@@ -62,6 +110,9 @@ define a senha, diz a meta e cai no primeiro bloco sem sair da tela.
 | Repetição de questão | `param.m4.dias_sem_repetir_questao` evita a mesma questão recente | y |
 | Acervo fino no bloco | tópico sem questão publicada é pulado, sem bloco vazio na tela | y (edge case) |
 
+Open questions: none. O formato visual, a paleta, a tipografia e os componentes são decisões de design
+da implementação e ficam centralizados em tokens.
+
 ## Success Criteria
 
 - [ ] Pagar, definir senha, declarar "iniciante" e ver o plano do 1º dia **na mesma sessão**
@@ -73,3 +124,17 @@ define a senha, diz a meta e cai no primeiro bloco sem sair da tela.
 - [ ] Bloco com questão anulada fecha sem ela
 - [ ] A explicação exibida é a da versão que o aluno respondeu, com as fontes
 - [ ] Explicação inválida faz a tela mostrar o aviso, nunca o texto antigo
+
+## Requirement Traceability
+
+| Requisito | Cobertura nesta spec | Status |
+| --- | --- | --- |
+| PAG-14 | Ativação, onboarding e plano do primeiro dia na mesma sessão | in tasks |
+| ALUNO-05 | Concurso-alvo, agenda, minutos, nível declarado e diagnóstico pulável | pending |
+| ALUNO-08 | Blocos Revisar/Avançar/Treinar, motivo e limite de tempo | pending |
+| ALUNO-11 | Separação visual e funcional entre `piso` e `meta_cheia` | pending |
+| ALUNO-03 | Causa obrigatória no erro do treino, incluindo `nao_sei_dizer` | pending |
+| ALUNO-01 | Tentativa só-INSERT, snapshot, tempo, chute, contexto e deduplicação | pending |
+| BANCO-01 | Proveniência visível, imagens servidas e questão anulada fora do treino | pending |
+| IA-04 | Explicação por questão-versão com `fontes_citadas` visíveis | in tasks |
+| IA-09 | Aviso `em revisão` sem fallback para explicação antiga | in tasks |

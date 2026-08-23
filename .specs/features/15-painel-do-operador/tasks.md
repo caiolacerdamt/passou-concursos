@@ -168,7 +168,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit + integration
 **Gate**: build
 **Commit**: `feat(m9): cria tela de configuracao`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — build gate verde; flags, JSON, histórico e integração append-only cobertos
 
 ## Diagram-Definition Cross-Check
 

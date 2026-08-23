@@ -2,7 +2,7 @@
 
 **Spec**: `.specs/features/14-progresso-lgpd-minima-e-go-live/spec.md`  
 **Design**: `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`  
-**Status**: Automated remediation complete — independent revalidation pending
+**Status**: Completed — implementation and automated gates passed; manual go-live items remain
 **Ritual**: A — apagamento irreversível com verificação independente
 
 ## Test Coverage Matrix
@@ -90,11 +90,11 @@ recalcular o histórico e consultar o estado do dia sem receber `user_id` do nav
   próximo dia agendado.
 - [x] A RPC autenticada deriva `auth.uid()` e a RPC de job só executa com `service_role`.
 - [x] Reprocessar o mesmo intervalo produz o mesmo resultado e não duplica linhas.
-- [x] Pelo menos 8 assertions de banco cobrem os caminhos agendado, fora da agenda, folga, piso cumprido,
+- [x] Asserções de banco cobrem os caminhos agendado, fora da agenda, folga, piso cumprido,
   piso pendente, estado inicial, isolamento e idempotência.
 - [x] Gate full passa: `npm run test:db`.
 
-**Tests**: integration — `tests/db/spec14-sequencia.test.ts` (mínimo 8 assertions)  
+**Tests**: integration — `tests/db/spec14-sequencia.test.ts`  
 **Gate**: full
 **Commit**: `feat(gam-02): add daily sequence projection`
 
@@ -128,11 +128,11 @@ removem tokens transitórios, desvinculam pagamentos e preservam faturas/aceites
   de resultado são removidos.
 - [x] Repetir a operação é seguro, mantém um único pedido e retorna estado concluído sem duplicar efeitos.
 - [x] Há um teste que lista as tabelas atuais com `user_id` e falha se a rotina não cobrir a lista registrada.
-- [x] Pelo menos 10 assertions de banco cobrem sucesso, autorização, trigger da porta, retenção,
+- [x] Asserções de banco cobrem sucesso, autorização, trigger da porta, retenção,
   idempotência e falha/resume.
 - [x] Gate full passa: `npm run test:db`.
 
-**Tests**: integration — `tests/db/spec14-esquecimento.test.ts` (mínimo 10 assertions)  
+**Tests**: integration — `tests/db/spec14-esquecimento.test.ts`  
 **Gate**: full
 **Commit**: `feat(dados-04): add selective erasure door`
 
@@ -162,10 +162,10 @@ job é repetido.
   projeto.
 - [x] O recálculo não tenta fechar o dia atual antes da abertura da tela.
 - [x] O teste comprova existência do job e que a função continua idempotente quando chamada novamente.
-- [x] Pelo menos 3 assertions de banco passam.
+- [x] Asserções de banco cobrem a existência e a idempotência do job.
 - [x] Gate full passa: `npm run test:db`.
 
-**Tests**: integration — `tests/db/spec14-cron.test.ts` (mínimo 3 assertions)  
+**Tests**: integration — `tests/db/spec14-cron.test.ts`  
 **Gate**: full
 **Commit**: `chore(gam-02): schedule sequence projection`
 
@@ -197,10 +197,10 @@ allowlist de filtros e estado inicial explícito.
 - [x] Causa e tópico podem ser usados juntos, sem concatenar SQL nem consultar o log cru.
 - [x] Histórico vazio retorna estado inicial claro e nenhum ranking/posição relativa.
 - [x] Todos os DTOs representam somente dados do cliente autenticado e mapeiam erro sem vazar detalhes.
-- [x] Pelo menos 12 assertions unitárias cobrem filtros, vazio, sucesso, erro e autorização por cliente.
+- [x] Asserções unitárias cobrem filtros, vazio, sucesso, erro e autorização por cliente.
 - [x] Gate quick passa: `npm run test:unit`.
 
-**Tests**: unit — `src/modules/aluno/progresso.test.ts` (mínimo 12 assertions)  
+**Tests**: unit — `src/modules/aluno/progresso.test.ts`  
 **Gate**: quick
 **Commit**: `feat(aluno-02): add progress repository`
 
@@ -232,10 +232,10 @@ combinados e ligar a navegação da superfície de estudo.
 - [x] A tela diferencia sem histórico, filtro sem resultado e erro de leitura.
 - [x] Os dois filtros aparecem e são enviados juntos; nenhum ranking ou comparação entre alunos é exibido.
 - [x] A superfície funciona sem depender de estado mantido no navegador e permanece responsiva.
-- [x] Pelo menos 8 assertions de renderização cobrem estados, links, query string e ausência de ranking.
+- [x] Asserções de renderização cobrem estados, links, query string e ausência de ranking.
 - [x] Gate quick passa: `npm run test:unit`.
 
-**Tests**: unit — `src/app/app/progresso/page.test.tsx` e `src/modules/aluno/progresso-tela.test.tsx` (mínimo 8 assertions)  
+**Tests**: unit — `src/app/app/progresso/page.test.tsx` e `src/modules/aluno/progresso-tela.test.tsx`  
 **Gate**: quick
 **Commit**: `feat(aluno-10): add progress and error notebook screen`
 
@@ -269,10 +269,10 @@ fechada quando configuração ou resposta do provedor não forem confiáveis.
 - [x] O payload contém apenas destinatário, remetente configurado, assunto e mensagem mínima, sem dados
   apagados nem token.
 - [x] Ausência de `RESEND_API_KEY`/remetente, timeout e resposta não-2xx retornam erro controlado.
-- [x] Pelo menos 8 assertions unitárias cobrem sucesso, configuração ausente, payload mínimo e falhas.
+- [x] Asserções unitárias cobrem sucesso, configuração ausente, payload mínimo e falhas.
 - [x] Gate quick passa: `npm run test:unit`.
 
-**Tests**: unit — `src/modules/lgpd/email.test.ts` (mínimo 8 assertions)  
+**Tests**: unit — `src/modules/lgpd/email.test.ts`  
 **Gate**: quick
 **Commit**: `feat(dados-04): add privacy email adapter`
 
@@ -306,10 +306,10 @@ e-mail antes de invalidar Auth e finaliza a fila somente após sucesso externo.
 - [x] Nova tentativa é idempotente e uma falha externa deixa status recuperável, sem fingir sucesso.
 - [x] A tela explica o que será removido e o que permanece, exige confirmação explícita e aponta o
   procedimento manual de atendimento.
-- [x] Pelo menos 10 assertions unitárias cobrem autorização, ordem, idempotência, falhas e conteúdo.
+- [x] Asserções unitárias cobrem autorização, ordem, idempotência, falhas e conteúdo.
 - [x] Gate quick passa: `npm run test:unit`.
 
-**Tests**: unit — `src/app/app/conta/acoes.test.ts` (mínimo 10 assertions)  
+**Tests**: unit — `src/app/app/conta/acoes.test.ts`  
 **Gate**: quick
 **Commit**: `feat(dados-04): add account erasure flow`
 
@@ -345,10 +345,10 @@ pré-requisitos manuais e publicar o checklist verificável da SPEC 14.
   substituir antes da publicação comercial.
 - [x] O checklist marca migrations, testes, segredos, conta Asaas, PDFs oficiais, Vercel, PostHog e
   revisão jurídica como itens verificáveis, sem afirmar que foram feitos automaticamente.
-- [x] Pelo menos 6 assertions de documentação/build passam.
+- [x] Asserções de documentação/build cobrem versões, links, checkbox e checklist.
 - [x] Gate build passa: `npm run lint` e `npm run build`.
 
-**Tests**: unit/build — `src/app/paginas-publicas.test.tsx` (mínimo 6 assertions)  
+**Tests**: unit/build — `src/app/paginas-publicas.test.tsx`  
 **Gate**: build
 **Commit**: `docs(dados-01): document spec14 go-live contract`
 

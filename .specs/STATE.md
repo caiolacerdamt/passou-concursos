@@ -387,20 +387,20 @@
 
 ## Handoff
 
-- **Feature**: SPEC 13 — onboarding, plano e sessão — **CONCLUÍDA**.
-- **Phase / Task**: implementação, gates e validação independente encerrados em 2026-08-22.
-- **Completed**: onboarding com diagnóstico pulável; plano diário derivado por SQL; sessão
-  retomável; resposta imutável com causa do erro; explicação versionada e conferida contra o
-  gabarito; proveniência e imagem assinada; shell responsivo e tokens visuais. Gates: build,
-  typecheck, lint, 626 testes unitários, 351 testes de banco e validação estrutural verdes.
-- **External checks**: migrations da SPEC 13 aplicadas no Supabase de desenvolvimento e bucket
-  `questoes` confirmado como privado. Produção continua dependente de alvo/credenciais próprios.
+- **Feature**: SPEC 14 — progresso, LGPD mínima e go-live — **CONCLUÍDA**.
+- **Phase / Task**: implementação, gates e validação independente encerrados em 2026-08-23.
+- **Completed**: progresso e caderno filtráveis; sequência com agenda, folga e continuidade;
+  porta de apagamento idempotente e seletiva; retenção financeira mínima; confirmação server-only;
+  conta, política/termos versionados e checklist de go-live. Gates: 665 testes unitários, 364 de
+  banco, lint sem erros, build 14/14, validators sem erros e sensor 10/10.
+- **External checks**: migrations da SPEC 14 aplicadas no Supabase de desenvolvimento. Produção,
+  Resend, Asaas, Vercel, PostHog, revisão jurídica e UAT autenticado continuam manuais.
 - **In-progress**: nada.
-- **Next step**: **SPEC 14** — progresso, caderno de erros, sequência, LGPD mínima e go-live.
-- **Blockers**: nenhum para iniciar a SPEC 14. Homologação visual autenticada e produção são
-  pendências externas, não bloqueios do código da SPEC 13.
+- **Next step**: checklist manual de go-live; depois, **SPEC 15** — painel do operador.
+- **Blockers**: nenhum bloqueio de código. Produção, terceiros, jurídico e homologação visual
+  autenticada são pendências externas para o lançamento.
 - **Uncommitted files**: none
-- **Branch**: `codex/spec13-onboarding-plano-sessao`
+- **Branch**: `feat/m4-p1-progresso-lgpd-go-live`
 
 ### Herdado pela SPEC 13
 

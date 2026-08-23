@@ -41,10 +41,10 @@ export const TABELAS_GRUPO_1_INDIRETAS = [
 
 /**
  * Tabelas com `user_id` que **não** entram no apagamento, cada uma com o
- * motivo escrito. Lista vazia hoje, e a forma importa: quando a SPEC 12 criar
- * `pagamentos` e `faturas`, elas entram aqui — o PAG-06 AC9 manda retê-las pelo
- * prazo fiscal, e elas SHALL sobreviver ao DELETE-por-esquecimento (DADOS-04).
- * Sem este campo, a única saída seria esquecer de listá-las.
+ * motivo escrito. Pagamentos e seus registros financeiros ficam aqui porque o
+ * PAG-06 AC9 manda retê-los pelo prazo fiscal, e eles SHALL sobreviver ao
+ * DELETE-por-esquecimento (DADOS-04). Sem este campo, a única saída seria
+ * esquecer de listá-los.
  */
 export const EXCECOES_DO_APAGAMENTO: { tabela: string; motivo: string }[] = [
   {

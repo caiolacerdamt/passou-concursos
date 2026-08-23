@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 16, 19 |
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | 🟨 **Remediação da verificação em andamento** |
+| **Status** | ✅ **Concluída e verificada** — checklist de go-live manual pendente |
 | **Requisitos** | **ALUNO-10** (superfície), **ALUNO-02** (AC2), **GAM-02**, **GAM-08**, **DADOS-04** (parte), **DADOS-01** (parte) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m6-gamificacao/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` |
 | **Vem de** | SPEC 25 + parte da SPEC 28 + pedaços das SPECs 30/31/32 do recorte de 42 (AD-089) |

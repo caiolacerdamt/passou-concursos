@@ -156,7 +156,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m1): cria tela da taxonomia`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — quick gate verde; candidatos, aprovação/rejeição, edição e desativação cobertos
 
 ### T126: Construir administração de configuração
 

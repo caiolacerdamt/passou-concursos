@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 16, 19 |
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ **Concluída e verificada** |
 | **Requisitos** | **ALUNO-10** (superfície), **ALUNO-02** (AC2), **GAM-02**, **GAM-08**, **DADOS-04** (parte), **DADOS-01** (parte) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m6-gamificacao/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` |
 | **Vem de** | SPEC 25 + parte da SPEC 28 + pedaços das SPECs 30/31/32 do recorte de 42 (AD-089) |
@@ -134,23 +134,24 @@ com `user_id` sobrevive e que a fatura permanece.
 | --- | --- | --- | --- | --- |
 | ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5 | T1/T4/T5 verified |
 | ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | T4/T5 verified |
-| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | T1/T3 verified; remaining screen pending |
+| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | T1/T3 verified |
 | GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | T4/T5 verified |
 | DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | T2/T6/T7 verified |
-| DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | T6/T7 verified; T8 pending |
+| DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | T6/T7/T8 verified |
 
 **ID format:** IDs de domínio já definidos pelos módulos (`ALUNO-`, `GAM-`, `DADOS-`).
 
-**Coverage:** 6 requisitos, todos mapeados a tasks; implementação pendente.
+**Coverage:** 6 requisitos, todos mapeados a tasks e verificados; a validação independente está em
+`validation.md`.
 
 ## Success Criteria
 
-- [ ] Errar 3 questões com causas diferentes e ver o caderno agrupar por causa e por tópico
-- [ ] Filtrar por causa e por tópico funciona junto
-- [ ] Aluno novo vê estado inicial explícito
-- [ ] Cumprir só o piso em 5 dias declarados mantém a sequência depois de um fim de semana sem estudar
-- [ ] Nenhuma tela exibe posição relativa entre alunos
-- [ ] Aluno com 30 questões respondidas pede exclusão: **nenhuma linha com `user_id` sobrevive** em nenhuma tabela, partição ou projeção
-- [ ] A fatura permanece; reexecutar a rotina depois de falha parcial chega ao mesmo estado final
+- [x] Errar 3 questões com causas diferentes e ver o caderno agrupar por causa e por tópico
+- [x] Filtrar por causa e por tópico funciona junto
+- [x] Aluno novo vê estado inicial explícito
+- [x] Cumprir só o piso em 5 dias declarados mantém a sequência depois de um fim de semana sem estudar
+- [x] Nenhuma tela exibe posição relativa entre alunos
+- [x] Aluno com 30 questões respondidas pede exclusão: **nenhuma linha com `user_id` sobrevive** em nenhuma tabela, partição ou projeção
+- [x] A fatura permanece; reexecutar a rotina depois de falha parcial chega ao mesmo estado final
 - [ ] Criar conta, nunca marcar nada e completar o loop central inteiro
 - [ ] Checklist de go-live percorrido com as flags do AD-076 conferidas uma a uma

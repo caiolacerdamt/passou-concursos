@@ -2,7 +2,7 @@
 
 **Spec**: `.specs/features/14-progresso-lgpd-minima-e-go-live/spec.md`  
 **Design**: `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`  
-**Status**: Approved  
+**Status**: Completed — implementation and automated gates passed; manual go-live items remain
 **Ritual**: A — apagamento irreversível com verificação independente
 
 ## Test Coverage Matrix
@@ -339,14 +339,14 @@ pré-requisitos manuais e publicar o checklist verificável da SPEC 14.
 
 **Done when**:
 
-- [ ] As duas páginas públicas têm versão explícita e a mesma versão usada no aceite do checkout.
-- [ ] O núcleo do produto não depende de checkbox de consentimento; marketing continua separado.
-- [ ] A política informa apagamento operacional, faturas retidas, provedor de e-mail e canal default a
+- [x] As duas páginas públicas têm versão explícita e a mesma versão usada no aceite do checkout.
+- [x] O núcleo do produto não depende de checkbox de consentimento; marketing continua separado.
+- [x] A política informa apagamento operacional, faturas retidas, provedor de e-mail e canal default a
   substituir antes da publicação comercial.
-- [ ] O checklist marca migrations, testes, segredos, conta Asaas, PDFs oficiais, Vercel, PostHog e
+- [x] O checklist marca migrations, testes, segredos, conta Asaas, PDFs oficiais, Vercel, PostHog e
   revisão jurídica como itens verificáveis, sem afirmar que foram feitos automaticamente.
-- [ ] Pelo menos 6 assertions de documentação/build passam.
-- [ ] Gate build passa: `npm run lint` e `npm run build`.
+- [x] Pelo menos 6 assertions de documentação/build passam.
+- [x] Gate build passa: `npm run lint` e `npm run build`.
 
 **Tests**: unit/build — `src/app/paginas-publicas.test.tsx` (mínimo 6 assertions)  
 **Gate**: build

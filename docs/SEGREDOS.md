@@ -65,6 +65,7 @@ Onde rotacionar cada um:
 | `DATABASE_URL` | Supabase → Project Settings → Database → Reset database password |
 | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → Secret keys |
 | `SENTRY_AUTH_TOKEN` | Sentry → Settings → Auth Tokens |
+| `RESEND_API_KEY` | Resend → API Keys → revogar a chave exposta e gerar outra |
 
 ## Cadastrar um segredo no repositório
 

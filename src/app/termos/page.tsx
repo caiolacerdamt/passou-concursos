@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import {
+  IDENTIFICACAO_PUBLICA_PADRAO,
+  VERSAO_ATUAL_DOS_TERMOS,
+} from "@/modules/pagamentos/contratos";
 import { Shell } from "@/modules/ui/shell";
 
 export default function Termos() {
@@ -7,6 +11,9 @@ export default function Termos() {
     <Shell acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}>
       <p className="text-sm font-semibold uppercase tracking-wide text-marca">Documento inicial</p>
       <h1 className="mt-2 text-3xl font-semibold">Termos de uso</h1>
+      <p className="mt-2 text-sm text-suave">
+        Versão {VERSAO_ATUAL_DOS_TERMOS} · identificação operacional: {IDENTIFICACAO_PUBLICA_PADRAO}
+      </p>
       <p className="mt-4 rounded-lg border border-aviso bg-fundo-suave p-4 text-sm leading-6" role="note">
         Este texto é uma versão inicial do produto e ainda precisa de revisão jurídica.
         A versão e a data apresentadas no checkout serão registradas junto ao aceite.
@@ -18,7 +25,9 @@ export default function Termos() {
           <p className="mt-2 text-suave">
             A matrícula anual dá acesso às superfícies liberadas no produto durante
             o período informado na compra. O acesso depende de uma conta individual
-            e não deve ser compartilhado.
+            e não deve ser compartilhado. A operação do núcleo é baseada no contrato,
+            não em um consentimento geral; marketing e comunicações externas, se
+            oferecidos, terão opção separada.
           </p>
         </section>
         <section aria-labelledby="pagamento-e-garantia">
@@ -40,8 +49,9 @@ export default function Termos() {
         <section aria-labelledby="contato-termos">
           <h2 id="contato-termos" className="text-xl font-semibold">4. Contato</h2>
           <p className="mt-2 text-suave">
-            O canal de suporte e os dados da empresa serão publicados com a versão
-            jurídica revisada antes da operação comercial.
+            O canal de suporte, a identidade/CNPJ e os dados do responsável serão
+            publicados com a versão jurídica revisada antes da operação comercial.
+            Para privacidade, consulte o canal indicado na política.
           </p>
         </section>
       </div>

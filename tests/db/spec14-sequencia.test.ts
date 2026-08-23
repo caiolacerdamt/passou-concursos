@@ -5,6 +5,17 @@ import { comTransacaoRevertida } from "./conexao";
 import { comoAluno, criarUsuario } from "./conta";
 import { descreveComBanco } from "./setup";
 
+function dataDeHojeEmSaoPaulo(): string {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const valor = Object.fromEntries(partes.map((parte) => [parte.type, parte.value]));
+  return `${valor.year}-${valor.month}-${valor.day}`;
+}
+
 descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
   async function criarPerfil(
     cliente: Client,
@@ -160,6 +171,7 @@ descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
       await criarPerfil(cliente, aluno, [1]);
 
       await comoAluno(cliente, aluno, async () => {
+        const hoje = dataDeHojeEmSaoPaulo();
         const { rows } = await cliente.query<{
           data: string;
           sequencia: number;
@@ -168,7 +180,7 @@ descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
         }>("select * from public.consultar_sequencia_do_dia()");
 
         expect(rows).toHaveLength(1);
-        expect(rows[0].data).toBe("2026-08-22");
+        expect(rows[0].data).toBe(hoje);
         expect(rows[0].estado).toBe("fora_agenda");
         expect(rows[0].sequencia).toBe(0);
         expect(rows[0].tem_historico).toBe(false);

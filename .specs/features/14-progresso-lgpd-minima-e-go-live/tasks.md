@@ -297,16 +297,17 @@ e-mail antes de invalidar Auth e finaliza a fila somente após sucesso externo.
 - `src/app/app/conta/page.tsx`
 - `src/modules/lgpd/esquecimento.ts`
 - `src/app/app/conta/acoes.test.ts`
+- `src/app/app/conta/page.test.tsx`
 
 **Done when**:
 
-- [ ] A ação deriva a conta da sessão, recusa confirmação ausente e não aceita `user_id` do formulário.
-- [ ] A ordem é apagamento → e-mail → exclusão Auth → finalização; falha do e-mail não invalida Auth.
-- [ ] Nova tentativa é idempotente e uma falha externa deixa status recuperável, sem fingir sucesso.
-- [ ] A tela explica o que será removido e o que permanece, exige confirmação explícita e aponta o
+- [x] A ação deriva a conta da sessão, recusa confirmação ausente e não aceita `user_id` do formulário.
+- [x] A ordem é apagamento → e-mail → exclusão Auth → finalização; falha do e-mail não invalida Auth.
+- [x] Nova tentativa é idempotente e uma falha externa deixa status recuperável, sem fingir sucesso.
+- [x] A tela explica o que será removido e o que permanece, exige confirmação explícita e aponta o
   procedimento manual de atendimento.
-- [ ] Pelo menos 10 assertions unitárias cobrem autorização, ordem, idempotência, falhas e conteúdo.
-- [ ] Gate quick passa: `npm run test:unit`.
+- [x] Pelo menos 10 assertions unitárias cobrem autorização, ordem, idempotência, falhas e conteúdo.
+- [x] Gate quick passa: `npm run test:unit`.
 
 **Tests**: unit — `src/app/app/conta/acoes.test.ts` (mínimo 10 assertions)  
 **Gate**: quick

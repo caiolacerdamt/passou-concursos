@@ -66,6 +66,14 @@ que diz o que substitui.
 | Erro / observabilidade | Sentry. **Não** se confunde com analytics — erro ≠ comportamento | AD-037 |
 | Teste | Vitest — `unit` (paralelo) e `db` (sequencial, contra o projeto Supabase de dev). **Sem Docker** | AD-083 |
 
+### Gate de banco e rede do sandbox
+
+`npm run test:db` acessa o Supabase de desenvolvimento pela `DATABASE_URL`; ele não usa Docker.
+Se o gate retornar `connect EACCES <host>:5432`, `fetch failed` por conexão ou falhar em massa antes
+de executar as asserções, isso é bloqueio de rede do sandbox, não evidência de regressão no código.
+Não repetir o mesmo comando no sandbox: repetir uma vez com a execução fora do sandbox/rede autorizada
+e registrar o resultado desse segundo gate. Só investigar o código se o gate com rede autorizada falhar.
+
 ## Invariantes — quebrar qualquer um destes é bug, não escolha
 
 1. **`tentativas` só recebe INSERT.** Nunca UPDATE, nunca DELETE-por-edição. Correção = linha nova.

@@ -96,7 +96,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m1): opera curadoria da taxonomia`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — full gate verde; migration aplicada em desenvolvimento
 
 ### T121: Fechar escrita e histórico de configuração
 

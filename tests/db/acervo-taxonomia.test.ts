@@ -253,14 +253,15 @@ descreveComBanco("taxonomia materia -> topico", () => {
 descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
   const INSERIR = `
     insert into public.topico_candidato
-      (nome_sugerido, materia_id, status, ocorrencias, topico_id, decidido_em, decidido_por)
-    values ($1, $2, $3, $4, $5, $6, $7)
+      (nome_sugerido, materia_id, status, ocorrencias, topico_id, decidido_em, decidido_por,
+       motivo_decisao)
+    values ($1, $2, $3, $4, $5, $6, $7, $8)
     returning id
   `;
 
   /** Candidato pendente, o unico estado em que a IA pode deixar a linha. */
   function pendente(nome: string, materia: string | null = null) {
-    return [nome, materia, "pendente", 1, null, null, null];
+    return [nome, materia, "pendente", 1, null, null, null, null];
   }
 
   it("nasce pendente, com uma ocorrencia e sem topico canonico", async () => {
@@ -303,6 +304,7 @@ descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
           null,
           new Date(),
           autor,
+          "aprovacao de teste",
         ]),
       ).rejects.toThrow(/candidato_aprovado_aponta_topico/);
     });
@@ -326,6 +328,7 @@ descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
           rows[0].id,
           null,
           null,
+          null,
         ]),
       ).rejects.toThrow(/candidato_aprovado_aponta_topico/);
     });
@@ -335,7 +338,16 @@ descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
     await comTransacaoRevertida(async (cliente) => {
       // Rejeitado nao precisa de topico, mas precisa de quem rejeitou.
       await expect(
-        cliente.query(INSERIR, ["Rejeitado Anonimo", null, "rejeitado", 1, null, null, null]),
+        cliente.query(INSERIR, [
+          "Rejeitado Anonimo",
+          null,
+          "rejeitado",
+          1,
+          null,
+          null,
+          null,
+          "rejeicao de teste",
+        ]),
       ).rejects.toThrow(/candidato_decidido_tem_autor/);
     });
   });
@@ -358,7 +370,8 @@ descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
 
       const { rowCount } = await cliente.query(
         `update public.topico_candidato
-            set status = 'aprovado', topico_id = $2, decidido_em = now(), decidido_por = $3
+            set status = 'aprovado', topico_id = $2, decidido_em = now(), decidido_por = $3,
+                motivo_decisao = 'aprovacao de teste'
           where id = $1`,
         [candidato[0].id, topico[0].id, autor],
       );
@@ -371,7 +384,16 @@ descreveComBanco("topico_candidato: a IA sugere, nao cria", () => {
       for (const quantas of [0, -1]) {
         await cliente.query("savepoint tentativa");
         await expect(
-          cliente.query(INSERIR, ["Contagem Invalida", null, "pendente", quantas, null, null, null]),
+          cliente.query(INSERIR, [
+            "Contagem Invalida",
+            null,
+            "pendente",
+            quantas,
+            null,
+            null,
+            null,
+            null,
+          ]),
         ).rejects.toThrow(/ocorrencias_check|violates check constraint/);
         await cliente.query("rollback to savepoint tentativa");
       }

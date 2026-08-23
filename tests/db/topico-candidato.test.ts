@@ -80,7 +80,8 @@ descreveComBanco("registrar_topico_candidato (BANCO-05 P3 AC1)", () => {
       );
       await cliente.query(
         `update public.topico_candidato
-            set status = 'rejeitado', decidido_em = now(), decidido_por = null
+            set status = 'rejeitado', decidido_em = now(), decidido_por = null,
+                motivo_decisao = 'rejeicao de teste'
           where id = $1`,
         [primeira[0].id],
       );

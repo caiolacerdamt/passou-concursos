@@ -8,7 +8,7 @@
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
-| **Status** | 🟡 Design aprovado |
+| **Status** | 🟠 Em implementação — pausa após T120 |
 | **Requisitos** | **BANCO-10**, **BANCO-07** (superfície), **INFRA-11** (tela de administração da configuração) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m9-infra/spec.md` |
 
@@ -83,7 +83,7 @@ sem deploy e com autoria explícita. Os critérios de aceite permanecem em **INF
 | Requirement ID | Fonte | Superfície nesta spec | Status |
 | --- | --- | --- | --- |
 | BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | Implementing |
-| BANCO-10 | M1 §P3 | taxonomia e candidato | In Tasks |
+| BANCO-10 | M1 §P3 | taxonomia e candidato | Implementing |
 | INFRA-11 | M9 §P1 | valor vigente, escrita e histórico | Implementing |
 | SEC-01 | ASVS v5.0.0 L2 | autorização explícita | Implementing |
 | SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | Implementing |

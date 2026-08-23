@@ -1,4 +1,5 @@
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import Link from "next/link";
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarPerfilEstudo } from "@/modules/aluno/onboarding";
 import { consultarPlanoDoDia } from "@/modules/aluno/plano";
@@ -25,11 +26,12 @@ export default async function App({ searchParams }: PageProps<"/app">) {
     <Shell
       largura="painel"
       acoes={
-        <form action={sair}>
-          <button type="submit" className="text-marca underline">
-            Sair
-          </button>
-        </form>
+        <div className="flex flex-wrap items-center justify-end gap-3 text-sm">
+          <Link href="/app/progresso" className="text-marca underline">Progresso</Link>
+          <form action={sair}>
+            <button type="submit" className="text-marca underline">Sair</button>
+          </form>
+        </div>
       }
     >
       {perfil?.onboardingConcluido ? (

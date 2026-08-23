@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 16, 19 |
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ **Concluída e verificada** — checklist de go-live manual pendente |
 | **Requisitos** | **ALUNO-10** (superfície), **ALUNO-02** (AC2), **GAM-02**, **GAM-08**, **DADOS-04** (parte), **DADOS-01** (parte) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m6-gamificacao/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` |
 | **Vem de** | SPEC 25 + parte da SPEC 28 + pedaços das SPECs 30/31/32 do recorte de 42 (AD-089) |
@@ -34,7 +34,9 @@ assumido, não como esquecimento.
 | DADOS-01 (parte) | política de privacidade e termos publicados em PT-BR, versionados, ligados da página de vendas e do checkout; **núcleo sem checkbox** (invariante nº9) | m7 §P1: Núcleo sem checkbox |
 | — | **checklist de go-live**: flags do AD-076 conferidas uma a uma, domínio no ar, Sentry recebendo, Raio-X e plano respondendo com o acervo real | esta spec |
 
-## Out of Scope — e o que isso significa
+## Out of Scope
+
+O quadro abaixo registra o que fica fora desta entrega e o risco assumido no lançamento.
 
 | O que fica de fora | Onde entra | Risco assumido no lançamento |
 | --- | --- | --- |
@@ -66,14 +68,90 @@ endurece a rotina; ela não a inventa do zero.
 | Texto da política | revisão do advogado **pendente**; sobe com redação própria e é revisado depois | n — risco assumido (AD-090) |
 | Fuso do aluno | sequência usa o fuso declarado vigente; virada do dia não retroage | y (edge case) |
 
+Open questions: none. O texto usa a identificação operacional `Passou Concursos` e o canal
+`privacidade@passouconcursos.com` como default documentado; o sócio ainda precisa substituir esses dados
+pela identidade/CNPJ e pelo encarregado reais antes da publicação comercial, e o advogado revisará a
+primeira versão depois.
+
+## User Stories
+
+### P1: Progresso e caderno legíveis ⭐ MVP
+
+**User Story**: Como aluno, quero ver meu histórico e meus erros agrupados, para saber o que revisar sem
+precisar interpretar o log cru.
+
+**Acceptance Criteria**:
+
+1. WHEN o aluno abre o progresso THEN o sistema SHALL ler o histórico a partir das projeções do job e
+   SHALL mostrar um estado inicial explícito quando não houver respostas.
+2. WHEN o aluno filtra por causa e por tópico THEN o sistema SHALL aplicar os dois filtros juntos ao
+   caderno de erros.
+3. O sistema SHALL mostrar somente dados do próprio aluno e SHALL NOT exibir ranking, liga, placar ou
+   percentil.
+
+**Independent Test**: Errar questões com causas e tópicos diferentes, abrir o progresso e aplicar os dois
+filtros simultaneamente.
+
+### P1: Sequência de barra baixa ⭐ MVP
+
+**User Story**: Como aluno, quero manter minha sequência cumprindo o piso que o sistema entregou, para
+criar constância sem ser punido por dias fora da agenda ou folgas declaradas.
+
+**Acceptance Criteria**:
+
+1. WHEN o aluno conclui todos os blocos do piso do dia THEN o sistema SHALL manter ou incrementar a
+   sequência.
+2. WHEN o dia não pertence à agenda declarada ou está registrado como folga THEN o sistema SHALL NOT
+   interromper a sequência.
+3. WHEN a tela é aberta THEN o sistema SHALL calcular o estado do dia a partir do plano do dia e das
+   sessões daquele aluno, sem esperar o job diário.
+
+**Independent Test**: Declarar cinco dias, concluir somente o piso nesses dias e abrir a tela depois do
+fim de semana.
+
+### P1: Direito ao esquecimento e documentos públicos ⭐ MVP
+
+**User Story**: Como titular, quero apagar meus dados operacionais e entender o que permanece, para exercer
+meu direito sem apagar a prova fiscal necessária.
+
+**Acceptance Criteria**:
+
+1. WHEN o titular confirma o pedido autenticado THEN o sistema SHALL apagar o grupo 1 pela porta nomeada
+   `app.esquecimento_user_id`, incluindo partições e projeções, e SHALL manter faturas fiscais.
+2. WHEN o apagamento é reexecutado depois de uma falha parcial THEN o sistema SHALL chegar ao mesmo estado
+   final sem duplicar efeitos.
+3. WHEN o pedido termina THEN o sistema SHALL enviar confirmação por e-mail antes de invalidar a conta e
+   SHALL informar erro sem concluir silenciosamente se o provedor falhar.
+4. O sistema SHALL publicar política de privacidade e termos em PT-BR, versionados e ligados da venda e
+   do checkout, sem checkbox para operar o núcleo.
+
+**Independent Test**: Criar um aluno com respostas, confirmar o apagamento, verificar que nenhuma linha
+com `user_id` sobrevive e que a fatura permanece.
+
+## Requirement Traceability
+
+| Requirement ID | Story | Phase | Tasks | Status |
+| --- | --- | --- | --- | --- |
+| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5, T9 | T1/T4/T5/T9 verified |
+| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5, T11 | T4/T5/T11 verified |
+| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3, T9 | T1/T3/T9 verified |
+| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5, T11 | T4/T5/T11 verified |
+| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7, T10 | T2/T6/T7/T10 verified |
+| DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | T6/T7/T8 verified |
+
+**ID format:** IDs de domínio já definidos pelos módulos (`ALUNO-`, `GAM-`, `DADOS-`).
+
+**Coverage:** 6 requisitos, todos mapeados a tasks; a validação independente está em
+`validation.md`.
+
 ## Success Criteria
 
-- [ ] Errar 3 questões com causas diferentes e ver o caderno agrupar por causa e por tópico
-- [ ] Filtrar por causa e por tópico funciona junto
-- [ ] Aluno novo vê estado inicial explícito
-- [ ] Cumprir só o piso em 5 dias declarados mantém a sequência depois de um fim de semana sem estudar
-- [ ] Nenhuma tela exibe posição relativa entre alunos
-- [ ] Aluno com 30 questões respondidas pede exclusão: **nenhuma linha com `user_id` sobrevive** em nenhuma tabela, partição ou projeção
-- [ ] A fatura permanece; reexecutar a rotina depois de falha parcial chega ao mesmo estado final
+- [x] Errar 3 questões com causas diferentes e ver o caderno agrupar por causa e por tópico
+- [x] Filtrar por causa e por tópico funciona junto
+- [x] Aluno novo vê estado inicial explícito
+- [x] Cumprir só o piso em 5 dias declarados mantém a sequência depois de um fim de semana sem estudar
+- [x] Nenhuma tela exibe posição relativa entre alunos
+- [x] Aluno com 30 questões respondidas pede exclusão: **nenhuma linha com `user_id` sobrevive** em nenhuma tabela, partição ou projeção
+- [x] A fatura permanece; reexecutar a rotina depois de falha parcial chega ao mesmo estado final
 - [ ] Criar conta, nunca marcar nada e completar o loop central inteiro
 - [ ] Checklist de go-live percorrido com as flags do AD-076 conferidas uma a uma

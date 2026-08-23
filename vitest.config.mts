@@ -6,6 +6,13 @@ import { defineConfig } from "vitest/config";
 // Mesmo atalho `@/*` que o tsconfig.json declara. O Vitest nao le `paths` do
 // tsconfig sozinho, e sem isto o teste de banco nao acha `src/modules/...`.
 const atalhos = { "@": path.resolve(import.meta.dirname, "src") };
+const atalhosUnit = {
+  ...atalhos,
+  // O pacote real falha deliberadamente fora de um grafo server-only. O
+  // Vitest roda em Node, mas ainda simula o import como um módulo neutro;
+  // o build do Next continua validando a barreira real.
+  "server-only": path.resolve(import.meta.dirname, "tests/unit/server-only.ts"),
+};
 
 // O Vitest nao copia o .env para process.env sozinho. O terceiro argumento vazio
 // significa "toda variavel, sem exigir o prefixo VITE_" — e o DATABASE_URL dos
@@ -16,7 +23,7 @@ export default defineConfig({
   test: {
     projects: [
       {
-        resolve: { alias: atalhos },
+        resolve: { alias: atalhosUnit },
         test: {
           // Teste unit: mora junto do codigo, nunca toca banco nem rede.
           name: "unit",

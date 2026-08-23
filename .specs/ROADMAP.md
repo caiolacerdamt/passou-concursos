@@ -106,10 +106,10 @@ trabalho é refeito.
 | 11 | **Raio-X — frequência, peso e tela** | taxa só de `origem='real'` com decaimento e amortecimento, porteiro do edital, substitui a view stub do plano, tela de leitura | 06, 07, 10 | 11 | B | ✅ Concluída (T98–T105) |
 | 12 | **Checkout, funil e ativação** | página de vendas, Asaas cartão/Pix/boleto, webhook verificado e idempotente, reconciliação, garantia de 7 dias, 18+ | 07 | 12 | **A** | ✅ Concluída — homologada com dado real, estorno inclusive |
 | 13 | **Onboarding, plano e sessão** | pagar → senha → meta → plano do 1º dia → responder com causa do erro → explicação com fonte. **É o loop central** | 06, 07, 10, 12 | 12 | B | ✅ Concluída |
-| 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ⬜ Não iniciada |
+| 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ✅ Concluída — go-live manual pendente |
 | — | 🚀 **LANÇAMENTO** | — | — | — | — | — |
 
-**Resta a SPEC 14 (10 tasks)** para lançar.
+**O código do MVP está concluído na SPEC 14; resta executar o checklist manual de go-live antes do lançamento.**
 
 ## Depois do lançamento — specs 15 a 36
 

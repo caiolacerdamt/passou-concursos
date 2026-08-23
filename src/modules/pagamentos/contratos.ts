@@ -6,6 +6,10 @@ export type MeioDePagamento = (typeof MEIOS_DE_PAGAMENTO)[number];
 /** Versão registrada junto do aceite; trocar o texto exige publicar uma versão nova. */
 export const VERSAO_ATUAL_DOS_TERMOS = "inicial-2026-08";
 
+/** Identificação provisória, explícita até a revisão jurídica e cadastral. */
+export const IDENTIFICACAO_PUBLICA_PADRAO = "Passou Concursos";
+export const CANAL_PRIVACIDADE_PADRAO = "privacidade@passouconcursos.com";
+
 export const ESTADOS_DE_PAGAMENTO = [
   "pendente",
   "confirmada",

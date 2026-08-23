@@ -7,18 +7,9 @@
  * CSS declaradas aqui dentro de `@theme`, e o Tailwind gera as utilidades a
  * partir delas (`bg-marca`, `text-suave`, `border-linha`...). Um lugar so.
  *
- * Os contrastes abaixo foram medidos, nao estimados (UI-03 AC3 exige >= 4,5:1
- * para texto normal). Todos contra o branco `--color-fundo`:
- *
- *   texto        #16191d   17,6:1
- *   texto-suave  #4a5158    8,1:1
- *   marca        #1d4ed8    6,7:1   (serve como fundo de botao com texto branco)
- *   erro         #b42318    6,6:1
- *   aviso        #8a4b08    6,8:1
- *   ok           #116339    7,3:1
- *
- * `linha` (1,4:1) e so borda decorativa — nunca carrega texto, e por isso nao
- * precisa passar no criterio.
+ * Os pares de texto usam tons escuros contra o papel claro (UI-03 AC3 exige
+ * contraste suficiente para texto normal). `linha` é só borda decorativa —
+ * nunca carrega texto e não participa da hierarquia de leitura.
  *
  * Tema claro/escuro esta FORA do escopo da SPEC 07.
  */

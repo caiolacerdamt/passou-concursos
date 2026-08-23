@@ -7,7 +7,7 @@ teste derivado do critério de aceite, gate verde e um commit atômico por taref
 design embutido neste arquivo; não há `design.md` separado.
 
 **Design**: embutido abaixo, conforme o Ritual B da SPEC 13.
-**Status**: In Progress
+**Status**: Completed
 
 ## Design embutido
 
@@ -275,14 +275,14 @@ causa do erro, correção, fontes e retomada visual.
 **Tools**: MCP: NONE · Skill: `frontend-design`
 **Done when**:
 
-- [ ] Questão, fonte e alternativas são legíveis no mobile e no desktop, sem rolagem horizontal.
-- [ ] O aluno não avança sem enviar causa quando o resultado é erro no treino.
-- [ ] A correção mostra acerto/erro, alternativa correta, explicação e fontes sem inventar conteúdo.
-- [ ] Questão sem explicação válida mostra `em revisão`; imagem, quando existente, aparece com texto
+- [x] Questão, fonte e alternativas são legíveis no mobile e no desktop, sem rolagem horizontal.
+- [x] O aluno não avança sem enviar causa quando o resultado é erro no treino.
+- [x] A correção mostra acerto/erro, alternativa correta, explicação e fontes sem inventar conteúdo.
+- [x] Questão sem explicação válida mostra `em revisão`; imagem, quando existente, aparece com texto
       alternativo.
-- [ ] Saída e retorno preservam itens já respondidos e não criam duplicidade.
-- [ ] Testes de página/componente cobrem estados de resposta, causa, revisão, erro e conclusão.
-- [ ] Build, lint e suítes unitária e de banco passam.
+- [x] Saída e retorno preservam itens já respondidos e não criam duplicidade.
+- [x] Testes de página/componente cobrem estados de resposta, causa, revisão, erro e conclusão.
+- [x] Build, lint e suítes unitária e de banco passam.
 
 **Tests**: unit (`src/app/app/sessao/[id]/page.test.tsx`, `src/modules/aluno/sessao/tela.test.tsx`)
 **Gate**: build

@@ -54,9 +54,6 @@ export type EstadoDaResposta =
       mensagem: string;
     };
 
-/** Estado inicial separado para a tela client e para os testes da action. */
-export const ESTADO_INICIAL_DA_RESPOSTA: EstadoDaResposta = { status: "inicial" };
-
 /**
  * Responde uma questão sem aceitar autoridade do formulário.
  *

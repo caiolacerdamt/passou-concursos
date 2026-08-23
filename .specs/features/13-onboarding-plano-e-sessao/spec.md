@@ -2,12 +2,12 @@
 
 | | |
 | --- | --- |
-| **Ordem** | 13 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · **é o loop central** |
+| **Ordem** | 13 de 36 · [ROADMAP](../../ROADMAP.md) · **MVP** · **é o loop central** · ✅ concluída |
 | **Depende de** | SPEC 06, SPEC 07, SPEC 10, SPEC 12 |
 | **Habilita** | SPEC 14, 19, 21, 24, 32 |
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ **Concluída e verificada** |
 | **Requisitos** | **PAG-14**, **ALUNO-08** (superfície), **ALUNO-11** (superfície), **ALUNO-03** (superfície), **ALUNO-01** (superfície), **BANCO-01** (AC2), **IA-04** (superfície), **IA-09** (AC5) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m8-negocio-pagamentos/spec.md` · `.specs/modulos/m2-camada-ia/spec.md` · `.specs/modulos/m1-banco-questoes/spec.md` |
 | **Vem de** | SPEC 22 + SPEC 23 + parte da SPEC 24 do recorte de 42, **fundidas** (AD-089) |
@@ -115,15 +115,15 @@ da implementação e ficam centralizados em tokens.
 
 ## Success Criteria
 
-- [ ] Pagar, definir senha, declarar "iniciante" e ver o plano do 1º dia **na mesma sessão**
-- [ ] A tela do plano mostra `piso` e `meta_cheia` como coisas distintas, com o motivo de cada bloco
-- [ ] Errar no treino e não conseguir avançar sem marcar a causa; "não sei dizer" é aceito
-- [ ] Duplo-clique gera **uma** tentativa
-- [ ] Sair no meio e voltar não perde nem duplica resposta
-- [ ] A fonte da questão real aparece na tela
-- [ ] Bloco com questão anulada fecha sem ela
-- [ ] A explicação exibida é a da versão que o aluno respondeu, com as fontes
-- [ ] Explicação inválida faz a tela mostrar o aviso, nunca o texto antigo
+- [x] Pagar, definir senha, declarar "iniciante" e ver o plano do 1º dia **na mesma sessão**
+- [x] A tela do plano mostra `piso` e `meta_cheia` como coisas distintas, com o motivo de cada bloco
+- [x] Errar no treino e não conseguir avançar sem marcar a causa; "não sei dizer" é aceito
+- [x] Duplo-clique gera **uma** tentativa
+- [x] Sair no meio e voltar não perde nem duplica resposta
+- [x] A fonte da questão real aparece na tela
+- [x] Bloco com questão anulada fecha sem ela
+- [x] A explicação exibida é a da versão que o aluno respondeu, com as fontes
+- [x] Explicação inválida faz a tela mostrar o aviso, nunca o texto antigo
 
 ## Requirement Traceability
 
@@ -133,8 +133,8 @@ da implementação e ficam centralizados em tokens.
 | ALUNO-05 | Concurso-alvo, agenda, minutos, nível declarado e diagnóstico pulável | verified |
 | ALUNO-08 | Blocos Revisar/Avançar/Treinar, motivo e limite de tempo | verified |
 | ALUNO-11 | Separação visual e funcional entre `piso` e `meta_cheia` | verified |
-| ALUNO-03 | Causa obrigatória no erro do treino, incluindo `nao_sei_dizer` | pending |
-| ALUNO-01 | Tentativa só-INSERT, snapshot, tempo, chute, contexto e deduplicação | pending |
-| BANCO-01 | Proveniência visível, imagens servidas e questão anulada fora do treino | pending |
-| IA-04 | Explicação por questão-versão com `fontes_citadas` visíveis | in tasks |
-| IA-09 | Aviso `em revisão` sem fallback para explicação antiga | in tasks |
+| ALUNO-03 | Causa obrigatória no erro do treino, incluindo `nao_sei_dizer` | verified |
+| ALUNO-01 | Tentativa só-INSERT, snapshot, tempo, chute, contexto e deduplicação | verified |
+| BANCO-01 | Proveniência visível, imagens servidas e questão anulada fora do treino | verified |
+| IA-04 | Explicação por questão-versão com `fontes_citadas` visíveis | verified |
+| IA-09 | Aviso `em revisão` sem fallback para explicação antiga | verified |

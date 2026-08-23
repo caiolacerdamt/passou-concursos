@@ -35,9 +35,10 @@ vi.mock("@/modules/observabilidade/reporte", () => ({
 import { TentativaRecusada } from "@/modules/aluno/tentativas";
 
 import {
-  ESTADO_INICIAL_DA_RESPOSTA,
   responderQuestao,
 } from "./acoes";
+
+const ESTADO_INICIAL_DA_RESPOSTA = { status: "inicial" } as const;
 
 const alvo = {
   sessao: { id: "sessao-1", contexto: "treino" as const, encerradaEm: null },

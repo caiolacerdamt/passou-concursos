@@ -8,7 +8,7 @@
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
-| **Status** | ⬜ Não iniciada |
+| **Status** | 🟡 Design aprovado |
 | **Requisitos** | **BANCO-10**, **BANCO-07** (superfície), **INFRA-11** (tela de administração da configuração) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m9-infra/spec.md` |
 
@@ -44,10 +44,53 @@ da SPEC 02 tem escrita com autor obrigatório e nenhuma forma de usá-la sem esc
 
 ## Assumptions & Open Questions
 
-| Assumption | Default | Confirmado? |
-| --- | --- | --- |
-| Quem opera | papel único de operador de conteúdo (time de 3) | y |
-| Chave sensível na tela | a tela é de operador autenticado; config nunca vai ao cliente | y (AD-081) |
+| Assumption | Default | Rationale | Confirmado? |
+| --- | --- | --- | --- |
+| Quem opera | papel único de operador de conteúdo (time de 3) | O recorte não precisa de hierarquia entre três pessoas. | y |
+| Autorização | allowlist `operadores` ligada a `auth.users`, conferida no servidor em toda leitura e mutação | Revogação é imediata e não depende de renovar token nem de deploy. | y (2026-08-23) |
+| Chave sensível na tela | a tela é de operador autenticado; o navegador não consulta tabelas internas nem recebe a chave de serviço | Preserva a fronteira server-only da AD-081. | y (AD-081) |
+| Lote | no máximo 50 itens e transação atômica | Evita abuso e impede meia decisão quando uma questão falha. | y (2026-08-23) |
+| Correção | cria versão `em_revisao`; a versão anterior congela e sai de vigência | Falha fechada: conteúdo conhecido como incorreto não continua sendo servido. | y (2026-08-23) |
+
+**Open questions:** none — as decisões de implementação foram aprovadas em 2026-08-23.
+
+## User Stories
+
+### P1: Curar o acervo
+
+Como operador de conteúdo, quero decidir a fila, corrigir questões e manter a taxonomia para publicar
+conteúdo conferido sem operar o banco por SQL. Os critérios de aceite permanecem em **BANCO-07** e
+**BANCO-10**; esta spec não os copia.
+
+### P1: Administrar configuração
+
+Como operador de conteúdo, quero trocar valor ou flag e consultar o histórico para operar o produto
+sem deploy e com autoria explícita. Os critérios de aceite permanecem em **INFRA-11**.
+
+## Security Criteria — ASVS v5.0.0 L2
+
+| Local ID | ASVS reference | Decisão para esta superfície | Verificação |
+| --- | --- | --- | --- |
+| SEC-01 | v5.0.0-8.2.1, v5.0.0-8.3.1 | Página e Server Action exigem operador ativo em guarda server-side; dado do formulário não concede acesso. | Teste de guarda e de chamada direta sem papel. |
+| SEC-02 | v5.0.0-15.3.3 | Cada mutação aceita uma lista fechada de campos; autor e estado de destino são derivados no servidor/banco. | Testes de campo extra, autor forjado e transição inválida. |
+| SEC-03 | v5.0.0-15.3.1 | A tela recebe somente os campos necessários; tabelas internas continuam sem acesso de `anon`/`authenticated`. | Teste do DTO e dos privilégios/RLS. |
+| SEC-04 | v5.0.0-16.2.1 | Toda mutação registra quando, quem, o quê e motivo não vazio, com horário do banco. | Testes das funções atômicas e do histórico. |
+| SEC-05 | v5.0.0-16.3.2 | Tentativa de acesso sem papel é negada e reportada sem conteúdo ou segredo. | Teste do reporte de autorização negada. |
+| SEC-06 | v5.0.0-16.5.1, v5.0.0-16.5.3 | Falha inesperada não mostra consulta, stack ou chave e não deixa mudança parcial. | Testes de mensagem genérica e rollback. |
+
+## Requirement Traceability
+
+| Requirement ID | Fonte | Superfície nesta spec | Status |
+| --- | --- | --- | --- |
+| BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | In Tasks |
+| BANCO-10 | M1 §P3 | taxonomia e candidato | In Tasks |
+| INFRA-11 | M9 §P1 | valor vigente, escrita e histórico | In Tasks |
+| SEC-01 | ASVS v5.0.0 L2 | autorização explícita | In Tasks |
+| SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | In Tasks |
+| SEC-03 | ASVS v5.0.0 L2 | retorno mínimo de dados | In Tasks |
+| SEC-04 | ASVS v5.0.0 L2 | autoria e motivo | In Tasks |
+| SEC-05 | ASVS v5.0.0 L2 | negativa de acesso reportada | In Tasks |
+| SEC-06 | ASVS v5.0.0 L2 | falha fechada e genérica | In Tasks |
 
 ## Success Criteria
 

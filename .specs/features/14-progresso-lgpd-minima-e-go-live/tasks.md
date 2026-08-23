@@ -116,20 +116,21 @@ removem tokens transitórios, desvinculam pagamentos e preservam faturas/aceites
 
 **Files in this task**:
 
+- `src/modules/lgpd/grupo-1.ts`
 - `tests/db/spec14-esquecimento.test.ts`
 
 **Done when**:
 
-- [ ] A função aceita somente execução de serviço e abre a porta nominal na mesma transação dos deletes.
-- [ ] O apagamento cobre as tabelas de grupo 1 existentes, inclusive `tentativas`, projeções, sessões,
+- [x] A função aceita somente execução de serviço e abre a porta nominal na mesma transação dos deletes.
+- [x] O apagamento cobre as tabelas de grupo 1 existentes, inclusive `tentativas`, projeções, sessões,
   plano, matrícula, folga e sequência; nenhum `DELETE` de edição é liberado.
-- [ ] `faturas` e o mínimo financeiro necessário permanecem, sem e-mail identificável do aluno; tokens
+- [x] `faturas` e o mínimo financeiro necessário permanecem, sem e-mail identificável do aluno; tokens
   de resultado são removidos.
-- [ ] Repetir a operação é seguro, mantém um único pedido e retorna estado concluído sem duplicar efeitos.
-- [ ] Há um teste que lista as tabelas atuais com `user_id` e falha se a rotina não cobrir a lista registrada.
-- [ ] Pelo menos 10 assertions de banco cobrem sucesso, autorização, trigger da porta, retenção,
+- [x] Repetir a operação é seguro, mantém um único pedido e retorna estado concluído sem duplicar efeitos.
+- [x] Há um teste que lista as tabelas atuais com `user_id` e falha se a rotina não cobrir a lista registrada.
+- [x] Pelo menos 10 assertions de banco cobrem sucesso, autorização, trigger da porta, retenção,
   idempotência e falha/resume.
-- [ ] Gate full passa: `npm run test:db`.
+- [x] Gate full passa: `npm run test:db`.
 
 **Tests**: integration — `tests/db/spec14-esquecimento.test.ts` (mínimo 10 assertions)  
 **Gate**: full

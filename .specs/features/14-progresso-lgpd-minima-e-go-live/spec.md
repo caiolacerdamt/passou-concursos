@@ -136,7 +136,7 @@ com `user_id` sobrevive e que a fatura permanece.
 | ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | Tasks ready |
 | GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | T1 verified; T3 pending |
 | GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | Tasks ready |
-| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | Tasks ready |
+| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | T2 verified; T6/T7 pending |
 | DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | Tasks ready |
 
 **ID format:** IDs de domínio já definidos pelos módulos (`ALUNO-`, `GAM-`, `DADOS-`).

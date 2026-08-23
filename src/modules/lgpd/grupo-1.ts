@@ -22,6 +22,7 @@ export const TABELAS_GRUPO_1 = [
   "plano_dia",
   "revisao_agenda",
   "revisao_evento",
+  "solicitacoes_esquecimento",
   "sequencia_dia",
   "sessoes",
   "tentativa_causa_simulado",

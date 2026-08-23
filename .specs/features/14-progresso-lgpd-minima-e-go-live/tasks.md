@@ -2,7 +2,7 @@
 
 **Spec**: `.specs/features/14-progresso-lgpd-minima-e-go-live/spec.md`  
 **Design**: `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`  
-**Status**: Completed — implementation and automated gates passed; manual go-live items remain
+**Status**: Remediation tasks in progress — T9 complete; T10/T11 pending commit
 **Ritual**: A — apagamento irreversível com verificação independente
 
 ## Test Coverage Matrix
@@ -351,6 +351,83 @@ pré-requisitos manuais e publicar o checklist verificável da SPEC 14.
 **Tests**: unit/build — `src/app/paginas-publicas.test.tsx` (mínimo 6 assertions)  
 **Gate**: build
 **Commit**: `docs(dados-01): document spec14 go-live contract`
+
+---
+
+### Validation remediation
+
+O Verificador independente encontrou uma falha de continuidade na consulta da sequência e três lacunas
+de evidência que podiam ser fechadas sem ampliar o produto. Estas tasks são correções da própria SPEC 14,
+não dependem de specs futuras.
+
+```text
+T1 -> T9
+T3 -> T9
+T2 -> T10
+T4 -> T11
+T5 -> T11
+```
+
+### T9: Corrigir continuidade da sequência e provar o fim de semana
+
+**What**: Fazer a abertura do dia usar a última data histórica, com zero explícito no estado inicial, e
+testar cinco dias úteis, fim de semana e a quebra seguida de um novo dia cumprido.
+**Where**: `supabase/migrations/20260823094000_spec14_sequencia_estado_inicial.sql`
+**Depends on**: T1, T3
+**Requirement**: GAM-02, ALUNO-02 AC2
+
+**Done when**:
+
+- [x] A sequência não usa o maior valor antigo para ressuscitar um período interrompido.
+- [x] Conta sem histórico continua recebendo sequência zero, nunca `NULL`.
+- [x] O teste cobre cinco dias declarados, sábado fora da agenda e o caso de dia agendado perdido.
+- [x] `npm run test:db` passa com a migration aplicada no Supabase de desenvolvimento.
+
+**Tests**: integration — `tests/db/spec14-sequencia.test.ts`
+**Gate**: full
+**Commit**: `fix(gam-02): preserve last sequence state`
+
+---
+
+### T10: Provar apagamento completo com fixture representativa
+
+**What**: Aumentar a fixture para 30 tentativas e afirmar zero em cada tabela do inventário depois que a
+fila é finalizada, mantendo a prova de que a fatura sobrevive enquanto a fila está aberta.
+**Where**: `tests/db/spec14-esquecimento.test.ts`
+**Depends on**: T2
+**Requirement**: DADOS-04
+
+**Done when**:
+
+- [ ] A fixture cria 30 tentativas e exercita a rotina sobre o conjunto completo.
+- [ ] Toda tabela do inventário, exceto a fila enquanto aberta, fica com contagem zero.
+- [ ] Depois da invalidação Auth e finalização, nenhuma linha com `user_id` do titular sobrevive.
+- [ ] Fatura, aceite e evento continuam retidos durante a prova.
+- [ ] `npm run test:db` passa.
+
+**Tests**: integration — `tests/db/spec14-esquecimento.test.ts`
+**Gate**: full
+**Commit**: `test(dados-04): prove complete erasure inventory`
+
+---
+
+### T11: Ampliar asserções da superfície solo
+
+**What**: Cobrir três causas no caderno e fechar o vocabulário proibido de comparação entre alunos nas
+asserções da tela.
+**Where**: `src/modules/aluno/progresso-tela.test.tsx`
+**Depends on**: T4, T5
+**Requirement**: ALUNO-10, GAM-08
+
+**Done when**:
+
+- [ ] A renderização mostra três causas diferentes para revisão.
+- [ ] Os testes recusam `ranking`, `liga`, `placar`, `percentil` e `posição`.
+- [ ] `npm run test:unit` passa.
+
+**Tests**: unit — `src/modules/aluno/progresso-tela.test.tsx`, `src/app/app/progresso/page.test.tsx`
+**Gate**: quick
+**Commit**: `test(gam-08): cover solo progress vocabulary`
 
 ---
 

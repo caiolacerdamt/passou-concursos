@@ -7,7 +7,7 @@
 | **Habilita** | SPEC 16, 19 |
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **A — completo** (o apagamento é irreversível: `design.md` próprio + Verificador independente com sensor de mutação) |
-| **Status** | ✅ **Concluída e verificada** |
+| **Status** | 🟨 **Remediação da verificação em andamento** |
 | **Requisitos** | **ALUNO-10** (superfície), **ALUNO-02** (AC2), **GAM-02**, **GAM-08**, **DADOS-04** (parte), **DADOS-01** (parte) |
 | **Fonte dos requisitos** | `.specs/modulos/m4-coluna-vertebral/spec.md` · `.specs/modulos/m6-gamificacao/spec.md` · `.specs/modulos/m7-lgpd-flywheel/spec.md` |
 | **Vem de** | SPEC 25 + parte da SPEC 28 + pedaços das SPECs 30/31/32 do recorte de 42 (AD-089) |
@@ -132,16 +132,16 @@ com `user_id` sobrevive e que a fatura permanece.
 
 | Requirement ID | Story | Phase | Tasks | Status |
 | --- | --- | --- | --- | --- |
-| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5 | T1/T4/T5 verified |
-| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | T4/T5 verified |
-| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | T1/T3 verified |
-| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | T4/T5 verified |
-| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | T2/T6/T7 verified |
+| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5, T9 | T1/T4/T5/T9 verified |
+| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5, T11 | T4/T5 verified; T11 pending |
+| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3, T9 | T1/T3/T9 verified |
+| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5, T11 | T4/T5 verified; T11 pending |
+| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7, T10 | T2/T6/T7 verified; T10 pending |
 | DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | T6/T7/T8 verified |
 
 **ID format:** IDs de domínio já definidos pelos módulos (`ALUNO-`, `GAM-`, `DADOS-`).
 
-**Coverage:** 6 requisitos, todos mapeados a tasks e verificados; a validação independente está em
+**Coverage:** 6 requisitos, todos mapeados a tasks; a validação independente está em
 `validation.md`.
 
 ## Success Criteria

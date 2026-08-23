@@ -16,6 +16,23 @@ function dataDeHojeEmSaoPaulo(): string {
   return `${valor.year}-${valor.month}-${valor.day}`;
 }
 
+function deslocarData(data: string, dias: number): string {
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const deslocada = new Date(Date.UTC(ano, mes - 1, dia + dias));
+  return deslocada.toISOString().slice(0, 10);
+}
+
+function domingoDaSemanaAnteriorOuAtual(data: string): string {
+  const [ano, mes, dia] = data.split("-").map(Number);
+  const diaDaSemana = new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
+  return deslocarData(data, -diaDaSemana);
+}
+
+function diaDaSemana(data: string): number {
+  const [ano, mes, dia] = data.split("-").map(Number);
+  return new Date(Date.UTC(ano, mes - 1, dia)).getUTCDay();
+}
+
 descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
   async function criarPerfil(
     cliente: Client,
@@ -191,6 +208,91 @@ descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
         [aluno],
       );
       expect(projeção[0].n).toBe("0");
+    });
+  });
+
+  it("carrega cinco dias úteis até o fim de semana sem ressuscitar uma sequência antiga", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      await criarPerfil(cliente, aluno, [1, 2, 3, 4, 5]);
+
+      const hoje = dataDeHojeEmSaoPaulo();
+      const domingo = domingoDaSemanaAnteriorOuAtual(hoje);
+      const segunda = deslocarData(domingo, -6);
+      const diasUteis = [0, 1, 2, 3, 4].map((offset) => deslocarData(segunda, offset));
+
+      for (const [ordem, data] of diasUteis.entries()) {
+        const bloco = await criarPlano(cliente, aluno, data, true);
+        await cliente.query(
+          `insert into public.sessoes
+             (user_id, contexto, plano_bloco_id, iniciada_em, encerrada_em)
+           values ($1, 'plano', $2, $3::timestamptz, $4::timestamptz)`,
+          [
+            aluno,
+            bloco,
+            `${data}T19:00:00-03:00`,
+            `${data}T20:00:00-03:00`,
+          ],
+        );
+        expect(ordem).toBeLessThan(5);
+      }
+
+      const sabado = deslocarData(domingo, -1);
+      await cliente.query("select public.recalcula_sequencia($1, $2::date)", [aluno, sabado]);
+
+      const { rows } = await cliente.query<{
+        data: string;
+        estado: string;
+        sequencia: number;
+      }>(
+        `select data::text, estado, sequencia
+           from public.sequencia_dia where user_id = $1 order by data`,
+        [aluno],
+      );
+      expect(rows).toEqual([
+        ...diasUteis.map((data, ordem) => ({ data, estado: "cumprido", sequencia: ordem + 1 })),
+        { data: sabado, estado: "fora_agenda", sequencia: 5 },
+      ]);
+
+      await comoAluno(cliente, aluno, async () => {
+        const { rows: hojeConsultado } = await cliente.query<{ sequencia: number }>(
+          "select sequencia from public.consultar_sequencia_do_dia()",
+        );
+        expect(hojeConsultado[0].sequencia).toBe(5);
+      });
+    });
+  });
+
+  it("usa a última data histórica, não o maior valor antigo, ao abrir o dia", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const hoje = dataDeHojeEmSaoPaulo();
+      const ontem = deslocarData(hoje, -1);
+      const anteontem = deslocarData(hoje, -2);
+      await criarPerfil(cliente, aluno, [...new Set([diaDaSemana(ontem), diaDaSemana(hoje)])]);
+
+      await cliente.query(
+        `insert into public.sequencia_dia
+           (user_id, data, agendado, folga, piso_entregue, piso_cumprido, estado, sequencia)
+         values ($1, $2::date, true, false, true, true, 'cumprido', 9),
+                ($1, $3::date, true, false, true, false, 'piso_pendente', 0)`,
+        [aluno, anteontem, ontem],
+      );
+
+      const bloco = await criarPlano(cliente, aluno, hoje, true);
+      await cliente.query(
+        `insert into public.sessoes
+           (user_id, contexto, plano_bloco_id, iniciada_em, encerrada_em)
+         values ($1, 'plano', $2, $3::timestamptz, $4::timestamptz)`,
+        [aluno, bloco, `${hoje}T19:00:00-03:00`, `${hoje}T20:00:00-03:00`],
+      );
+
+      await comoAluno(cliente, aluno, async () => {
+        const { rows } = await cliente.query<{ sequencia: number; estado: string }>(
+          "select sequencia, estado from public.consultar_sequencia_do_dia()",
+        );
+        expect(rows).toEqual([{ sequencia: 1, estado: "cumprido" }]);
+      });
     });
   });
 

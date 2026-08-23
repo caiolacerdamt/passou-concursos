@@ -16,11 +16,13 @@
 export const TABELAS_GRUPO_1 = [
   "caderno_erros",
   "dominio_topico",
+  "folgas_programadas",
   "matriculas",
   "perfil_estudo",
   "plano_dia",
   "revisao_agenda",
   "revisao_evento",
+  "sequencia_dia",
   "sessoes",
   "tentativa_causa_simulado",
   "tentativas",

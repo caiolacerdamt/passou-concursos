@@ -80,18 +80,19 @@ recalcular o histórico e consultar o estado do dia sem receber `user_id` do nav
 
 **Files in this task**:
 
+- `src/modules/lgpd/grupo-1.ts`
 - `tests/db/spec14-sequencia.test.ts`
 
 **Done when**:
 
-- [ ] A projeção conserva o piso diário, a agenda, a folga e o estado calculado por data.
-- [ ] Dia fora da agenda e folga carregam a sequência sem quebrá-la; piso pendente quebra a sequência no
+- [x] A projeção conserva o piso diário, a agenda, a folga e o estado calculado por data.
+- [x] Dia fora da agenda e folga carregam a sequência sem quebrá-la; piso pendente quebra a sequência no
   próximo dia agendado.
-- [ ] A RPC autenticada deriva `auth.uid()` e a RPC de job só executa com `service_role`.
-- [ ] Reprocessar o mesmo intervalo produz o mesmo resultado e não duplica linhas.
-- [ ] Pelo menos 8 assertions de banco cobrem os caminhos agendado, fora da agenda, folga, piso cumprido,
+- [x] A RPC autenticada deriva `auth.uid()` e a RPC de job só executa com `service_role`.
+- [x] Reprocessar o mesmo intervalo produz o mesmo resultado e não duplica linhas.
+- [x] Pelo menos 8 assertions de banco cobrem os caminhos agendado, fora da agenda, folga, piso cumprido,
   piso pendente, estado inicial, isolamento e idempotência.
-- [ ] Gate full passa: `npm run test:db`.
+- [x] Gate full passa: `npm run test:db`.
 
 **Tests**: integration — `tests/db/spec14-sequencia.test.ts` (mínimo 8 assertions)  
 **Gate**: full

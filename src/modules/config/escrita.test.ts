@@ -93,7 +93,10 @@ describe("setConfig", () => {
     // Chave que chega por variavel (de uma tela, por exemplo) e barrada em execucao.
     const vindaDeFora = "param.m4.inventada" as Chave;
     await expect(
-      setConfig(vindaDeFora, 1 as never, { autorId: AUTOR }),
+      setConfig(vindaDeFora, 1 as never, {
+        autorId: AUTOR,
+        motivo: "chave inexistente",
+      }),
     ).rejects.toThrow(/nao existe no catalogo/);
 
     expect(gravadas).toEqual([]);

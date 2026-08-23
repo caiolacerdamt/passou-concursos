@@ -30,6 +30,15 @@ describe("Shell", () => {
 
     expect(saida.indexOf("Sair")).toBeLessThan(saida.indexOf("<main"));
   });
+
+  it("oferece largura de painel sem duplicar o shell", () => {
+    const saida = renderToStaticMarkup(
+      <Shell largura="painel">painel</Shell>,
+    );
+
+    expect(saida.match(/max-w-painel/g)?.length).toBe(2);
+    expect(saida).toContain("painel");
+  });
 });
 
 /**

@@ -17,11 +17,16 @@ import type { ReactNode } from "react";
 export function Shell({
   children,
   acoes,
+  largura = "leitura",
 }: {
   children: ReactNode;
   /** Canto direito do cabecalho: entrar, sair, nome do aluno. */
   acoes?: ReactNode;
+  /** A tela de estudo pode usar painel largo; leitura permanece o default. */
+  largura?: "leitura" | "painel";
 }) {
+  const larguraClasse = largura === "painel" ? "max-w-painel" : "max-w-leitura";
+
   return (
     <div className="min-h-dvh">
       {/*
@@ -36,14 +41,14 @@ export function Shell({
         Pular para o conteúdo
       </a>
 
-      <header className="border-b border-linha">
-        <div className="mx-auto flex w-full max-w-leitura flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
+      <header className="border-b border-linha bg-painel/90">
+        <div className={`mx-auto flex w-full ${larguraClasse} flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6`}>
           <span className="font-semibold">Passou Concursos</span>
           {acoes}
         </div>
       </header>
 
-      <main id="conteudo" className="mx-auto w-full max-w-leitura px-4 py-6 sm:px-6">
+      <main id="conteudo" className={`mx-auto w-full ${larguraClasse} px-4 py-6 sm:px-6`}>
         {children}
       </main>
     </div>

@@ -160,9 +160,9 @@ largura de painel sem duplicar o shell.
 **Tools**: MCP: NONE · Skill: `frontend-design`
 **Done when**:
 
-- [ ] Cores, tipografia, raios, espaçamento e larguras ficam centralizados em tokens.
-- [ ] A variante de painel permanece responsiva a 360px e mantém foco/link de pulo.
-- [ ] Testes do shell continuam passando e cobrem a nova variante.
+- [x] Cores, tipografia, raios, espaçamento e larguras ficam centralizados em tokens.
+- [x] A variante de painel permanece responsiva a 360px e mantém foco/link de pulo.
+- [x] Testes do shell continuam passando e cobrem a nova variante.
 
 **Tests**: unit (`src/modules/ui/shell.test.tsx`)
 **Gate**: quick

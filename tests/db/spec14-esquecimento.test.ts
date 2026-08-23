@@ -88,6 +88,20 @@ async function criarGrupoOperacional(cliente: Client, aluno: string): Promise<{
     [simulado.id, simulado.respondida_em, aluno],
   );
 
+  // Fixture de tamanho próximo ao critério de sucesso: o apagamento precisa
+  // remover o conjunto inteiro, não apenas uma amostra de duas tentativas.
+  for (let indice = 0; indice < 28; indice += 1) {
+    await inserirTentativa(cliente, questao, {
+      user_id: aluno,
+      contexto: "treino",
+      ordem_na_sessao: indice + 1,
+      correta: false,
+      resposta_dada: "A",
+      causa_erro: "fiquei_na_duvida",
+      causa_origem: "aluno",
+    });
+  }
+
   await cliente.query(
     `insert into public.dominio_topico
        (user_id, topico_id, n_respostas, n_acertos, n_chute_certo, score)
@@ -194,8 +208,17 @@ descreveComBanco("SPEC 14 — porta de esquecimento e retenção mínima", () =>
           order by tabela`,
         [aluno],
       );
-      expect(group1.every((linha) => linha.n === "0")).toBe(false);
+      expect(group1.filter((linha) => linha.tabela !== "solicitacoes_esquecimento")
+        .every((linha) => linha.n === "0")).toBe(true);
       expect(group1.find((linha) => linha.tabela === "solicitacoes_esquecimento")?.n).toBe("1");
+
+      await cliente.query("delete from auth.users where id = $1", [aluno]);
+      expect((await cliente.query("select public.finalizar_esquecimento($1)", [aluno])).rows[0].finalizar_esquecimento).toBe(true);
+      const { rows: depoisDaFinalizacao } = await cliente.query<{ n: string }>(
+        `select n::text from public.contar_dados_grupo1_esquecimento($1)`,
+        [aluno],
+      );
+      expect(depoisDaFinalizacao.every((linha) => linha.n === "0")).toBe(true);
     });
   });
 

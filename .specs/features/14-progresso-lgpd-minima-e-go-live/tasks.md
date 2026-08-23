@@ -2,7 +2,7 @@
 
 **Spec**: `.specs/features/14-progresso-lgpd-minima-e-go-live/spec.md`  
 **Design**: `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`  
-**Status**: Remediation tasks in progress — T9 complete; T10/T11 pending commit
+**Status**: Remediation tasks in progress — T9/T10 complete; T11 pending commit
 **Ritual**: A — apagamento irreversível com verificação independente
 
 ## Test Coverage Matrix
@@ -399,11 +399,11 @@ fila é finalizada, mantendo a prova de que a fatura sobrevive enquanto a fila e
 
 **Done when**:
 
-- [ ] A fixture cria 30 tentativas e exercita a rotina sobre o conjunto completo.
-- [ ] Toda tabela do inventário, exceto a fila enquanto aberta, fica com contagem zero.
-- [ ] Depois da invalidação Auth e finalização, nenhuma linha com `user_id` do titular sobrevive.
-- [ ] Fatura, aceite e evento continuam retidos durante a prova.
-- [ ] `npm run test:db` passa.
+- [x] A fixture cria 30 tentativas e exercita a rotina sobre o conjunto completo.
+- [x] Toda tabela do inventário, exceto a fila enquanto aberta, fica com contagem zero.
+- [x] Depois da invalidação Auth e finalização, nenhuma linha com `user_id` do titular sobrevive.
+- [x] Fatura, aceite e evento continuam retidos durante a prova.
+- [x] `npm run test:db` passa.
 
 **Tests**: integration — `tests/db/spec14-esquecimento.test.ts`
 **Gate**: full

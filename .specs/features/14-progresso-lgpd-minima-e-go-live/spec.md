@@ -130,18 +130,18 @@ com `user_id` sobrevive e que a fatura permanece.
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
-| --- | --- | --- | --- |
-| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | Pending |
-| ALUNO-10 | Caderno filtrável por causa e tópico | Design | Pending |
-| GAM-02 | Sequência baseada no piso, agenda e folga | Design | Pending |
-| GAM-08 | Produto solo, sem posição relativa | Design | Pending |
-| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | Pending |
-| DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | Pending |
+| Requirement ID | Story | Phase | Tasks | Status |
+| --- | --- | --- | --- | --- |
+| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5 | Tasks ready |
+| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | Tasks ready |
+| GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | Tasks ready |
+| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | Tasks ready |
+| DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | Tasks ready |
+| DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | Tasks ready |
 
 **ID format:** IDs de domínio já definidos pelos módulos (`ALUNO-`, `GAM-`, `DADOS-`).
 
-**Coverage:** 6 requisitos, 0 mapeados a tasks, 6 pendentes.
+**Coverage:** 6 requisitos, todos mapeados a tasks; implementação pendente.
 
 ## Success Criteria
 

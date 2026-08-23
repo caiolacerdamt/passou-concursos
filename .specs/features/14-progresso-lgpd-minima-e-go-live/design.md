@@ -48,10 +48,12 @@ a outro dispositivo.
 
 ## Components
 
-### Migration de progresso, sequência e apagamento
+### Migrations de sequência, apagamento e agenda
 
 - **Purpose**: Criar as projeções, a folga declarada e a porta transacional do direito ao esquecimento.
-- **Location**: `supabase/migrations/20260822230000_spec14_progresso_lgpd.sql`
+- **Location**: `supabase/migrations/20260822230000_spec14_sequencia.sql`,
+  `supabase/migrations/20260822231000_spec14_esquecimento.sql` e
+  `supabase/migrations/20260822232000_spec14_cron.sql`
 - **Interfaces**:
   - `recalcula_sequencia(p_user_id, p_ate)` — job de serviço, recalculável e idempotente.
   - `consultar_sequencia_do_dia()` — RPC autenticada, sem `user_id` recebido do cliente.

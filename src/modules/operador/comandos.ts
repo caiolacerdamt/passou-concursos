@@ -11,7 +11,7 @@ import {
   decisaoDeCandidatoSchema,
   correcaoDeQuestaoSchema,
   edicaoDeTaxonomiaSchema,
-  type AlteracaoDeConfiguracaoInput,
+  alteracaoDeConfiguracaoSchema,
 } from "./contratos";
 import {
   comOperador,
@@ -129,24 +129,18 @@ export async function editarTaxonomia(entrada: unknown): Promise<boolean> {
 
 /** Grava uma configuracao append-only com autor derivado da sessao. */
 export async function alterarConfiguracao(
-  entrada: AlteracaoDeConfiguracaoInput,
+  entrada: unknown,
 ): Promise<void> {
   return comOperador("alterar_configuracao", async ({ operador }) => {
-    if (
-      typeof entrada !== "object" ||
-      entrada === null ||
-      typeof entrada.chave !== "string" ||
-      typeof entrada.motivo !== "string" ||
-      entrada.motivo.trim() === "" ||
-      !existeNoCatalogo(entrada.chave)
-    ) {
+    const validada = alteracaoDeConfiguracaoSchema.safeParse(entrada);
+    if (!validada.success || !existeNoCatalogo(validada.data.chave)) {
       rejeitarEntrada("configuracao_invalida");
     }
 
     try {
-      await setConfig(entrada.chave as Chave, entrada.valor as never, {
+      await setConfig(validada.data.chave as Chave, validada.data.valor as never, {
         autorId: operador.id,
-        motivo: entrada.motivo,
+        motivo: validada.data.motivo,
       });
     } catch (erro) {
       if (erro instanceof ConfiguracaoRecusada) {

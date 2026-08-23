@@ -155,4 +155,27 @@ describe("comandos do operador", () => {
 
     expect(dependencias.rpc).not.toHaveBeenCalled();
   });
+
+  it("recusa campos extras na edição de taxonomia e configuração", async () => {
+    await expect(
+      editarTaxonomia({
+        tipo: "topico",
+        id: "44444444-4444-4444-8444-444444444444",
+        motivo: "ajuste",
+        campos: { nome: "Juros", campoInterno: "não permitido" },
+      }),
+    ).rejects.toMatchObject({ name: "EntradaDoOperadorInvalida" });
+
+    await expect(
+      alterarConfiguracao({
+        chave: "flag.m5.raiox",
+        valor: true,
+        motivo: "ajuste",
+        autorId: "autor-forjado",
+      }),
+    ).rejects.toMatchObject({ name: "EntradaDoOperadorInvalida" });
+
+    expect(dependencias.rpc).not.toHaveBeenCalled();
+    expect(dependencias.setConfig).not.toHaveBeenCalled();
+  });
 });

@@ -57,7 +57,7 @@ T121 → T122
 ### Phase 3: Superfície
 
 ```text
-T122 → T123 → T124 → T125 → T126
+T122 → T123 → T124 → T125 → T126 → T127
 ```
 
 ## Task Breakdown
@@ -170,6 +170,18 @@ T122 → T123 → T124 → T125 → T126
 **Commit**: `feat(m9): cria tela de configuracao`
 **Status**: ✅ Done — build gate verde; flags, JSON, histórico e integração append-only cobertos
 
+### T127: Endurecer payloads do operador
+
+**What**: Fechar schemas de taxonomia/configuração contra campos extras após a verificação independente.
+**Where**: `src/modules/operador/contratos.ts`, `src/modules/operador/comandos.ts`
+**Depends on**: T126
+**Requirement**: SEC-02
+**Done when**: união de taxonomia e alteração de configuração rejeitam campos não permitidos antes de qualquer RPC/INSERT.
+**Tests**: unit
+**Gate**: quick
+**Commit**: `fix(m9): fecha payloads do operador`
+**Status**: ✅ Done — quick gate verde; extras rejeitados em taxonomia e configuração
+
 ## Diagram-Definition Cross-Check
 
 | Task | Depends on | Diagram | Status |
@@ -183,6 +195,7 @@ T122 → T123 → T124 → T125 → T126
 | T124 | T123 | T123 → T124 | ✅ |
 | T125 | T124 | T124 → T125 | ✅ |
 | T126 | T125 | T125 → T126 | ✅ |
+| T127 | T126 | T126 → T127 | ✅ |
 
 ## Test Co-location Validation
 
@@ -197,6 +210,7 @@ T122 → T123 → T124 → T125 → T126
 | T124 | action/componente | unit | unit | ✅ |
 | T125 | action/componente | unit | unit | ✅ |
 | T126 | config/action/componente | unit + integration | unit + integration | ✅ |
+| T127 | contratos server-side | unit | unit | ✅ |
 
 ## Traceability Plan
 
@@ -205,9 +219,9 @@ T122 → T123 → T124 → T125 → T126
 | BANCO-07 | T119, T122, T124 |
 | BANCO-10 | T120, T122, T125 |
 | INFRA-11 | T118, T121, T122, T126 |
-| SEC-01…SEC-06 | T118…T126 |
+| SEC-01…SEC-06 | T118…T127 |
 
 ## Closing Protocol
 
-Depois de T126: Verificador GPT-5.6 Terra com reasoning `max`, Ritual B, Success Criteria com evidência
+Depois de T127: Verificador GPT-5.6 Luna com reasoning `max`, Ritual B, Success Criteria com evidência
 `file:line`, sem sensor. Gaps viram tasks de correção e nova verificação antes de `validate_state.py`.

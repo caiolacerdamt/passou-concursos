@@ -143,13 +143,13 @@ export const edicaoDeTaxonomiaSchema = z.discriminatedUnion("tipo", [
     id: uuid,
     motivo: textoObrigatorio,
     campos: camposDeMateria,
-  }),
+  }).strict(),
   z.object({
     tipo: z.literal("topico"),
     id: uuid,
     motivo: textoObrigatorio,
     campos: camposDeTopico,
-  }),
+  }).strict(),
 ]);
 
 export type DecisaoDaFilaInput = z.infer<typeof decisaoDaFilaSchema>;
@@ -157,8 +157,14 @@ export type CorrecaoDeQuestaoInput = z.infer<typeof correcaoDeQuestaoSchema>;
 export type DecisaoDeCandidatoInput = z.infer<typeof decisaoDeCandidatoSchema>;
 export type EdicaoDeTaxonomiaInput = z.infer<typeof edicaoDeTaxonomiaSchema>;
 
-export type AlteracaoDeConfiguracaoInput = {
-  chave: string;
-  valor: unknown;
-  motivo: unknown;
-};
+export const alteracaoDeConfiguracaoSchema = z
+  .object({
+    chave: textoObrigatorio,
+    valor: z.unknown().refine((valor) => valor !== undefined, "valor_obrigatorio"),
+    motivo: textoObrigatorio,
+  })
+  .strict();
+
+export type AlteracaoDeConfiguracaoInput = z.infer<
+  typeof alteracaoDeConfiguracaoSchema
+>;

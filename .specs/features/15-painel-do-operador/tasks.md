@@ -65,19 +65,19 @@ T122 → T123 → T124 → T125 → T126
 ### T118: Criar identidade e trilha do operador
 
 **What**: Criar allowlist, log append-only e exigir motivo em novas configurações.
-**Where**: `supabase/migrations/20260823090000_spec15_operadores.sql`
+**Where**: `supabase/migrations/20260823100000_spec15_operadores.sql`
 **Depends on**: None
 **Requirement**: INFRA-11, SEC-01, SEC-03, SEC-04
 **Done when**: operador ativo é verificável; navegador não lê; log não aceita mutação; config sem motivo falha.
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m9): cria fronteira do operador`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — full gate verde; migrations aplicadas em desenvolvimento
 
 ### T119: Operar a fila em transação
 
 **What**: Criar decisão em lote e correção versionada com publicação/rollback atômicos.
-**Where**: `supabase/migrations/20260823091000_spec15_fila.sql`
+**Where**: `supabase/migrations/20260823101000_spec15_fila.sql`
 **Depends on**: T118
 **Requirement**: BANCO-07, SEC-02, SEC-04, SEC-06
 **Done when**: lote 1–50 aprova/rejeita; aprovar publica; corrigir insere versão; conflito reverte tudo.
@@ -89,7 +89,7 @@ T122 → T123 → T124 → T125 → T126
 ### T120: Operar a taxonomia em transação
 
 **What**: Criar funções de candidato e edição canônica com motivo e trilha.
-**Where**: `supabase/migrations/20260823092000_spec15_taxonomia.sql`
+**Where**: `supabase/migrations/20260823102000_spec15_taxonomia.sql`
 **Depends on**: T119
 **Requirement**: BANCO-10, SEC-02, SEC-04, SEC-06
 **Done when**: aprovação cria tópico; rejeição não cria; edição desativa sem DELETE; concorrência falha fechada.

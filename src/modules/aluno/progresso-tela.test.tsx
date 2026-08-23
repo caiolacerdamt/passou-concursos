@@ -45,8 +45,10 @@ describe("ProgressoTela", () => {
       />,
     );
     expect(html).toContain("Nenhum erro encontrado com esses filtros");
-    expect(html.toLowerCase()).not.toContain("ranking");
-    expect(html.toLowerCase()).not.toContain("posição");
+    const texto = html.toLowerCase();
+    for (const palavra of ["ranking", "liga", "placar", "percentil", "posição"]) {
+      expect(texto).not.toContain(palavra);
+    }
   });
 
   it("mostra início explícito quando ainda não há dados", () => {
@@ -63,5 +65,24 @@ describe("ProgressoTela", () => {
     );
     expect(html).toContain("Seu ponto de partida");
     expect(html).toContain("Seu caderno ainda está vazio");
+  });
+
+  it("mostra erros com três causas diferentes para revisão", () => {
+    const html = renderToStaticMarkup(
+      <ProgressoTela
+        dados={{
+          ...base,
+          caderno: [
+            { topicoId: "topico-1", topico: "Matemática", causa: "errei_a_conta", nErros: 2, ultimoErroEm: "2026-08-21" },
+            { topicoId: "topico-1", topico: "Matemática", causa: "chutei", nErros: 1, ultimoErroEm: "2026-08-20" },
+            { topicoId: "topico-1", topico: "Matemática", causa: "faltou_tempo", nErros: 1, ultimoErroEm: "2026-08-19" },
+          ],
+        }}
+      />,
+    );
+
+    expect(html).toContain("Errei a conta");
+    expect(html).toContain("Chutei");
+    expect(html).toContain("Faltou tempo");
   });
 });

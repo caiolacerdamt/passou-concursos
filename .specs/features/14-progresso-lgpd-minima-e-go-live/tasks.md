@@ -2,7 +2,7 @@
 
 **Spec**: `.specs/features/14-progresso-lgpd-minima-e-go-live/spec.md`  
 **Design**: `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`  
-**Status**: Remediation tasks in progress — T9/T10 complete; T11 pending commit
+**Status**: Automated remediation complete — independent revalidation pending
 **Ritual**: A — apagamento irreversível com verificação independente
 
 ## Test Coverage Matrix
@@ -421,9 +421,9 @@ asserções da tela.
 
 **Done when**:
 
-- [ ] A renderização mostra três causas diferentes para revisão.
-- [ ] Os testes recusam `ranking`, `liga`, `placar`, `percentil` e `posição`.
-- [ ] `npm run test:unit` passa.
+- [x] A renderização mostra três causas diferentes para revisão.
+- [x] Os testes recusam `ranking`, `liga`, `placar`, `percentil` e `posição`.
+- [x] `npm run test:unit` passa.
 
 **Tests**: unit — `src/modules/aluno/progresso-tela.test.tsx`, `src/app/app/progresso/page.test.tsx`
 **Gate**: quick

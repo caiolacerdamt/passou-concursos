@@ -78,8 +78,10 @@ describe("/app/progresso", () => {
     expect(html).toContain("Caderno de erros");
     expect(html).toContain("Por que errei");
     expect(html).toContain("name=\"topico\"");
-    expect(html.toLowerCase()).not.toContain("ranking");
-    expect(html.toLowerCase()).not.toContain("posição");
+    const texto = html.toLowerCase();
+    for (const palavra of ["ranking", "liga", "placar", "percentil", "posição"]) {
+      expect(texto).not.toContain(palavra);
+    }
   });
 
   it("mostra começo explícito para aluno sem histórico", async () => {

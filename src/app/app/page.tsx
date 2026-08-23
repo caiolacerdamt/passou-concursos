@@ -1,18 +1,29 @@
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { clienteDaSessao } from "@/lib/db/sessao";
+import { consultarPerfilEstudo } from "@/modules/aluno/onboarding";
+import { consultarPlanoDoDia } from "@/modules/aluno/plano";
+import { OnboardingTela } from "@/modules/aluno/onboarding-tela";
+import { PlanoTela } from "@/modules/aluno/plano-tela";
 import { Estado } from "@/modules/ui/estado";
 import { Shell } from "@/modules/ui/shell";
 
+import { salvarOnboarding } from "./acoes";
 import { sair } from "../entrar/acoes";
 
 /**
  * A primeira tela logada. O plano do dia de verdade e da SPEC 13 — aqui existe
  * o esqueleto que prova a corrente inteira: sessao → matricula → conteudo.
  */
-export default async function App() {
-  const matricula = await exigirMatriculaAtiva();
+export default async function App({ searchParams }: PageProps<"/app">) {
+  await exigirMatriculaAtiva();
+  const supabase = await clienteDaSessao();
+  const perfil = await consultarPerfilEstudo(supabase);
+  const parametros = await searchParams;
+  const erro = comoTexto(parametros.erro);
 
   return (
     <Shell
+      largura="painel"
       acoes={
         <form action={sair}>
           <button type="submit" className="text-marca underline">
@@ -21,19 +32,30 @@ export default async function App() {
         </form>
       }
     >
-      <h1 className="text-2xl font-semibold">Seu estudo</h1>
-      <p className="mt-2 text-suave">
-        Matrícula ativa até{" "}
-        {new Date(matricula.fim_em).toLocaleDateString("pt-BR")}.
-      </p>
-
-      <div className="mt-6">
-        <Estado
-          tipo="vazio"
-          titulo="Seu plano do dia ainda não está aqui"
-          acao="O plano diário entra na próxima etapa do produto. Enquanto isso, sua conta já está ativa."
-        />
-      </div>
+      {perfil?.onboardingConcluido ? (
+        await conteudoDoPlano(supabase)
+      ) : (
+        <OnboardingTela acao={salvarOnboarding} erro={erro} />
+      )}
     </Shell>
   );
+}
+
+async function conteudoDoPlano(supabase: Awaited<ReturnType<typeof clienteDaSessao>>) {
+  const plano = await consultarPlanoDoDia(supabase);
+  if (!plano) {
+    return (
+      <Estado
+        tipo="vazio"
+        titulo="Seu plano de hoje ainda está sendo preparado"
+        acao="Recarregue em alguns instantes. Seu perfil já está salvo e a geração do plano não depende de uma resposta da IA."
+      />
+    );
+  }
+
+  return <PlanoTela plano={plano} />;
+}
+
+function comoTexto(valor: string | string[] | undefined): string | undefined {
+  return Array.isArray(valor) ? valor[0] : valor;
 }

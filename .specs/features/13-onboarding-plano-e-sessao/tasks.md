@@ -203,11 +203,11 @@ plano do dia.
 **Tools**: MCP: NONE · Skill: `frontend-design`
 **Done when**:
 
-- [ ] Primeiro acesso mostra formulário responsivo com concurso, minutos, agenda, horário e nível.
-- [ ] Envio grava o perfil do próprio aluno, marca onboarding concluído e gera o plano por SQL.
-- [ ] Retorno mostra o plano na mesma sessão e não bloqueia por frase de IA nula.
-- [ ] Matrícula ausente continua redirecionando antes de qualquer conteúdo.
-- [ ] Testes da página e da ação cobrem primeiro acesso, retorno com plano, erro seguro e paywall.
+- [x] Primeiro acesso mostra formulário responsivo com concurso, minutos, agenda, horário e nível.
+- [x] Envio grava o perfil do próprio aluno, marca onboarding concluído e gera o plano por SQL.
+- [x] Retorno mostra o plano na mesma sessão e não bloqueia por frase de IA nula.
+- [x] Matrícula ausente continua redirecionando antes de qualquer conteúdo.
+- [x] Testes da página e da ação cobrem primeiro acesso, retorno com plano, erro seguro e paywall.
 
 **Tests**: unit (`src/app/app/page.test.tsx`, `src/app/app/acoes.test.ts`)
 **Gate**: quick

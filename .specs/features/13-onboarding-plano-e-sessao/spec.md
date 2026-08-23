@@ -129,8 +129,8 @@ da implementação e ficam centralizados em tokens.
 
 | Requisito | Cobertura nesta spec | Status |
 | --- | --- | --- |
-| PAG-14 | Ativação, onboarding e plano do primeiro dia na mesma sessão | in tasks |
-| ALUNO-05 | Concurso-alvo, agenda, minutos, nível declarado e diagnóstico pulável | in tasks |
+| PAG-14 | Ativação, onboarding e plano do primeiro dia na mesma sessão | verified |
+| ALUNO-05 | Concurso-alvo, agenda, minutos, nível declarado e diagnóstico pulável | verified |
 | ALUNO-08 | Blocos Revisar/Avançar/Treinar, motivo e limite de tempo | verified |
 | ALUNO-11 | Separação visual e funcional entre `piso` e `meta_cheia` | verified |
 | ALUNO-03 | Causa obrigatória no erro do treino, incluindo `nao_sei_dizer` | pending |

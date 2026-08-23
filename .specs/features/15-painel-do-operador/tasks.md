@@ -144,7 +144,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m1): cria tela da fila de revisao`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — quick gate verde; lote, proveniência, correção versionada e erros fechados cobertos
 
 ### T125: Construir a curadoria da taxonomia
 

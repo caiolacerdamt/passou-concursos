@@ -132,10 +132,10 @@ com `user_id` sobrevive e que a fatura permanece.
 
 | Requirement ID | Story | Phase | Tasks | Status |
 | --- | --- | --- | --- | --- |
-| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5 | T1 verified; T4/T5 pending |
-| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | Tasks ready |
+| ALUNO-02 | Progresso baseado em projeção e estado inicial | Design | T1, T4, T5 | T1/T4 verified; T5 pending |
+| ALUNO-10 | Caderno filtrável por causa e tópico | Design | T4, T5 | T4 verified; T5 pending |
 | GAM-02 | Sequência baseada no piso, agenda e folga | Design | T1, T3 | T1/T3 verified; remaining screen pending |
-| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | Tasks ready |
+| GAM-08 | Produto solo, sem posição relativa | Design | T4, T5 | T4 verified; T5 pending |
 | DADOS-04 | Apagamento seletivo, idempotente e com fatura retida | Design | T2, T6, T7 | T2 verified; T6/T7 pending |
 | DADOS-01 | Política, termos versionados e núcleo sem checkbox | Design | T6, T7, T8 | Tasks ready |
 

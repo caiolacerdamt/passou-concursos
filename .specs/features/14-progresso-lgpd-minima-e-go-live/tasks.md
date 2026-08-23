@@ -193,12 +193,12 @@ allowlist de filtros e estado inicial explícito.
 
 **Done when**:
 
-- [ ] Causa inválida é descartada e tópico aceita somente UUID válido.
-- [ ] Causa e tópico podem ser usados juntos, sem concatenar SQL nem consultar o log cru.
-- [ ] Histórico vazio retorna estado inicial claro e nenhum ranking/posição relativa.
-- [ ] Todos os DTOs representam somente dados do cliente autenticado e mapeiam erro sem vazar detalhes.
-- [ ] Pelo menos 12 assertions unitárias cobrem filtros, vazio, sucesso, erro e autorização por cliente.
-- [ ] Gate quick passa: `npm run test:unit`.
+- [x] Causa inválida é descartada e tópico aceita somente UUID válido.
+- [x] Causa e tópico podem ser usados juntos, sem concatenar SQL nem consultar o log cru.
+- [x] Histórico vazio retorna estado inicial claro e nenhum ranking/posição relativa.
+- [x] Todos os DTOs representam somente dados do cliente autenticado e mapeiam erro sem vazar detalhes.
+- [x] Pelo menos 12 assertions unitárias cobrem filtros, vazio, sucesso, erro e autorização por cliente.
+- [x] Gate quick passa: `npm run test:unit`.
 
 **Tests**: unit — `src/modules/aluno/progresso.test.ts` (mínimo 12 assertions)  
 **Gate**: quick

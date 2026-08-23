@@ -387,23 +387,19 @@
 
 ## Handoff
 
-- **Feature**: SPEC 15 — Painel do operador (`.specs/features/15-painel-do-operador/`) — em implementação.
-- **Phase / Task**: Execute / pausa solicitada depois da T120; próxima tarefa é a T121.
-- **Completed**: design e plano (`e9c3d6c`); T118, identidade/autorização e trilha do operador
-  (`191fc2d`); T119, lote atômico da fila e correção por versão nova (`68b1327`); T120, decisão de
-  candidato e edição fechada da taxonomia (`904fb56`). Gate da T120: 665 unitários e 376 de banco;
-  validadores de spec/tasks sem erros.
+- **Feature**: SPEC 15 — Painel do operador (`.specs/features/15-painel-do-operador/`) — concluída e verificada.
+- **Phase / Task**: Execute concluído em T127; Ritual B validado por GPT-5.6 Luna com reasoning `max`.
+- **Completed**: design e plano (`e9c3d6c`); T118 (`191fc2d`), T119 (`68b1327`), T120 (`904fb56`),
+  T121 (`ae1f718`), T122 (`c6982f9`), T123 (`d93278b`), T124 (`a1aad7f`), T125 (`a04ca25`),
+  T126 (`b25fe96`) e T127 (`47850cf`). Correção de fixture de typecheck em `fcf8217`.
+  Gates finais: 699 unitários, 378 testes de banco com rede autorizada, lint sem erros e build verde.
 - **External checks**: migrations da SPEC 15 até `20260823102000_spec15_taxonomia.sql` aplicadas no
   Supabase de desenvolvimento. Nenhuma migration desta branch foi aplicada em produção.
 - **In-progress** (file:line): none.
-- **Next step**: reconciliar este snapshot com git e executar T121 em
-  `.specs/features/15-painel-do-operador/tasks.md`: fechar o contrato TS de escrita e a leitura
-  tipada do histórico de configuração; não refazer T118–T120.
-- **Blockers**: nenhum. `npm test` agregado tem falha preexistente de configuração do Vitest
-  (`maxWorkers` divergente); usar os gates canônicos separados `npm run test:unit` e
-  `npm run test:db`. Antes das tarefas de superfície, reconciliar a dívida herdada da SPEC 13:
-  pendência de estorno já aberta pode manter motivo desatualizado e tinha destino declarado na
-  SPEC 15. O Verificador independente só deve rodar após T126, com GPT-5.6 Terra, reasoning `max`.
+- **Next step**: iniciar a SPEC 16 conforme `.specs/ROADMAP.md`; a SPEC 15 não tem task pendente.
+- **Blockers**: nenhum para a implementação. `npm test` agregado tem falha preexistente de configuração do Vitest
+  (`maxWorkers` divergente); usar os gates canônicos separados `npm run test:unit` e `npm run test:db`.
+  UAT visual e configuração de produção continuam manuais.
 - **Inherited notes**: preservar F-13 (aviso de reembolso preso à URL) e F-14 (revelar senha, sem
   confirmação nem retorno ao login); acompanhar o primeiro estorno parcelado em produção; CI de
   banco ainda sofre latência e executa novamente após merge; não apagar `caiolacerdamt@` nem

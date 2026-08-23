@@ -8,7 +8,7 @@
 | **Tasks (estimativa)** | ~10 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Média |
-| **Status** | 🟠 Em implementação — pausa após T120 |
+| **Status** | ✅ **Concluída e verificada** |
 | **Requisitos** | **BANCO-10**, **BANCO-07** (superfície), **INFRA-11** (tela de administração da configuração) |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` · `.specs/modulos/m9-infra/spec.md` |
 
@@ -20,10 +20,10 @@ da SPEC 02 tem escrita com autor obrigatório e nenhuma forma de usá-la sem esc
 
 ## Goals
 
-- [ ] Operador revisa a fila de questões em lote: aprovar, rejeitar, corrigir gerando versão nova.
-- [ ] Taxonomia editável, com aprovação de candidato a tópico novo.
-- [ ] Configuração e feature flags trocáveis pela tela, com histórico visível por chave.
-- [ ] Toda ação registra quem, quando e por quê.
+- [x] Operador revisa a fila de questões em lote: aprovar, rejeitar, corrigir gerando versão nova.
+- [x] Taxonomia editável, com aprovação de candidato a tópico novo.
+- [x] Configuração e feature flags trocáveis pela tela, com histórico visível por chave.
+- [x] Toda ação registra quem, quando e por quê.
 
 ## Escopo
 
@@ -82,19 +82,19 @@ sem deploy e com autoria explícita. Os critérios de aceite permanecem em **INF
 
 | Requirement ID | Fonte | Superfície nesta spec | Status |
 | --- | --- | --- | --- |
-| BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | Implementing |
-| BANCO-10 | M1 §P3 | taxonomia e candidato | Implementing |
-| INFRA-11 | M9 §P1 | valor vigente, escrita e histórico | Implementing |
-| SEC-01 | ASVS v5.0.0 L2 | autorização explícita | Implementing |
-| SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | Implementing |
-| SEC-03 | ASVS v5.0.0 L2 | retorno mínimo de dados | Implementing |
-| SEC-04 | ASVS v5.0.0 L2 | autoria e motivo | Implementing |
-| SEC-05 | ASVS v5.0.0 L2 | negativa de acesso reportada | In Tasks |
-| SEC-06 | ASVS v5.0.0 L2 | falha fechada e genérica | Implementing |
+| BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | Verified |
+| BANCO-10 | M1 §P3 | taxonomia e candidato | Verified |
+| INFRA-11 | M9 §P1 | valor vigente, escrita e histórico | Verified |
+| SEC-01 | ASVS v5.0.0 L2 | autorização explícita | Verified |
+| SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | Verified |
+| SEC-03 | ASVS v5.0.0 L2 | retorno mínimo de dados | Verified |
+| SEC-04 | ASVS v5.0.0 L2 | autoria e motivo | Verified |
+| SEC-05 | ASVS v5.0.0 L2 | negativa de acesso reportada | Verified |
+| SEC-06 | ASVS v5.0.0 L2 | falha fechada e genérica | Verified |
 
 ## Success Criteria
 
-- [ ] Aprovar uma questão da fila a publica e registra a decisão
-- [ ] Corrigir uma questão publicada gera versão nova, não reescreve a anterior
-- [ ] Aprovar candidato a tópico cria o tópico e não desloca nenhum histórico
-- [ ] Trocar uma flag pela tela vale sem deploy e aparece no histórico com autor e motivo
+- [x] Aprovar uma questão da fila a publica e registra a decisão
+- [x] Corrigir uma questão publicada gera versão nova, não reescreve a anterior
+- [x] Aprovar candidato a tópico cria o tópico e não desloca nenhum histórico
+- [x] Trocar uma flag pela tela vale sem deploy e aparece no histórico com autor e motivo

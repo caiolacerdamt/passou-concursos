@@ -16,7 +16,9 @@ const entradaValida = () => ({
 
 function recusa(motivo: string, entrada: Record<string, unknown>) {
   try {
-    validarOnboarding({ diasEstudo: [], ...entrada });
+    validarOnboarding(
+      { diasEstudo: [], ...entrada } as unknown as Parameters<typeof validarOnboarding>[0],
+    );
     expect.unreachable("deveria recusar");
   } catch (erro) {
     expect(erro).toBeInstanceOf(OnboardingRecusado);

@@ -61,7 +61,7 @@ const plano = {
 };
 
 function renderApp(searchParams: Record<string, string> = {}) {
-  return App({ searchParams: Promise.resolve(searchParams) });
+  return App({ params: Promise.resolve({}), searchParams: Promise.resolve(searchParams) });
 }
 
 describe("/app", () => {

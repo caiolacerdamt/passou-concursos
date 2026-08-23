@@ -226,12 +226,12 @@ itens ainda sem resposta.
 **Tools**: MCP: NONE · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Só questões publicadas, vigentes e não anuladas entram na sessão.
-- [ ] `treinar` mistura questões; blocos por tópico respeitam o tópico do plano.
-- [ ] Uma sessão aberta do mesmo bloco é retomada, sem duplicar itens.
-- [ ] A leitura retorna proveniência, alternativas e imagens com URLs assinadas, sem gabarito para o
+- [x] Só questões publicadas, vigentes e não anuladas entram na sessão.
+- [x] `treinar` mistura questões; blocos por tópico respeitam o tópico do plano.
+- [x] Uma sessão aberta do mesmo bloco é retomada, sem duplicar itens.
+- [x] A leitura retorna proveniência, alternativas e imagens com URLs assinadas, sem gabarito para o
       navegador antes da resposta.
-- [ ] Testes unitários cobrem acervo vazio, anulada, retomada e imagem.
+- [x] Testes unitários cobrem acervo vazio, anulada, retomada e imagem.
 
 **Tests**: unit (`src/modules/aluno/sessao.test.ts`)
 **Gate**: quick

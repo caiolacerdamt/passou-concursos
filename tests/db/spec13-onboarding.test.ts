@@ -67,6 +67,17 @@ descreveComBanco("SPEC 13 — onboarding, retomada e explicacao publica", () => 
         [aluno, plano[0].id, bloco[0].id],
       );
 
+      await recusa(
+        cliente,
+        () =>
+          cliente.query(
+            `insert into public.sessoes (user_id, contexto, plano_dia_id, plano_bloco_id)
+             values ($1, 'plano', $2, $3)`,
+            [aluno, plano[0].id, bloco[0].id],
+          ),
+        /sessoes_uma_aberta_por_bloco/,
+      );
+
       await cliente.query("delete from public.plano_bloco where id = $1", [bloco[0].id]);
       const viva = await cliente.query<{ plano_bloco_id: string | null }>(
         "select plano_bloco_id from public.sessoes where id = $1",

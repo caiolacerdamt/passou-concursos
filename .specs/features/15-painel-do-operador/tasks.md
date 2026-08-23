@@ -84,7 +84,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: integration
 **Gate**: full
 **Commit**: `feat(m1): opera fila de revisao`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — full gate verde; migrations aplicadas em desenvolvimento
 
 ### T120: Operar a taxonomia em transação
 

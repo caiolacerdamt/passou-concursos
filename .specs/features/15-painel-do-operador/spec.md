@@ -82,15 +82,15 @@ sem deploy e com autoria explícita. Os critérios de aceite permanecem em **INF
 
 | Requirement ID | Fonte | Superfície nesta spec | Status |
 | --- | --- | --- | --- |
-| BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | In Tasks |
+| BANCO-07 | M1 §P1 | fila, lote, publicação e versão corrigida | Implementing |
 | BANCO-10 | M1 §P3 | taxonomia e candidato | In Tasks |
 | INFRA-11 | M9 §P1 | valor vigente, escrita e histórico | Implementing |
 | SEC-01 | ASVS v5.0.0 L2 | autorização explícita | Implementing |
-| SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | In Tasks |
+| SEC-02 | ASVS v5.0.0 L2 | lista fechada de campos | Implementing |
 | SEC-03 | ASVS v5.0.0 L2 | retorno mínimo de dados | Implementing |
 | SEC-04 | ASVS v5.0.0 L2 | autoria e motivo | Implementing |
 | SEC-05 | ASVS v5.0.0 L2 | negativa de acesso reportada | In Tasks |
-| SEC-06 | ASVS v5.0.0 L2 | falha fechada e genérica | In Tasks |
+| SEC-06 | ASVS v5.0.0 L2 | falha fechada e genérica | Implementing |
 
 ## Success Criteria
 

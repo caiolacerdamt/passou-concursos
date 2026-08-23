@@ -181,10 +181,10 @@ a tela.
 **Tools**: MCP: NONE · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Leitura retorna `piso` e `meta_cheia` separados, em ordem e com motivo/tempo.
-- [ ] Frase nula não impede a entrega do plano.
-- [ ] Falha de leitura vira erro nomeado sem expor mensagem técnica ao aluno.
-- [ ] Testes unitários cobrem plano completo, plano sem blocos e frase ausente.
+- [x] Leitura retorna `piso` e `meta_cheia` separados, em ordem e com motivo/tempo.
+- [x] Frase nula não impede a entrega do plano.
+- [x] Falha de leitura vira erro nomeado sem expor mensagem técnica ao aluno.
+- [x] Testes unitários cobrem plano completo, plano sem blocos e frase ausente.
 
 **Tests**: unit (`src/modules/aluno/plano.test.ts`)
 **Gate**: quick

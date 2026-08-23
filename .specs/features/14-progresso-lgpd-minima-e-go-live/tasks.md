@@ -228,12 +228,12 @@ combinados e ligar a navegação da superfície de estudo.
 
 **Done when**:
 
-- [ ] A rota exige matrícula e autenticação conforme as páginas existentes.
-- [ ] A tela diferencia sem histórico, filtro sem resultado e erro de leitura.
-- [ ] Os dois filtros aparecem e são enviados juntos; nenhum ranking ou comparação entre alunos é exibido.
-- [ ] A superfície funciona sem depender de estado mantido no navegador e permanece responsiva.
-- [ ] Pelo menos 8 assertions de renderização cobrem estados, links, query string e ausência de ranking.
-- [ ] Gate quick passa: `npm run test:unit`.
+- [x] A rota exige matrícula e autenticação conforme as páginas existentes.
+- [x] A tela diferencia sem histórico, filtro sem resultado e erro de leitura.
+- [x] Os dois filtros aparecem e são enviados juntos; nenhum ranking ou comparação entre alunos é exibido.
+- [x] A superfície funciona sem depender de estado mantido no navegador e permanece responsiva.
+- [x] Pelo menos 8 assertions de renderização cobrem estados, links, query string e ausência de ranking.
+- [x] Gate quick passa: `npm run test:unit`.
 
 **Tests**: unit — `src/app/app/progresso/page.test.tsx` e `src/modules/aluno/progresso-tela.test.tsx` (mínimo 8 assertions)  
 **Gate**: quick

@@ -139,9 +139,9 @@ leitura do perfil da sessão.
 **Tools**: MCP: NONE · Skill: `tlc-spec-driven`
 **Done when**:
 
-- [ ] Validação recusa payload incompleto, minutos fora do intervalo, agenda vazia e nível desconhecido.
-- [ ] Validação devolve dados normalizados para a ação, sem confiar em texto de erro do banco.
-- [ ] Testes unitários cobrem caminho válido e cada recusa.
+- [x] Validação recusa payload incompleto, minutos fora do intervalo, agenda vazia e nível desconhecido.
+- [x] Validação devolve dados normalizados para a ação, sem confiar em texto de erro do banco.
+- [x] Testes unitários cobrem caminho válido e cada recusa.
 
 **Tests**: unit (`src/modules/aluno/onboarding.test.ts`)
 **Gate**: quick

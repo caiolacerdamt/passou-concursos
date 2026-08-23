@@ -23,6 +23,8 @@ da hospedagem** (Vercel e Supabase, quando existirem — SPEC 16). O repositóri
 | `SENTRY_AUTH_TOKEN` | **sim** | opcional | ✅ | Vercel (SPEC 16) | upload de source map no build |
 | `OPENAI_API_KEY` | **sim** | — (SPEC 07) | — (SPEC 07) | — | gateway de IA |
 | `COHERE_API_KEY` | **sim** | — (SPEC 11) | — (SPEC 11) | — | embeddings |
+| `RESEND_API_KEY` | **sim** | ✅ | ✅ | Vercel / Supabase | confirmação do apagamento antes de invalidar Auth (SPEC 14) |
+| `RESEND_FROM` | não (configuração) | ✅ | ✅ | Vercel / Supabase | remetente verificado do e-mail de privacidade (SPEC 14) |
 
 **Sobre o DSN do Sentry.** Ele não é segredo: o SDK do navegador precisa dele, então ele aparece no
 pacote que qualquer visitante baixa. Ele mora nos segredos do repositório apenas porque é o mesmo

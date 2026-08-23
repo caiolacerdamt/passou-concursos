@@ -261,15 +261,16 @@ fechada quando configuração ou resposta do provedor não forem confiáveis.
 
 - `src/modules/lgpd/email.test.ts`
 - `.env.example`
+- `docs/SEGREDOS.md`
 
 **Done when**:
 
-- [ ] A função não pode ser importada para o bundle do navegador e nunca recebe segredo do cliente.
-- [ ] O payload contém apenas destinatário, remetente configurado, assunto e mensagem mínima, sem dados
+- [x] A função não pode ser importada para o bundle do navegador e nunca recebe segredo do cliente.
+- [x] O payload contém apenas destinatário, remetente configurado, assunto e mensagem mínima, sem dados
   apagados nem token.
-- [ ] Ausência de `RESEND_API_KEY`/remetente, timeout e resposta não-2xx retornam erro controlado.
-- [ ] Pelo menos 8 assertions unitárias cobrem sucesso, configuração ausente, payload mínimo e falhas.
-- [ ] Gate quick passa: `npm run test:unit`.
+- [x] Ausência de `RESEND_API_KEY`/remetente, timeout e resposta não-2xx retornam erro controlado.
+- [x] Pelo menos 8 assertions unitárias cobrem sucesso, configuração ausente, payload mínimo e falhas.
+- [x] Gate quick passa: `npm run test:unit`.
 
 **Tests**: unit — `src/modules/lgpd/email.test.ts` (mínimo 8 assertions)  
 **Gate**: quick

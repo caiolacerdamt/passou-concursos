@@ -80,7 +80,21 @@ registrar lesson.
   ainda é necessário executar a migração no projeto Supabase de produção e
   conferir as credenciais/bucket privado de imagens.
 
+## Checagens externas pós-validação
+
+Em 2026-08-22, a rotina protegida de migração foi executada contra o projeto de
+desenvolvimento `kfpmetkmhjtmgwgaaerl`: o banco informou que está atualizado, sem
+migrations pendentes. Também foi consultado o Storage desse mesmo projeto: o
+bucket `questoes` existe e está privado (`public: false`).
+
+Não foi aplicada migration em produção porque o workspace não possui um alvo de
+produção separado nem credenciais de produção configuradas; a proteção existente
+recusa inferir esse alvo. A homologação com uma conta autenticada também continua
+pendente, pois não há uma sessão/conta de teste fornecida e não foi criado dado
+externo descartável sem necessidade.
+
 ## Commits
 
 `ea87981..1d05b45` — oito tasks da SPEC 13 e o teste adicional de proteção da
-explicação divergente.
+explicação divergente. As checagens externas pós-validação foram registradas no
+commit documental seguinte.

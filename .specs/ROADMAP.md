@@ -105,11 +105,11 @@ trabalho é refeito.
 | 10 | **Publicação e explicações** | piso de confiança, fila humana única, porta de publicação, fábrica de explicação com citação conferida por código | 09 | 11 | B | ✅ Concluída |
 | 11 | **Raio-X — frequência, peso e tela** | taxa só de `origem='real'` com decaimento e amortecimento, porteiro do edital, substitui a view stub do plano, tela de leitura | 06, 07, 10 | 11 | B | ✅ Concluída (T98–T105) |
 | 12 | **Checkout, funil e ativação** | página de vendas, Asaas cartão/Pix/boleto, webhook verificado e idempotente, reconciliação, garantia de 7 dias, 18+ | 07 | 12 | **A** | ✅ Concluída — homologada com dado real, estorno inclusive |
-| 13 | **Onboarding, plano e sessão** | pagar → senha → meta → plano do 1º dia → responder com causa do erro → explicação com fonte. **É o loop central** | 06, 07, 10, 12 | 12 | B | ⬜ Não iniciada |
+| 13 | **Onboarding, plano e sessão** | pagar → senha → meta → plano do 1º dia → responder com causa do erro → explicação com fonte. **É o loop central** | 06, 07, 10, 12 | 12 | B | ✅ Concluída |
 | 14 | **Progresso, LGPD mínima e go-live** | caderno de erros, histórico, sequência, apagamento por pedido, política publicada, checklist de lançamento | 06, 11, 13 | 10 | **A** | ⬜ Não iniciada |
 | — | 🚀 **LANÇAMENTO** | — | — | — | — | — |
 
-**Restam ~62 tasks em 5 specs** para lançar.
+**Resta a SPEC 14 (10 tasks)** para lançar.
 
 ## Depois do lançamento — specs 15 a 36
 

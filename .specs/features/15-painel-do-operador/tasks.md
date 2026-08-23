@@ -108,7 +108,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit + integration
 **Gate**: full
 **Commit**: `feat(m9): fecha historico da configuracao`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — full gate verde; contrato de escrita e leitura administrativa tipada cobertos
 
 ### T122: Criar fronteira server-side do painel
 

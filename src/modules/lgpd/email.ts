@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Transporte server-only por convenção de importação: este módulo só é usado
  * por Server Actions/rotas do servidor e nunca por componente `use client`.
@@ -92,4 +94,3 @@ export async function enviarConfirmacaoEsquecimento(
     clearTimeout(timer);
   }
 }
-

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { enviarConfirmacaoEsquecimento } from "./email";
@@ -8,6 +10,11 @@ const ambiente = {
 };
 
 describe("e-mail de confirmação do esquecimento", () => {
+  it("declara a barreira server-only no módulo do transporte", () => {
+    const fonte = readFileSync(new URL("./email.ts", import.meta.url), "utf8");
+    expect(fonte).toContain('import "server-only";');
+  });
+
   it("falha fechado sem configuração e não toca a rede", async () => {
     let chamou = false;
     const resultado = await enviarConfirmacaoEsquecimento("aluno@exemplo.com", {

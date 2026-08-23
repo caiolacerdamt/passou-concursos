@@ -97,7 +97,7 @@ a outro dispositivo.
 - **Purpose**: Enviar somente a confirmação mínima por HTTPS, sem deixar o apagamento concluir silenciosamente.
 - **Location**: `src/modules/lgpd/email.ts`.
 - **Interfaces**: `enviarConfirmacaoDeExclusao(email, fetcher?)`.
-- **Dependencies**: `RESEND_API_KEY` e `EMAIL_FROM` no servidor.
+- **Dependencies**: `RESEND_API_KEY` e `RESEND_FROM` no servidor.
 - **Reuses**: `fetch` nativo e testes com dependência injetada; nenhum SDK ou segredo no cliente.
 
 ### Documentos e checklist de lançamento

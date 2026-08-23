@@ -366,13 +366,15 @@ T3 -> T9
 T2 -> T10
 T4 -> T11
 T5 -> T11
+T6 -> T12
 ```
 
 ### T9: Corrigir continuidade da sequência e provar o fim de semana
 
 **What**: Fazer a abertura do dia usar a última data histórica, com zero explícito no estado inicial, e
 testar cinco dias úteis, fim de semana e a quebra seguida de um novo dia cumprido.
-**Where**: `supabase/migrations/20260823094000_spec14_sequencia_estado_inicial.sql`
+**Where**: `supabase/migrations/20260823093000_spec14_sequencia_ultima_data.sql`,
+`supabase/migrations/20260823094000_spec14_sequencia_estado_inicial.sql`
 **Depends on**: T1, T3
 **Requirement**: GAM-02, ALUNO-02 AC2
 
@@ -386,6 +388,12 @@ testar cinco dias úteis, fim de semana e a quebra seguida de um novo dia cumpri
 **Tests**: integration — `tests/db/spec14-sequencia.test.ts`
 **Gate**: full
 **Commit**: `fix(gam-02): preserve last sequence state`
+
+**Files in this task**:
+
+- `supabase/migrations/20260823093000_spec14_sequencia_ultima_data.sql`
+- `supabase/migrations/20260823094000_spec14_sequencia_estado_inicial.sql`
+- `tests/db/spec14-sequencia.test.ts`
 
 ---
 
@@ -428,6 +436,37 @@ asserções da tela.
 **Tests**: unit — `src/modules/aluno/progresso-tela.test.tsx`, `src/app/app/progresso/page.test.tsx`
 **Gate**: quick
 **Commit**: `test(gam-08): cover solo progress vocabulary`
+
+---
+
+### T12: Fechar a barreira server-only do transporte de privacidade
+
+**What**: Tornar a fronteira do adaptador de e-mail verificável pelo runtime e por teste, mantendo o
+contrato documental alinhado ao nome real da configuração.
+**Where**: `src/modules/lgpd/email.ts`
+**Depends on**: T6
+**Requirement**: DADOS-04, DADOS-01 e ASVS 14.2.1/14.3.1
+
+**Files in this task**:
+
+- `src/modules/lgpd/email.ts`
+- `src/modules/lgpd/email.test.ts`
+- `vitest.config.mts`
+- `tests/unit/server-only.ts`
+- `package.json`
+- `package-lock.json`
+- `.specs/features/14-progresso-lgpd-minima-e-go-live/design.md`
+
+**Done when**:
+
+- [x] O pacote `server-only` impede importação acidental do transporte em código de navegador.
+- [x] O teste confirma a declaração da barreira e preserva os cenários de payload mínimo e falha fechada.
+- [x] O design usa `RESEND_FROM`, o mesmo nome lido pelo código e documentado nos segredos.
+- [x] `npm run test:unit` e `npm run build` passam.
+
+**Tests**: unit — `src/modules/lgpd/email.test.ts`
+**Gate**: quick/build
+**Commit**: `fix(dados-04): enforce server-only email transport`
 
 ---
 

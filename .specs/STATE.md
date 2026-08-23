@@ -374,20 +374,20 @@
 
 ## Handoff
 
-- **Feature**: otimização da suíte de banco — **CONCLUÍDA** (AD-104).
-- **Phase / Task**: implementação e validação independentes encerradas em 2026-08-22.
-- **Completed**: pool local de tamanho 1 no worker sequencial; transação revertida por teste;
-  configuração Vitest compartilhada entre arquivos; métrica acumulada no comando oficial;
-  jobs de app e banco em paralelo com check agregado preservado; cancelamento de CI obsoleta e
-  exclusão mútua do Supabase de desenvolvimento. Gates: build/typecheck e lint verdes, 589/589
-  unitários, 348/348 testes de banco em 72,88 s, 350 usos do helper e 1 conexão física. Validação
-  independente: 6/6 critérios e 5/5 mutações detectadas.
+- **Feature**: SPEC 13 — onboarding, plano e sessão — **CONCLUÍDA**.
+- **Phase / Task**: implementação, gates e validação independente encerrados em 2026-08-22.
+- **Completed**: onboarding com diagnóstico pulável; plano diário derivado por SQL; sessão
+  retomável; resposta imutável com causa do erro; explicação versionada e conferida contra o
+  gabarito; proveniência e imagem assinada; shell responsivo e tokens visuais. Gates: build,
+  typecheck, lint, 626 testes unitários, 351 testes de banco e validação estrutural verdes.
+- **External checks**: migrations da SPEC 13 aplicadas no Supabase de desenvolvimento e bucket
+  `questoes` confirmado como privado. Produção continua dependente de alvo/credenciais próprios.
 - **In-progress**: nada.
-- **Next step**: enviar a branch e medir o job `Testes de banco` no GitHub; depois, **SPEC 13** —
-  onboarding, plano do 1º dia e sessão de questões.
-- **Blockers**: nenhum. A medição no runner do GitHub depende apenas de push/PR autorizado.
+- **Next step**: **SPEC 14** — progresso, caderno de erros, sequência, LGPD mínima e go-live.
+- **Blockers**: nenhum para iniciar a SPEC 14. Homologação visual autenticada e produção são
+  pendências externas, não bloqueios do código da SPEC 13.
 - **Uncommitted files**: none
-- **Branch**: `codex/otimiza-testes-db`
+- **Branch**: `codex/spec13-onboarding-plano-sessao`
 
 ### Herdado pela SPEC 13
 

@@ -1,0 +1,122 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const dependencias = vi.hoisted(() => ({
+  matricula: vi.fn(),
+  cliente: vi.fn(),
+  perfil: vi.fn(),
+  plano: vi.fn(),
+  salvar: vi.fn(),
+  sair: vi.fn(),
+}));
+
+vi.mock("@/modules/conta/matricula", () => ({
+  exigirMatriculaAtiva: dependencias.matricula,
+}));
+vi.mock("@/lib/db/sessao", () => ({
+  clienteDaSessao: dependencias.cliente,
+}));
+vi.mock("@/modules/aluno/onboarding", () => ({
+  NIVEIS_DECLARADOS: ["iniciante", "intermediario", "avancado"],
+  consultarPerfilEstudo: dependencias.perfil,
+}));
+vi.mock("@/modules/aluno/plano", () => ({
+  consultarPlanoDoDia: dependencias.plano,
+}));
+vi.mock("./acoes", () => ({
+  salvarOnboarding: dependencias.salvar,
+}));
+vi.mock("../entrar/acoes", () => ({
+  sair: dependencias.sair,
+}));
+
+const { default: App } = await import("./page");
+
+const plano = {
+  id: "plano-1",
+  data: "2026-08-22",
+  frase: "Hoje, consistência antes de velocidade.",
+  piso: [
+    {
+      id: "bloco-piso",
+      tipo: "revisar" as const,
+      nivel: "piso" as const,
+      ordem: 1,
+      topicoId: "topico-1",
+      minutosEstimados: 15,
+      motivo: "A revisão vence hoje.",
+    },
+  ],
+  metaCheia: [
+    {
+      id: "bloco-meta",
+      tipo: "avancar" as const,
+      nivel: "meta_cheia" as const,
+      ordem: 2,
+      topicoId: "topico-2",
+      minutosEstimados: 25,
+      motivo: "Este tema tem peso alto na prova.",
+    },
+  ],
+};
+
+function renderApp(searchParams: Record<string, string> = {}) {
+  return App({ params: Promise.resolve({}), searchParams: Promise.resolve(searchParams) });
+}
+
+describe("/app", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    dependencias.matricula.mockResolvedValue({ id: "matricula-1" });
+    dependencias.cliente.mockResolvedValue({});
+    dependencias.perfil.mockResolvedValue(null);
+    dependencias.plano.mockResolvedValue(null);
+  });
+
+  it("mostra onboarding no primeiro acesso e deixa o diagnóstico para depois", async () => {
+    const html = renderToStaticMarkup(await renderApp());
+
+    expect(dependencias.matricula).toHaveBeenCalledTimes(1);
+    expect(dependencias.perfil).toHaveBeenCalledTimes(1);
+    expect(dependencias.plano).not.toHaveBeenCalled();
+    expect(html).toContain("Um plano que cabe na sua rotina");
+    expect(html).toContain('name="concursoAlvo"');
+    expect(html).toContain('name="minutosPorDia"');
+    expect(html).toContain('name="diasEstudo"');
+    expect(html).toContain('name="horarioEstudo"');
+    expect(html).toContain('name="nivelDeclarado"');
+    expect(html).toContain("O diagnóstico adaptativo é opcional");
+  });
+
+  it("mostra piso, meta cheia, motivo e frase quando o plano existe", async () => {
+    dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
+    dependencias.plano.mockResolvedValue(plano);
+
+    const html = renderToStaticMarkup(await renderApp());
+
+    expect(dependencias.plano).toHaveBeenCalledTimes(1);
+    expect(html).toContain("Piso");
+    expect(html).toContain("Meta cheia");
+    expect(html).toContain("A revisão vence hoje.");
+    expect(html).toContain("Este tema tem peso alto na prova.");
+    expect(html).toContain("Hoje, consistência antes de velocidade.");
+    expect(html).toContain("/app/sessao?bloco=bloco-piso");
+  });
+
+  it("trata plano ainda não preparado como estado vazio seguro", async () => {
+    dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
+
+    const html = renderToStaticMarkup(await renderApp({ erro: "plano" }));
+
+    expect(html).toContain("Seu plano de hoje ainda está sendo preparado");
+    expect(html).toContain("não depende de uma resposta da IA");
+  });
+
+  it("mantém a guarda de matrícula antes de qualquer leitura", async () => {
+    dependencias.matricula.mockRejectedValue(new Error("NEXT_REDIRECT:/assinar"));
+
+    await expect(renderApp()).rejects.toThrow("NEXT_REDIRECT:/assinar");
+    expect(dependencias.cliente).not.toHaveBeenCalled();
+    expect(dependencias.perfil).not.toHaveBeenCalled();
+  });
+});

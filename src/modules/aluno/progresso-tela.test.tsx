@@ -39,7 +39,7 @@ describe("ProgressoTela", () => {
       <ProgressoTela
         dados={{
           ...base,
-          filtros: { causa: "chute", topicoId: "topico-1" },
+          filtros: { causa: "chutei", topicoId: "topico-1" },
           caderno: [],
         }}
       />,

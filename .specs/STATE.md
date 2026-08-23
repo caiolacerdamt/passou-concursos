@@ -387,53 +387,28 @@
 
 ## Handoff
 
-- **Feature**: SPEC 14 — progresso, LGPD mínima e go-live — **CONCLUÍDA**.
-- **Phase / Task**: implementação, gates e validação independente encerrados em 2026-08-23.
-- **Completed**: progresso e caderno filtráveis; sequência com agenda, folga e continuidade;
-  porta de apagamento idempotente e seletiva; retenção financeira mínima; confirmação server-only;
-  conta, política/termos versionados e checklist de go-live. Gates: 665 testes unitários, 364 de
-  banco, lint sem erros, build 14/14, validators sem erros e sensor 10/10.
-- **External checks**: migrations da SPEC 14 aplicadas no Supabase de desenvolvimento. Produção,
-  Resend, Asaas, Vercel, PostHog, revisão jurídica e UAT autenticado continuam manuais.
-- **In-progress**: nada.
-- **Next step**: checklist manual de go-live; depois, **SPEC 15** — painel do operador.
-- **Blockers**: nenhum bloqueio de código. Produção, terceiros, jurídico e homologação visual
-  autenticada são pendências externas para o lançamento.
-- **Uncommitted files**: none
-- **Branch**: `feat/m4-p1-progresso-lgpd-go-live`
-
-### Herdado pela SPEC 13
-
-- **F-13 — o aviso de reembolso fica preso na URL.** `/app/reembolso` deriva a mensagem de
-  `?resultado=pendente` (`src/app/app/reembolso/page.tsx:96`). Recarregar reexibe *"O pedido ficou em
-  análise"* sem nova tentativa. Custou duas confusões de diagnóstico na homologação.
-- **F-14 — UX da definição de senha.** Adicionar o botão de revelar a senha. **Não** adicionar
-  confirmação de senha (padrão em desuso, não evita o erro que promete e aumenta abandono) nem
-  redirecionar ao login depois (a pessoa acabou de provar identidade pelo link do e-mail).
-
-### Acompanhar em produção
-
-- **Estorno de cartão parcelado** (`/v3/installments/{id}/refund`) está provado por teste e pela doc
-  oficial, **não** por dinheiro real. O primeiro estorno de cartão em produção SHALL ser
-  acompanhado. O caminho para homologá-lo em Sandbox existe (a doc diz que cartão e boleto seguem o
-  fluxo padrão via API, idêntico ao de produção) e fica registrado para a SPEC 28.
-- **Alerta com motivo desatualizado.** Só cabe uma pendência aberta por (pagamento, tipo), e
-  `abrirPendencia` desiste em silêncio se já existe uma. Um `estorno_negado` chegando depois de um
-  `estorno_aguardando_confirmacao` não atualiza o motivo — a fila da operação passa a mentir sobre o
-  estado atual. Visto com dado real em 21:50 UTC. **Destino: SPEC 15 (painel do operador).**
-
-### Dívidas registradas fora da spec
-
-- **Testes de banco levam ~10 min na CI** (580s; ~97% do tempo do job). A causa é latência, não
-  lentidão do teste: 326 conexões novas de um runner nos EUA para o Postgres em `sa-east-1`.
-  Correção: reaproveitar conexão por arquivo em `tests/db/conexao.ts`, preservando o isolamento por
-  transação revertida e o fechamento do cliente. Local: 137s.
-- **CI roda duas vezes por mudança** — uma no `pull_request` e outra no `push` para a `main`
-  (`.github/workflows/ci.yml`). A segunda testa o commit de merge, que ninguém testou antes de
-  existir; com `main` recebendo só merge de PR verde, ela quase sempre repete o resultado. Cortar é
-  uma linha. Não decidido.
-- **Dados de teste**: `caiolacerdamt@` **não pode ser apagada** — é autora de linhas em
-  `configuracoes`, que é imutável (INFRA-11). `raiox-demo@passou.dev` e o perfil ativo do Raio-X são
-  dados de demonstração: **preservar**. O log de `pagamentos` não é apagável (append-only por
-  gatilho) e sobrevive ao DELETE do usuário com `user_id` nulo — tensão real que a SPEC 18 vai
-  enfrentar no esquecimento LGPD.
+- **Feature**: SPEC 15 — Painel do operador (`.specs/features/15-painel-do-operador/`) — em implementação.
+- **Phase / Task**: Execute / pausa solicitada depois da T120; próxima tarefa é a T121.
+- **Completed**: design e plano (`e9c3d6c`); T118, identidade/autorização e trilha do operador
+  (`191fc2d`); T119, lote atômico da fila e correção por versão nova (`68b1327`); T120, decisão de
+  candidato e edição fechada da taxonomia (`904fb56`). Gate da T120: 665 unitários e 376 de banco;
+  validadores de spec/tasks sem erros.
+- **External checks**: migrations da SPEC 15 até `20260823102000_spec15_taxonomia.sql` aplicadas no
+  Supabase de desenvolvimento. Nenhuma migration desta branch foi aplicada em produção.
+- **In-progress** (file:line): none.
+- **Next step**: reconciliar este snapshot com git e executar T121 em
+  `.specs/features/15-painel-do-operador/tasks.md`: fechar o contrato TS de escrita e a leitura
+  tipada do histórico de configuração; não refazer T118–T120.
+- **Blockers**: nenhum. `npm test` agregado tem falha preexistente de configuração do Vitest
+  (`maxWorkers` divergente); usar os gates canônicos separados `npm run test:unit` e
+  `npm run test:db`. Antes das tarefas de superfície, reconciliar a dívida herdada da SPEC 13:
+  pendência de estorno já aberta pode manter motivo desatualizado e tinha destino declarado na
+  SPEC 15. O Verificador independente só deve rodar após T126, com GPT-5.6 Terra, reasoning `max`.
+- **Inherited notes**: preservar F-13 (aviso de reembolso preso à URL) e F-14 (revelar senha, sem
+  confirmação nem retorno ao login); acompanhar o primeiro estorno parcelado em produção; CI de
+  banco ainda sofre latência e executa novamente após merge; não apagar `caiolacerdamt@` nem
+  `raiox-demo@passou.dev`; a tensão do log append-only de pagamentos com esquecimento segue para a
+  SPEC 18.
+- **Uncommitted files**: somente diretórios não rastreados preexistentes do usuário:
+  `.claude/skills/`, `.github/agents/`, `.github/hooks/`, `.github/skills/`; não alterar nem incluir.
+- **Branch**: `codex/spec-15`.

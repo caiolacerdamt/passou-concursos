@@ -158,12 +158,12 @@ job é repetido.
 
 **Done when**:
 
-- [ ] O job existe uma única vez, aponta para a RPC de sequência e segue o timezone operacional do
+- [x] O job existe uma única vez, aponta para a RPC de sequência e segue o timezone operacional do
   projeto.
-- [ ] O recálculo não tenta fechar o dia atual antes da abertura da tela.
-- [ ] O teste comprova existência do job e que a função continua idempotente quando chamada novamente.
-- [ ] Pelo menos 3 assertions de banco passam.
-- [ ] Gate full passa: `npm run test:db`.
+- [x] O recálculo não tenta fechar o dia atual antes da abertura da tela.
+- [x] O teste comprova existência do job e que a função continua idempotente quando chamada novamente.
+- [x] Pelo menos 3 assertions de banco passam.
+- [x] Gate full passa: `npm run test:db`.
 
 **Tests**: integration — `tests/db/spec14-cron.test.ts` (mínimo 3 assertions)  
 **Gate**: full

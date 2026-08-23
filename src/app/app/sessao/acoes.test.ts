@@ -237,6 +237,29 @@ describe("responderQuestao", () => {
     expect(estado).toMatchObject({ status: "respondida", explicacao: null });
   });
 
+  it("não exibe explicação que contradiz o gabarito da questão-versão", async () => {
+    const { cliente } = clienteDaResposta();
+    cliente.rpc.mockResolvedValue({
+      data: [
+        {
+          texto: "Texto que não pode ser servido.",
+          alternativa_correta: "A",
+          fontes_citadas: [{ doc_id: "base:1", trecho: "trecho oficial" }],
+        },
+      ],
+      error: null,
+    });
+    dependencias.cliente.mockResolvedValue(cliente);
+
+    const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
+
+    expect(estado).toMatchObject({ status: "respondida", explicacao: null });
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ operacao: "validar_explicacao_publica" }),
+    );
+  });
+
   it("deixa o redirect do paywall atravessar a action", async () => {
     dependencias.matricula.mockRejectedValue(new Error("NEXT_REDIRECT:/assinar"));
 

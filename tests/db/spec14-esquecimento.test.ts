@@ -163,6 +163,12 @@ descreveComBanco("SPEC 14 — porta de esquecimento e retenção mínima", () =>
       const aluno = await criarUsuario(cliente);
       const { pagamento } = await criarGrupoOperacional(cliente, aluno);
 
+      const { rows: tentativasAntes } = await cliente.query<{ n: string }>(
+        "select count(*)::text as n from public.tentativas where user_id = $1",
+        [aluno],
+      );
+      expect(tentativasAntes[0].n).toBe("30");
+
       const { rows: pedido } = await cliente.query<{
         estado: string;
         dados_apagados_em: string | null;

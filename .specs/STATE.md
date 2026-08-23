@@ -372,6 +372,19 @@
 - **Date**: 2026-08-22
 - **Status**: active
 
+### AD-105
+- **Decision**: A confirmação do direito ao esquecimento será enviada pelo servidor ao Resend via HTTPS,
+  usando apenas o e-mail do titular e um texto mínimo; sem `RESEND_API_KEY` ou remetente verificado, a
+  operação SHALL falhar fechada e SHALL NOT invalidar a conta como se tivesse concluído.
+- **Reason**: O produto precisa confirmar o apagamento antes de invalidar o endereço, mas ainda não possui
+  provedor transacional. Um no-op silencioso deixaria o titular sem prova e repetiria a falha de dependência
+  opcional registrada na AD-103.
+- **Trade-off**: Resend se torna operador internacional declarado na política e exige configuração de domínio
+  e credencial antes do go-live; o ganho é uma confirmação verificável e uma etapa retomável.
+- **Scope**: SPEC 14 e futuras notificações transacionais de privacidade, até decisão posterior.
+- **Date**: 2026-08-22
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: SPEC 13 — onboarding, plano e sessão — **CONCLUÍDA**.

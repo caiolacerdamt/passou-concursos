@@ -132,7 +132,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m9): cria shell do operador`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — quick gate verde; guarda, navegação e erro fechado cobertos
 
 ### T124: Construir a fila de revisão
 

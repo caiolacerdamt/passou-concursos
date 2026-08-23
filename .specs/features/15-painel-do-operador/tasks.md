@@ -120,7 +120,7 @@ T122 → T123 → T124 → T125 → T126
 **Tests**: unit
 **Gate**: quick
 **Commit**: `feat(m9): protege comandos do operador`
-**Status**: ⬜ Pending
+**Status**: ✅ Done — quick gate verde; guarda, DTOs e comandos tipados cobertos
 
 ### T123: Construir o shell do operador
 

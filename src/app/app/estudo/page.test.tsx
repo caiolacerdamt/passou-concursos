@@ -89,19 +89,18 @@ describe("/app/estudo", () => {
   });
 
   it("reporta falha de leitura sem expor o detalhe técnico na tela", async () => {
-    dependencias.consultar.mockRejectedValue(
-      new EstudoGuiadoRecusado(
-        "falha_leitura",
-        "Falha ao ler recursos curados: detalhe interno",
-      ),
+    const falha = new EstudoGuiadoRecusado(
+      "falha_leitura",
+      "Falha ao ler recursos curados: detalhe interno",
     );
+    dependencias.consultar.mockRejectedValue(falha);
 
     const html = renderToStaticMarkup(
       await Estudo({ searchParams: Promise.resolve({ bloco: id }) }),
     );
 
     expect(dependencias.reportar).toHaveBeenCalledWith(
-      expect.any(Error),
+      falha,
       { modulo: "aluno", operacao: "consultar_estudo_guiado" },
     );
     expect(html).toContain("Algo deu errado");

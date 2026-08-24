@@ -38,7 +38,7 @@ export default async function Estudo({ searchParams }: Props) {
   } catch (erro) {
     if (!(erro instanceof EstudoGuiadoRecusado)) throw erro;
     if (erro.motivo === "falha_leitura") {
-      reportarErro(new Error("falha ao consultar estudo guiado"), {
+      reportarErro(erro, {
         modulo: "aluno",
         operacao: "consultar_estudo_guiado",
       });

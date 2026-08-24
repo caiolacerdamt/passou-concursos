@@ -1,6 +1,7 @@
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { isFlagOn } from "@/modules/config";
 import { consultarProgresso } from "@/modules/aluno/progresso";
+import { consultarGamificacaoOpcional } from "@/modules/aluno/painel-do-dia";
 import { ProgressoTela } from "@/modules/aluno/progresso-tela";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { reportarErro } from "@/modules/observabilidade/reporte";
@@ -47,5 +48,9 @@ export default async function Progresso({ searchParams }: Props) {
     return <Estado tipo="erro" />;
   }
 
-  return <ProgressoTela dados={resultado.dados} />;
+  // A gamificação é opcional: flag desligada ou leitura falha não impedem o
+  // aluno de ver o próprio progresso.
+  const gamificacao = await consultarGamificacaoOpcional(supabase);
+
+  return <ProgressoTela dados={resultado.dados} gamificacao={gamificacao} />;
 }

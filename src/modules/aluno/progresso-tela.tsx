@@ -2,7 +2,10 @@ import Link from "next/link";
 
 import { Estado } from "@/modules/ui/estado";
 
-import { CAUSAS_DO_CADERNO } from "./progresso";
+import type { DadosGamificacao } from "./gamificacao";
+import { GamificacaoNoProgresso } from "./painel-do-dia-tela";
+
+import { CAUSAS_DO_CADERNO, NOMES_DAS_CAUSAS } from "./progresso";
 import type {
   DadosProgresso,
   EstadoDaSequencia,
@@ -22,17 +25,6 @@ const TENDENCIA_EM_TEXTO: Record<TendenciaProgresso, string> = {
   estavel: "Estável",
   caindo: "Caindo",
   sem_base: "Sem base",
-};
-
-const NOMES_DAS_CAUSAS: Record<(typeof CAUSAS_DO_CADERNO)[number], string> = {
-  nao_sabia_conteudo: "Não sabia o conteúdo",
-  errei_a_conta: "Errei a conta",
-  entendi_errado_enunciado: "Entendi errado o enunciado",
-  confundi_conceitos: "Confundi conceitos",
-  fiquei_na_duvida: "Fiquei na dúvida",
-  chutei: "Chutei",
-  nao_sei_dizer: "Não sei dizer",
-  faltou_tempo: "Faltou tempo",
 };
 
 function nomeDoEstado(estado: EstadoDaSequencia["estado"]): string {
@@ -298,7 +290,13 @@ function Caderno({ dados }: { dados: DadosProgresso }) {
   );
 }
 
-export function ProgressoTela({ dados }: { dados: DadosProgresso }) {
+export function ProgressoTela({
+  dados,
+  gamificacao = null,
+}: {
+  dados: DadosProgresso;
+  gamificacao?: DadosGamificacao | null;
+}) {
   return (
     <div className="space-y-8">
       <header className="max-w-3xl">
@@ -312,6 +310,7 @@ export function ProgressoTela({ dados }: { dados: DadosProgresso }) {
       </header>
 
       <CartaoDaSequencia dados={dados} />
+      {gamificacao ? <GamificacaoNoProgresso dados={gamificacao} /> : null}
       <RelatorioSemanal dados={dados} />
       <Historico dados={dados} />
       <Caderno dados={dados} />

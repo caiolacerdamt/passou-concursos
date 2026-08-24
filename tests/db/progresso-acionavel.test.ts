@@ -16,6 +16,7 @@ descreveComBanco("progresso acionável — concorrência da refação", () => {
         [aluno, chave],
       );
 
+      await cliente.query("savepoint refacao_conflito");
       await expect(
         cliente.query(
           `insert into public.sessoes (user_id, contexto, refacao_chave)
@@ -23,6 +24,8 @@ descreveComBanco("progresso acionável — concorrência da refação", () => {
           [aluno, chave],
         ),
       ).rejects.toThrow(/sessoes_uma_refacao_aberta|duplicate key/);
+      await cliente.query("rollback to savepoint refacao_conflito");
+      await cliente.query("release savepoint refacao_conflito");
 
       await cliente.query(
         `update public.sessoes

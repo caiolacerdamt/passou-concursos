@@ -376,8 +376,16 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
           () =>
             cliente.query(
               `select * from public.registrar_revisao(
-                 $1, $2, 'fsrs', current_date + 3, 3::smallint, 0.8::numeric,
-                 null, 0, $3)`,
+                 p_user_id => $1::uuid,
+                 p_topico_id => $2::uuid,
+                 p_algoritmo => 'fsrs'::text,
+                 p_due => (current_date + 3)::date,
+                 p_nota => 3::smallint,
+                 p_percentual => 0.8::numeric,
+                 p_fsrs_card => null::jsonb,
+                 p_regua_passo => 0::smallint,
+                 p_sessao_id => $3::uuid,
+                 p_so_agenda => false::boolean)`,
               [aluno, topicoAlheio, sessao],
             ),
           /topico_invalido/,
@@ -417,8 +425,17 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
     await comTransacaoRevertida(async (cliente) => {
       configFixa({});
       const aluno = novoAluno();
-      const topico = await criarTopico(cliente);
+      const questao = await questaoParaResponder(cliente);
+      const topico = questao.topico_id;
       const sessao = await criarSessao(cliente, aluno, "treino");
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        sessao_id: sessao,
+        contexto: "treino",
+        correta: false,
+        causa_erro: "nao_sei_dizer",
+        causa_origem: "aluno",
+      });
       await cliente.query(
         "update public.sessoes set encerrada_em = now() where id = $1",
         [sessao],
@@ -449,8 +466,15 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
     await comTransacaoRevertida(async (cliente) => {
       configFixa({});
       const aluno = novoAluno();
-      const topico = await criarTopico(cliente);
+      const questao = await questaoParaResponder(cliente);
+      const topico = questao.topico_id;
       const sessao = await criarSessao(cliente, aluno, "revisao");
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        sessao_id: sessao,
+        contexto: "revisao",
+        correta: true,
+      });
       await cliente.query(
         "update public.sessoes set encerrada_em = now() where id = $1",
         [sessao],

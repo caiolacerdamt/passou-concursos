@@ -208,7 +208,7 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
     });
   });
 
-  it("a revisao vencida entra mesmo estourando o tempo — ela e o piso", async () => {
+  it("a revisao vencida participa sem estourar a capacidade diaria", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       const a = await topicoComQuestao(cliente);
@@ -220,10 +220,15 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
       await gerar(cliente, aluno);
       const piso = (await blocosDe(cliente, aluno)).filter((x) => x.nivel === "piso");
 
-      // 3 revisoes x 20 min = 60 min contra 20 declarados. Cortar revisao devida
-      // para caber no tempo seria deixar o aluno perder o que ja conquistou — o
-      // corte por tempo vale para Avancar e Treinar, nao para o piso.
-      expect(piso).toHaveLength(3);
+      // Mesmo com revisão vencida, o único slot precisa preservar avanço quando
+      // há conteúdo elegível. A revisão limitada não paralisa o edital.
+      expect(piso).toHaveLength(0);
+      const meta = (await blocosDe(cliente, aluno)).filter(
+        (x) => x.nivel === "meta_cheia",
+      );
+      expect(meta.reduce((total, bloco) => total + bloco.minutos_estimados, 0)).toBeLessThanOrEqual(20);
+      expect(meta).toHaveLength(1);
+      expect(meta[0].tipo).toBe("avancar");
     });
   });
 });

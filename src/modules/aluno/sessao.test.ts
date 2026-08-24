@@ -67,6 +67,7 @@ function clienteParaPreparar({
     plano_dia_id: "plano-1",
     tipo: "treinar",
     topico_id: "topico-1",
+    n_questoes: 10,
   },
   abertas = null,
   questoes = [linha()],
@@ -180,6 +181,22 @@ describe("sessão de estudo", () => {
       retomada: false,
     });
     expect(cliente.from).toHaveBeenCalledWith("sessao_itens");
+  });
+
+  it("usa a quantidade gravada no bloco, inclusive quando é menor que o padrão", async () => {
+    const { cliente, consultas } = clienteParaPreparar({
+      bloco: {
+        id: "bloco-1",
+        plano_dia_id: "plano-1",
+        tipo: "treinar",
+        topico_id: "topico-1",
+        n_questoes: 3,
+      },
+    });
+
+    await prepararSessao(cliente as never, "bloco-1");
+
+    expect(consultas.questoes[0].limit).toHaveBeenCalledWith(3);
   });
 
   it("retoma sessão aberta e não busca nem insere outro conjunto", async () => {

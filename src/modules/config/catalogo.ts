@@ -216,6 +216,69 @@ export const CATALOGO = {
     descricao:
       "Janela em que a mesma questao nao volta no Treinar, para o aluno nao decorar a alternativa.",
   }),
+  "param.m4.percentual_avancar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para avancar no edital. A capacidade nao usada por uma categoria pode ser redistribuida sem ultrapassar os minutos declarados.",
+  }),
+  "param.m4.percentual_praticar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.3,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para praticar. Vive em configuracao para calibrar o equilibrio do ciclo sem deploy.",
+  }),
+  "param.m4.percentual_revisar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.2,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para revisoes vencidas. A revisao nunca pode consumir mais que a capacidade total.",
+  }),
+  "param.m4.teto_revisoes_dia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 2,
+    moduloDono: "m4",
+    descricao:
+      "Quantidade maxima de blocos de revisao por dia. Evita que a fila vencida paralise o avanco do edital.",
+  }),
+  "param.m4.cooldown_materia_dias": chave({
+    tipo: z.number().int().min(0),
+    padrao: 2,
+    moduloDono: "m4",
+    descricao:
+      "Quantidade de dias de cooldown depois de tocar uma materia, para favorecer a rotacao do ciclo.",
+  }),
+  "param.m4.teto_semanal_materia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 3,
+    moduloDono: "m4",
+    descricao:
+      "Teto de blocos concluidos por materia na semana para impedir monopolio; a janela maxima pode quebrar o teto para evitar abandono.",
+  }),
+  "param.m4.limite_sem_toque_materia_dias": chave({
+    tipo: z.number().int().positive(),
+    padrao: 7,
+    moduloDono: "m4",
+    descricao:
+      "Janela maxima sem tocar uma materia relevante. Ao vencer, a materia volta a ser elegivel mesmo que o teto semanal esteja cheio.",
+  }),
+  "param.m4.fracao_minutos_versao_curta": chave({
+    tipo: z.number().min(0.01).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao dos minutos da versao cheia usada na versao curta. A operacao e idempotente e nunca reduz abaixo de um minuto.",
+  }),
+  "param.m4.fracao_questoes_versao_curta": chave({
+    tipo: z.number().min(0.01).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao das questoes da versao cheia usada na versao curta. A quantidade minima e uma questao.",
+  }),
   "param.m4.peso_devendo_revisao": chave({
     tipo: z.number().positive(),
     padrao: 1.5,

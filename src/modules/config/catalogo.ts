@@ -365,6 +365,67 @@ export const CATALOGO = {
       "Tamanho, em anos, da janela anterior comparada com a janela recente da tendência.",
   }),
 
+  // ── M6 · gamificação solo ─────────────────────────────────────────────────
+  // A flag é global e nasce desligada. Os pontos e as metas ficam em
+  // configuração versionada para que a calibragem não exija deploy nem espalhe
+  // números pelo contrato que a tela consome.
+  "flag.m6.gamificacao": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m6",
+    descricao:
+      "Contrato de gamificação solo: anel, pontos, missão e conquistas. Nasce desligado até a onda visual ligar a superfície com segurança.",
+  }),
+  "param.m6.pontos_estudo_prioritario": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 10,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de um bloco prioritário do piso concluído com respostas reais. O evento é único por bloco e não premia sessão vazia.",
+  }),
+  "param.m6.pontos_conclusao": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 20,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de um bloco da meta cheia concluído com respostas reais. O valor é congelado no evento de origem.",
+  }),
+  "param.m6.pontos_revisao_no_prazo": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 15,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de uma revisão do plano concluída com respostas reais. A presença no plano de hoje é a prova server-trusted do prazo.",
+  }),
+  "param.m6.pontos_recuperacao_erro": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 25,
+    moduloDono: "m6",
+    descricao:
+      "Pontos da primeira resposta correta posterior a um erro no mesmo tópico. Cada tentativa é uma origem auditável e única.",
+  }),
+  "param.m6.meta_missao_questoes": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m6",
+    descricao:
+      "Meta configurável da missão de questões quando o plano não emite um piso prioritário.",
+  }),
+  "param.m6.meta_conquista_sequencia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 7,
+    moduloDono: "m6",
+    descricao:
+      "Quantidade de dias cumpridos necessária para a conquista pessoal de sequência.",
+  }),
+  "param.m6.meta_conquista_questoes": chave({
+    tipo: z.number().int().positive(),
+    padrao: 100,
+    moduloDono: "m6",
+    descricao:
+      "Quantidade acumulada de questões respondidas necessária para a conquista pessoal de volume.",
+  }),
+
   // ── M2 · camada de IA ─────────────────────────────────────────────────────
   // **Os tres defaults abaixo sao vazios de proposito** e isso e o desenho, nao
   // esquecimento (SPEC 08). O `AGENTS.md` proibe nome de modelo em codigo; o

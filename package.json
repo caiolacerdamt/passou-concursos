@@ -15,6 +15,7 @@
     "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
     "jobs:ingestao": "tsx scripts/jobs/ingestao-de-prova.mts",
     "jobs:importar-questoes-json": "tsx scripts/jobs/importar-questoes-json.mts",
+    "jobs:importar-recursos-estudo": "tsx scripts/jobs/importar-recursos-estudo.mts",
     "jobs:gabarito": "tsx scripts/jobs/cruzar-gabarito.mts",
     "jobs:explicacoes": "tsx scripts/jobs/explicacoes.mts",
     "jobs:reconciliacao": "tsx scripts/jobs/reconciliacao-pagamentos.mts",

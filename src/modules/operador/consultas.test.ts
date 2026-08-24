@@ -20,6 +20,7 @@ const {
   consultarCandidatosDeTopico,
   consultarConfiguracoes,
   consultarFilaRevisao,
+  consultarRecursosEstudo,
   consultarTaxonomia,
 } = await import("./consultas");
 
@@ -177,5 +178,36 @@ describe("consultas do operador", () => {
     dependencias.configuracoes.mockResolvedValue([configuracao]);
 
     await expect(consultarConfiguracoes()).resolves.toEqual([configuracao]);
+  });
+
+  it("lista recursos inclusive inativos para a correção do operador", async () => {
+    dependencias.from.mockReturnValue(
+      consulta([
+        {
+          id: "recurso-1",
+          topico_id: "topico-1",
+          titulo: "Aula",
+          url: "https://conteudo.test/aula",
+          tipo: "video",
+          duracao_minutos: 20,
+          ordem: 1,
+          ativo: false,
+        },
+      ]),
+    );
+
+    await expect(consultarRecursosEstudo("topico-1")).resolves.toEqual([
+      {
+        id: "recurso-1",
+        topicoId: "topico-1",
+        titulo: "Aula",
+        url: "https://conteudo.test/aula",
+        tipo: "video",
+        duracaoMinutos: 20,
+        ordem: 1,
+        ativo: false,
+      },
+    ]);
+    expect(dependencias.from).toHaveBeenCalledWith("recursos_estudo");
   });
 });

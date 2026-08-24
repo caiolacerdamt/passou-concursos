@@ -6,6 +6,8 @@ const dependencias = vi.hoisted(() => ({
   cliente: vi.fn(),
   perfil: vi.fn(),
   plano: vi.fn(),
+  rotulos: vi.fn(),
+  reportar: vi.fn(),
   salvar: vi.fn(),
   sair: vi.fn(),
 }));
@@ -22,6 +24,12 @@ vi.mock("@/modules/aluno/onboarding", () => ({
 }));
 vi.mock("@/modules/aluno/plano", () => ({
   consultarPlanoDoDia: dependencias.plano,
+}));
+vi.mock("@/modules/aluno/plano-rotulos", () => ({
+  consultarRotulosDosTopicos: dependencias.rotulos,
+}));
+vi.mock("@/modules/observabilidade/reporte", () => ({
+  reportarErro: dependencias.reportar,
 }));
 vi.mock("./acoes", () => ({
   salvarOnboarding: dependencias.salvar,
@@ -73,6 +81,7 @@ describe("/app", () => {
     dependencias.cliente.mockResolvedValue({});
     dependencias.perfil.mockResolvedValue(null);
     dependencias.plano.mockResolvedValue(null);
+    dependencias.rotulos.mockResolvedValue(new Map());
   });
 
   it("mostra onboarding no primeiro acesso e deixa o diagnóstico para depois", async () => {
@@ -102,7 +111,7 @@ describe("/app", () => {
     expect(html).toContain("A revisão vence hoje.");
     expect(html).toContain("Este tema tem peso alto na prova.");
     expect(html).toContain("Hoje, consistência antes de velocidade.");
-    expect(html).toContain("/app/sessao?bloco=bloco-piso");
+    expect(html).toContain("/app/estudo?bloco=bloco-piso");
   });
 
   it("trata plano ainda não preparado como estado vazio seguro", async () => {
@@ -112,6 +121,22 @@ describe("/app", () => {
 
     expect(html).toContain("Seu plano de hoje ainda está sendo preparado");
     expect(html).toContain("não depende de uma resposta da IA");
+  });
+
+  it("mantém o plano sem UUID e reporta falha técnica dos rótulos", async () => {
+    dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
+    dependencias.plano.mockResolvedValue(plano);
+    dependencias.rotulos.mockRejectedValue(new Error("detalhe interno"));
+
+    const html = renderToStaticMarkup(await renderApp());
+
+    expect(html).toContain("Tópico do ciclo");
+    expect(html).not.toContain("detalhe interno");
+    expect(html).not.toContain("topico-1");
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ modulo: "aluno", operacao: "consultar_rotulos_plano" }),
+    );
   });
 
   it("troca a ação do bloco concluído pelo placar e link do resumo", async () => {

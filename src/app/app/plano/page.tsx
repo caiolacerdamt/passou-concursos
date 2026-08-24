@@ -1,12 +1,11 @@
-import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { salvarOnboarding } from "../acoes";
+import { renderizarPainelDoPlano } from "@/modules/aluno/plano-pagina";
 
-import App from "../page";
-
-/** Atalho explícito para o plano, preservando Hoje como a entrada do painel. */
+/** Visualização completa do ciclo, compartilhando a leitura e as regras de Hoje. */
 export default async function Plano({ searchParams }: PageProps<"/app/plano">) {
-  await exigirMatriculaAtiva();
-  return App({
-    params: Promise.resolve({}),
+  return renderizarPainelDoPlano({
     searchParams,
-  } as PageProps<"/app">);
+    superficie: "plano",
+    acaoDeOnboarding: salvarOnboarding,
+  });
 }

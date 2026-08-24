@@ -351,12 +351,18 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
           "select user_id from public.gamificacao_dia",
         );
         expect(visiveis.rows.map((linha) => linha.user_id)).toEqual([a]);
-        await expect(
-          cliente.query(
-            `insert into public.gamificacao_dia (user_id, data) values ($1, $2)`,
-            [b, data],
-          ),
-        ).rejects.toThrow(/permission denied|row-level security/);
+        await cliente.query("savepoint gamificacao_rls_insert");
+        try {
+          await expect(
+            cliente.query(
+              `insert into public.gamificacao_dia (user_id, data) values ($1, $2)`,
+              [b, data],
+            ),
+          ).rejects.toThrow(/permission denied|row-level security/);
+        } finally {
+          await cliente.query("rollback to savepoint gamificacao_rls_insert");
+          await cliente.query("release savepoint gamificacao_rls_insert");
+        }
       });
 
       await cliente.query("select public.apagar_dados_do_usuario($1)", [a]);

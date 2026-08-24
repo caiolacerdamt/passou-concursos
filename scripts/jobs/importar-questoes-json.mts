@@ -7,6 +7,7 @@ import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { Client } from "pg";
 
+import { consultarInventarioAcervo, type LinhaDoInventarioAcervo } from "@/modules/acervo";
 import type { ClienteSql } from "@/modules/ia";
 
 import { lerEnv } from "../alvo-do-banco.mjs";
@@ -93,6 +94,7 @@ export type Relatorio = {
   };
   provas: RelatorioProva[];
   arquivos: { pdfs: number; imagens: number; imagensAusentes: number };
+  inventario: readonly LinhaDoInventarioAcervo[];
 };
 
 export type SubidorDeImagem = (
@@ -433,11 +435,38 @@ function relatorioVazio(preparacao: Preparacao): Relatorio {
       imagens: preparacao.arquivos.imagens.length,
       imagensAusentes: preparacao.arquivos.imagensAusentes.length,
     },
+    inventario: [],
   };
+}
+
+function inventarioDoDryRun(preparacao: Preparacao): LinhaDoInventarioAcervo[] {
+  const linhas: LinhaDoInventarioAcervo[] = [];
+  for (const materia of preparacao.taxonomia.materias) {
+    for (const topico of materia.topicos) {
+      const total = preparacao.questoes.filter((questao) => {
+        const mapa = preparacao.mapa[questao.id];
+        return mapa.materia === materia.nome && mapa.topico === topico;
+      }).length;
+      // Dry-run não grava e, portanto, não afirma que algo foi importado,
+      // publicado ou servido a uma sessão. `total` é apenas a entrada lida.
+      linhas.push({
+        materiaId: materia.nome,
+        materia: materia.nome,
+        topicoId: `${materia.nome}\u0000${topico}`,
+        topico,
+        total,
+        importadas: 0,
+        publicadas: 0,
+        aptasSessao: 0,
+      });
+    }
+  }
+  return linhas;
 }
 
 export function relatorioDoDryRun(preparacao: Preparacao): Relatorio {
   const relatorio = relatorioVazio(preparacao);
+  relatorio.inventario = inventarioDoDryRun(preparacao);
   for (const [chave, grupo] of agruparPorProva(preparacao.questoes)) {
     relatorio.provas.push({
       prova: chave,
@@ -673,6 +702,7 @@ export async function importarDados(
     }
 
     if (propriaTransacao) await cliente.query("commit");
+    relatorio.inventario = await consultarInventarioAcervo(cliente);
     return relatorio;
   } catch (erro) {
     if (propriaTransacao) await cliente.query("rollback").catch(() => {});

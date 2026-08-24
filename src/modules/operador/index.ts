@@ -17,6 +17,7 @@ export {
   consultarCandidatosDeTopico,
   consultarConfiguracoes,
   consultarFilaRevisao,
+  consultarRecursosEstudo,
   consultarTaxonomia,
 } from "./consultas";
 
@@ -26,6 +27,7 @@ export {
   decidirRevisoesEmLote,
   decidirTopicoCandidato,
   editarTaxonomia,
+  salvarRecursoEstudo,
 } from "./comandos";
 
 export type {
@@ -36,6 +38,7 @@ export type {
   DecisaoDaFilaInput,
   DecisaoDeCandidatoInput,
   EdicaoDeTaxonomiaInput,
+  RecursoEstudoInput,
   MateriaDoOperador,
   QuestaoDaFila,
   ResultadoDaConfiguracao,

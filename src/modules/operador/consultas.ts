@@ -10,6 +10,7 @@ import {
   lerConfiguracoesAdministrativas,
   type ConfiguracaoAdministrativa,
 } from "@/modules/config/escrita";
+import type { RecursoDeEstudo, TipoRecursoEstudo } from "@/modules/acervo";
 
 import { comOperador, type ClienteDoOperador } from "./fronteira";
 import type {
@@ -226,5 +227,48 @@ async function consultarCandidatosInterno(
 export async function consultarConfiguracoes(): Promise<ResultadoDaConfiguracao> {
   return comOperador("consultar_configuracao", async () => {
     return (await lerConfiguracoesAdministrativas()) as readonly ConfiguracaoAdministrativa[];
+  });
+}
+
+type RecursoBruto = {
+  id: string;
+  topico_id: string;
+  titulo: string;
+  url: string;
+  tipo: string;
+  duracao_minutos: number;
+  ordem: number;
+  ativo: boolean;
+};
+
+/** Lista a curadoria, inclusive inativos, para o operador corrigir links. */
+export async function consultarRecursosEstudo(
+  topicoId?: string,
+): Promise<readonly RecursoDeEstudo[]> {
+  return comOperador("consultar_recursos_estudo", async ({ cliente }) => {
+    let consulta = cliente
+      .from("recursos_estudo")
+      .select("id, topico_id, titulo, url, tipo, duracao_minutos, ordem, ativo")
+      .order("topico_id", { ascending: true })
+      .order("ordem", { ascending: true })
+      .order("titulo", { ascending: true });
+    if (topicoId !== undefined) consulta = consulta.eq("topico_id", topicoId);
+    const { data, error } = await consulta;
+    if (error) throw error;
+    return ((data ?? []) as RecursoBruto[]).map((linha) => {
+      if (!["video", "artigo", "pdf"].includes(linha.tipo)) {
+        throw new Error("tipo_de_recurso_invalido");
+      }
+      return {
+        id: String(linha.id),
+        topicoId: String(linha.topico_id),
+        titulo: linha.titulo,
+        url: linha.url,
+        tipo: linha.tipo as TipoRecursoEstudo,
+        duracaoMinutos: Number(linha.duracao_minutos),
+        ordem: Number(linha.ordem),
+        ativo: Boolean(linha.ativo),
+      };
+    });
   });
 }

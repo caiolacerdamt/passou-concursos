@@ -3,6 +3,11 @@
 -- Blocos `avancar` usam o contexto `plano`. Errar neles precisa alimentar o
 -- caderno de erros com a causa declarada, com a mesma trava que já existe para
 -- `treino`. Revisão, simulado e diagnóstico continuam sem interrupção.
+--
+-- `tentativas` é append-only. O banco de desenvolvimento já contém linhas
+-- antigas de `plano` sem causa, gravadas antes desta regra existir; não podemos
+-- corrigi-las por UPDATE sem quebrar o snapshot histórico. `not valid` preserva
+-- essas linhas e continua verificando todo INSERT/UPDATE novo.
 
 alter table public.tentativas
   drop constraint causa_obrigatoria_no_treino;
@@ -10,7 +15,7 @@ alter table public.tentativas
 alter table public.tentativas
   add constraint causa_obrigatoria_no_treino check (
     contexto not in ('treino', 'plano') or correta or causa_erro is not null
-  );
+  ) not valid;
 
 create or replace function public.registrar_tentativa(
   p_user_id        uuid,

@@ -95,7 +95,7 @@ descreveComBanco("registrar_tentativa — snapshot congelado (ALUNO-01 AC2)", ()
         userId: aluno,
         itemId: item2,
         resposta: "A",
-        contexto: "plano",
+        contexto: "diagnostico",
       });
       expect(errada.correta).toBe(false);
     });

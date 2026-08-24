@@ -226,12 +226,20 @@ descreveComBanco("tentativas — o que a tabela recusa", () => {
         tipo_questao: "certo_errado",
       });
       await expect(
-        inserirTentativa(cliente, certoErrado, { resposta_dada: "E", correta: false }),
+        inserirTentativa(cliente, certoErrado, {
+          contexto: "diagnostico",
+          resposta_dada: "E",
+          correta: false,
+        }),
       ).resolves.toBeTruthy();
 
       const multipla = await questaoParaResponder(cliente);
       await expect(
-        inserirTentativa(cliente, multipla, { resposta_dada: "D", correta: false }),
+        inserirTentativa(cliente, multipla, {
+          contexto: "diagnostico",
+          resposta_dada: "D",
+          correta: false,
+        }),
       ).resolves.toBeTruthy();
     });
   });

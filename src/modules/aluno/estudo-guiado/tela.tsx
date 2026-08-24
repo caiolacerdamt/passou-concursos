@@ -4,6 +4,7 @@ import type { RecursoDeEstudo } from "@/modules/acervo/recursos";
 
 import { CronometroDeEstudo } from "./cronometro-tela";
 import type { DadosDoEstudoGuiado, SnapshotDoBlocoDeEstudo } from "./consulta";
+import { nomeDoRotuloDoTopico } from "../rotulo-do-topico";
 
 const NOMES_DOS_TIPOS: Record<SnapshotDoBlocoDeEstudo["tipo"], string> = {
   revisar: "Revisar",
@@ -26,7 +27,7 @@ const NOMES_DOS_RECURSOS: Record<RecursoDeEstudo["tipo"], string> = {
 export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
   const recursos = estudo.recursos.filter(recursoSeguro);
   const bloco = estudo.bloco;
-  const titulo = estudo.topico ?? "Estudo do bloco";
+  const titulo = nomeDoRotuloDoTopico({ materia: estudo.materia, topico: estudo.topico }) ?? "Estudo do bloco";
   const chamadaDaMateria = estudo.materia
     ? `Matéria: ${estudo.materia}`
     : "Matéria não informada neste bloco";

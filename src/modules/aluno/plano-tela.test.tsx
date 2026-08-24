@@ -43,12 +43,15 @@ describe("PlanoTela", () => {
     const html = renderToStaticMarkup(
       <PlanoTela
         plano={planoBase}
-        rotulosDosTopicos={new Map([["topico-1", "Matemática Financeira"]])}
+        rotulosDosTopicos={new Map([[
+          "topico-1",
+          { materia: "Matemática", topico: "Matemática Financeira" },
+        ]])}
       />,
     );
 
     expect(html).toContain("Próximo bloco");
-    expect(html).toContain("Matemática Financeira");
+    expect(html).toContain("Matemática · Matemática Financeira");
     expect(html).toContain("/app/estudo?bloco=bloco-piso");
     expect(html).toContain("20");
     expect(html).toContain("1");
@@ -74,7 +77,10 @@ describe("PlanoTela", () => {
           ...planoBase,
           piso: [{ ...planoBase.piso[0], conclusao: { sessaoId: "sessao-1", nQuestoes: 5, nAcertos: 4, encerradaEm: "2026-08-22T21:00:00Z" } }],
         }}
-        rotulosDosTopicos={new Map([["topico-1", "Matemática Financeira"]])}
+        rotulosDosTopicos={new Map([[
+          "topico-1",
+          { materia: "Matemática", topico: "Matemática Financeira" },
+        ]])}
       />,
     );
 
@@ -99,5 +105,20 @@ describe("PlanoTela", () => {
 
     expect(html).toContain("Versão curta escolhida");
     expect(html).not.toContain("Escolher versão curta");
+  });
+
+  it("exibe apenas a matéria quando o tópico é Geral", () => {
+    const html = renderToStaticMarkup(
+      <PlanoTela
+        plano={planoBase}
+        rotulosDosTopicos={new Map([[
+          "topico-1",
+          { materia: "Língua Portuguesa", topico: "Geral" },
+        ]])}
+      />,
+    );
+
+    expect(html).toContain("Língua Portuguesa");
+    expect(html).not.toContain("Língua Portuguesa · Geral");
   });
 });

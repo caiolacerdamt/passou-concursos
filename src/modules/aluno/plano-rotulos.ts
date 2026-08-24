@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { PlanoDoDia } from "./plano";
+export { nomeDoRotuloDoTopico, type RotuloDoTopico } from "./rotulo-do-topico";
 
 type TopicoBanco = {
   id: string;
   nome: string;
+  materias?: { nome?: unknown } | { nome?: unknown }[] | null;
 };
 
 /**
@@ -17,10 +19,19 @@ type TopicoBanco = {
 export async function consultarRotulosDosTopicos(
   cliente: SupabaseClient,
   plano: PlanoDoDia,
-): Promise<ReadonlyMap<string, string>> {
+): Promise<ReadonlyMap<string, RotuloDoTopico>> {
   const ids = [...new Set([...plano.piso, ...plano.metaCheia]
     .map((bloco) => bloco.topicoId)
     .filter((id): id is string => typeof id === "string" && id.length > 0))];
+
+  return consultarRotulosDosTopicosPorIds(cliente, ids);
+}
+
+export async function consultarRotulosDosTopicosPorIds(
+  cliente: SupabaseClient,
+  idsRecebidos: readonly string[],
+): Promise<ReadonlyMap<string, RotuloDoTopico>> {
+  const ids = [...new Set(idsRecebidos.filter((id) => typeof id === "string" && id.length > 0))];
 
   if (ids.length === 0) return new Map();
 
@@ -32,7 +43,7 @@ export async function consultarRotulosDosTopicos(
 
   const consulta = await cliente
     .from("topicos")
-    .select("id, nome")
+    .select("id, nome, materias(nome)")
     .in("id", ids);
 
   if (consulta.error) {
@@ -47,6 +58,21 @@ export async function consultarRotulosDosTopicos(
           typeof topico.nome === "string" &&
           topico.nome.trim().length > 0,
       )
-      .map((topico) => [topico.id, topico.nome.trim()]),
+      .map((topico) => [
+        topico.id,
+        {
+          materia: nomeDaMateria(topico.materias),
+          topico: topico.nome.trim(),
+        },
+      ]),
   );
+}
+
+function nomeDaMateria(relacao: TopicoBanco["materias"]): string | null {
+  const linha = Array.isArray(relacao) ? relacao[0] : relacao;
+  return textoValido(linha?.nome);
+}
+
+function textoValido(valor: unknown): string | null {
+  return typeof valor === "string" && valor.trim().length > 0 ? valor.trim() : null;
 }

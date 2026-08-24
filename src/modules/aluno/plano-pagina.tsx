@@ -1,7 +1,7 @@
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarPerfilEstudo } from "./onboarding";
 import { consultarPlanoDoDia, type PlanoDoDia } from "./plano";
-import { consultarRotulosDosTopicos } from "./plano-rotulos";
+import { consultarRotulosDosTopicos, type RotuloDoTopico } from "./plano-rotulos";
 import { consultarPainelDoDia, type PainelDoDia } from "./painel-do-dia";
 import { PainelDoDiaTela } from "./painel-do-dia-tela";
 import { OnboardingTela } from "./onboarding-tela";
@@ -101,7 +101,7 @@ async function conteudoDoPlano(
 async function lerRotulosComFallback(
   supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
   plano: PlanoDoDia,
-): Promise<ReadonlyMap<string, string>> {
+): Promise<ReadonlyMap<string, RotuloDoTopico>> {
   try {
     return await consultarRotulosDosTopicos(supabase, plano);
   } catch (erro) {

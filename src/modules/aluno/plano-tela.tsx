@@ -7,6 +7,7 @@ import {
 } from "@/app/app/plano/acoes";
 
 import type { BlocoDoPlano, NivelDoPlano, PlanoDoDia } from "./plano";
+import { nomeDoRotuloDoTopico, type RotuloDoTopico } from "./rotulo-do-topico";
 
 const TITULOS: Record<BlocoDoPlano["tipo"], string> = {
   revisar: "Revisar",
@@ -28,7 +29,7 @@ export type ResultadoDoPlano = "reordenado" | "adiado" | "curta" | "erro" | null
 
 type Props = {
   plano: PlanoDoDia;
-  rotulosDosTopicos?: ReadonlyMap<string, string>;
+  rotulosDosTopicos?: ReadonlyMap<string, RotuloDoTopico>;
   superficie?: SuperficieDoPlano;
   resultado?: ResultadoDoPlano;
 };
@@ -175,7 +176,7 @@ function ProximoBloco({
   rotaDaTela,
 }: {
   bloco: BlocoDoPlano | null;
-  rotulosDosTopicos: ReadonlyMap<string, string>;
+  rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   rotaDaTela: string;
 }) {
   return (
@@ -233,7 +234,7 @@ function NivelDoPlano({
   blocos: BlocoDoPlano[];
   compacto?: boolean;
   planoId: string;
-  rotulosDosTopicos: ReadonlyMap<string, string>;
+  rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   origem: SuperficieDoPlano;
 }) {
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
@@ -302,7 +303,7 @@ function BlocoCard({
   planoId: string;
   nivel: NivelDoPlano;
   pendentes: BlocoDoPlano[];
-  rotulosDosTopicos: ReadonlyMap<string, string>;
+  rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   origem: SuperficieDoPlano;
 }) {
   const conclusao = bloco.conclusao;
@@ -420,9 +421,9 @@ function BlocoCard({
   );
 }
 
-function nomeDoBloco(bloco: BlocoDoPlano, rotulosDosTopicos: ReadonlyMap<string, string>): string {
+function nomeDoBloco(bloco: BlocoDoPlano, rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>): string {
   if (bloco.topicoId === null) return "Assuntos misturados";
-  return rotulosDosTopicos.get(bloco.topicoId) ?? "Tópico do ciclo";
+  return nomeDoRotuloDoTopico(rotulosDosTopicos.get(bloco.topicoId)) ?? "Tópico do ciclo";
 }
 
 function hrefDoBloco(blocoId: string): string {

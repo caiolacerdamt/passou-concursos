@@ -60,8 +60,7 @@ describe("mesa de estudo guiado", () => {
   it("mostra assunto real, snapshot, curadoria ordenada e próxima revisão", () => {
     const html = renderToStaticMarkup(<EstudoGuiadoTela estudo={estudo} />);
 
-    expect(html).toContain("Conhecimentos Bancários");
-    expect(html).toContain("Mercado de crédito");
+    expect(html).toContain("Conhecimentos Bancários · Mercado de crédito");
     expect(html).toContain("35 minutos");
     expect(html).toContain("Este tema fecha uma lacuna importante do ciclo.");
     expect(html).toContain("Recurso principal");
@@ -94,5 +93,16 @@ describe("mesa de estudo guiado", () => {
     expect(html).toContain("não tem um tópico único associado");
     expect(html).toContain("Ainda não há recurso curado para este assunto");
     expect(html).toContain("Ir para as questões");
+  });
+
+  it("usa somente a matéria quando o tópico é Geral", () => {
+    const html = renderToStaticMarkup(
+      <EstudoGuiadoTela
+        estudo={{ ...estudo, materia: "Língua Portuguesa", topico: "Geral" }}
+      />,
+    );
+
+    expect(html).toContain("Língua Portuguesa");
+    expect(html).not.toContain("Língua Portuguesa · Geral");
   });
 });

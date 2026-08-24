@@ -1,0 +1,23 @@
+/** Interface pública do domínio de gamificação solo. */
+export {
+  CATALOGO_DE_CONQUISTAS,
+  ESTADOS_DA_MISSAO,
+  TIPOS_DE_MISSAO,
+  GamificacaoRecusada,
+  consultarGamificacao,
+  consultarGamificacaoDoDia,
+  mapearGamificacao,
+  type AnelDoDia,
+  type ConquistaPessoal,
+  type DadosGamificacao,
+  type DimensaoDoAnel,
+  type DiscriminacaoDePontos,
+  type EstadoDaGamificacao,
+  type EstadoDaMissao,
+  type IdDaConquista,
+  type MissaoDoDia,
+  type MotivoDaRecusaDaGamificacao,
+  type PontosDaGamificacao,
+  type SequenciaVigente,
+  type TipoDeMissao,
+} from "./contrato";

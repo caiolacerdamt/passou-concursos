@@ -154,3 +154,10 @@ export {
   type LinhaDoInventarioAcervo,
   consultarInventarioAcervo,
 } from "./relatorio";
+
+export {
+  CONSULTA_DA_PRONTIDAO_CONTEUDO,
+  type LinhaDaProntidaoConteudo,
+  consultarProntidaoConteudo,
+  pendenciasDoEdital,
+} from "./prontidao";

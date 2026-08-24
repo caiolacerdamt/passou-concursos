@@ -1,0 +1,211 @@
+{
+  "_comentario": [
+    "Curadoria mínima do lançamento: pelo menos um recurso ativo por matéria do",
+    "acervo. Fonte oficial ou pública sempre que existe; nada aqui é buscado em",
+    "tempo real nem gerado por IA. URL quebrada é desativada ou substituída pelo",
+    "operador — nunca removida às cegas do banco.",
+    "Toda URL desta carga foi conferida com resposta HTTP 200 em 2026-08-24."
+  ],
+  "recursos": [
+    {
+      "materia": "Língua Portuguesa",
+      "topico": "Geral",
+      "titulo": "Portal da Língua Portuguesa — gramática e ortografia de referência",
+      "url": "https://portaldalinguaportuguesa.org/",
+      "tipo": "artigo",
+      "duracaoMinutos": 25,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Língua Inglesa",
+      "topico": "Geral",
+      "titulo": "BBC Learning English — compreensão de texto e vocabulário",
+      "url": "https://www.bbc.co.uk/learningenglish",
+      "tipo": "video",
+      "duracaoMinutos": 20,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Língua Inglesa",
+      "topico": "Geral",
+      "titulo": "Cambridge Dictionary — gramática inglesa explicada",
+      "url": "https://dictionary.cambridge.org/grammar/british-grammar/",
+      "tipo": "artigo",
+      "duracaoMinutos": 20,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Matemática",
+      "topico": "Geral",
+      "titulo": "Khan Academy — trilha de matemática em português",
+      "url": "https://pt.khanacademy.org/math",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Matemática",
+      "topico": "Geral",
+      "titulo": "Portal da Matemática OBMEP — aulas gratuitas",
+      "url": "https://portaldaobmep.impa.br/",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Matemática Financeira",
+      "topico": "Geral",
+      "titulo": "Banco Central — Cidadania Financeira",
+      "url": "https://www.bcb.gov.br/cidadaniafinanceira",
+      "tipo": "artigo",
+      "duracaoMinutos": 25,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Matemática Financeira",
+      "topico": "Geral",
+      "titulo": "Khan Academy — juros, porcentagem e proporção",
+      "url": "https://pt.khanacademy.org/math",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Estatística",
+      "topico": "Geral",
+      "titulo": "Khan Academy — estatística e probabilidade",
+      "url": "https://pt.khanacademy.org/math/statistics-probability",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Raciocínio Lógico",
+      "topico": "Geral",
+      "titulo": "Portal da Matemática OBMEP — raciocínio e resolução de problemas",
+      "url": "https://portaldaobmep.impa.br/",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Conhecimentos Bancários",
+      "topico": "Geral",
+      "titulo": "Banco Central — composição e segmentos do Sistema Financeiro Nacional",
+      "url": "https://www.bcb.gov.br/estabilidadefinanceira/sfn",
+      "tipo": "artigo",
+      "duracaoMinutos": 25,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Conhecimentos Bancários",
+      "topico": "Geral",
+      "titulo": "Banco Central — perguntas frequentes sobre produtos e serviços",
+      "url": "https://www.bcb.gov.br/meubc/faqs",
+      "tipo": "artigo",
+      "duracaoMinutos": 20,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Atualidades do Mercado Financeiro",
+      "topico": "Geral",
+      "titulo": "Banco Central — Relatório de Política Monetária",
+      "url": "https://www.bcb.gov.br/publicacoes/ri",
+      "tipo": "artigo",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Conhecimentos de Informática",
+      "topico": "Geral",
+      "titulo": "CERT.br — Cartilha de Segurança para Internet",
+      "url": "https://cartilha.cert.br/",
+      "tipo": "artigo",
+      "duracaoMinutos": 25,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Conhecimentos de Informática",
+      "topico": "Geral",
+      "titulo": "CERT.br — Cartilha completa em PDF",
+      "url": "https://cartilha.cert.br/livro/cartilha-seguranca-internet.pdf",
+      "tipo": "pdf",
+      "duracaoMinutos": 40,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Vendas e Negociação",
+      "topico": "Geral",
+      "titulo": "Sebrae — cursos online de vendas e negociação",
+      "url": "https://www.sebrae.com.br/sites/PortalSebrae/cursosonline",
+      "tipo": "video",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Ética e Compliance",
+      "topico": "Geral",
+      "titulo": "Lei 9.613/1998 — prevenção à lavagem de dinheiro",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l9613.htm",
+      "tipo": "artigo",
+      "duracaoMinutos": 30,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Ética e Compliance",
+      "topico": "Geral",
+      "titulo": "Lei 13.709/2018 — Lei Geral de Proteção de Dados Pessoais",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm",
+      "tipo": "artigo",
+      "duracaoMinutos": 35,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Legislação e Normas",
+      "topico": "Geral",
+      "titulo": "Lei 8.078/1990 — Código de Defesa do Consumidor",
+      "url": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm",
+      "tipo": "artigo",
+      "duracaoMinutos": 35,
+      "ordem": 1,
+      "ativo": true
+    },
+    {
+      "materia": "Legislação e Normas",
+      "topico": "Geral",
+      "titulo": "Lei 12.527/2011 — Lei de Acesso à Informação",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12527.htm",
+      "tipo": "artigo",
+      "duracaoMinutos": 25,
+      "ordem": 2,
+      "ativo": true
+    },
+    {
+      "materia": "Cultura e Comportamento Digital",
+      "topico": "Geral",
+      "titulo": "Governo Digital — transformação digital de serviços",
+      "url": "https://www.gov.br/governodigital/pt-br",
+      "tipo": "artigo",
+      "duracaoMinutos": 20,
+      "ordem": 1,
+      "ativo": true
+    }
+  ]
+}

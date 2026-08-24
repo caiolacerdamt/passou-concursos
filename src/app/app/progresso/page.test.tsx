@@ -34,7 +34,15 @@ const { default: Progresso } = await import("./page");
 const dados = {
   filtros: { causa: "errei_a_conta" as const, topicoId: "11111111-1111-4111-8111-111111111111" },
   historico: [
-    { topicoId: "11111111-1111-4111-8111-111111111111", topico: "Matemática", nRespostas: 10, nAcertos: 7, score: 0.7 },
+    {
+      topicoId: "11111111-1111-4111-8111-111111111111",
+      topico: "Matemática",
+      nRespostas: 10,
+      nAcertos: 7,
+      score: 0.7,
+      dominio: "em_desenvolvimento" as const,
+      tendencia: "sem_base" as const,
+    },
   ],
   caderno: [
     { topicoId: "11111111-1111-4111-8111-111111111111", topico: "Matemática", causa: "errei_a_conta" as const, nErros: 2, ultimoErroEm: "2026-08-21T20:00:00Z" },
@@ -49,6 +57,16 @@ const dados = {
     temHistorico: true,
   },
   estadoInicial: false,
+  relatorioSemanal: {
+    inicio: "2026-08-15T00:00:00Z",
+    fim: "2026-08-22T00:00:00Z",
+    questoesRespondidas: 10,
+    acertos: 7,
+    percentualAcertos: 0.7,
+    topicosTocados: 1,
+    revisoesConcluidas: 2,
+    tendencia: "sem_base" as const,
+  },
 };
 
 function renderPage(searchParams: Record<string, string | string[]> = {}) {
@@ -75,6 +93,7 @@ describe("/app/progresso", () => {
       { causa: "errei_a_conta", topico: dados.filtros.topicoId },
     );
     expect(html).toContain("Seu progresso");
+    expect(html).toContain("Relatório semanal");
     expect(html).toContain("Caderno de erros");
     expect(html).toContain("Por que errei");
     expect(html).toContain("name=\"topico\"");

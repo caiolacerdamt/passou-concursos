@@ -13,10 +13,14 @@ import {
 } from "@/modules/acervo";
 import { getParam, getParams } from "@/modules/config";
 
+import {
+  CAUSAS_DO_CADERNO,
+  type CausaDoCaderno,
+} from "./progresso";
 import type { Contexto } from "./tentativas";
 
 const QUESTAO_PUBLICA_SELECT =
-  "id, questao_versao, origem, topico_id, tipo_questao, enunciado, alternativas, imagens, fonte_citacao";
+  "id, questao_versao, origem, topico_id, tipo_questao, enunciado, alternativas, imagens, fonte_citacao, status, vigente, anulada";
 const QUESTAO_RESPOSTA_SELECT =
   `${QUESTAO_PUBLICA_SELECT}, resposta_correta, gabarito_versao`;
 const DURACAO_URL_IMAGEM_SEGUNDOS = 60 * 60;
@@ -115,6 +119,11 @@ export type ResultadoDaSelecao = {
   gabarito_versao?: string | null;
 };
 
+export type OpcoesDaRefacao = {
+  topicoId: string;
+  causa: CausaDoCaderno;
+};
+
 export class SessaoRecusada extends Error {
   readonly motivo:
     | "usuario_ausente"
@@ -124,6 +133,7 @@ export class SessaoRecusada extends Error {
     | "sessao_encerrada"
     | "item_inexistente"
     | "gabarito_ausente"
+    | "refacao_indisponivel"
     | "acervo_inconsistente"
     | "falha_imagem";
 
@@ -149,6 +159,7 @@ type SessaoDaConsulta = {
   plano_bloco_id: string | null;
   contexto: Contexto;
   encerrada_em: string | null;
+  refacao_chave?: string | null;
 };
 
 type ItemDaConsulta = {
@@ -161,6 +172,22 @@ type ItemDaConsulta = {
 };
 
 type AssinadorDeImagem = (storagePath: string) => Promise<string>;
+
+type TentativaErradaDaRefacao = {
+  id: string;
+  questao_id: string;
+  questao_versao: number;
+  topico_id: string;
+  causa_erro: string | null;
+  respondida_em: string;
+};
+
+type CausaSimuladoDaRefacao = {
+  tentativa_id: string;
+  causa_erro: string;
+};
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
  * Filtra novamente no domínio o contrato que o banco já filtra na consulta.
@@ -258,7 +285,7 @@ export async function prepararSessao(
   const aberta = await lerUma<SessaoDaConsulta>(
     cliente
       .from("sessoes")
-      .select("id, plano_bloco_id, contexto, encerrada_em")
+      .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
       .eq("user_id", usuario.id)
       .eq("plano_bloco_id", blocoId)
       .is("encerrada_em", null)
@@ -362,6 +389,147 @@ export async function prepararSessao(
   return criada;
 }
 
+/**
+ * Monta uma sessão exclusivamente com erros do próprio aluno.
+ *
+ * O tópico e a causa são filtros de navegação, não autoridade: a lista de
+ * questões nasce de `tentativas` sob RLS, e cada versão é conferida novamente
+ * no acervo antes de entrar na sessão. A chave parcial da migration torna o
+ * duplo clique idempotente mesmo quando as duas requisições passam no SELECT.
+ */
+export async function prepararSessaoDeRefacao(
+  cliente: SupabaseClient,
+  opcoes: OpcoesDaRefacao,
+): Promise<{ id: string; retomada: boolean }> {
+  if (
+    !UUID.test(opcoes.topicoId) ||
+    !(CAUSAS_DO_CADERNO as readonly string[]).includes(opcoes.causa)
+  ) {
+    throw new SessaoRecusada(
+      "refacao_indisponivel",
+      "Não foi possível identificar este caderno de erros.",
+    );
+  }
+
+  const usuario = await usuarioDaSessao(cliente);
+  const refacaoChave = `${opcoes.topicoId}|${opcoes.causa}`;
+  const aberta = await lerUma<SessaoDaConsulta>(
+    cliente
+      .from("sessoes")
+      .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
+      .eq("user_id", usuario.id)
+      .eq("refacao_chave", refacaoChave)
+      .is("encerrada_em", null)
+      .order("iniciada_em", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    "refação aberta",
+  );
+  if (aberta !== null) return { id: aberta.id, retomada: true };
+
+  const tentativas = await lerLista<TentativaErradaDaRefacao>(
+    cliente
+      .from("tentativas")
+      .select("id, questao_id, questao_versao, topico_id, causa_erro, respondida_em")
+      .eq("user_id", usuario.id)
+      .eq("topico_id", opcoes.topicoId)
+      .eq("correta", false)
+      .order("respondida_em", { ascending: false }),
+    "erros do caderno",
+  );
+
+  const idsDasTentativas = tentativas.map((tentativa) => tentativa.id);
+  const causasSimulado =
+    idsDasTentativas.length === 0
+      ? []
+      : await lerLista<CausaSimuladoDaRefacao>(
+          cliente
+            .from("tentativa_causa_simulado")
+            .select("tentativa_id, causa_erro")
+            .eq("user_id", usuario.id)
+            .in("tentativa_id", idsDasTentativas),
+          "causas dos erros",
+        );
+  const causaPorTentativa = new Map(
+    causasSimulado.map((linha) => [linha.tentativa_id, linha.causa_erro]),
+  );
+  const candidatos = tentativas.filter((tentativa) => {
+    const causa = tentativa.causa_erro ?? causaPorTentativa.get(tentativa.id) ?? null;
+    return causa === opcoes.causa;
+  });
+
+  if (candidatos.length === 0) {
+    throw new SessaoRecusada(
+      "acervo_vazio",
+      "Não há questões disponíveis para refazer neste erro.",
+    );
+  }
+
+  const ids = [...new Set(candidatos.map((tentativa) => tentativa.questao_id))];
+  const linhas = await lerLista<LinhaDeQuestao>(
+    cliente
+      .from("questoes")
+      .select(QUESTAO_PUBLICA_SELECT)
+      .in("id", ids)
+      .eq("status", "publicada")
+      .eq("vigente", true)
+      .eq("anulada", false),
+    "questões do caderno",
+  );
+  const porVersao = new Map(
+    linhas.map((linha) => [`${linha.id}:${linha.questao_versao}`, linha]),
+  );
+  const selecionadas: LinhaDeQuestao[] = [];
+  const versoesIncluidas = new Set<string>();
+  for (const candidato of candidatos) {
+    const versao = Number(candidato.questao_versao);
+    if (!Number.isInteger(versao) || versao < 1) continue;
+    const chave = `${candidato.questao_id}:${versao}`;
+    if (versoesIncluidas.has(chave)) continue;
+    const linha = porVersao.get(chave);
+    if (linha === undefined) continue;
+    versoesIncluidas.add(chave);
+    selecionadas.push(linha);
+  }
+
+  const disponiveis = selecionarQuestoesDisponiveis(selecionadas, {
+    tipo: "treinar",
+    // O tópico do filtro é o snapshot da tentativa. Uma reclassificação
+    // posterior do acervo não pode deslocar o erro histórico para outro grupo.
+    topicoId: null,
+    quantidade: selecionadas.length,
+  });
+  if (disponiveis.length === 0) {
+    throw new SessaoRecusada(
+      "acervo_vazio",
+      "As questões deste erro foram retiradas do acervo.",
+    );
+  }
+
+  const criada = await inserirSessaoRefacao(cliente, {
+    userId: usuario.id,
+    refacaoChave,
+  });
+  if (criada.retomada) return criada;
+
+  const itens = disponiveis.map((questao, indice) => ({
+    sessao_id: criada.id,
+    questao_id: questao.id,
+    questao_versao: questao.questao_versao,
+    ordem: indice + 1,
+  }));
+  const { error } = await cliente.from("sessao_itens").insert(itens);
+  if (error) {
+    await cliente.from("sessoes").delete().eq("id", criada.id);
+    throw new SessaoRecusada(
+      "acervo_inconsistente",
+      `Não foi possível montar a refação: ${error.message}`,
+    );
+  }
+
+  return criada;
+}
+
 /** Lê apenas os itens ainda pendentes e assina imagens no servidor. */
 export async function consultarSessao(
   cliente: SupabaseClient,
@@ -370,7 +538,7 @@ export async function consultarSessao(
   const sessao = await lerUma<SessaoDaConsulta>(
     cliente
       .from("sessoes")
-      .select("id, plano_bloco_id, contexto, encerrada_em")
+      .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
       .eq("id", sessaoId)
       .maybeSingle(),
     "sessão",
@@ -399,8 +567,18 @@ export async function consultarSessao(
   }
 
   const ids = [...new Set(itens.map((item) => item.questao_id))];
+  let questoesConsulta = cliente
+    .from("questoes")
+    .select(QUESTAO_PUBLICA_SELECT)
+    .in("id", ids);
+  if (sessao.refacao_chave) {
+    questoesConsulta = questoesConsulta
+      .eq("status", "publicada")
+      .eq("vigente", true)
+      .eq("anulada", false);
+  }
   const linhas = await lerLista<LinhaDeQuestao>(
-    cliente.from("questoes").select(QUESTAO_PUBLICA_SELECT).in("id", ids),
+    questoesConsulta,
     "questões da sessão",
   );
   const porVersao = new Map(
@@ -453,7 +631,7 @@ export async function obterItemParaResposta(
   const sessao = await lerUma<SessaoDaConsulta>(
     cliente
       .from("sessoes")
-      .select("id, plano_bloco_id, contexto, encerrada_em")
+      .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
       .eq("id", sessaoId)
       .maybeSingle(),
     "sessão para resposta",
@@ -479,12 +657,20 @@ export async function obterItemParaResposta(
   }
 
   const linha = await lerUma<LinhaDeQuestao>(
-    cliente
+    (() => {
+      let consulta = cliente
       .from("questoes")
       .select(QUESTAO_RESPOSTA_SELECT)
       .eq("id", item.questao_id)
-      .eq("questao_versao", item.questao_versao)
-      .maybeSingle(),
+      .eq("questao_versao", item.questao_versao);
+      if (sessao.refacao_chave) {
+        consulta = consulta
+          .eq("status", "publicada")
+          .eq("vigente", true)
+          .eq("anulada", false);
+      }
+      return consulta.maybeSingle();
+    })(),
     "questão para resposta",
   );
   if (linha === null) {
@@ -577,7 +763,7 @@ async function inserirSessao(
     const aberta = await lerUma<SessaoDaConsulta>(
       cliente
         .from("sessoes")
-        .select("id, plano_bloco_id, contexto, encerrada_em")
+        .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
         .eq("user_id", entrada.userId)
         .eq("plano_bloco_id", entrada.bloco.id)
         .is("encerrada_em", null)
@@ -592,6 +778,44 @@ async function inserirSessao(
   throw new SessaoRecusada(
     "acervo_inconsistente",
     `Não foi possível abrir a sessão: ${error?.message ?? "resposta vazia"}`,
+  );
+}
+
+async function inserirSessaoRefacao(
+  cliente: SupabaseClient,
+  entrada: { userId: string; refacaoChave: string },
+): Promise<{ id: string; retomada: boolean }> {
+  const { data, error } = await cliente
+    .from("sessoes")
+    .insert({
+      user_id: entrada.userId,
+      contexto: "treino",
+      refacao_chave: entrada.refacaoChave,
+    })
+    .select("id")
+    .single();
+
+  if (!error && data !== null) return { id: data.id, retomada: false };
+
+  if (error?.code === "23505") {
+    const aberta = await lerUma<SessaoDaConsulta>(
+      cliente
+        .from("sessoes")
+        .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
+        .eq("user_id", entrada.userId)
+        .eq("refacao_chave", entrada.refacaoChave)
+        .is("encerrada_em", null)
+        .order("iniciada_em", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      "refação concorrente",
+    );
+    if (aberta !== null) return { id: aberta.id, retomada: true };
+  }
+
+  throw new SessaoRecusada(
+    "acervo_inconsistente",
+    `Não foi possível abrir a refação: ${error?.message ?? "resposta vazia"}`,
   );
 }
 

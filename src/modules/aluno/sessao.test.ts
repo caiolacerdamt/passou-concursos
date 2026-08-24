@@ -19,6 +19,7 @@ import {
   itensPendentes,
   mapearQuestaoParaTela,
   prepararSessao,
+  prepararSessaoDeRefacao,
   selecionarQuestoesDisponiveis,
 } from "./sessao";
 
@@ -107,6 +108,50 @@ function clienteParaPreparar({
     }),
   };
   return { cliente, consultas };
+}
+
+function clienteParaRefacao({
+  aberta = null,
+  tentativas = [],
+  causas = [],
+  questoes = [],
+  inserir = { data: { id: "sessao-refacao" }, error: null },
+  inserirItens = { data: null, error: null },
+}: {
+  aberta?: Record<string, unknown> | null;
+  tentativas?: unknown[];
+  causas?: unknown[];
+  questoes?: unknown[];
+  inserir?: { data: unknown; error: null | { message: string; code?: string } };
+  inserirItens?: { data: unknown; error: null | { message: string; code?: string } };
+} = {}) {
+  const sessoes = [0];
+  const insercoes: unknown[] = [];
+  const cliente = {
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }) },
+    from: vi.fn((tabela: string) => {
+      let resposta: { data: unknown; error: null | { message: string; code?: string } };
+      if (tabela === "sessoes") {
+        resposta = sessoes[0] === 0 ? { data: aberta, error: null } : inserir;
+        sessoes[0] += 1;
+      } else if (tabela === "tentativas") {
+        resposta = { data: tentativas, error: null };
+      } else if (tabela === "tentativa_causa_simulado") {
+        resposta = { data: causas, error: null };
+      } else if (tabela === "questoes") {
+        resposta = { data: questoes, error: null };
+      } else {
+        resposta = inserirItens;
+      }
+      const builder = consulta(resposta);
+      builder.insert = vi.fn((linhas: unknown) => {
+        insercoes.push(linhas);
+        return consulta(tabela === "sessoes" ? inserir : inserirItens);
+      });
+      return builder;
+    }),
+  };
+  return { cliente, insercoes };
 }
 
 describe("sessão de estudo", () => {
@@ -216,5 +261,118 @@ describe("sessão de estudo", () => {
       constructor: SessaoRecusada,
       motivo: "acervo_vazio",
     });
+  });
+
+  it("monta refação somente com erros do titular e versões publicadas", async () => {
+    const { cliente, insercoes } = clienteParaRefacao({
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 2,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+        {
+          id: "tentativa-2",
+          questao_id: "questao-2",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-22T12:00:00Z",
+        },
+      ],
+      questoes: [
+        linha({
+          id: "questao-1",
+          questao_versao: 2,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          status: "publicada",
+          vigente: true,
+          anulada: false,
+        }),
+        linha({
+          id: "questao-2",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          status: "rascunho",
+          vigente: true,
+          anulada: false,
+        }),
+      ],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-refacao", retomada: false });
+    expect(insercoes).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-refacao",
+        questao_id: "questao-1",
+        questao_versao: 2,
+        ordem: 1,
+      },
+    ]);
+  });
+
+  it("usa causa do simulado em tabela vizinha e nunca aceita identidade do cliente", async () => {
+    const { cliente } = clienteParaRefacao({
+      tentativas: [
+        {
+          id: "tentativa-simulado",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: null,
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      causas: [{ tentativa_id: "tentativa-simulado", causa_erro: "faltou_tempo" }],
+      questoes: [linha({ topico_id: "11111111-1111-4111-8111-111111111111" })],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "faltou_tempo",
+      }),
+    ).resolves.toMatchObject({ id: "sessao-refacao" });
+    expect(cliente.auth.getUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("retoma a sessão de refação aberta e não refaz a seleção", async () => {
+    const { cliente } = clienteParaRefacao({
+      aberta: {
+        id: "sessao-aberta",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: "11111111-1111-4111-8111-111111111111|errei_a_conta",
+      },
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-aberta", retomada: true });
+    expect(cliente.from).toHaveBeenCalledTimes(1);
+  });
+
+  it("recusa filtro de refação inválido antes de consultar o banco", async () => {
+    const { cliente } = clienteParaRefacao();
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "topico-alheio",
+        causa: "errei_a_conta",
+      }),
+    ).rejects.toMatchObject({ motivo: "refacao_indisponivel" });
+    expect(cliente.auth.getUser).not.toHaveBeenCalled();
   });
 });

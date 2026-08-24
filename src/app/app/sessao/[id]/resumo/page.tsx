@@ -1,13 +1,11 @@
 import Link from "next/link";
 
-import { sair } from "@/app/entrar/acoes";
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarResumoDaSessao } from "@/modules/aluno/resumo-sessao";
 import { ResumoTela } from "@/modules/aluno/resumo-tela";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { Estado } from "@/modules/ui/estado";
-import { Shell } from "@/modules/ui/shell";
 
 export const dynamic = "force-dynamic";
 
@@ -42,19 +40,5 @@ export default async function Resumo({ params }: Props) {
 }
 
 function TelaBase({ children }: { children: React.ReactNode }) {
-  return (
-    <Shell
-      largura="leitura"
-      acoes={
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/app" className="text-marca underline">Plano</Link>
-          <form action={sair}>
-            <button type="submit" className="text-marca underline">Sair</button>
-          </form>
-        </div>
-      }
-    >
-      {children}
-    </Shell>
-  );
+  return <div className="mx-auto max-w-2xl">{children}</div>;
 }

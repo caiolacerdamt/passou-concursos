@@ -10,7 +10,6 @@ import {
   type ResultadoDaGarantia,
 } from "@/modules/pagamentos/garantia";
 import { criarRepositorioDePagamentos } from "@/modules/pagamentos/repositorio";
-import { Shell } from "@/modules/ui/shell";
 
 import { pedirReembolso } from "./acoes";
 
@@ -59,10 +58,11 @@ export default async function Reembolso({
   const pagamento = await criarRepositorioDePagamentos(clienteDeServico()).buscarUltimoPagamentoDoUsuario(user.id);
   if (!pagamento) {
     return (
-      <Shell acoes={<Link href="/app" className="text-marca underline">Voltar para o estudo</Link>}>
+      <div className="mx-auto max-w-2xl">
         <h1 className="font-display text-4xl leading-tight tracking-tight">Garantia do pagamento</h1>
         <p className="mt-4 text-suave">Não há um pagamento confirmado para consultar.</p>
-      </Shell>
+        <Link href="/app" className="mt-5 inline-flex text-sm font-semibold text-marca underline">Voltar para o estudo</Link>
+      </div>
     );
   }
 
@@ -74,12 +74,13 @@ export default async function Reembolso({
   );
 
   return (
-    <Shell acoes={<Link href="/app" className="text-marca underline">Voltar para o estudo</Link>}>
+    <div className="mx-auto max-w-2xl">
       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Garantia</p>
       <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">Pedido de reembolso</h1>
       <p className="mt-5 text-lg leading-8 text-suave">
         A janela é contada em dias corridos desde a confirmação do pagamento.
       </p>
+      <Link href="/app" className="mt-4 inline-flex text-sm font-semibold text-marca underline">Voltar para o estudo</Link>
       <p className="mt-6 rounded-card border border-linha bg-painel p-5 text-sm shadow-card" role="status">
         {tela.resultado.diasPassados === null
           ? "Pagamento ainda não confirmado."
@@ -108,6 +109,6 @@ export default async function Reembolso({
           {tela.recusa ?? "O pedido não está disponível para este pagamento."}
         </p>
       )}
-    </Shell>
+    </div>
   );
 }

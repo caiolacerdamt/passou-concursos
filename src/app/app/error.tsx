@@ -4,7 +4,6 @@ import { useEffect } from "react";
 
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { Estado } from "@/modules/ui/estado";
-import { Shell } from "@/modules/ui/shell";
 
 /**
  * Fronteira de erro da area logada (UI-04 AC3).
@@ -22,9 +21,5 @@ export default function Erro({
     reportarErro(error, { origem: "app/app/error.tsx", digest: error.digest });
   }, [error]);
 
-  return (
-    <Shell>
-      <Estado tipo="erro" />
-    </Shell>
-  );
+  return <Estado tipo="erro" />;
 }

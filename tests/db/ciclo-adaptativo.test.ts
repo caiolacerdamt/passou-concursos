@@ -169,7 +169,7 @@ descreveComBanco("ciclo adaptativo W2-A", () => {
       await topicoPublicado(cliente);
       await criarPerfil(cliente, aluno, 60, [1]);
 
-      expect(await gerar(cliente, aluno, DOMINGO)).toBe(0);
+      expect(await gerar(cliente, aluno, DOMINGO)).toBe(1);
       expect(await blocosDe(cliente, aluno, DOMINGO)).toHaveLength(0);
       expect(await gerar(cliente, aluno, SEGUNDA)).toBe(1);
       expect((await blocosDe(cliente, aluno, SEGUNDA)).length).toBeGreaterThan(0);
@@ -209,6 +209,11 @@ descreveComBanco("ciclo adaptativo W2-A", () => {
       const topicos = await topicosDaMateria(cliente, 5);
       for (const topico of topicos.slice(1)) await marcarDominio(cliente, aluno, topico, 0.1);
       await criarPerfil(cliente, aluno, 120);
+      await criarPerfilConcurso(
+        cliente,
+        topicos,
+        topicos.map((topico) => ({ topico, peso: 0.2 })),
+      );
 
       await gerar(cliente, aluno, SEGUNDA);
       const blocos = await blocosDe(cliente, aluno, SEGUNDA);
@@ -225,6 +230,10 @@ descreveComBanco("ciclo adaptativo W2-A", () => {
       const revisao = await topicoPublicado(cliente);
       const novo = await topicoPublicado(cliente);
       await criarPerfil(cliente, aluno, 40);
+      await criarPerfilConcurso(cliente, [revisao.topico, novo.topico], [
+        { topico: revisao.topico, peso: 0.5 },
+        { topico: novo.topico, peso: 0.5 },
+      ]);
       await marcarRevisao(cliente, aluno, revisao.topico);
 
       await gerar(cliente, aluno, SEGUNDA);

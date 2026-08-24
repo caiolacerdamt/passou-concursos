@@ -3,6 +3,14 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { consultarPlanoDoDia } from "@/modules/aluno/plano";
+import {
+  consultarRotulosDosTopicosPorIds,
+  type RotuloDoTopico,
+} from "@/modules/aluno/plano-rotulos";
+import { consultarRevisoesDevidas } from "@/modules/aluno/revisoes-devidas";
+import { IndiceDeSessoes } from "@/modules/aluno/sessao/indice-tela";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 import {
   prepararSessao,
   prepararSessaoDeRefacao,
@@ -53,14 +61,39 @@ export default async function AbrirSessao({ searchParams }: Props) {
   }
 
   if (blocoId === undefined || blocoId === "") {
+    const supabase = await clienteDaSessao();
+    let plano;
+    let revisoesDevidas;
+    try {
+      [plano, revisoesDevidas] = await Promise.all([
+        consultarPlanoDoDia(supabase),
+        consultarRevisoesDevidas(supabase),
+      ]);
+    } catch (erro) {
+      reportarErro(erro, { modulo: "aluno", operacao: "consultar_indice_de_sessoes" });
+      return <div className="mx-auto max-w-2xl"><Estado tipo="erro" /></div>;
+    }
+
+    const blocosPendentes = plano === null
+      ? []
+      : [...plano.piso, ...plano.metaCheia].filter((bloco) => bloco.conclusao === null);
+    const idsDosTopicos = [
+      ...blocosPendentes.flatMap((bloco) => (bloco.topicoId ? [bloco.topicoId] : [])),
+      ...revisoesDevidas.map((revisao) => revisao.topicoId),
+    ];
+    let rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico> = new Map();
+    try {
+      rotulosDosTopicos = await consultarRotulosDosTopicosPorIds(supabase, idsDosTopicos);
+    } catch (erro) {
+      reportarErro(erro, { modulo: "aluno", operacao: "consultar_rotulos_sessoes" });
+    }
+
     return (
-      <div className="mx-auto max-w-2xl">
-        <Estado
-          tipo="vazio"
-          titulo="Escolha um bloco do seu plano para começar"
-          acao={<Link href="/app" className="text-marca underline">Voltar ao plano de hoje</Link>}
-        />
-      </div>
+      <IndiceDeSessoes
+        blocosPendentes={blocosPendentes}
+        revisoesDevidas={revisoesDevidas}
+        rotulosDosTopicos={rotulosDosTopicos}
+      />
     );
   }
 

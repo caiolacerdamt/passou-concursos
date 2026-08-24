@@ -7,6 +7,9 @@ const dependencias = vi.hoisted(() => ({
   preparar: vi.fn(),
   prepararRefacao: vi.fn(),
   consultar: vi.fn(),
+  plano: vi.fn(),
+  rotulos: vi.fn(),
+  revisoes: vi.fn(),
   sair: vi.fn(),
   redirect: vi.fn((destino: string): never => {
     throw new Error(`NEXT_REDIRECT:${destino}`);
@@ -26,6 +29,13 @@ vi.mock("@/modules/aluno/sessao", async (importOriginal) => {
     consultarSessao: dependencias.consultar,
   };
 });
+vi.mock("@/modules/aluno/plano", () => ({ consultarPlanoDoDia: dependencias.plano }));
+vi.mock("@/modules/aluno/plano-rotulos", () => ({
+  consultarRotulosDosTopicosPorIds: dependencias.rotulos,
+}));
+vi.mock("@/modules/aluno/revisoes-devidas", () => ({
+  consultarRevisoesDevidas: dependencias.revisoes,
+}));
 vi.mock("../../../entrar/acoes", () => ({ sair: dependencias.sair }));
 vi.mock("@/modules/aluno/sessao/tela", () => ({
   SessaoTela: ({ sessao }: { sessao: { id: string } }) => (
@@ -64,6 +74,9 @@ describe("rotas da sessão", () => {
     dependencias.consultar.mockResolvedValue(sessao);
     dependencias.preparar.mockResolvedValue({ id: "sessao-1", retomada: false });
     dependencias.prepararRefacao.mockResolvedValue({ id: "sessao-refacao", retomada: false });
+    dependencias.plano.mockResolvedValue(null);
+    dependencias.rotulos.mockResolvedValue(new Map());
+    dependencias.revisoes.mockResolvedValue([]);
   });
 
   it("redireciona a entrada do bloco para uma sessão persistida", async () => {
@@ -71,6 +84,77 @@ describe("rotas da sessão", () => {
       AbrirSessao({ searchParams: Promise.resolve({ bloco: "bloco-1" }) }),
     ).rejects.toThrow("NEXT_REDIRECT:/app/sessao/sessao-1");
     expect(dependencias.preparar).toHaveBeenCalledWith({}, "bloco-1");
+  });
+
+  it("lista blocos pendentes e revisões devidas quando a entrada não recebe bloco", async () => {
+    dependencias.plano.mockResolvedValue({
+      id: "plano-1",
+      data: "2026-08-22",
+      frase: null,
+      piso: [
+        {
+          id: "bloco-revisao",
+          tipo: "revisar",
+          nivel: "piso",
+          ordem: 1,
+          topicoId: "topico-1",
+          nQuestoes: 5,
+          nQuestoesCheias: 5,
+          minutosEstimados: 20,
+          minutosEstimadosCheios: 20,
+          motivo: "A revisão venceu.",
+          ajusteUsuario: false,
+          adiadoDe: null,
+          conclusao: null,
+        },
+        {
+          id: "bloco-concluido",
+          tipo: "avancar",
+          nivel: "meta_cheia",
+          ordem: 2,
+          topicoId: "topico-2",
+          nQuestoes: 5,
+          nQuestoesCheias: 5,
+          minutosEstimados: 20,
+          minutosEstimadosCheios: 20,
+          motivo: null,
+          ajusteUsuario: false,
+          adiadoDe: null,
+          conclusao: {
+            sessaoId: "sessao-encerrada",
+            nQuestoes: 5,
+            nAcertos: 4,
+            encerradaEm: "2026-08-22T21:00:00Z",
+          },
+        },
+      ],
+      metaCheia: [],
+    });
+    dependencias.revisoes.mockResolvedValue([{ topicoId: "topico-1", due: "2026-08-22" }]);
+    dependencias.rotulos.mockResolvedValue(
+      new Map([["topico-1", { materia: "Conhecimentos Bancários", topico: "Geral" }]]),
+    );
+
+    const html = renderToStaticMarkup(
+      await AbrirSessao({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(html).toContain("Blocos pendentes");
+    expect(html).toContain("Revisões devidas");
+    expect(html).toContain("Conhecimentos Bancários");
+    expect(html).toContain("/app/sessao?bloco=bloco-revisao");
+    expect(html).not.toContain("bloco-concluido");
+    expect(dependencias.plano).toHaveBeenCalledWith({});
+    expect(dependencias.revisoes).toHaveBeenCalledWith({});
+  });
+
+  it("mostra caminho de volta quando não há plano nem revisão devida", async () => {
+    const html = renderToStaticMarkup(
+      await AbrirSessao({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(html).toContain("Não há questões ou revisões pendentes agora");
+    expect(html).toContain("/app");
   });
 
   it("redireciona a refação usando somente o filtro autenticado do caderno", async () => {

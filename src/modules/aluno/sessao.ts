@@ -437,7 +437,10 @@ export async function prepararSessaoDeRefacao(
       .maybeSingle(),
     "refação aberta",
   );
-  if (aberta !== null) return { id: aberta.id, retomada: true };
+  if (aberta !== null) {
+    const itensExistentes = await lerItensDaRefacao(cliente, aberta.id);
+    if (itensExistentes.length > 0) return { id: aberta.id, retomada: true };
+  }
 
   const tentativas = await lerLista<TentativaErradaDaRefacao>(
     cliente

@@ -404,6 +404,15 @@ describe("sessão de estudo", () => {
         encerrada_em: null,
         refacao_chave: "11111111-1111-4111-8111-111111111111|errei_a_conta",
       },
+      itens: [
+        {
+          id: "item-refacao",
+          sessao_id: "sessao-aberta",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          ordem: 1,
+        },
+      ],
     });
 
     await expect(
@@ -412,7 +421,56 @@ describe("sessão de estudo", () => {
         causa: "errei_a_conta",
       }),
     ).resolves.toEqual({ id: "sessao-aberta", retomada: true });
-    expect(cliente.from).toHaveBeenCalledTimes(1);
+    expect(cliente.from).toHaveBeenCalledTimes(2);
+  });
+
+  it("repara sessão aberta sem itens e retorna retomada", async () => {
+    const topicoId = "11111111-1111-4111-8111-111111111111";
+    const { cliente, insercoes } = clienteParaRefacao({
+      aberta: {
+        id: "sessao-vazia",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: `${topicoId}|errei_a_conta`,
+      },
+      abertaDepoisDoConflito: {
+        id: "sessao-vazia",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: `${topicoId}|errei_a_conta`,
+      },
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: topicoId,
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      questoes: [linha({ id: "questao-1", topico_id: topicoId })],
+      itens: [],
+      itensDepoisDaCorrida: [],
+      inserir: { data: null, error: { message: "colisão", code: "23505" } },
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId,
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-vazia", retomada: true });
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-vazia",
+        questao_id: "questao-1",
+        questao_versao: 1,
+        ordem: 1,
+      },
+    ]);
   });
 
   it("no caminho 23505 preenche a sessão vencedora que ainda estava sem itens", async () => {

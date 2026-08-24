@@ -45,6 +45,7 @@ const plano = {
       topicoId: "topico-1",
       minutosEstimados: 15,
       motivo: "A revisão vence hoje.",
+      conclusao: null,
     },
   ],
   metaCheia: [
@@ -56,6 +57,7 @@ const plano = {
       topicoId: "topico-2",
       minutosEstimados: 25,
       motivo: "Este tema tem peso alto na prova.",
+      conclusao: null,
     },
   ],
 };
@@ -110,6 +112,32 @@ describe("/app", () => {
 
     expect(html).toContain("Seu plano de hoje ainda está sendo preparado");
     expect(html).toContain("não depende de uma resposta da IA");
+  });
+
+  it("troca a ação do bloco concluído pelo placar e link do resumo", async () => {
+    dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
+    dependencias.plano.mockResolvedValue({
+      ...plano,
+      metaCheia: [
+        {
+          ...plano.metaCheia[0],
+          conclusao: {
+            sessaoId: "sessao-concluida",
+            nQuestoes: 10,
+            nAcertos: 3,
+            encerradaEm: "2026-08-23T21:00:00.000Z",
+          },
+        },
+      ],
+    });
+
+    const html = renderToStaticMarkup(await renderApp());
+
+    expect(html).toContain("Concluído");
+    expect(html).toContain("10 questões · 3 acertos");
+    expect(html).toContain("/app/sessao/sessao-concluida/resumo");
+    expect(html).toContain("Ver resumo");
+    expect(html).not.toContain("/app/sessao?bloco=bloco-meta");
   });
 
   it("mantém a guarda de matrícula antes de qualquer leitura", async () => {

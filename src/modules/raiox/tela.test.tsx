@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { DadosRaioX } from "./index";
+import type { DadosMapaPrioridade, DadosRaioX } from "./index";
 import { RaioXTela } from "./tela";
 
 const perfil = {
@@ -9,6 +9,7 @@ const perfil = {
   banca: "indefinida",
   dataProva: null,
   formato: "multipla_escolha",
+  programaEdital: [],
 };
 
 describe("RaioXTela", () => {
@@ -74,5 +75,61 @@ describe("RaioXTela", () => {
 
     expect(html).not.toMatch(/(?:width|min-width|max-width):[^;]*px/);
     expect(html).not.toMatch(/(?:w|min-w|max-w)-\[\d+px\]/);
+  });
+
+  it("mostra o mapa como leitura separada dos quatro sinais", () => {
+    const mapa: DadosMapaPrioridade = {
+      dataReferencia: "2026-08-24",
+      linhas: [
+        {
+          topicoId: "topico-1",
+          topico: "Matemática Financeira",
+          peso: 0.72,
+          score: 0.4,
+          nRespostas: 10,
+          dominio: "fraco",
+          cobertura: "coberto",
+          revisao: "devida",
+          due: "2026-08-24",
+          prioridade: 0.432,
+          nivel: "maior_atencao",
+          motivo: "A revisão está devida; veja este tópico antes de deixar o conteúdo se afastar.",
+          ordem: 1,
+        },
+        {
+          topicoId: "topico-2",
+          topico: "Conhecimentos Bancários",
+          peso: null,
+          score: null,
+          nRespostas: 0,
+          dominio: "nao_iniciado",
+          cobertura: "nao_iniciado",
+          revisao: "em_dia",
+          due: "2026-09-01",
+          prioridade: null,
+          nivel: "sem_projecao",
+          motivo: "A frequência da banca ainda não tem projeção para este tópico.",
+          ordem: 2,
+        },
+      ],
+    };
+
+    const html = renderToStaticMarkup(<RaioXTela dados={{ perfil, linhas: [] }} mapa={mapa} />);
+
+    expect(html).toContain("Mapa de Prioridade");
+    expect(html).toContain("Peso da banca");
+    expect(html).toContain("Faixa de domínio");
+    expect(html).toContain("Cobertura observada");
+    expect(html).toContain("Revisão e data");
+    expect(html).toContain("Em dia");
+    expect(html).toContain("Devida");
+    expect(html).toContain("Não é outro plano");
+  });
+
+  it("nomeia estado degradado do mapa sem expor detalhe técnico", () => {
+    const html = renderToStaticMarkup(<RaioXTela dados={{ perfil, linhas: [] }} mapa={null} />);
+
+    expect(html).toContain("Mapa de Prioridade está indisponível agora");
+    expect(html).not.toContain("stack");
   });
 });

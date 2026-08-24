@@ -5,6 +5,7 @@ const dependencias = vi.hoisted(() => ({
   matricula: vi.fn(),
   cliente: vi.fn(),
   preparar: vi.fn(),
+  prepararRefacao: vi.fn(),
   consultar: vi.fn(),
   sair: vi.fn(),
   redirect: vi.fn((destino: string): never => {
@@ -21,6 +22,7 @@ vi.mock("@/modules/aluno/sessao", async (importOriginal) => {
   return {
     ...atual,
     prepararSessao: dependencias.preparar,
+    prepararSessaoDeRefacao: dependencias.prepararRefacao,
     consultarSessao: dependencias.consultar,
   };
 });
@@ -61,6 +63,7 @@ describe("rotas da sessão", () => {
     dependencias.cliente.mockResolvedValue({});
     dependencias.consultar.mockResolvedValue(sessao);
     dependencias.preparar.mockResolvedValue({ id: "sessao-1", retomada: false });
+    dependencias.prepararRefacao.mockResolvedValue({ id: "sessao-refacao", retomada: false });
   });
 
   it("redireciona a entrada do bloco para uma sessão persistida", async () => {
@@ -68,6 +71,26 @@ describe("rotas da sessão", () => {
       AbrirSessao({ searchParams: Promise.resolve({ bloco: "bloco-1" }) }),
     ).rejects.toThrow("NEXT_REDIRECT:/app/sessao/sessao-1");
     expect(dependencias.preparar).toHaveBeenCalledWith({}, "bloco-1");
+  });
+
+  it("redireciona a refação usando somente o filtro autenticado do caderno", async () => {
+    await expect(
+      AbrirSessao({
+        searchParams: Promise.resolve({
+          refacao: "1",
+          topico: "11111111-1111-4111-8111-111111111111",
+          causa: "errei_a_conta",
+          user_id: "aluno-alheio",
+          questoes: "questao-alheia",
+        }),
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:/app/sessao/sessao-refacao");
+    expect(dependencias.prepararRefacao).toHaveBeenCalledWith({}, {
+      topicoId: "11111111-1111-4111-8111-111111111111",
+      causa: "errei_a_conta",
+    });
+    expect(dependencias.prepararRefacao.mock.calls[0][1]).not.toHaveProperty("user_id");
+    expect(dependencias.prepararRefacao.mock.calls[0][1]).not.toHaveProperty("questoes");
   });
 
   it("renderiza a questão pendente através do componente da sessão", async () => {

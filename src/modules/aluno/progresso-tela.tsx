@@ -3,7 +3,26 @@ import Link from "next/link";
 import { Estado } from "@/modules/ui/estado";
 
 import { CAUSAS_DO_CADERNO } from "./progresso";
-import type { DadosProgresso, EstadoDaSequencia } from "./progresso";
+import type {
+  DadosProgresso,
+  EstadoDaSequencia,
+  TendenciaProgresso,
+} from "./progresso";
+
+const DOMINIO_EM_TEXTO = {
+  nao_iniciado: "Não iniciado",
+  fraco: "Fraco",
+  em_desenvolvimento: "Em desenvolvimento",
+  forte: "Forte",
+  dominado: "Dominado",
+} as const;
+
+const TENDENCIA_EM_TEXTO: Record<TendenciaProgresso, string> = {
+  subindo: "Subindo",
+  estavel: "Estável",
+  caindo: "Caindo",
+  sem_base: "Sem base",
+};
 
 const NOMES_DAS_CAUSAS: Record<(typeof CAUSAS_DO_CADERNO)[number], string> = {
   nao_sabia_conteudo: "Não sabia o conteúdo",
@@ -39,6 +58,11 @@ function explicacaoDoEstado(estado: EstadoDaSequencia["estado"]): string {
 function percentual(acertos: number, respostas: number): string {
   if (respostas <= 0) return "0%";
   return `${Math.round((acertos / respostas) * 100).toLocaleString("pt-BR")}%`;
+}
+
+function percentualOpcional(valor: number | null): string {
+  if (valor === null) return "Sem base";
+  return `${Math.round(valor * 100).toLocaleString("pt-BR")}%`;
 }
 
 function dataCurta(data: string): string {
@@ -88,6 +112,56 @@ function CartaoDaSequencia({ dados }: { dados: DadosProgresso }) {
   );
 }
 
+function RelatorioSemanal({ dados }: { dados: DadosProgresso }) {
+  const relatorio = dados.relatorioSemanal;
+  return (
+    <section
+      aria-labelledby="titulo-relatorio-semanal"
+      className="rounded-card border border-linha bg-painel p-5 shadow-card sm:p-6"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-marca">Leitura da semana</p>
+          <h2 id="titulo-relatorio-semanal" className="mt-2 text-2xl font-semibold">Relatório semanal</h2>
+          <p className="mt-2 max-w-2xl leading-7 text-suave">
+            Fatos dos últimos 7 dias, comparados com os 7 dias anteriores. Sem estimar tempo de estudo.
+          </p>
+        </div>
+        <span className="rounded-full bg-fundo-suave px-3 py-1 text-sm font-semibold text-evolucao">
+          Tendência: {TENDENCIA_EM_TEXTO[relatorio.tendencia]}
+        </span>
+      </div>
+
+      <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-linha bg-fundo p-3">
+          <dt className="text-sm text-suave">Questões respondidas</dt>
+          <dd className="mt-1 text-2xl font-semibold">{relatorio.questoesRespondidas}</dd>
+        </div>
+        <div className="rounded-xl border border-linha bg-fundo p-3">
+          <dt className="text-sm text-suave">Acertos</dt>
+          <dd className="mt-1 text-2xl font-semibold">
+            {relatorio.acertos} · {percentualOpcional(relatorio.percentualAcertos)}
+          </dd>
+        </div>
+        <div className="rounded-xl border border-linha bg-fundo p-3">
+          <dt className="text-sm text-suave">Tópicos tocados</dt>
+          <dd className="mt-1 text-2xl font-semibold">{relatorio.topicosTocados}</dd>
+        </div>
+        <div className="rounded-xl border border-linha bg-fundo p-3">
+          <dt className="text-sm text-suave">Revisões concluídas</dt>
+          <dd className="mt-1 text-2xl font-semibold">{relatorio.revisoesConcluidas}</dd>
+        </div>
+      </dl>
+
+      {relatorio.tendencia === "sem_base" ? (
+        <p className="mt-4 text-sm text-suave">
+          Ainda não há respostas nas duas janelas para comparar a tendência.
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 function Historico({ dados }: { dados: DadosProgresso }) {
   return (
     <section aria-labelledby="titulo-historico">
@@ -124,6 +198,14 @@ function Historico({ dados }: { dados: DadosProgresso }) {
               <p className="mt-2 text-sm text-suave">
                 {linha.nAcertos} de {linha.nRespostas} {linha.nRespostas === 1 ? "resposta" : "respostas"} certas
               </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-fundo-suave px-3 py-1 text-marca">
+                  Domínio: {DOMINIO_EM_TEXTO[linha.dominio]}
+                </span>
+                <span className="rounded-full bg-fundo-suave px-3 py-1 text-evolucao">
+                  Tendência: {TENDENCIA_EM_TEXTO[linha.tendencia]}
+                </span>
+              </div>
             </li>
           ))}
         </ul>
@@ -202,6 +284,12 @@ function Caderno({ dados }: { dados: DadosProgresso }) {
                 </span>
               </div>
               <p className="mt-3 text-xs text-suave">Último registro: {dataCurta(linha.ultimoErroEm)}</p>
+              <Link
+                href={`/app/sessao?refacao=1&topico=${encodeURIComponent(linha.topicoId)}&causa=${encodeURIComponent(linha.causa)}`}
+                className="mt-4 inline-flex min-h-11 items-center rounded-full bg-marca px-4 py-2 text-sm font-semibold text-white transition hover:bg-marca-apoio"
+              >
+                Refazer questões deste erro
+              </Link>
             </li>
           ))}
         </ul>
@@ -224,6 +312,7 @@ export function ProgressoTela({ dados }: { dados: DadosProgresso }) {
       </header>
 
       <CartaoDaSequencia dados={dados} />
+      <RelatorioSemanal dados={dados} />
       <Historico dados={dados} />
       <Caderno dados={dados} />
     </div>

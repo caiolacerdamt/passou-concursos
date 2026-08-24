@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { clienteDeServico } from "@/lib/db/servidor";
+import { faixaDeDominio, type FaixaDominio } from "@/modules/raiox";
 
 import { CONTEXTOS, type Contexto } from "./tentativas";
 
@@ -28,7 +29,11 @@ export type LinhaHistorico = {
   nRespostas: number;
   nAcertos: number;
   score: number;
+  dominio: FaixaDominio;
+  tendencia: TendenciaProgresso;
 };
+
+export type TendenciaProgresso = "subindo" | "estavel" | "caindo" | "sem_base";
 
 export type LinhaCaderno = {
   topicoId: string;
@@ -58,7 +63,19 @@ export type DadosProgresso = {
   caderno: LinhaCaderno[];
   topicos: Array<{ id: string; nome: string }>;
   sequencia: EstadoDaSequencia | null;
+  relatorioSemanal: RelatorioSemanal;
   estadoInicial: boolean;
+};
+
+export type RelatorioSemanal = {
+  inicio: string;
+  fim: string;
+  questoesRespondidas: number;
+  acertos: number;
+  percentualAcertos: number | null;
+  topicosTocados: number;
+  revisoesConcluidas: number;
+  tendencia: TendenciaProgresso;
 };
 
 export type ResultadoDaFinalizacao = {
@@ -110,6 +127,17 @@ type TentativaDoBlocoBanco = {
   correta: boolean;
 };
 
+type TentativaDoProgressoBanco = {
+  topico_id: string;
+  correta: boolean;
+  respondida_em: string;
+};
+
+type RevisaoDoProgressoBanco = {
+  topico_id: string;
+  revisado_em: string;
+};
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function texto(valor: unknown): string | null {
@@ -153,6 +181,123 @@ function numero(valor: number | string, campo: string): number {
     throw new Error(`${campo} contém número inválido`);
   }
   return convertido;
+}
+
+function instante(valor: string, campo: string): Date {
+  const resultado = new Date(valor);
+  if (Number.isNaN(resultado.getTime())) {
+    throw new Error(`${campo} contém data inválida`);
+  }
+  return resultado;
+}
+
+function referenciaTemporal(agora: Date | string): Date {
+  if (agora instanceof Date) {
+    if (Number.isNaN(agora.getTime())) throw new Error("data de referência inválida");
+    return agora;
+  }
+  return instante(agora, "data de referência");
+}
+
+function desempenho(linhas: readonly TentativaDoProgressoBanco[]) {
+  const nRespostas = linhas.length;
+  const nAcertos = linhas.filter((linha) => linha.correta).length;
+  return {
+    nRespostas,
+    nAcertos,
+    percentual: nRespostas === 0 ? null : nAcertos / nRespostas,
+  };
+}
+
+/**
+ * Compara a taxa de acerto das duas janelas, sem arredondar antes da decisão.
+ * Uma janela vazia não vira queda nem melhora: é explicitamente `sem_base`.
+ */
+export function calcularTendencia(
+  atual: readonly TentativaDoProgressoBanco[],
+  anterior: readonly TentativaDoProgressoBanco[],
+): TendenciaProgresso {
+  const desempenhoAtual = desempenho(atual);
+  const desempenhoAnterior = desempenho(anterior);
+  if (desempenhoAtual.percentual === null || desempenhoAnterior.percentual === null) {
+    return "sem_base";
+  }
+  if (desempenhoAtual.percentual === desempenhoAnterior.percentual) return "estavel";
+  return desempenhoAtual.percentual > desempenhoAnterior.percentual ? "subindo" : "caindo";
+}
+
+function validarTentativasDoProgresso(
+  linhas: readonly TentativaDoProgressoBanco[],
+): TentativaDoProgressoBanco[] {
+  return linhas.map((linha) => {
+    if (typeof linha.topico_id !== "string" || typeof linha.correta !== "boolean") {
+      throw new Error("tentativas devolveu fato inválido");
+    }
+    instante(linha.respondida_em, "tentativas.respondida_em");
+    return linha;
+  });
+}
+
+function validarRevisoesDoProgresso(
+  linhas: readonly RevisaoDoProgressoBanco[],
+): RevisaoDoProgressoBanco[] {
+  return linhas.map((linha) => {
+    if (typeof linha.topico_id !== "string") {
+      throw new Error("revisao_evento devolveu tópico inválido");
+    }
+    instante(linha.revisado_em, "revisao_evento.revisado_em");
+    return linha;
+  });
+}
+
+function janelaAtual(
+  linhas: readonly TentativaDoProgressoBanco[],
+  inicio: Date,
+  fim: Date,
+): TentativaDoProgressoBanco[] {
+  return linhas.filter((linha) => {
+    const data = instante(linha.respondida_em, "tentativas.respondida_em").getTime();
+    return data >= inicio.getTime() && data <= fim.getTime();
+  });
+}
+
+function janelaAnterior(
+  linhas: readonly TentativaDoProgressoBanco[],
+  inicio: Date,
+  fim: Date,
+): TentativaDoProgressoBanco[] {
+  return linhas.filter((linha) => {
+    const data = instante(linha.respondida_em, "tentativas.respondida_em").getTime();
+    return data >= inicio.getTime() && data < fim.getTime();
+  });
+}
+
+function criarRelatorioSemanal(
+  tentativas: readonly TentativaDoProgressoBanco[],
+  revisoes: readonly RevisaoDoProgressoBanco[],
+  agora: Date,
+): RelatorioSemanal {
+  const fim = agora;
+  const inicio = new Date(fim.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const inicioAnterior = new Date(fim.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const atual = janelaAtual(tentativas, inicio, fim);
+  const anterior = janelaAnterior(tentativas, inicioAnterior, inicio);
+  const dadosAtuais = desempenho(atual);
+  const revisoesAtuais = revisoes.filter((linha) => {
+    const data = instante(linha.revisado_em, "revisao_evento.revisado_em").getTime();
+    return data >= inicio.getTime() && data <= fim.getTime();
+  });
+
+  return {
+    inicio: inicio.toISOString(),
+    fim: fim.toISOString(),
+    questoesRespondidas: dadosAtuais.nRespostas,
+    acertos: dadosAtuais.nAcertos,
+    percentualAcertos: dadosAtuais.percentual,
+    topicosTocados: new Set(atual.map((linha) => linha.topico_id)).size,
+    revisoesConcluidas: revisoesAtuais.length,
+    tendencia: calcularTendencia(atual, anterior),
+  };
 }
 
 /**
@@ -252,15 +397,18 @@ function mapearSequencia(linha: SequenciaBanco | undefined): EstadoDaSequencia |
 }
 
 /**
- * Lê somente as projeções próprias expostas pela RLS. `tentativas` nunca é
- * consultada nesta superfície: o log continua sendo fonte de reconstrução,
- * não fonte de renderização.
+ * Lê as projeções próprias expostas pela RLS e os fatos dos últimos 14 dias
+ * necessários para a tendência e o relatório semanal. O log continua sendo
+ * fonte de reconstrução, nunca de escrita nesta superfície.
  */
 export async function consultarProgresso(
   cliente: SupabaseClient,
   entrada: unknown = {},
+  agora: Date | string = new Date(),
 ): Promise<DadosProgresso> {
   const filtros = normalizarFiltrosProgresso(entrada);
+  const referencia = referenciaTemporal(agora);
+  const inicioAnterior = new Date(referencia.getTime() - 14 * 24 * 60 * 60 * 1000);
 
   let dominioBuilder = cliente
     .from("dominio_topico")
@@ -273,10 +421,27 @@ export async function consultarProgresso(
   if (filtros.causa) cadernoBuilder = cadernoBuilder.eq("causa_erro", filtros.causa);
   if (filtros.topicoId) cadernoBuilder = cadernoBuilder.eq("topico_id", filtros.topicoId);
 
-  const [dominioConsulta, cadernoConsulta, sequenciaConsulta] = await Promise.all([
+  const tentativasBuilder = cliente
+    .from("tentativas")
+    .select("topico_id, correta, respondida_em")
+    .gte("respondida_em", inicioAnterior.toISOString());
+  const revisoesBuilder = cliente
+    .from("revisao_evento")
+    .select("topico_id, revisado_em")
+    .gte("revisado_em", inicioAnterior.toISOString());
+
+  const [
+    dominioConsulta,
+    cadernoConsulta,
+    sequenciaConsulta,
+    tentativasConsulta,
+    revisoesConsulta,
+  ] = await Promise.all([
     dominioBuilder.order("n_respostas", { ascending: false }).order("topico_id", { ascending: true }),
     cadernoBuilder.order("n_erros", { ascending: false }).order("ultimo_erro_em", { ascending: false }),
     cliente.rpc("consultar_sequencia_do_dia"),
+    tentativasBuilder,
+    revisoesBuilder,
   ]);
 
   if (dominioConsulta.error) {
@@ -288,9 +453,21 @@ export async function consultarProgresso(
   if (sequenciaConsulta.error) {
     throw falhaAoLer("sequência", sequenciaConsulta.error.message);
   }
+  if (tentativasConsulta.error) {
+    throw falhaAoLer("tentativas", tentativasConsulta.error.message);
+  }
+  if (revisoesConsulta.error) {
+    throw falhaAoLer("revisao_evento", revisoesConsulta.error.message);
+  }
 
   const dominioLinhas = (dominioConsulta.data ?? []) as DominioBanco[];
   const cadernoLinhas = (cadernoConsulta.data ?? []) as CadernoBanco[];
+  const tentativas = validarTentativasDoProgresso(
+    (tentativasConsulta.data ?? []) as TentativaDoProgressoBanco[],
+  );
+  const revisoes = validarRevisoesDoProgresso(
+    (revisoesConsulta.data ?? []) as RevisaoDoProgressoBanco[],
+  );
   const ids = [
     ...new Set([
       ...dominioLinhas.map((linha) => linha.topico_id),
@@ -316,12 +493,36 @@ export async function consultarProgresso(
   }
 
   const nomes = new Map(topicos.map((topico) => [topico.id, topico.nome]));
+  const inicioSemana = new Date(referencia.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const inicioQuinzena = new Date(referencia.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const tentativasAtuais = janelaAtual(tentativas, inicioSemana, referencia);
+  const tentativasAnteriores = janelaAnterior(tentativas, inicioQuinzena, inicioSemana);
+  const tentativasPorTopicoAtual = new Map<string, TentativaDoProgressoBanco[]>();
+  const tentativasPorTopicoAnterior = new Map<string, TentativaDoProgressoBanco[]>();
+  for (const tentativa of tentativasAtuais) {
+    const grupo = tentativasPorTopicoAtual.get(tentativa.topico_id) ?? [];
+    grupo.push(tentativa);
+    tentativasPorTopicoAtual.set(tentativa.topico_id, grupo);
+  }
+  for (const tentativa of tentativasAnteriores) {
+    const grupo = tentativasPorTopicoAnterior.get(tentativa.topico_id) ?? [];
+    grupo.push(tentativa);
+    tentativasPorTopicoAnterior.set(tentativa.topico_id, grupo);
+  }
   const historico: LinhaHistorico[] = dominioLinhas.map((linha) => ({
     topicoId: linha.topico_id,
     topico: nomes.get(linha.topico_id)!,
     nRespostas: numero(linha.n_respostas, "dominio_topico.n_respostas"),
     nAcertos: numero(linha.n_acertos, "dominio_topico.n_acertos"),
     score: numero(linha.score, "dominio_topico.score"),
+    dominio: faixaDeDominio(
+      numero(linha.score, "dominio_topico.score"),
+      numero(linha.n_respostas, "dominio_topico.n_respostas"),
+    ),
+    tendencia: calcularTendencia(
+      tentativasPorTopicoAtual.get(linha.topico_id) ?? [],
+      tentativasPorTopicoAnterior.get(linha.topico_id) ?? [],
+    ),
   }));
 
   const cadernoMapeado: LinhaCaderno[] = cadernoLinhas.map((linha) => {
@@ -342,7 +543,8 @@ export async function consultarProgresso(
     ((sequenciaConsulta.data ?? []) as SequenciaBanco[])[0],
   );
   const temHistorico =
-    sequencia?.temHistorico ?? (historico.length > 0 || cadernoMapeado.length > 0);
+    sequencia?.temHistorico ??
+    (historico.length > 0 || cadernoMapeado.length > 0 || tentativas.length > 0 || revisoes.length > 0);
 
   return {
     filtros,
@@ -352,6 +554,7 @@ export async function consultarProgresso(
       .map(({ id, nome }) => ({ id, nome }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
     sequencia,
+    relatorioSemanal: criarRelatorioSemanal(tentativas, revisoes, referencia),
     estadoInicial: !temHistorico,
   };
 }

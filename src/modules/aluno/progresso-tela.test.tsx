@@ -7,7 +7,15 @@ import type { DadosProgresso } from "./progresso";
 const base: DadosProgresso = {
   filtros: { causa: null, topicoId: null },
   historico: [
-    { topicoId: "topico-1", topico: "Matemática", nRespostas: 4, nAcertos: 3, score: 0.75 },
+    {
+      topicoId: "topico-1",
+      topico: "Matemática",
+      nRespostas: 4,
+      nAcertos: 3,
+      score: 0.75,
+      dominio: "forte",
+      tendencia: "sem_base",
+    },
   ],
   caderno: [
     { topicoId: "topico-1", topico: "Matemática", causa: "errei_a_conta", nErros: 1, ultimoErroEm: "2026-08-21" },
@@ -22,6 +30,16 @@ const base: DadosProgresso = {
     temHistorico: true,
   },
   estadoInicial: false,
+  relatorioSemanal: {
+    inicio: "2026-08-15T00:00:00Z",
+    fim: "2026-08-22T00:00:00Z",
+    questoesRespondidas: 4,
+    acertos: 3,
+    percentualAcertos: 0.75,
+    topicosTocados: 1,
+    revisoesConcluidas: 1,
+    tendencia: "subindo",
+  },
 };
 
 describe("ProgressoTela", () => {
@@ -30,6 +48,11 @@ describe("ProgressoTela", () => {
     expect(html).toContain("2 dias de sequência");
     expect(html).toContain("Hoje é uma folga declarada");
     expect(html).toContain("Matemática");
+    expect(html).toContain("Domínio: Forte");
+    expect(html).toContain("Tendência: Sem base");
+    expect(html).toContain("Relatório semanal");
+    expect(html).toContain("Refazer questões deste erro");
+    expect(html).toContain("refacao=1");
     expect(html).toContain("name=\"causa\"");
     expect(html).toContain("name=\"topico\"");
   });

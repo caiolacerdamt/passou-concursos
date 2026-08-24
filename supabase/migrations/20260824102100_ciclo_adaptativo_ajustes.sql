@@ -61,6 +61,7 @@ begin
       values (v_aluno.user_id, v_data, now())
       on conflict (user_id, data) do update
         set gerado_em = now(), frase = null;
+      v_planos := v_planos + 1;
       continue;
     end if;$agenda_nova$
   );

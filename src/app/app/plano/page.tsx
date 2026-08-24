@@ -10,4 +10,3 @@ export default async function Plano({ searchParams }: PageProps<"/app/plano">) {
     searchParams,
   } as PageProps<"/app">);
 }
-

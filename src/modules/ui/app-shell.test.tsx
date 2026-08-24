@@ -32,4 +32,3 @@ describe("AppShell", () => {
     expect(html.indexOf('href="#conteudo"')).toBeLessThan(html.indexOf('<main id="conteudo"'));
   });
 });
-

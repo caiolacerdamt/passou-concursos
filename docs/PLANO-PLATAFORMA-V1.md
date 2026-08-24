@@ -563,7 +563,7 @@ uma decisão real do responsável do produto.
 
 | Onda | Estado | Main base | Observação |
 |---|---|---|---|
-| 1 | pendente | preencher ao iniciar | três pacotes paralelos com propriedade separada |
+| 1 | concluída | `e07ec1b` | W1-A `9e2f524` + `e13bcaf`; W1-C `c8aadad`; W1-B `7c4df3e`. Unit/build e DB da onda verdes; gate DB geral mantém 4 falhas antigas dependentes de acervo/data. |
 | 2 | pendente | — | um trabalhador; contrato central |
 | 3 | pendente | — | três superfícies paralelas |
 | 4 | pendente | — | dois domínios, sem UI compartilhada |

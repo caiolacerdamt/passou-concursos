@@ -292,6 +292,9 @@ declare
   v_revisao_piso_bruto      integer := 0;
   v_piso_meta               integer := 0;
   v_piso_bruto              integer := 0;
+  v_estudo_progresso        integer := 0;
+  v_questoes_progresso      integer := 0;
+  v_revisao_progresso        integer := 0;
   v_missao_id               text;
   v_missao_tipo             text;
   v_missao_meta             integer := 0;

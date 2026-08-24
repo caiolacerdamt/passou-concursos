@@ -1,5 +1,4 @@
 import { clienteDaSessao } from "@/lib/db/sessao";
-import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { consultarPerfilEstudo } from "./onboarding";
 import { consultarPlanoDoDia, type PlanoDoDia } from "./plano";
 import { consultarRotulosDosTopicos } from "./plano-rotulos";
@@ -26,7 +25,6 @@ export async function renderizarPainelDoPlano({
   superficie: SuperficieDoPlano;
   acaoDeOnboarding: AcaoDeOnboarding;
 }) {
-  await exigirMatriculaAtiva();
   const supabase = await clienteDaSessao();
   const perfil = await consultarPerfilEstudo(supabase);
   const parametros = await searchParams;

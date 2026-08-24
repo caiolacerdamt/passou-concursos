@@ -50,8 +50,21 @@ export async function agendarRevisao(
   const agora = entrada.agora ?? new Date();
   const anterior = await lerAgenda(cliente, entrada.userId, entrada.topicoId);
 
+  // Conteúdo novo entra na agenda sem ser contado como uma revisão já feita.
+  // Se outra requisição chegou primeiro, a linha existente é a autoridade e
+  // esta chamada vira um retry sem tocar no evento append-only.
+  if (entrada.primeiraRevisao && anterior !== null) {
+    return {
+      due: new Date(`${anterior.due}T00:00:00Z`),
+      nota,
+      algoritmo: anterior.algoritmo,
+    };
+  }
+
   const calculado =
-    algoritmo === "regua_fixa"
+    entrada.primeiraRevisao
+      ? { due: diaSeguinte(agora), card: null, reguaPasso: 0 }
+      : algoritmo === "regua_fixa"
       ? porReguaFixa(nota, agora, anterior?.regua_passo ?? null, reguaDias)
       : porFsrs(nota, agora, anterior?.fsrs_card ?? null, passosCurtos);
 
@@ -60,10 +73,12 @@ export async function agendarRevisao(
     p_topico_id: entrada.topicoId,
     p_algoritmo: algoritmo,
     p_due: emDataLocal(calculado.due),
-    p_nota: nota,
+    p_nota: entrada.primeiraRevisao ? null : nota,
     p_percentual: percentualAcerto,
     p_fsrs_card: calculado.card,
     p_regua_passo: calculado.reguaPasso,
+    p_sessao_id: entrada.sessaoId ?? null,
+    p_so_agenda: entrada.primeiraRevisao ?? false,
   });
 
   if (error) throw error;
@@ -182,16 +197,34 @@ async function lerAgenda(
   cliente: SupabaseClient,
   userId: string,
   topicoId: string,
-): Promise<{ fsrs_card: unknown; regua_passo: number } | null> {
+): Promise<{
+  fsrs_card: unknown;
+  regua_passo: number;
+  due: string;
+  algoritmo: Algoritmo;
+} | null> {
   const { data, error } = await cliente
     .from("revisao_agenda")
-    .select("fsrs_card, regua_passo")
+    .select("fsrs_card, regua_passo, due, algoritmo")
     .eq("user_id", userId)
     .eq("topico_id", topicoId)
     .maybeSingle();
 
   if (error) throw new Error(`falha ao ler revisao_agenda: ${error.message}`);
-  return (data as { fsrs_card: unknown; regua_passo: number } | null) ?? null;
+  return (
+    data as {
+      fsrs_card: unknown;
+      regua_passo: number;
+      due: string;
+      algoritmo: Algoritmo;
+    } | null
+  ) ?? null;
+}
+
+function diaSeguinte(agora: Date): Date {
+  const amanha = new Date(agora);
+  amanha.setUTCDate(amanha.getUTCDate() + 1);
+  return amanha;
 }
 
 /**

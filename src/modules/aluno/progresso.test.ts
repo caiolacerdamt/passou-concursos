@@ -1,8 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
+const dependencias = vi.hoisted(() => ({
+  servico: { rpc: vi.fn() },
+}));
+
+vi.mock("@/lib/db/servidor", () => ({
+  clienteDeServico: () => dependencias.servico,
+}));
+
 import {
   CAUSAS_DO_CADERNO,
   consultarProgresso,
+  finalizarBloco,
   normalizarFiltrosProgresso,
 } from "./progresso";
 
@@ -202,6 +211,64 @@ describe("consultarProgresso", () => {
 
     await expect(consultarProgresso(falso.cliente as never)).rejects.toThrow(
       "falha ao ler sequência: rpc indisponível",
+    );
+  });
+
+  it("reconstroi projeções e calcula o percentual do bloco pela sessão autenticada", async () => {
+    dependencias.servico.rpc.mockResolvedValue({ data: 2, error: null });
+    const sessao = {
+      select: vi.fn(() => sessao),
+      eq: vi.fn(() => sessao),
+      maybeSingle: vi.fn(async () => ({
+        data: { contexto: "revisao", encerrada_em: "2026-08-24T10:00:00Z" },
+        error: null,
+      })),
+    };
+    const tentativas = {
+      select: vi.fn(() => tentativas),
+      eq: vi.fn(() => tentativas),
+      then: (
+        resolve: (valor: Resposta) => unknown,
+        reject?: (erro: unknown) => unknown,
+      ) =>
+        Promise.resolve({
+          data: [
+            { topico_id: UUID_A, correta: true },
+            { topico_id: UUID_A, correta: false },
+            { topico_id: UUID_A, correta: true },
+          ],
+          error: null,
+        }).then(resolve, reject),
+    };
+    const cliente = {
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: { id: "aluno-1" } }, error: null })),
+      },
+      from: vi.fn((tabela: string) => (tabela === "sessoes" ? sessao : tentativas)),
+    };
+
+    await expect(finalizarBloco(cliente as never, "sessao-1")).resolves.toEqual({
+      userId: "aluno-1",
+      contexto: "revisao",
+      topicoId: UUID_A,
+      nRespostas: 3,
+      nAcertos: 2,
+    });
+    expect(dependencias.servico.rpc).toHaveBeenCalledWith("recalcula_projecoes", {
+      p_user_id: "aluno-1",
+    });
+  });
+
+  it("torna ocupação ou falha da projeção visível", async () => {
+    dependencias.servico.rpc.mockResolvedValue({ data: -1, error: null });
+    const cliente = {
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: { id: "aluno-1" } }, error: null })),
+      },
+    };
+
+    await expect(finalizarBloco(cliente as never, "sessao-1")).rejects.toThrow(
+      "está ocupada",
     );
   });
 });

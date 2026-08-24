@@ -6,6 +6,8 @@ const dependencias = vi.hoisted(() => ({
   obterItem: vi.fn(),
   registrar: vi.fn(),
   validar: vi.fn(),
+  finalizar: vi.fn(),
+  agendar: vi.fn(),
   reportar: vi.fn(),
 }));
 
@@ -30,6 +32,13 @@ vi.mock("@/modules/aluno/tentativas", async (importOriginal) => {
 });
 vi.mock("@/modules/observabilidade/reporte", () => ({
   reportarErro: dependencias.reportar,
+}));
+vi.mock("@/modules/aluno/progresso", () => ({
+  finalizarBloco: dependencias.finalizar,
+}));
+vi.mock("@/modules/aluno/revisao", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/aluno/revisao")>()),
+  agendarRevisao: dependencias.agendar,
 }));
 
 import { TentativaRecusada } from "@/modules/aluno/tentativas";
@@ -145,6 +154,18 @@ describe("responderQuestao", () => {
       correta: true,
       duplicada: false,
     });
+    dependencias.finalizar.mockResolvedValue({
+      userId: "aluno-1",
+      contexto: "treino",
+      topicoId: "topico-1",
+      nRespostas: 1,
+      nAcertos: 1,
+    });
+    dependencias.agendar.mockResolvedValue({
+      due: new Date("2026-08-24T00:00:00Z"),
+      nota: 3,
+      algoritmo: "fsrs",
+    });
   });
 
   it("deriva contexto e usuário da sessão, registra uma vez e mostra fonte da explicação", async () => {
@@ -235,6 +256,117 @@ describe("responderQuestao", () => {
     const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
 
     expect(estado).toMatchObject({ status: "respondida", explicacao: null });
+  });
+
+  it("recalcula antes de agendar a primeira revisão com identidade e tópico do servidor", async () => {
+    const { cliente } = clienteDaResposta({ pendente: false });
+    dependencias.cliente.mockResolvedValue(cliente);
+    dependencias.obterItem.mockResolvedValue({
+      ...alvo,
+      sessao: { ...alvo.sessao, contexto: "revisao" },
+    });
+    dependencias.finalizar.mockResolvedValue({
+      userId: "aluno-confirmado",
+      contexto: "revisao",
+      topicoId: "topico-confirmado",
+      nRespostas: 4,
+      nAcertos: 3,
+    });
+
+    const estado = await responderQuestao(
+      ESTADO_INICIAL_DA_RESPOSTA,
+      formulario({ contexto: "treino" }),
+    );
+
+    expect(estado).toMatchObject({ status: "respondida", sessaoConcluida: true });
+    expect(dependencias.finalizar).toHaveBeenCalledWith(cliente, "sessao-1");
+    expect(dependencias.agendar).toHaveBeenCalledWith(
+      {
+        userId: "aluno-confirmado",
+        topicoId: "topico-confirmado",
+        percentualAcerto: 0.75,
+        sessaoId: "sessao-1",
+        primeiraRevisao: false,
+      },
+      cliente,
+    );
+  });
+
+  it("permite retry do fechamento sem perder a revisão nem duplicar o fato", async () => {
+    const { cliente } = clienteDaResposta({ pendente: false });
+    dependencias.cliente.mockResolvedValue(cliente);
+    dependencias.obterItem.mockResolvedValue({
+      ...alvo,
+      sessao: { ...alvo.sessao, contexto: "revisao" },
+      item: { ...alvo.item, respondidoEm: "2026-08-22T22:00:00Z" },
+    });
+    dependencias.registrar.mockResolvedValue({
+      tentativaId: "tentativa-1",
+      respondidaEm: "2026-08-22T22:00:00Z",
+      correta: false,
+      duplicada: true,
+    });
+    dependencias.finalizar.mockResolvedValue({
+      userId: "aluno-1",
+      contexto: "revisao",
+      topicoId: "topico-1",
+      nRespostas: 1,
+      nAcertos: 0,
+    });
+
+    await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario({ resposta: "A" }));
+
+    expect(dependencias.finalizar).toHaveBeenCalledTimes(1);
+    expect(dependencias.agendar).toHaveBeenCalledWith(
+      {
+        userId: "aluno-1",
+        topicoId: "topico-1",
+        percentualAcerto: 0,
+        sessaoId: "sessao-1",
+        primeiraRevisao: false,
+      },
+      cliente,
+    );
+  });
+
+  it("agenda a primeira revisão do conteúdo para amanhã sem depender do cron", async () => {
+    const { cliente } = clienteDaResposta({ pendente: false });
+    dependencias.cliente.mockResolvedValue(cliente);
+    dependencias.finalizar.mockResolvedValue({
+      userId: "aluno-confirmado",
+      contexto: "treino",
+      topicoId: "topico-conteudo",
+      nRespostas: 4,
+      nAcertos: 1,
+    });
+
+    const estado = await responderQuestao(
+      ESTADO_INICIAL_DA_RESPOSTA,
+      formulario({ contexto: "simulado" }),
+    );
+
+    expect(estado).toMatchObject({ status: "respondida", sessaoConcluida: true });
+    expect(dependencias.agendar).toHaveBeenCalledWith(
+      {
+        userId: "aluno-confirmado",
+        topicoId: "topico-conteudo",
+        percentualAcerto: 0.25,
+        sessaoId: "sessao-1",
+        primeiraRevisao: true,
+      },
+      cliente,
+    );
+  });
+
+  it("mostra falha de projeção sem perder a tentativa confirmada", async () => {
+    const { cliente } = clienteDaResposta({ pendente: false });
+    dependencias.cliente.mockResolvedValue(cliente);
+    dependencias.finalizar.mockRejectedValue(new Error("projeção indisponível"));
+
+    const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
+
+    expect(estado).toMatchObject({ status: "erro", mensagem: expect.any(String) });
+    expect(dependencias.registrar).toHaveBeenCalledTimes(1);
   });
 
   it("não exibe explicação que contradiz o gabarito da questão-versão", async () => {

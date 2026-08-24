@@ -23,8 +23,13 @@ export type BlocoDoPlano = {
   nivel: NivelDoPlano;
   ordem: number;
   topicoId: string | null;
+  nQuestoes: number;
+  nQuestoesCheias: number;
   minutosEstimados: number;
+  minutosEstimadosCheios: number;
   motivo: string | null;
+  ajusteUsuario: boolean;
+  adiadoDe: string | null;
   conclusao: ConclusaoDoBloco | null;
 };
 
@@ -43,8 +48,13 @@ type BlocoBanco = {
   nivel: NivelDoPlano;
   ordem: number;
   topico_id: string | null;
+  n_questoes?: number | null;
+  n_questoes_cheias?: number | null;
   minutos_estimados: number;
+  minutos_estimados_cheios?: number | null;
   motivo: string | null;
+  ajuste_usuario?: boolean | null;
+  adiado_de?: string | null;
 };
 type SessaoEncerradaBanco = {
   id: string;
@@ -76,8 +86,15 @@ function mapearBloco(bloco: BlocoBanco): BlocoDoPlano {
     nivel: bloco.nivel,
     ordem: Number(bloco.ordem),
     topicoId: bloco.topico_id,
+    nQuestoes: Number(bloco.n_questoes ?? 0),
+    nQuestoesCheias: Number(bloco.n_questoes_cheias ?? bloco.n_questoes ?? 0),
     minutosEstimados: Number(bloco.minutos_estimados),
+    minutosEstimadosCheios: Number(
+      bloco.minutos_estimados_cheios ?? bloco.minutos_estimados,
+    ),
     motivo: bloco.motivo,
+    ajusteUsuario: bloco.ajuste_usuario === true,
+    adiadoDe: bloco.adiado_de ?? null,
     conclusao: null,
   };
 }
@@ -160,7 +177,9 @@ export async function consultarPlanoDoDia(
   const plano = planoConsulta.data as PlanoBanco;
   const blocosConsulta = await cliente
     .from("plano_bloco")
-    .select("id, tipo, nivel, ordem, topico_id, minutos_estimados, motivo")
+    .select(
+      "id, tipo, nivel, ordem, topico_id, n_questoes, n_questoes_cheias, minutos_estimados, minutos_estimados_cheios, motivo, ajuste_usuario, adiado_de",
+    )
     .eq("plano_dia_id", plano.id)
     .order("nivel", { ascending: true })
     .order("ordem", { ascending: true });
@@ -181,3 +200,105 @@ export async function consultarPlanoDoDia(
     metaCheia: blocos.filter((bloco) => bloco.nivel === "meta_cheia"),
   };
 }
+
+export type ReordenarBlocosEntrada = {
+  planoId: string;
+  blocoIds: readonly string[];
+  nivel?: NivelDoPlano | null;
+};
+
+export type ErroDeOperacaoDoPlano =
+  | "usuario_ausente"
+  | "plano_alheio"
+  | "bloco_alheio"
+  | "bloco_concluido"
+  | "permutacao_invalida"
+  | "agenda_invalida"
+  | "falha_operacao";
+
+export class PlanoRecusado extends Error {
+  readonly motivo: ErroDeOperacaoDoPlano;
+
+  constructor(motivo: ErroDeOperacaoDoPlano, mensagem: string) {
+    super(mensagem);
+    this.name = "PlanoRecusado";
+    this.motivo = motivo;
+  }
+}
+
+function recusarOperacao(erro: { message?: string } | null, acao: string): never {
+  const mensagem = erro?.message ?? `não foi possível ${acao}`;
+  const motivo = (Object.keys({
+    usuario_ausente: true,
+    plano_alheio: true,
+    bloco_alheio: true,
+    bloco_concluido: true,
+    permutacao_invalida: true,
+    agenda_invalida: true,
+  }).find((chave) => mensagem.includes(chave)) ?? "falha_operacao") as ErroDeOperacaoDoPlano;
+  throw new PlanoRecusado(motivo, mensagem);
+}
+
+/** Reordena atomicamente uma permutação completa de blocos pendentes. */
+export async function reordenarBlocosDoPlano(
+  cliente: SupabaseClient,
+  entrada: ReordenarBlocosEntrada,
+): Promise<void> {
+  const { error } = await cliente.rpc("reordenar_plano_do_dia", {
+    p_plano_id: entrada.planoId,
+    p_nivel: entrada.nivel ?? null,
+    p_ordens: [...entrada.blocoIds],
+  });
+  if (error) recusarOperacao(error, "reordenar os blocos");
+}
+
+/** Leva um bloco pendente para o próximo dia declarado, sem apagar sessão. */
+export async function adiarBlocoDoPlano(
+  cliente: SupabaseClient,
+  blocoId: string,
+): Promise<string> {
+  const { data, error } = await cliente.rpc("adiar_plano_bloco", {
+    p_bloco_id: blocoId,
+  });
+  if (error) recusarOperacao(error, "adiar o bloco");
+
+  const linha = Array.isArray(data) ? data[0] : data;
+  if (typeof linha === "string") return linha;
+  if (linha && typeof linha === "object" && "adiar_plano_bloco" in linha) {
+    const dataDestino = (linha as { adiar_plano_bloco?: unknown }).adiar_plano_bloco;
+    if (typeof dataDestino === "string") return dataDestino;
+  }
+  throw new PlanoRecusado("falha_operacao", "o adiamento não devolveu a data de destino");
+}
+
+/** Escolhe a versão curta sem reduzir novamente um bloco já encurtado. */
+export async function encurtarBlocoDoPlano(
+  cliente: SupabaseClient,
+  blocoId: string,
+): Promise<Pick<BlocoDoPlano, "nQuestoes" | "minutosEstimados">> {
+  const { data, error } = await cliente.rpc("encurtar_plano_bloco", {
+    p_bloco_id: blocoId,
+  });
+  if (error) recusarOperacao(error, "encurtar o bloco");
+
+  const linha = Array.isArray(data) ? data[0] : data;
+  const bruto = linha as { n_questoes?: unknown; minutos_estimados?: unknown } | null;
+  if (
+    bruto === null ||
+    typeof bruto !== "object" ||
+    typeof bruto.n_questoes !== "number" ||
+    typeof bruto.minutos_estimados !== "number"
+  ) {
+    throw new PlanoRecusado("falha_operacao", "a versão curta não devolveu o tamanho do bloco");
+  }
+  return {
+    nQuestoes: bruto.n_questoes,
+    minutosEstimados: bruto.minutos_estimados,
+  };
+}
+
+// Nomes curtos para os consumidores de área logada. Os aliases mantêm o
+// contrato do módulo no domínio sem expor nomes de função SQL à Onda 3.
+export const reordenarBlocosPendentes = reordenarBlocosDoPlano;
+export const adiarBloco = adiarBlocoDoPlano;
+export const escolherVersaoCurta = encurtarBlocoDoPlano;

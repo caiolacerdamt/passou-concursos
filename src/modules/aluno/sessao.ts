@@ -141,6 +141,7 @@ type BlocoDaConsulta = {
   plano_dia_id: string;
   tipo: TipoDeBloco;
   topico_id: string | null;
+  n_questoes?: number | null;
 };
 
 type SessaoDaConsulta = {
@@ -272,7 +273,7 @@ export async function prepararSessao(
   const bloco = await lerUma<BlocoDaConsulta>(
     cliente
       .from("plano_bloco")
-      .select("id, plano_dia_id, tipo, topico_id")
+      .select("id, plano_dia_id, tipo, topico_id, n_questoes")
       .eq("id", blocoId)
       .maybeSingle(),
     "bloco do plano",
@@ -285,10 +286,18 @@ export async function prepararSessao(
     );
   }
 
-  const [questoesPorBloco, diasSemRepetir] = await getParams(
+  const [questoesPadrao, diasSemRepetir] = await getParams(
     "param.m4.questoes_por_bloco",
     "param.m4.dias_sem_repetir_questao",
   );
+  // A quantidade pertence ao snapshot do bloco. O fallback mantém a leitura
+  // operável para planos legados que ainda não tinham a coluna nova.
+  const questoesPorBloco =
+    typeof bloco.n_questoes === "number" &&
+    Number.isInteger(bloco.n_questoes) &&
+    bloco.n_questoes > 0
+      ? bloco.n_questoes
+      : questoesPadrao;
   const contexto = contextoDoBloco(bloco.tipo);
   const idsRecentes =
     contexto === "treino"

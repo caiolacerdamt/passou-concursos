@@ -6,12 +6,14 @@ const dependencias = vi.hoisted(() => ({
   cliente: vi.fn(),
   consultar: vi.fn(),
   sair: vi.fn(),
+  reportar: vi.fn(),
 }));
 
 vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias.matricula }));
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/modules/aluno/resumo-sessao", () => ({ consultarResumoDaSessao: dependencias.consultar }));
 vi.mock("@/app/entrar/acoes", () => ({ sair: dependencias.sair }));
+vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("@/modules/aluno/resumo-tela", () => ({
   ResumoTela: ({ resumo }: { resumo: { id: string } }) => <div>Resumo renderizado: {resumo.id}</div>,
 }));
@@ -46,5 +48,30 @@ describe("rota do resumo", () => {
     expect(html).toContain("Resumo indisponível");
     expect(html).toContain("Voltar ao plano de hoje");
     expect(html).not.toContain("Resumo renderizado");
+  });
+
+  it("interrompe antes da consulta quando a matrícula não autoriza o acesso", async () => {
+    dependencias.matricula.mockRejectedValue(new Error("NEXT_REDIRECT:/assinar"));
+
+    await expect(
+      Resumo({ params: Promise.resolve({ id: "sessao-1" }) }),
+    ).rejects.toThrow("NEXT_REDIRECT:/assinar");
+    expect(dependencias.cliente).not.toHaveBeenCalled();
+    expect(dependencias.consultar).not.toHaveBeenCalled();
+  });
+
+  it("transforma falha interna em estado genérico sem expor a mensagem técnica", async () => {
+    dependencias.consultar.mockRejectedValue(new Error("detalhe privado do banco"));
+
+    const html = renderToStaticMarkup(
+      await Resumo({ params: Promise.resolve({ id: "sessao-1" }) }),
+    );
+
+    expect(html).toContain("Algo deu errado");
+    expect(html).not.toContain("detalhe privado do banco");
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      expect.any(Error),
+      { modulo: "aluno", operacao: "consultar_resumo_sessao" },
+    );
   });
 });

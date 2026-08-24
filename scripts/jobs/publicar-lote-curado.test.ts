@@ -38,6 +38,18 @@ describe("leitura do lote curado", () => {
     expect(() => lerLoteCurado(linha({ fontes_citadas: [] }))).toThrow(/sem fonte/);
     expect(() => lerLoteCurado(`${linha()}\n${linha()}`)).toThrow(/repetida/);
   });
+
+  it("recusa fonte auto-referente do lote antigo", () => {
+    expect(() =>
+      lerLoteCurado(
+        linha({
+          fontes_citadas: [
+            { doc_id: "curado:SRC-1:46", trecho: "Gabarito oficial da questão 46: C" },
+          ],
+        }),
+      ),
+    ).toThrow(/fonte auto-referente/);
+  });
 });
 
 function clienteFalso(questao: Record<string, unknown>) {

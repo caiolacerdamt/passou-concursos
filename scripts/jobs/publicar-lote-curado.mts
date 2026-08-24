@@ -3,10 +3,12 @@
  * Publica um lote curado de questões já importadas, distribuindo o acervo por
  * matéria sem nenhuma chamada a provedor externo.
  *
- * O lote traz a explicação escrita fora do produto (revisão humana) e a letra
- * que ela justifica. A verdade continua sendo o gabarito do banco: se a letra do
- * arquivo divergir da coluna `resposta_correta`, o job para e não publica nada.
- * A IA não decide alternativa correta aqui — nem em lugar nenhum.
+ * O lote pode trazer explicação curada por operador ou rascunho gerado fora do
+ * produto. A aprovação automática não é uma revisão: em regra, o operador deve
+ * revisar o arquivo antes de rodar. O Grupo 4 registra uma exceção operacional
+ * para este lote, mas a verdade continua sendo o gabarito do banco: se a letra
+ * divergir da coluna `resposta_correta`, o job para e não publica nada.
+ * A IA não decide alternativa correta aqui.
  */
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -124,6 +126,14 @@ export function lerLoteCurado(conteudo: string): ExplicacaoCurada[] {
         (fonte as FonteCitada).doc_id.trim() !== "" &&
         (fonte as FonteCitada).trecho.trim() !== "";
       if (!valida) throw new Error(`linha ${posicao}: fonte sem doc_id ou trecho`);
+      const docId = (fonte as FonteCitada).doc_id.trim();
+      const trecho = (fonte as FonteCitada).trecho.trim();
+      if (
+        docId.startsWith("curado:") &&
+        /^Gabarito oficial da questão \d+: [A-E]$/.test(trecho)
+      ) {
+        throw new Error(`linha ${posicao}: fonte auto-referente não é aceita`);
+      }
     }
 
     const explicacao: ExplicacaoCurada = {

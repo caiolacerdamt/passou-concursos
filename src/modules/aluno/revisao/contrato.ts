@@ -31,6 +31,17 @@ export type EntradaRevisao = {
   topicoId: string;
   /** Acertos / total do bloco Revisar naquele topico, de 0 a 1. */
   percentualAcerto: number;
+  /**
+   * Bloco que originou a revisão. Quando presente, torna a gravação
+   * idempotente: uma retentativa pode concluir o agendamento sem criar outro
+   * evento para o mesmo bloco.
+   */
+  sessaoId?: string;
+  /**
+   * Bloco de conteúdo concluído pela primeira vez. A primeira cobrança fica
+   * para amanhã; uma agenda existente não é recalculada nem gera evento.
+   */
+  primeiraRevisao?: boolean;
   /** Injetavel para o teste fixar o dia. Producao nunca passa. */
   agora?: Date;
 };

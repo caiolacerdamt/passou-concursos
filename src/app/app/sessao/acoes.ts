@@ -16,6 +16,8 @@ import {
   validarResposta,
   type CausaDoTreino,
 } from "@/modules/aluno/tentativas";
+import { agendarRevisao } from "@/modules/aluno/revisao";
+import { finalizarBloco } from "@/modules/aluno/progresso";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 
 export type { ExplicacaoPublica } from "@/modules/aluno/explicacao-publica";
@@ -136,15 +138,20 @@ export async function responderQuestao(
       supabase,
     );
 
-    const [explicacao, sessaoConcluida] = await Promise.all([
-      lerExplicacaoPublica(
-        supabase,
-        alvo.item.questaoId,
-        alvo.item.questaoVersao,
-        alvo.questao.respostaCorreta,
-      ),
-      encerrarSeNaoHouverPendencias(supabase, sessaoId),
-    ]);
+    const sessaoConcluida = await encerrarSeNaoHouverPendencias(supabase, sessaoId);
+    if (sessaoConcluida) {
+      // A tentativa já está confirmada no log. A sincronização é uma segunda
+      // transação deliberada: se ela falhar, o fato append-only continua salvo
+      // e a action devolve erro visível para uma nova tentativa.
+      await sincronizarDepoisDoFechamento(supabase, sessaoId);
+    }
+
+    const explicacao = await lerExplicacaoPublica(
+      supabase,
+      alvo.item.questaoId,
+      alvo.item.questaoVersao,
+      alvo.questao.respostaCorreta,
+    );
 
     return {
       status: "respondida",
@@ -198,6 +205,32 @@ export async function responderQuestao(
       mensagem: "Não conseguimos registrar esta resposta. Tente novamente.",
     };
   }
+}
+
+async function sincronizarDepoisDoFechamento(
+  supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
+  sessaoId: string,
+): Promise<void> {
+  const fechamento = await finalizarBloco(supabase, sessaoId);
+  const eConteudo = fechamento.contexto === "plano" || fechamento.contexto === "treino";
+  if (fechamento.contexto !== "revisao" && !eConteudo) return;
+  if (fechamento.topicoId === null) {
+    if (fechamento.contexto === "revisao") {
+      throw new Error("bloco de revisão concluído sem tópico");
+    }
+    return;
+  }
+
+  await agendarRevisao(
+    {
+      userId: fechamento.userId,
+      topicoId: fechamento.topicoId,
+      percentualAcerto: fechamento.nAcertos / fechamento.nRespostas,
+      sessaoId,
+      primeiraRevisao: eConteudo,
+    },
+    supabase,
+  );
 }
 
 function texto(formulario: FormData, campo: string): string {

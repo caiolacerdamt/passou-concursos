@@ -5,12 +5,16 @@ const dependencias = vi.hoisted(() => ({
   matricula: vi.fn(),
   cliente: vi.fn(),
   consultar: vi.fn(),
+  reportar: vi.fn(),
 }));
 
 vi.mock("@/modules/conta/matricula", () => ({
   exigirMatriculaAtiva: dependencias.matricula,
 }));
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
+vi.mock("@/modules/observabilidade/reporte", () => ({
+  reportarErro: dependencias.reportar,
+}));
 vi.mock("@/modules/aluno/estudo-guiado/consulta", async (importOriginal) => {
   const atual = await importOriginal<typeof import("@/modules/aluno/estudo-guiado/consulta")>();
   return { ...atual, consultarEstudoGuiado: dependencias.consultar };
@@ -50,6 +54,7 @@ describe("/app/estudo", () => {
     expect(html).toContain("/app");
     expect(dependencias.cliente).not.toHaveBeenCalled();
     expect(dependencias.consultar).not.toHaveBeenCalled();
+    expect(dependencias.reportar).not.toHaveBeenCalled();
   });
 
   it("consulta pela sessão/RLS e renderiza o estudo do bloco", async () => {
@@ -70,6 +75,7 @@ describe("/app/estudo", () => {
     );
     expect(alheio).toContain("Este bloco não está disponível");
     expect(alheio).toContain("Voltar ao plano de hoje");
+    expect(dependencias.reportar).not.toHaveBeenCalled();
 
     dependencias.consultar.mockRejectedValue(
       new EstudoGuiadoRecusado("bloco_concluido", "concluído"),
@@ -79,6 +85,27 @@ describe("/app/estudo", () => {
     );
     expect(concluido).toContain("Este bloco já foi concluído");
     expect(concluido).toContain("Voltar ao plano de hoje");
+    expect(dependencias.reportar).not.toHaveBeenCalled();
+  });
+
+  it("reporta falha de leitura sem expor o detalhe técnico na tela", async () => {
+    dependencias.consultar.mockRejectedValue(
+      new EstudoGuiadoRecusado(
+        "falha_leitura",
+        "Falha ao ler recursos curados: detalhe interno",
+      ),
+    );
+
+    const html = renderToStaticMarkup(
+      await Estudo({ searchParams: Promise.resolve({ bloco: id }) }),
+    );
+
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      expect.any(Error),
+      { modulo: "aluno", operacao: "consultar_estudo_guiado" },
+    );
+    expect(html).toContain("Algo deu errado");
+    expect(html).not.toContain("detalhe interno");
   });
 
   it("mantém a guarda de matrícula antes da leitura", async () => {

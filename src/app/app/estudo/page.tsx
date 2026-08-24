@@ -5,6 +5,7 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarEstudoGuiado, EstudoGuiadoRecusado } from "@/modules/aluno/estudo-guiado/consulta";
 import { EstudoGuiadoTela } from "@/modules/aluno/estudo-guiado/tela";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 import { Estado } from "@/modules/ui/estado";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,12 @@ export default async function Estudo({ searchParams }: Props) {
     estudo = await consultarEstudoGuiado(supabase, blocoId);
   } catch (erro) {
     if (!(erro instanceof EstudoGuiadoRecusado)) throw erro;
+    if (erro.motivo === "falha_leitura") {
+      reportarErro(new Error("falha ao consultar estudo guiado"), {
+        modulo: "aluno",
+        operacao: "consultar_estudo_guiado",
+      });
+    }
     return (
       <TelaBase>
         <EstadoDaFalha motivo={erro.motivo} />

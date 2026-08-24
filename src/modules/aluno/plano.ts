@@ -10,6 +10,13 @@ export type TipoDeBloco = (typeof TIPOS_DE_BLOCO)[number];
 
 export type NivelDoPlano = "piso" | "meta_cheia";
 
+export type ConclusaoDoBloco = {
+  sessaoId: string;
+  nQuestoes: number;
+  nAcertos: number;
+  encerradaEm: string;
+};
+
 export type BlocoDoPlano = {
   id: string;
   tipo: TipoDeBloco;
@@ -18,6 +25,7 @@ export type BlocoDoPlano = {
   topicoId: string | null;
   minutosEstimados: number;
   motivo: string | null;
+  conclusao: ConclusaoDoBloco | null;
 };
 
 export type PlanoDoDia = {
@@ -38,6 +46,12 @@ type BlocoBanco = {
   minutos_estimados: number;
   motivo: string | null;
 };
+type SessaoEncerradaBanco = {
+  id: string;
+  plano_bloco_id: string;
+  encerrada_em: string;
+};
+type TentativaDoPlacarBanco = { sessao_id: string; correta: boolean };
 
 export function dataHojeDoProduto(data = new Date()): string {
   const partes = new Intl.DateTimeFormat("en", {
@@ -64,7 +78,68 @@ function mapearBloco(bloco: BlocoBanco): BlocoDoPlano {
     topicoId: bloco.topico_id,
     minutosEstimados: Number(bloco.minutos_estimados),
     motivo: bloco.motivo,
+    conclusao: null,
   };
+}
+
+async function conclusoesDosBlocos(
+  cliente: SupabaseClient,
+  blocos: readonly BlocoDoPlano[],
+): Promise<Map<string, ConclusaoDoBloco>> {
+  if (blocos.length === 0) return new Map();
+
+  const sessoesConsulta = await cliente
+    .from("sessoes")
+    .select("id, plano_bloco_id, encerrada_em")
+    .in("plano_bloco_id", blocos.map((bloco) => bloco.id))
+    .not("encerrada_em", "is", null)
+    .order("encerrada_em", { ascending: false });
+
+  if (sessoesConsulta.error) {
+    throw falhaAoLer("sessões concluídas do plano", sessoesConsulta.error.message);
+  }
+
+  const maisRecentePorBloco = new Map<string, SessaoEncerradaBanco>();
+  for (const sessao of (sessoesConsulta.data ?? []) as SessaoEncerradaBanco[]) {
+    if (!maisRecentePorBloco.has(sessao.plano_bloco_id)) {
+      maisRecentePorBloco.set(sessao.plano_bloco_id, sessao);
+    }
+  }
+
+  const sessoes = [...maisRecentePorBloco.values()];
+  if (sessoes.length === 0) return new Map();
+
+  const tentativasConsulta = await cliente
+    .from("tentativas")
+    .select("sessao_id, correta")
+    .in("sessao_id", sessoes.map((sessao) => sessao.id));
+
+  if (tentativasConsulta.error) {
+    throw falhaAoLer("placar dos blocos concluídos", tentativasConsulta.error.message);
+  }
+
+  const placares = new Map<string, { nQuestoes: number; nAcertos: number }>();
+  for (const tentativa of (tentativasConsulta.data ?? []) as TentativaDoPlacarBanco[]) {
+    const atual = placares.get(tentativa.sessao_id) ?? { nQuestoes: 0, nAcertos: 0 };
+    atual.nQuestoes += 1;
+    if (tentativa.correta) atual.nAcertos += 1;
+    placares.set(tentativa.sessao_id, atual);
+  }
+
+  return new Map(
+    [...maisRecentePorBloco.entries()].map(([blocoId, sessao]) => {
+      const placar = placares.get(sessao.id) ?? { nQuestoes: 0, nAcertos: 0 };
+      return [
+        blocoId,
+        {
+          sessaoId: sessao.id,
+          nQuestoes: placar.nQuestoes,
+          nAcertos: placar.nAcertos,
+          encerradaEm: sessao.encerrada_em,
+        },
+      ];
+    }),
+  );
 }
 
 export async function consultarPlanoDoDia(
@@ -95,6 +170,8 @@ export async function consultarPlanoDoDia(
   }
 
   const blocos = ((blocosConsulta.data ?? []) as BlocoBanco[]).map(mapearBloco);
+  const conclusoes = await conclusoesDosBlocos(cliente, blocos);
+  for (const bloco of blocos) bloco.conclusao = conclusoes.get(bloco.id) ?? null;
 
   return {
     id: plano.id,

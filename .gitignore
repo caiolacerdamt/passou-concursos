@@ -37,8 +37,19 @@ desktop.ini
 *.log
 *.tmp
 
+# Ferramentas locais de agentes e QA (nao fazem parte do produto)
+/.playwright-mcp/
+/.impeccable/
+/.claude/skills/
+/.github/agents/
+/.github/hooks/
+/.github/skills/
+/lp-desktop.png
+/docs/superpowers/specs/2026-08-23-unified-visual-system-design.md
+
 # Provas oficiais e gabaritos (SPEC 09). Fonte legal e o PDF da banca (AD-003),
 # mas binario de prova nao entra no git: sao centenas de KB por arquivo, mudam
 # a cada lote e nao sao codigo. O operador os guarda fora do repositorio.
 /provas/*.pdf
 /provas/*.png
+/fontes/

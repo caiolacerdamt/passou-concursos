@@ -10,19 +10,20 @@ import { Shell } from "@/modules/ui/shell";
 export default function Privacidade() {
   return (
     <Shell acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}>
-      <p className="text-sm font-semibold uppercase tracking-wide text-marca">Documento inicial</p>
-      <h1 className="mt-2 text-3xl font-semibold">Política de privacidade</h1>
-      <p className="mt-2 text-sm text-suave">
-        Versão {VERSAO_ATUAL_DOS_TERMOS} · identificação operacional: {IDENTIFICACAO_PUBLICA_PADRAO}
-      </p>
-      <p className="mt-4 rounded-lg border border-aviso bg-fundo-suave p-4 text-sm leading-6" role="note">
-        Este texto é uma versão inicial e ainda precisa de revisão jurídica. A
-        redação final deve confirmar bases legais, prazos, identidade/CNPJ e canais
-        do titular. Antes da publicação comercial, substitua a identificação e o
-        canal provisórios abaixo pelos dados reais do controlador e do encarregado.
-      </p>
+      <article className="documento mx-auto max-w-3xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Documento inicial</p>
+        <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">Política de privacidade</h1>
+        <p className="mt-3 text-sm text-suave">
+          Versão {VERSAO_ATUAL_DOS_TERMOS} · identificação operacional: {IDENTIFICACAO_PUBLICA_PADRAO}
+        </p>
+        <p className="mt-5 rounded-xl border border-aviso/40 bg-conquista-fundo p-4 text-sm leading-6" role="note">
+          Este texto é uma versão inicial e ainda precisa de revisão jurídica. A
+          redação final deve confirmar bases legais, prazos, identidade/CNPJ e canais
+          do titular. Antes da publicação comercial, substitua a identificação e o
+          canal provisórios abaixo pelos dados reais do controlador e do encarregado.
+        </p>
 
-      <div className="mt-8 space-y-7 leading-7">
+      <div className="mt-12 space-y-9 leading-7">
         <section aria-labelledby="dados-coletados">
           <h2 id="dados-coletados" className="text-xl font-semibold">1. Dados usados no produto</h2>
           <p className="mt-2 text-suave">
@@ -77,6 +78,7 @@ export default function Privacidade() {
       <p className="mt-8 text-sm">
         <Link href="/termos" className="text-marca underline">Ler os termos de uso</Link>
       </p>
+      </article>
     </Shell>
   );
 }

@@ -1,0 +1,17 @@
+{
+  "materias": [
+    { "nome": "Língua Portuguesa", "ordem": 1, "topicos": ["Geral"] },
+    { "nome": "Língua Inglesa", "ordem": 2, "topicos": ["Geral"] },
+    { "nome": "Matemática", "ordem": 3, "topicos": ["Geral"] },
+    { "nome": "Atualidades do Mercado Financeiro", "ordem": 4, "topicos": ["Geral"] },
+    { "nome": "Matemática Financeira", "ordem": 5, "topicos": ["Geral"] },
+    { "nome": "Conhecimentos Bancários", "ordem": 6, "topicos": ["Geral"] },
+    { "nome": "Conhecimentos de Informática", "ordem": 7, "topicos": ["Geral"] },
+    { "nome": "Vendas e Negociação", "ordem": 8, "topicos": ["Geral"] },
+    { "nome": "Estatística", "ordem": 9, "topicos": ["Geral"] },
+    { "nome": "Ética e Compliance", "ordem": 10, "topicos": ["Geral"] },
+    { "nome": "Cultura e Comportamento Digital", "ordem": 11, "topicos": ["Geral"] },
+    { "nome": "Raciocínio Lógico", "ordem": 12, "topicos": ["Geral"] },
+    { "nome": "Legislação e Normas", "ordem": 13, "topicos": ["Geral"] }
+  ]
+}

@@ -2,10 +2,10 @@
   display: inline-flex;
   min-height: 2.75rem;
   align-items: center;
-  border: 1px solid rgb(247 248 246 / 0.18);
-  border-radius: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--color-papel-alto) 24%, transparent);
+  border-radius: 999px;
   padding: 0.6rem 0.8rem;
-  color: rgb(247 248 246 / 0.78);
+  color: color-mix(in srgb, var(--color-papel-alto) 82%, transparent);
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.1;
@@ -16,9 +16,9 @@
 }
 
 .navLink:hover {
-  border-color: rgb(247 248 246 / 0.5);
-  background: rgb(247 248 246 / 0.1);
-  color: #f7f8f6;
+  border-color: color-mix(in srgb, var(--color-papel-alto) 58%, transparent);
+  background: color-mix(in srgb, var(--color-papel-alto) 12%, transparent);
+  color: var(--color-papel-alto);
 }
 
 @media (prefers-reduced-motion: reduce) {

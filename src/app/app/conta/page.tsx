@@ -92,7 +92,7 @@ export default async function Conta({
               />
             </label>
             <input type="hidden" name="user_id" value="não usado" />
-            <button type="submit" className="rounded-lg bg-erro px-5 py-3 font-semibold text-white hover:brightness-95">
+            <button type="submit" className="min-h-11 rounded-full bg-erro px-5 py-3 font-semibold text-white transition hover:brightness-95">
               Apagar dados e conta
             </button>
           </form>

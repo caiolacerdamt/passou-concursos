@@ -20,8 +20,8 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
   );
 
   return (
-    <form action={action} className="mt-8 space-y-6">
-      <section aria-labelledby="preco-selecionado" className="rounded-lg border border-linha bg-fundo-suave p-5">
+    <form action={action} className="mt-9 space-y-7 rounded-card border border-linha bg-painel p-5 shadow-card sm:p-8">
+      <section aria-labelledby="preco-selecionado" className="rounded-xl border border-marca/20 bg-marca-suave p-5">
         <h2 id="preco-selecionado" className="font-semibold">Valores antes da escolha</h2>
         <div className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
           <p>{precos.parcelado.parcelas}x de {precos.parcelado.parcelaFormatada} no cartão</p>
@@ -72,7 +72,7 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
       <fieldset>
         <legend className="text-sm font-semibold">Escolha o meio de pagamento</legend>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <label className="rounded-md border border-linha p-3 text-sm">
+          <label className="rounded-xl border border-linha bg-fundo px-4 py-3 text-sm transition has-[:checked]:border-marca has-[:checked]:bg-marca-suave">
             <input
               className="mr-2"
               type="radio"
@@ -83,7 +83,7 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
             />
             Cartão em 12x
           </label>
-          <label className="rounded-md border border-linha p-3 text-sm">
+          <label className="rounded-xl border border-linha bg-fundo px-4 py-3 text-sm transition has-[:checked]:border-marca has-[:checked]:bg-marca-suave">
             <input
               className="mr-2"
               type="radio"
@@ -93,7 +93,7 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
             />
             Pix à vista
           </label>
-          <label className="rounded-md border border-linha p-3 text-sm">
+          <label className="rounded-xl border border-linha bg-fundo px-4 py-3 text-sm transition has-[:checked]:border-marca has-[:checked]:bg-marca-suave">
             <input
               className="mr-2"
               type="radio"
@@ -133,7 +133,7 @@ export function FormularioCheckout({ precos }: { precos: PrecosPublicos }) {
       <button
         type="submit"
         disabled={pendente}
-        className="rounded-md bg-marca px-5 py-3 font-medium text-fundo disabled:cursor-wait disabled:opacity-60"
+        className="min-h-11 rounded-full bg-marca px-6 py-3 font-medium text-fundo transition hover:bg-marca-apoio disabled:cursor-wait disabled:opacity-60"
       >
         {pendente ? "Preparando cobrança…" : "Continuar para pagamento"}
       </button>

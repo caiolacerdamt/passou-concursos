@@ -20,37 +20,37 @@ export default async function OperadorLayout({ children }: { children: ReactNode
   await exigirOperadorAtivo("abrir_painel");
 
   return (
-    <div className="operador-shell min-h-dvh bg-fundo">
+    <div className="operador-shell app-ui min-h-dvh bg-fundo">
       <a
         href="#conteudo-operador"
-        className="sr-only rounded bg-marca px-4 py-2 text-fundo focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-20"
+        className="sr-only rounded-full bg-marca px-4 py-2 text-fundo focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-20"
       >
         Pular para o conteúdo da mesa
       </a>
 
-      <header className="border-b border-texto/15 bg-texto text-fundo">
+      <header className="border-b border-verde/30 bg-verde text-papel-alto">
         <div className="mx-auto flex w-full max-w-painel flex-wrap items-center justify-between gap-x-6 gap-y-4 px-4 py-4 sm:px-6 lg:py-5">
           <div className="flex min-w-0 items-center gap-3">
-            <span aria-hidden="true" className="operador-marca-linha h-10 w-1 shrink-0 rounded-full bg-evolucao" />
+            <span aria-hidden="true" className="operador-marca-linha h-10 w-1 shrink-0 rounded-full bg-papel-alto/80" />
             <div className="min-w-0">
-              <p className="font-utilitaria text-[0.68rem] uppercase tracking-[0.2em] text-fundo/65">
+              <p className="font-utilitaria text-[0.68rem] uppercase tracking-[0.2em] text-papel-alto/70">
                 Passou Concursos · operação
               </p>
-              <p className="mt-1 truncate font-display text-2xl leading-none sm:text-3xl">
+              <p className="mt-1 truncate font-display text-2xl leading-none tracking-tight sm:text-3xl">
                 Mesa editorial
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 text-xs sm:gap-5 sm:text-sm">
-            <span className="inline-flex items-center gap-2 font-utilitaria uppercase tracking-[0.12em] text-fundo/75">
-              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-evolucao" />
+              <span className="inline-flex items-center gap-2 font-utilitaria uppercase tracking-[0.12em] text-papel-alto/80">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-papel-alto" />
               registro vivo
             </span>
             <form action={sair}>
               <button
                 type="submit"
-                className="rounded-md border border-fundo/35 px-3 py-2 font-semibold text-fundo transition hover:border-fundo hover:bg-fundo/10"
+                className="rounded-full border border-papel-alto/40 px-3.5 py-2 font-semibold text-papel-alto transition hover:border-papel-alto hover:bg-papel-alto/10"
               >
                 Sair
               </button>
@@ -60,7 +60,7 @@ export default async function OperadorLayout({ children }: { children: ReactNode
 
         <nav
           aria-label="Áreas da mesa editorial"
-          className="border-t border-fundo/10 bg-texto/95"
+          className="border-t border-papel-alto/15 bg-verde/95"
         >
           <div className="mx-auto flex w-full max-w-painel flex-wrap gap-2 px-4 py-3 sm:gap-3 sm:px-6">
             <Link className={estilos.navLink} href="/operador">
@@ -79,7 +79,7 @@ export default async function OperadorLayout({ children }: { children: ReactNode
         </nav>
       </header>
 
-      <main id="conteudo-operador" className="mx-auto w-full max-w-painel px-4 py-8 sm:px-6 sm:py-10">
+      <main id="conteudo-operador" className="mx-auto w-full max-w-painel px-4 pb-14 pt-10 sm:px-6 sm:pt-14">
         {children}
       </main>
 

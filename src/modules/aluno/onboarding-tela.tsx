@@ -13,7 +13,7 @@ const DIAS = [
 ] as const;
 
 function campoBase() {
-  return "mt-2 w-full rounded-lg border border-linha bg-painel px-3 py-2.5 text-base shadow-sm";
+  return "mt-2 w-full rounded-xl border border-linha bg-painel px-3 py-3 text-base";
 }
 
 export function OnboardingTela({
@@ -98,7 +98,7 @@ export function OnboardingTela({
               {DIAS.map(([valor, nome]) => (
                 <label
                   key={valor}
-                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-linha px-3 py-2.5 text-sm has-[:checked]:border-marca has-[:checked]:bg-marca/10"
+                  className="flex cursor-pointer items-center gap-2 rounded-xl border border-linha bg-fundo px-3 py-2.5 text-sm has-[:checked]:border-marca has-[:checked]:bg-marca-suave"
                 >
                   <input type="checkbox" name="diasEstudo" value={valor} defaultChecked={valor >= 1 && valor <= 5} />
                   <span>{nome}</span>
@@ -143,7 +143,7 @@ export function OnboardingTela({
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-marca px-4 py-3 font-semibold text-white shadow-sm transition hover:brightness-95"
+          className="min-h-11 w-full rounded-full bg-marca px-4 py-3 font-semibold text-white transition hover:bg-marca-apoio"
         >
           Montar meu plano de hoje
         </button>

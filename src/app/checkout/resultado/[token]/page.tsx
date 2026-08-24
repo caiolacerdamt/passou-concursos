@@ -18,7 +18,7 @@ export default async function ResultadoCheckout({
   if (!pagamento) {
     return (
       <Shell acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}>
-        <h1 className="text-3xl font-semibold">Resultado indisponível</h1>
+        <h1 className="font-display text-4xl leading-tight tracking-tight sm:text-5xl">Resultado indisponível</h1>
         <p className="mt-4 text-suave">Não encontramos este resultado de pagamento.</p>
       </Shell>
     );
@@ -36,12 +36,12 @@ export default async function ResultadoCheckout({
 
   return (
     <Shell acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}>
-      <p className="text-sm font-semibold uppercase tracking-wide text-marca">Resultado do pagamento</p>
-      <h1 className="mt-2 text-3xl font-semibold">{resultado.titulo}</h1>
-      <p className="mt-4 leading-7 text-suave">{resultado.mensagem}</p>
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Resultado do pagamento</p>
+      <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">{resultado.titulo}</h1>
+      <p className="mt-5 max-w-2xl text-lg leading-8 text-suave">{resultado.mensagem}</p>
 
       {resultado.mostraPix ? (
-        <section aria-labelledby="pix-instrucoes" className="mt-6 rounded-lg border border-linha p-5">
+        <section aria-labelledby="pix-instrucoes" className="mt-8 rounded-card border border-linha bg-painel p-5 shadow-card sm:p-6">
           <h2 id="pix-instrucoes" className="font-semibold">Instruções do Pix</h2>
           {pagamento.resultado_pix_copia_e_cola ? (
             <label className="mt-3 block text-sm">
@@ -79,7 +79,7 @@ export default async function ResultadoCheckout({
         <p className="mt-6">
           <a
             href={pagamento.resultado_url}
-            className="rounded-md bg-marca px-5 py-3 font-medium text-fundo"
+            className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio"
             target="_blank"
             rel="noreferrer noopener"
           >
@@ -90,7 +90,7 @@ export default async function ResultadoCheckout({
       {resultado.avisoDeSenha ? (
         <section
           aria-labelledby="proximo-passo"
-          className="mt-6 rounded-lg border border-marca bg-fundo-suave p-5"
+          className="mt-8 rounded-card border border-marca/20 bg-marca-suave p-5 sm:p-6"
         >
           <h2 id="proximo-passo" className="font-semibold">Próximo passo: crie sua senha</h2>
           <p className="mt-2 leading-7 text-suave">{resultado.avisoDeSenha}</p>
@@ -98,7 +98,7 @@ export default async function ResultadoCheckout({
       ) : null}
       {resultado.acessoLiberado ? (
         <p className="mt-6">
-          <Link href="/app" className="rounded-md bg-marca px-5 py-3 font-medium text-fundo">
+          <Link href="/app" className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio">
             Já tenho senha — entrar
           </Link>
         </p>

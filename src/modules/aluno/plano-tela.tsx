@@ -30,7 +30,7 @@ export function PlanoTela({ plano }: { plano: PlanoDoDia }) {
       </header>
 
       {plano.frase ? (
-        <blockquote className="rounded-card border-l-4 border-marca bg-marca/10 px-5 py-4 text-lg leading-8 text-texto">
+      <blockquote className="rounded-card border border-marca/20 bg-marca-suave px-5 py-4 text-lg leading-8 text-texto">
           {plano.frase}
         </blockquote>
       ) : null}
@@ -87,11 +87,15 @@ export function PlanoTela({ plano }: { plano: PlanoDoDia }) {
 }
 
 function BlocoCard({ bloco, compacto = false }: { bloco: BlocoDoPlano; compacto?: boolean }) {
+  const conclusao = bloco.conclusao;
   return (
-    <div className={`rounded-lg border border-linha bg-fundo-suave ${compacto ? "p-3" : "p-4"}`}>
+    <div className={`rounded-lg border ${conclusao ? "border-evolucao/40 bg-evolucao/5" : "border-linha bg-fundo-suave"} ${compacto ? "p-3" : "p-4"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-marca">{TITULOS[bloco.tipo]}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-semibold text-marca">{TITULOS[bloco.tipo]}</p>
+            {conclusao ? <span className="rounded-full bg-evolucao/10 px-2 py-0.5 text-xs font-semibold text-evolucao">Concluído</span> : null}
+          </div>
           <h3 className="mt-1 truncate font-semibold">
             {bloco.topicoId ? "Bloco focado no assunto" : "Assuntos misturados"}
           </h3>
@@ -99,12 +103,26 @@ function BlocoCard({ bloco, compacto = false }: { bloco: BlocoDoPlano; compacto?
         <span className="shrink-0 font-utilitaria text-xs text-suave">{bloco.minutosEstimados} min</span>
       </div>
       <p className="mt-2 text-sm leading-6 text-suave">{bloco.motivo ?? DESCRICOES[bloco.tipo]}</p>
-      <Link
-        href={`/app/sessao?bloco=${encodeURIComponent(bloco.id)}`}
-        className="mt-4 inline-flex rounded-lg border border-marca px-3 py-2 text-sm font-semibold text-marca transition hover:bg-marca hover:text-white"
-      >
-        Começar bloco
-      </Link>
+      {conclusao ? (
+        <>
+          <p className="mt-3 text-sm font-semibold text-evolucao">
+            {conclusao.nQuestoes} questões · {conclusao.nAcertos} acertos
+          </p>
+          <Link
+            href={`/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`}
+            className="mt-3 inline-flex min-h-10 items-center rounded-full border border-evolucao px-4 py-2 text-sm font-semibold text-evolucao transition hover:bg-evolucao hover:text-white"
+          >
+            Ver resumo
+          </Link>
+        </>
+      ) : (
+        <Link
+          href={`/app/sessao?bloco=${encodeURIComponent(bloco.id)}`}
+          className="mt-4 inline-flex min-h-10 items-center rounded-full border border-marca px-4 py-2 text-sm font-semibold text-marca transition hover:bg-marca hover:text-white"
+        >
+          Começar bloco
+        </Link>
+      )}
     </div>
   );
 }

@@ -156,11 +156,11 @@ function FiltrosDoCaderno({ dados }: { dados: DadosProgresso }) {
       </label>
 
       <div className="flex flex-wrap gap-2">
-        <button type="submit" className="min-h-11 rounded-lg bg-marca px-4 py-2 text-sm font-semibold text-white hover:brightness-95">
+        <button type="submit" className="min-h-11 rounded-full bg-marca px-5 py-2 text-sm font-semibold text-white transition hover:bg-marca-apoio">
           Filtrar
         </button>
         {queryDoFiltro(dados) ? (
-          <Link href="/app/progresso" className="inline-flex min-h-11 items-center rounded-lg border border-linha px-4 py-2 text-sm font-semibold text-marca hover:bg-fundo-suave">
+          <Link href="/app/progresso" className="inline-flex min-h-11 items-center rounded-full border border-linha px-4 py-2 text-sm font-semibold text-marca hover:bg-fundo-suave">
             Limpar
           </Link>
         ) : null}

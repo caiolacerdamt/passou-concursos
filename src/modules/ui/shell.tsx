@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 /**
  * O shell de toda tela (UI-01 AC3, UI-03 AC4).
@@ -28,7 +29,7 @@ export function Shell({
   const larguraClasse = largura === "painel" ? "max-w-painel" : "max-w-leitura";
 
   return (
-    <div className="min-h-dvh">
+    <div className="app-ui min-h-dvh">
       {/*
        * `sr-only focus:not-sr-only`: invisivel para quem usa mouse, aparece no
        * instante em que recebe foco. Precisa ser o primeiro do documento — um
@@ -36,19 +37,28 @@ export function Shell({
        */}
       <a
         href="#conteudo"
-        className="sr-only rounded bg-marca px-4 py-2 text-fundo focus:not-sr-only focus:absolute focus:top-2 focus:left-2"
+        className="sr-only rounded-full bg-marca px-4 py-2 text-fundo focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
       >
         Pular para o conteúdo
       </a>
 
-      <header className="border-b border-linha bg-painel/90">
-        <div className={`mx-auto flex w-full ${larguraClasse} flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6`}>
-          <span className="font-semibold">Passou Concursos</span>
-          {acoes}
+      <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5">
+        <div className={`mx-auto flex w-full ${larguraClasse} flex-wrap items-center gap-3 rounded-full border border-linha bg-painel/95 px-3 py-2.5 shadow-card backdrop-blur sm:px-4`}>
+          <Link href="/" className="group inline-flex min-h-10 items-center gap-2 rounded-full px-2.5 text-sm font-semibold tracking-tight text-texto transition-colors hover:text-marca">
+            <span aria-hidden="true" className="grid size-7 place-items-center rounded-[9px] bg-marca transition-transform group-hover:rotate-3">
+              <svg viewBox="0 0 32 32" className="size-5" fill="none">
+                <path d="M8 17.5l4.5 4.5L24 10.5" stroke="var(--color-painel)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <span>Passou Concursos</span>
+          </Link>
+          <div className="app-actions ml-auto flex flex-wrap items-center justify-end gap-2 text-sm">
+            {acoes}
+          </div>
         </div>
       </header>
 
-      <main id="conteudo" className={`mx-auto w-full ${larguraClasse} px-4 py-6 sm:px-6`}>
+      <main id="conteudo" className={`mx-auto w-full ${larguraClasse} px-4 pb-14 pt-10 sm:px-6 sm:pt-14`}>
         {children}
       </main>
     </div>

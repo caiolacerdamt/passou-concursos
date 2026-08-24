@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
+
+const geist = Geist({ subsets: ["latin"], variable: "--fonte-geist", display: "swap" });
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--fonte-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Passou Concursos",
@@ -22,7 +30,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body className={`${geist.variable} ${geistMono.variable}`}>{children}</body>
     </html>
   );
 }

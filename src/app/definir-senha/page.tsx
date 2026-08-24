@@ -28,7 +28,9 @@ export default async function DefinirSenha({
 
   return (
     <Shell>
-      <h1 className="text-2xl font-semibold">Defina sua senha</h1>
+      <section className="mx-auto max-w-md rounded-card border border-linha bg-painel p-6 shadow-card sm:p-9" aria-labelledby="titulo-senha">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Acesso seguro</p>
+      <h1 id="titulo-senha" className="mt-3 font-display text-4xl leading-tight tracking-tight">Defina sua senha</h1>
 
       {erro ? (
         <p role="alert" className="mt-4 rounded-md border border-erro/40 bg-fundo-suave px-4 py-3 text-erro">
@@ -55,10 +57,11 @@ export default async function DefinirSenha({
             Ao menos {MINIMO_DE_CARACTERES} caracteres.
           </p>
         </div>
-        <button type="submit" className="rounded-md bg-marca px-4 py-2 font-medium text-fundo">
+        <button type="submit" className="min-h-11 rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio">
           Salvar e entrar
         </button>
       </form>
+      </section>
     </Shell>
   );
 }

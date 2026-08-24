@@ -11,7 +11,9 @@ export default async function RecuperarSenha({
 
   return (
     <Shell>
-      <h1 className="text-2xl font-semibold">Definir uma nova senha</h1>
+      <section className="mx-auto max-w-md rounded-card border border-linha bg-painel p-6 shadow-card sm:p-9" aria-labelledby="titulo-recuperacao">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Acesso seguro</p>
+      <h1 id="titulo-recuperacao" className="mt-3 font-display text-4xl leading-tight tracking-tight">Definir uma nova senha</h1>
 
       {enviado ? (
         <p role="status" className="mt-4 rounded-md border border-linha bg-fundo-suave px-4 py-3">
@@ -34,12 +36,13 @@ export default async function RecuperarSenha({
           </div>
           <button
             type="submit"
-            className="rounded-md bg-marca px-4 py-2 font-medium text-fundo"
+            className="min-h-11 rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio"
           >
             Enviar o link
           </button>
         </form>
       )}
+      </section>
     </Shell>
   );
 }

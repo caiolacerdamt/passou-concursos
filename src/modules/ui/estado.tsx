@@ -23,7 +23,7 @@ export type EstadoProps =
   | { tipo: "degradado"; oQueCaiu: string };
 
 const caixa =
-  "rounded-lg border border-linha bg-fundo-suave px-4 py-5 text-sm sm:px-6";
+  "rounded-card border border-linha bg-painel px-5 py-5 text-sm shadow-card sm:px-6";
 
 export function Estado(props: EstadoProps) {
   switch (props.tipo) {

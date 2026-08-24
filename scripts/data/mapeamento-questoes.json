@@ -1,0 +1,5582 @@
+{
+  "BB-2021-AC-A-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-A-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-B-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2021-AC-C-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-A-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-B-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-011": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-012": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-013": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-014": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-015": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2023-AC-C-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-006": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-007": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-008": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-009": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-010": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-011": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-012": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-013": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-014": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-015": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-016": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-017": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-018": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-019": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-020": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-021": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-022": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-023": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-024": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-025": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-026": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-027": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-028": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-029": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-030": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-046": {
+    "materia": "Cultura e Comportamento Digital",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-047": {
+    "materia": "Cultura e Comportamento Digital",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-048": {
+    "materia": "Cultura e Comportamento Digital",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-049": {
+    "materia": "Cultura e Comportamento Digital",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-050": {
+    "materia": "Cultura e Comportamento Digital",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-051": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-052": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-053": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-054": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-055": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2024-TBN-P1-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-011": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-012": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-013": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-014": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-015": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-016": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-017": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-018": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-019": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-020": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-021": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-022": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-023": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-024": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-025": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-026": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-027": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-028": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-029": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-030": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-031": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-032": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-033": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-034": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-035": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-036": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-037": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-038": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-039": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-040": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-046": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-047": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-048": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-049": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-050": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-051": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-052": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-053": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-054": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-055": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2021-TBN-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-006": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-007": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "CAIXA-2012-TBN-008": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-006": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-007": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-008": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-009": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-010": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-011": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-012": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-013": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-014": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-015": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-016": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-017": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-018": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-019": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-020": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-021": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-022": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-023": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-024": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-025": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-026": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-027": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-028": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-029": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-030": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-031": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-032": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-033": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-034": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-035": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-036": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-037": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-038": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-039": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-040": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2024-TB-A-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-021": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-022": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-023": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-024": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-025": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-026": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-027": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-028": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-029": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-030": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-056": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-057": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-059": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2024-AB1-060": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-011": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-012": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-013": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-014": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-015": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-021": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-022": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-023": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-024": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-025": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-026": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-027": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-028": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-029": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-030": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-031": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-032": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-033": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-034": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-035": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-046": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-047": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-071": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-072": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-073": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-074": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-075": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-076": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-077": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-078": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-079": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANRISUL-2023-ESC-080": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-026": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-027": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-028": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-029": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-030": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-031": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-032": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-033": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-034": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-035": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-051": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-052": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-053": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-054": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-055": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-066": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-067": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-068": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-069": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANESE-2025-TB1-070": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-011": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-012": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-013": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-014": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-015": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-016": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-017": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-018": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-019": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-020": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-021": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-022": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-023": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-024": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-025": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-026": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-027": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-028": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-029": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-030": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-031": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-032": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-036": {
+    "materia": "Ética e Compliance",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-038": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-039": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-041": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-042": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-046": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-047": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-048": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-049": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-051": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-053": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-055": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-056": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-057": {
+    "materia": "Legislação e Normas",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-059": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2025-TB-C1-060": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-011": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-012": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-013": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-014": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-015": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-016": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-017": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-018": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-019": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-020": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-021": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-022": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-023": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-024": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-025": {
+    "materia": "Raciocínio Lógico",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-026": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-027": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-028": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-029": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-030": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-031": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-032": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-033": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-034": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-035": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-056": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-058": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-059": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-060": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-061": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-062": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-063": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-064": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-065": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANESTES-2023-TB-T1-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-007": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-008": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-009": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-010": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-012": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-013": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-014": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-041": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-042": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-051": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-052": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-053": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-054": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-055": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-056": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-057": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-058": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-059": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BRB-2022-201-TA-060": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-011": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-012": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-013": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-014": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-015": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-016": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-017": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-018": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-019": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-020": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-021": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-022": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-023": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-024": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-025": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-026": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-027": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-028": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-029": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-030": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-031": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-048": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-049": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-050": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-052": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-053": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-054": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-055": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-056": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-057": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-058": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-059": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-060": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-061": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-062": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-063": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-064": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-065": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-066": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-067": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-068": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-069": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-070": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-071": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-072": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-073": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-074": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-075": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-076": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-077": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-078": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-079": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-080": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-081": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-082": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-083": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-084": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-085": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-086": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-087": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-088": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-089": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-090": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-091": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-092": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-093": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-094": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-095": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-096": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-097": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-098": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-099": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-100": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-101": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-102": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-103": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-104": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-105": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-106": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-107": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-108": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-109": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-110": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-111": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-112": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-113": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-114": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-115": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-116": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-117": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-118": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-119": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BNB-2018-AB1-120": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-006": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-007": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-008": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-009": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-010": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-011": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-012": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-013": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-014": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-015": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-021": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-022": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-023": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-024": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-025": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-026": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-027": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-028": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-029": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-030": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-031": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-032": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-033": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-034": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-035": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-042": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-043": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-044": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-045": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-046": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-056": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-057": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-059": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BASA-2022-TB-060": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-016": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-017": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-018": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-019": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-020": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-026": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-027": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-028": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-029": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-030": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-031": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-032": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-033": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-034": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-035": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-036": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-037": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-038": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-039": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-040": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-041": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-043": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-044": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-045": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-056": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-057": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-059": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANPARA-2018-TB-AM-060": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-011": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-012": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-013": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-014": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-015": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-016": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-017": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-018": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-019": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-020": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-021": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-022": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-023": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-024": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-025": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-026": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-027": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-028": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-029": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-030": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-031": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-032": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-033": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-034": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-035": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-036": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-037": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-038": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-039": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-040": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-041": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-042": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-043": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-044": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-045": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-046": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-047": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-048": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-049": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-050": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-051": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-052": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-053": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-054": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-056": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-057": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-059": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-060": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-061": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-062": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-063": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-064": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-065": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-066": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-067": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-068": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-069": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-070": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-071": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-072": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-073": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-074": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-075": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-076": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-077": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-078": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-079": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BANRISUL-2019-ESC-E-080": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-016": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-017": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-018": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-019": {
+    "materia": "Matemática Financeira",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-026": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-027": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-028": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-029": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2010-ESC-BRANCA-030": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-006": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-007": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-008": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-009": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-010": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-016": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-017": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-018": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-019": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-020": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-026": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-027": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-028": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-029": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2012-ESC-GAB1-030": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-006": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-007": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-008": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-009": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-010": {
+    "materia": "Língua Inglesa",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-011": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-012": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-013": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-014": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-015": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-021": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-022": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-023": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-024": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-025": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-026": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-027": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-028": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-029": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-030": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-031": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-032": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-033": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-034": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-035": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-036": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-037": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-038": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-039": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BB-2018-ESC-GAB1-040": {
+    "materia": "Estatística",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-001": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-002": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-003": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-004": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-005": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-006": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-007": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-008": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-009": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "BASA-2018-TB-GAB1-0001-010": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  }
+}

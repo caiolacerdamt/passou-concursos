@@ -3,6 +3,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
+import "./globals.css";
+
 /**
  * Erro de renderizacao do React (INFRA-09 AC1).
  *
@@ -24,12 +26,15 @@ export default function GlobalError({
 
   return (
     <html lang="pt-BR">
-      <body>
-        <h1>Algo deu errado</h1>
-        <p>
-          Já fomos avisados e estamos olhando. Tente recarregar a página em
-          alguns instantes.
-        </p>
+      <body className="app-ui flex min-h-dvh items-center justify-center px-4 py-10">
+        <main className="w-full max-w-md rounded-card border border-linha bg-painel p-6 shadow-card sm:p-9">
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Passou Concursos</p>
+          <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight">Algo deu errado</h1>
+          <p className="mt-4 leading-7 text-suave">
+            Já fomos avisados e estamos olhando. Tente recarregar a página em
+            alguns instantes.
+          </p>
+        </main>
       </body>
     </html>
   );

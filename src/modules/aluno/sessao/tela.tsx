@@ -34,7 +34,7 @@ export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
       <div className="space-y-4">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-evolucao">Sessão salva</p>
         <h1 className="font-display text-4xl leading-tight">Você chegou ao fim deste bloco.</h1>
-        <Link href="/app" className="inline-flex rounded-lg bg-marca px-4 py-3 font-semibold text-white">
+        <Link href="/app" className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 py-3 font-semibold text-white">
           Voltar ao plano
         </Link>
       </div>
@@ -160,7 +160,7 @@ function QuestaoAtual({
         <button
           type="submit"
           disabled={pendente}
-          className="w-full rounded-lg bg-marca px-4 py-3 font-semibold text-white shadow-sm transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
+          className="min-h-11 w-full rounded-full bg-marca px-4 py-3 font-semibold text-white transition hover:bg-marca-apoio disabled:cursor-wait disabled:opacity-60"
         >
           {pendente ? "Registrando…" : pedindoCausa ? "Enviar causa e continuar" : "Responder"}
         </button>
@@ -197,7 +197,7 @@ function Alternativas({ questao }: { questao: QuestaoDaSessao }) {
         return (
           <label
             key={alternativa.letra}
-            className="flex cursor-pointer items-start gap-3 rounded-card border border-linha bg-painel p-4 text-base leading-7 shadow-sm transition hover:border-marca has-[:checked]:border-marca has-[:checked]:bg-marca/10"
+          className="flex cursor-pointer items-start gap-3 rounded-card border border-linha bg-painel p-4 text-base leading-7 shadow-card transition hover:border-marca has-[:checked]:border-marca has-[:checked]:bg-marca-suave"
           >
             <input
               type="radio"
@@ -272,14 +272,14 @@ export function FeedbackDaResposta({
       )}
 
       {ultima ? (
-        <Link href="/app" className="inline-flex w-full justify-center rounded-lg bg-marca px-4 py-3 font-semibold text-white">
+        <Link href="/app" className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-marca px-4 py-3 font-semibold text-white">
           Concluir e voltar ao plano
         </Link>
       ) : (
         <button
           type="button"
           onClick={aoAvancar}
-          className="w-full rounded-lg border border-marca px-4 py-3 font-semibold text-marca transition hover:bg-marca hover:text-white"
+          className="min-h-11 w-full rounded-full border border-marca px-4 py-3 font-semibold text-marca transition hover:bg-marca hover:text-white"
         >
           Próxima questão
         </button>

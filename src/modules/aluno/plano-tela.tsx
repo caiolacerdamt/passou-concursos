@@ -30,7 +30,7 @@ export function PlanoTela({ plano }: { plano: PlanoDoDia }) {
       </header>
 
       {plano.frase ? (
-        <blockquote className="rounded-card border-l-4 border-marca bg-marca/10 px-5 py-4 text-lg leading-8 text-texto">
+      <blockquote className="rounded-card border border-marca/20 bg-marca-suave px-5 py-4 text-lg leading-8 text-texto">
           {plano.frase}
         </blockquote>
       ) : null}
@@ -118,7 +118,7 @@ function BlocoCard({ bloco, compacto = false }: { bloco: BlocoDoPlano; compacto?
       ) : (
         <Link
           href={`/app/sessao?bloco=${encodeURIComponent(bloco.id)}`}
-          className="mt-4 inline-flex rounded-lg border border-marca px-3 py-2 text-sm font-semibold text-marca transition hover:bg-marca hover:text-white"
+          className="mt-4 inline-flex min-h-10 items-center rounded-full border border-marca px-4 py-2 text-sm font-semibold text-marca transition hover:bg-marca hover:text-white"
         >
           Começar bloco
         </Link>

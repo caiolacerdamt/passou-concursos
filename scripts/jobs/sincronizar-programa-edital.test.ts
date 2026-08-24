@@ -6,7 +6,7 @@ import {
 } from "./sincronizar-programa-edital.mts";
 
 function cliente(
-  perfis: unknown[],
+  perfis: Record<string, unknown>[],
   elegiveis: { topico_id: string; materia: string }[],
 ) {
   const executadas: { sql: string; parametros?: unknown[] }[] = [];

@@ -568,7 +568,7 @@ uma decisão real do responsável do produto.
 | 3 | concluída | `c13ad90` | W3-A `ed69597` + `08eab29` + `33f56b4` + `71883da`; W3-B `e6001e6` + `1ac88b5` + `4bfa761`; W3-C `ac957d0`. Unit (768)/build verdes; sem migration, gate DB não se aplica. |
 | 4 | concluída | `46831de` | W4-A `d9dd796` + `126467e` + `9c05a4a` + `5d1a96e`; W4-B `324c635` + `7161738` + `cfbf757` + `d3ad89c`. Unit (786)/build e DB próprios (5/5) verdes; migrations aplicadas no dev. Gate DB geral mantém 3 falhas antigas de acervo/data e 1 expectativa temporal antiga da sequência. |
 | 5 | concluída | `5a31cac` | W5-A `72bdd01`. Unit (805)/build/lint verdes; sem migration, gate DB não se aplica. |
-| 6 | pendente | — | acervo e jornada |
+| 6 | concluída | `f30868f` | W6-A `a9ab006`; W6-B `10e1674`; correção de tipo `0cbb946`. Acervo publicado em 11 matérias (121 aptas) com 20 recursos curados; edital ativo passou a derivar do publicado. Unit (816)/build verdes; gate DB mantém as mesmas 4 falhas antigas (3 de acervo/data em `gera-plano`, 1 temporal da sequência), reproduzidas no commit `f30868f` com os mesmos números. Estatística e Raciocínio Lógico seguem sem publicação: são quantitativas e dependem da conferência por código (invariante 11). |
 
 ## 14. Critério de encerramento
 

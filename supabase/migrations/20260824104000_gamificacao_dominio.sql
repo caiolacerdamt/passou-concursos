@@ -83,7 +83,7 @@ create table public.gamificacao_dia (
 );
 
 comment on table public.gamificacao_dia is
-  'Projeção do anel de hoje. O progresso é limitado à meta da meta_cheia; os campos bruto preservam o valor server-trusted para auditoria (GAM-01/AD-071). Grupo LGPD 1.';
+  'Projeção do anel de hoje. O progresso é limitado à meta do piso; os campos bruto preservam volume server-trusted, inclusive fora do piso, para auditoria (GAM-01/AD-071). Grupo LGPD 1.';
 
 create table public.gamificacao_ponto_evento (
   id              bigint generated always as identity primary key,
@@ -283,10 +283,13 @@ declare
   v_plano_id                uuid;
   v_estudo_meta             integer := 0;
   v_estudo_bruto            integer := 0;
+  v_estudo_piso_bruto       integer := 0;
   v_questoes_meta           integer := 0;
   v_questoes_bruto          integer := 0;
+  v_questoes_piso_bruto     integer := 0;
   v_revisao_meta            integer := 0;
   v_revisao_bruto           integer := 0;
+  v_revisao_piso_bruto      integer := 0;
   v_piso_meta               integer := 0;
   v_piso_bruto              integer := 0;
   v_missao_id               text;
@@ -350,6 +353,8 @@ begin
   get diagnostics v_linhas = row_count;
   v_novos_eventos := v_novos_eventos + v_linhas;
 
+  -- Este evento é pontuação de conclusão, não teto do anel: o anel abaixo
+  -- usa exclusivamente os blocos `piso` e o `n_questoes` vigente deles.
   insert into public.gamificacao_ponto_evento
     (user_id, chave_evento, tipo, origem_id, data, pontos)
   select p_user_id,
@@ -378,6 +383,8 @@ begin
 
   -- O plano só emite revisão quando ela está devida; a presença do bloco de
   -- revisão no plano de hoje é a prova server-trusted do sinal "no prazo".
+  -- A preferência por `meta_cheia` abaixo só desempata eventos de pontos; não
+  -- alimenta nenhuma meta/progresso do anel.
   insert into public.gamificacao_ponto_evento
     (user_id, chave_evento, tipo, origem_id, data, pontos)
   select distinct on (coalesce(b.topico_id::text, b.tipo::text || ':' || b.ordem::text))
@@ -409,8 +416,9 @@ begin
   get diagnostics v_linhas = row_count;
   v_novos_eventos := v_novos_eventos + v_linhas;
 
-  -- Recuperação é um fato de tentativa posterior a um erro do próprio aluno.
-  -- A chave usa a tentativa, portanto o mesmo evento nunca é contado duas vezes.
+  -- Recuperação exige que a tentativa anterior mais recente da mesma questão
+  -- seja um erro. A chave usa a tentativa, portanto o mesmo evento nunca é
+  -- contado duas vezes.
   insert into public.gamificacao_ponto_evento
     (user_id, chave_evento, tipo, origem_id, data, pontos)
   select p_user_id,
@@ -423,14 +431,21 @@ begin
    where t.user_id = p_user_id
      and t.correta
      and (t.respondida_em at time zone 'America/Sao_Paulo')::date = v_data
-     and exists (
-       select 1
+     and (
+       select anterior.correta
          from public.tentativas anterior
         where anterior.user_id = t.user_id
-          and anterior.topico_id = t.topico_id
-          and not anterior.correta
-          and anterior.respondida_em < t.respondida_em
-     )
+          and anterior.questao_id = t.questao_id
+          and (
+            anterior.respondida_em < t.respondida_em
+            or (
+              anterior.respondida_em = t.respondida_em
+              and anterior.id < t.id
+            )
+          )
+        order by anterior.respondida_em desc, anterior.id desc
+        limit 1
+     ) is false
   on conflict (user_id, chave_evento) do nothing;
   get diagnostics v_linhas = row_count;
   v_novos_eventos := v_novos_eventos + v_linhas;
@@ -443,24 +458,38 @@ begin
 
   if v_plano_id is not null then
     select
-      count(*) filter (where b.nivel = 'meta_cheia' and b.tipo <> 'revisar'),
-      count(*) filter (where b.nivel = 'meta_cheia' and b.tipo = 'revisar'),
-      coalesce(sum(b.n_questoes) filter (where b.nivel = 'meta_cheia'), 0),
+      count(*) filter (where b.nivel = 'piso' and b.tipo <> 'revisar'),
+      count(*) filter (where b.nivel = 'piso' and b.tipo = 'revisar'),
+      coalesce(sum(b.n_questoes) filter (where b.nivel = 'piso'), 0),
       count(*) filter (where b.nivel = 'piso')
       into v_estudo_meta, v_revisao_meta, v_questoes_meta, v_piso_meta
       from public.plano_bloco b
      where b.plano_dia_id = v_plano_id;
 
-    -- O bloco concluído exige sessão encerrada e pelo menos uma tentativa.
+    -- O bloco concluído exige sessão encerrada e pelo menos uma tentativa. O
+    -- bruto inclui blocos fora do piso para auditoria; só o piso entra no progresso.
     select count(distinct b.id)
       into v_estudo_bruto
       from public.plano_bloco b
       join public.sessoes s on s.plano_bloco_id = b.id
-      where b.plano_dia_id = v_plano_id
-        and b.nivel = 'meta_cheia'
-        and b.tipo <> 'revisar'
-        and s.user_id = p_user_id
+     where b.plano_dia_id = v_plano_id
+       and b.tipo <> 'revisar'
+       and s.user_id = p_user_id
         and s.encerrada_em is not null
+       and exists (
+         select 1 from public.tentativas t
+         where t.user_id = p_user_id and t.sessao_id = s.id
+       );
+
+    select count(distinct b.id)
+      into v_estudo_piso_bruto
+      from public.plano_bloco b
+      join public.sessoes s on s.plano_bloco_id = b.id
+     where b.plano_dia_id = v_plano_id
+       and b.nivel = 'piso'
+       and b.tipo <> 'revisar'
+       and s.user_id = p_user_id
+       and s.encerrada_em is not null
        and exists (
          select 1 from public.tentativas t
           where t.user_id = p_user_id and t.sessao_id = s.id
@@ -471,22 +500,45 @@ begin
       from public.plano_bloco b
       join public.sessoes s on s.plano_bloco_id = b.id
       where b.plano_dia_id = v_plano_id
-        and b.nivel = 'meta_cheia'
-        and b.tipo = 'revisar'
-        and s.user_id = p_user_id
+       and b.tipo = 'revisar'
+       and s.user_id = p_user_id
         and s.encerrada_em is not null
+       and exists (
+         select 1 from public.tentativas t
+         where t.user_id = p_user_id and t.sessao_id = s.id
+       );
+
+    select count(distinct b.id)
+      into v_revisao_piso_bruto
+      from public.plano_bloco b
+      join public.sessoes s on s.plano_bloco_id = b.id
+     where b.plano_dia_id = v_plano_id
+       and b.nivel = 'piso'
+       and b.tipo = 'revisar'
+       and s.user_id = p_user_id
+       and s.encerrada_em is not null
        and exists (
          select 1 from public.tentativas t
           where t.user_id = p_user_id and t.sessao_id = s.id
        );
 
     -- O bruto conserva também questões extras/fora do plano; o anel visual
-    -- continua preso ao teto da meta_cheia, mas a auditoria não perde volume.
+    -- continua preso ao teto do piso, mas a auditoria não perde volume extra.
     select count(*)
       into v_questoes_bruto
       from public.tentativas t
      where t.user_id = p_user_id
        and (t.respondida_em at time zone 'America/Sao_Paulo')::date = v_data;
+
+    select count(*)
+      into v_questoes_piso_bruto
+      from public.tentativas t
+      join public.sessoes s on s.id = t.sessao_id
+      join public.plano_bloco b on b.id = s.plano_bloco_id
+     where t.user_id = p_user_id
+       and s.user_id = p_user_id
+       and b.plano_dia_id = v_plano_id
+       and b.nivel = 'piso';
 
     select count(distinct b.id)
       into v_piso_bruto
@@ -502,9 +554,9 @@ begin
        );
   end if;
 
-  v_estudo_progresso := least(v_estudo_bruto, v_estudo_meta);
-  v_questoes_progresso := least(v_questoes_bruto, v_questoes_meta);
-  v_revisao_progresso := least(v_revisao_bruto, v_revisao_meta);
+  v_estudo_progresso := least(v_estudo_piso_bruto, v_estudo_meta);
+  v_questoes_progresso := least(v_questoes_piso_bruto, v_questoes_meta);
+  v_revisao_progresso := least(v_revisao_piso_bruto, v_revisao_meta);
 
   insert into public.gamificacao_dia (
     user_id, data,

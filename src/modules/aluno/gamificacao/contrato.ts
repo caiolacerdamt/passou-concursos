@@ -45,7 +45,7 @@ export type IdDaConquista = (typeof CATALOGO_DE_CONQUISTAS)[number]["id"];
 export type DimensaoDoAnel = {
   /** Progresso visual, sempre limitado à meta. */
   progresso: number;
-  /** Teto derivado da `meta_cheia` do plano de hoje. */
+  /** Teto derivado dos blocos `piso` do plano de hoje. */
   meta: number;
   /** Valor bruto server-trusted, preservado para auditoria. */
   bruto: number;

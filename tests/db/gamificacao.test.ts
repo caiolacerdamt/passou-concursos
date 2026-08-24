@@ -21,7 +21,13 @@ async function criarPlanoComBlocos(
   cliente: Client,
   aluno: string,
   data: string,
-): Promise<{ plano: string; piso: string; meta: string }> {
+): Promise<{
+  plano: string;
+  piso: string;
+  meta: string;
+  pisoRevisao: string;
+  metaRevisao: string;
+}> {
   const plano = await cliente.query<{ id: string }>(
     `insert into public.plano_dia (user_id, data) values ($1, $2) returning id`,
     [aluno, data],
@@ -40,7 +46,27 @@ async function criarPlanoComBlocos(
      values ($1, 'avancar', 'meta_cheia', 1, 1, 1, 2, 2) returning id`,
     [plano.rows[0].id],
   );
-  return { plano: plano.rows[0].id, piso: piso.rows[0].id, meta: meta.rows[0].id };
+  const pisoRevisao = await cliente.query<{ id: string }>(
+    `insert into public.plano_bloco
+       (plano_dia_id, tipo, nivel, ordem, n_questoes, n_questoes_cheias,
+        minutos_estimados, minutos_estimados_cheios)
+     values ($1, 'revisar', 'piso', 2, 1, 1, 2, 2) returning id`,
+    [plano.rows[0].id],
+  );
+  const metaRevisao = await cliente.query<{ id: string }>(
+    `insert into public.plano_bloco
+       (plano_dia_id, tipo, nivel, ordem, n_questoes, n_questoes_cheias,
+        minutos_estimados, minutos_estimados_cheios)
+     values ($1, 'revisar', 'meta_cheia', 2, 1, 1, 2, 2) returning id`,
+    [plano.rows[0].id],
+  );
+  return {
+    plano: plano.rows[0].id,
+    piso: piso.rows[0].id,
+    meta: meta.rows[0].id,
+    pisoRevisao: pisoRevisao.rows[0].id,
+    metaRevisao: metaRevisao.rows[0].id,
+  };
 }
 
 async function fecharBlocoComTentativa(
@@ -135,19 +161,161 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         estudo_progresso: number;
         estudo_bruto: number;
         questoes_meta: number;
+        questoes_progresso: number;
         questoes_bruto: number;
+        revisao_meta: number;
+        revisao_progresso: number;
       }>(
-        `select estudo_meta, estudo_progresso, estudo_bruto, questoes_meta, questoes_bruto
+        `select estudo_meta, estudo_progresso, estudo_bruto, questoes_meta,
+                questoes_progresso, questoes_bruto, revisao_meta, revisao_progresso
            from public.gamificacao_dia where user_id = $1 and data = $2`,
         [aluno, data],
       );
       expect(anel.rows[0]).toMatchObject({
         estudo_meta: 1,
         estudo_progresso: 1,
+        estudo_bruto: 2,
+        questoes_meta: 2,
+        questoes_progresso: 1,
+        questoes_bruto: 2,
+        revisao_meta: 1,
+        revisao_progresso: 0,
+      });
+    });
+  });
+
+  it("fecha cada dimensão pelo piso e não pelo bloco meta_cheia alheio", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const data = dataDeHojeEmSaoPaulo();
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste anel piso W4-B')`,
+        [autor],
+      );
+      const plano = await criarPlanoComBlocos(cliente, aluno, data);
+      const questao = await questaoParaResponder(cliente);
+
+      // Meta cheia concluída é volume auditável, mas não avança o anel.
+      await fecharBlocoComTentativa(cliente, aluno, plano.meta, data, questao);
+      await fecharBlocoComTentativa(cliente, aluno, plano.metaRevisao, data, questao);
+      await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
+
+      const antes = await cliente.query<{
+        estudo_meta: number;
+        estudo_progresso: number;
+        estudo_bruto: number;
+        questoes_meta: number;
+        questoes_progresso: number;
+        questoes_bruto: number;
+        revisao_meta: number;
+        revisao_progresso: number;
+        revisao_bruto: number;
+      }>(
+        `select estudo_meta, estudo_progresso, estudo_bruto, questoes_meta,
+                questoes_progresso, questoes_bruto, revisao_meta,
+                revisao_progresso, revisao_bruto
+           from public.gamificacao_dia where user_id = $1 and data = $2`,
+        [aluno, data],
+      );
+      expect(antes.rows[0]).toMatchObject({
+        estudo_meta: 1,
+        estudo_progresso: 0,
         estudo_bruto: 1,
         questoes_meta: 2,
+        questoes_progresso: 0,
         questoes_bruto: 2,
+        revisao_meta: 1,
+        revisao_progresso: 0,
+        revisao_bruto: 1,
       });
+
+      // Só o piso correspondente fecha as três dimensões aplicáveis.
+      await fecharBlocoComTentativa(cliente, aluno, plano.piso, data, questao);
+      await fecharBlocoComTentativa(cliente, aluno, plano.pisoRevisao, data, questao);
+      await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
+
+      const depois = await cliente.query<{
+        estudo_progresso: number;
+        questoes_progresso: number;
+        revisao_progresso: number;
+      }>(
+        `select estudo_progresso, questoes_progresso, revisao_progresso
+           from public.gamificacao_dia where user_id = $1 and data = $2`,
+        [aluno, data],
+      );
+      expect(depois.rows[0]).toEqual({
+        estudo_progresso: 1,
+        questoes_progresso: 2,
+        revisao_progresso: 1,
+      });
+    });
+  });
+
+  it("pontua recuperação somente após erro mais recente da mesma questão", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const data = dataDeHojeEmSaoPaulo();
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste recuperação W4-B')`,
+        [autor],
+      );
+      const questao = await questaoParaResponder(cliente);
+
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        correta: false,
+        resposta_dada: "A",
+        respondida_em: `${data}T10:00:00-03:00`,
+      });
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        correta: true,
+        resposta_dada: "C",
+        respondida_em: `${data}T10:01:00-03:00`,
+      });
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        correta: true,
+        resposta_dada: "C",
+        respondida_em: `${data}T10:02:00-03:00`,
+      });
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        correta: false,
+        resposta_dada: "A",
+        respondida_em: `${data}T10:03:00-03:00`,
+      });
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        correta: true,
+        resposta_dada: "C",
+        respondida_em: `${data}T10:04:00-03:00`,
+      });
+
+      const primeiro = await cliente.query<{ n: number }>(
+        "select public.materializar_gamificacao($1, $2::date) as n",
+        [aluno, data],
+      );
+      expect(Number(primeiro.rows[0].n)).toBe(2);
+      const eventos = await cliente.query<{ n: string; pontos: number }>(
+        `select count(*)::text as n, coalesce(sum(pontos), 0)::int as pontos
+           from public.gamificacao_ponto_evento
+          where user_id = $1 and tipo = 'recuperacao_erro'`,
+        [aluno],
+      );
+      expect(eventos.rows[0]).toEqual({ n: "2", pontos: 50 });
+
+      const segundo = await cliente.query<{ n: number }>(
+        "select public.materializar_gamificacao($1, $2::date) as n",
+        [aluno, data],
+      );
+      expect(Number(segundo.rows[0].n)).toBe(0);
     });
   });
 

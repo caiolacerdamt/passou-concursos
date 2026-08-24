@@ -402,7 +402,7 @@ export const CATALOGO = {
     padrao: 25,
     moduloDono: "m6",
     descricao:
-      "Pontos da primeira resposta correta posterior a um erro no mesmo tópico. Cada tentativa é uma origem auditável e única.",
+      "Pontos da primeira resposta correta posterior a um erro na mesma questão. Cada tentativa é uma origem auditável e única.",
   }),
   "param.m6.meta_missao_questoes": chave({
     tipo: z.number().int().positive(),

@@ -187,6 +187,18 @@ type CausaSimuladoDaRefacao = {
   causa_erro: string;
 };
 
+type ItemEsperadoDaRefacao = {
+  sessao_id: string;
+  questao_id: string;
+  questao_versao: number;
+  ordem: number;
+};
+
+type ItemDaRefacaoBanco = Omit<ItemEsperadoDaRefacao, "sessao_id"> & {
+  id: string;
+  sessao_id: string;
+};
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
@@ -465,7 +477,26 @@ export async function prepararSessaoDeRefacao(
     );
   }
 
-  const ids = [...new Set(candidatos.map((tentativa) => tentativa.questao_id))];
+  const [questoesPorRefacao] = await getParams("param.m4.questoes_por_bloco");
+  const candidatosLimitados: TentativaErradaDaRefacao[] = [];
+  const versoesDosCandidatos = new Set<string>();
+  for (const candidato of candidatos) {
+    const versao = Number(candidato.questao_versao);
+    if (!Number.isInteger(versao) || versao < 1) continue;
+    const chave = `${candidato.questao_id}:${versao}`;
+    if (versoesDosCandidatos.has(chave)) continue;
+    versoesDosCandidatos.add(chave);
+    candidatosLimitados.push({ ...candidato, questao_versao: versao });
+    if (candidatosLimitados.length >= questoesPorRefacao) break;
+  }
+  if (candidatosLimitados.length === 0) {
+    throw new SessaoRecusada(
+      "acervo_vazio",
+      "Não há questões disponíveis para refazer neste erro.",
+    );
+  }
+
+  const ids = [...new Set(candidatosLimitados.map((tentativa) => tentativa.questao_id))];
   const linhas = await lerLista<LinhaDeQuestao>(
     cliente
       .from("questoes")
@@ -480,15 +511,10 @@ export async function prepararSessaoDeRefacao(
     linhas.map((linha) => [`${linha.id}:${linha.questao_versao}`, linha]),
   );
   const selecionadas: LinhaDeQuestao[] = [];
-  const versoesIncluidas = new Set<string>();
-  for (const candidato of candidatos) {
-    const versao = Number(candidato.questao_versao);
-    if (!Number.isInteger(versao) || versao < 1) continue;
-    const chave = `${candidato.questao_id}:${versao}`;
-    if (versoesIncluidas.has(chave)) continue;
+  for (const candidato of candidatosLimitados) {
+    const chave = `${candidato.questao_id}:${candidato.questao_versao}`;
     const linha = porVersao.get(chave);
     if (linha === undefined) continue;
-    versoesIncluidas.add(chave);
     selecionadas.push(linha);
   }
 
@@ -497,7 +523,7 @@ export async function prepararSessaoDeRefacao(
     // O tópico do filtro é o snapshot da tentativa. Uma reclassificação
     // posterior do acervo não pode deslocar o erro histórico para outro grupo.
     topicoId: null,
-    quantidade: selecionadas.length,
+    quantidade: questoesPorRefacao,
   });
   if (disponiveis.length === 0) {
     throw new SessaoRecusada(
@@ -510,22 +536,18 @@ export async function prepararSessaoDeRefacao(
     userId: usuario.id,
     refacaoChave,
   });
-  if (criada.retomada) return criada;
 
-  const itens = disponiveis.map((questao, indice) => ({
+  const itens: ItemEsperadoDaRefacao[] = disponiveis.map((questao, indice) => ({
     sessao_id: criada.id,
     questao_id: questao.id,
     questao_versao: questao.questao_versao,
     ordem: indice + 1,
   }));
-  const { error } = await cliente.from("sessao_itens").insert(itens);
-  if (error) {
-    await cliente.from("sessoes").delete().eq("id", criada.id);
-    throw new SessaoRecusada(
-      "acervo_inconsistente",
-      `Não foi possível montar a refação: ${error.message}`,
-    );
-  }
+  // A sessão e seus itens são duas chamadas PostgREST. Tanto a vencedora
+  // quanto a perdedora do índice parcial passam por esta reconciliação; se a
+  // inserção concorrente ganhar, a leitura seguinte confirma o mesmo conjunto
+  // sem apagar a sessão que a outra requisição acabou de preencher.
+  await garantirItensDaRefacao(cliente, criada.id, itens);
 
   return criada;
 }
@@ -816,6 +838,71 @@ async function inserirSessaoRefacao(
   throw new SessaoRecusada(
     "acervo_inconsistente",
     `Não foi possível abrir a refação: ${error?.message ?? "resposta vazia"}`,
+  );
+}
+
+async function lerItensDaRefacao(
+  cliente: SupabaseClient,
+  sessaoId: string,
+): Promise<ItemDaRefacaoBanco[]> {
+  return lerLista<ItemDaRefacaoBanco>(
+    cliente
+      .from("sessao_itens")
+      .select("id, sessao_id, questao_id, questao_versao, ordem")
+      .eq("sessao_id", sessaoId)
+      .order("ordem", { ascending: true }),
+    "itens da refação",
+  );
+}
+
+/**
+ * Confirma que os itens existentes são exatamente os selecionados no servidor
+ * e insere somente o que falta. A constraint de ordem/questão resolve a
+ * corrida entre duas inserções; a releitura após 23505 transforma a colisão
+ * em sucesso idempotente ou em falha segura, nunca em DELETE da sessão.
+ */
+async function garantirItensDaRefacao(
+  cliente: SupabaseClient,
+  sessaoId: string,
+  esperados: readonly ItemEsperadoDaRefacao[],
+): Promise<void> {
+  const confirmar = (atuais: readonly ItemDaRefacaoBanco[]): ItemEsperadoDaRefacao[] => {
+    const porOrdem = new Map(esperados.map((item) => [item.ordem, item]));
+    const vistos = new Set<number>();
+    for (const atual of atuais) {
+      const esperado = porOrdem.get(atual.ordem);
+      if (
+        esperado === undefined ||
+        vistos.has(atual.ordem) ||
+        atual.sessao_id !== sessaoId ||
+        atual.questao_id !== esperado.questao_id ||
+        Number(atual.questao_versao) !== esperado.questao_versao
+      ) {
+        throw new SessaoRecusada(
+          "acervo_inconsistente",
+          "A sessão de refação contém itens diferentes do caderno.",
+        );
+      }
+      vistos.add(atual.ordem);
+    }
+    return esperados.filter((item) => !vistos.has(item.ordem));
+  };
+
+  const atuais = await lerItensDaRefacao(cliente, sessaoId);
+  const faltantes = confirmar(atuais);
+  if (faltantes.length === 0) return;
+
+  const insercao = await cliente.from("sessao_itens").insert(faltantes);
+  if (!insercao.error) return;
+
+  // Uma requisição concorrente pode ter preenchido os mesmos itens depois da
+  // primeira leitura. Releia sob RLS: só sucesso completo encerra a corrida.
+  const depois = await lerItensDaRefacao(cliente, sessaoId);
+  if (confirmar(depois).length === 0) return;
+
+  throw new SessaoRecusada(
+    "acervo_inconsistente",
+    `Não foi possível montar a refação: ${insercao.error.message}`,
   );
 }
 

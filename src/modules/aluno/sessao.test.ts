@@ -112,27 +112,39 @@ function clienteParaPreparar({
 
 function clienteParaRefacao({
   aberta = null,
+  abertaDepoisDoConflito = aberta,
   tentativas = [],
   causas = [],
   questoes = [],
+  itens = [],
+  itensDepoisDaCorrida = itens,
   inserir = { data: { id: "sessao-refacao" }, error: null },
   inserirItens = { data: null, error: null },
 }: {
   aberta?: Record<string, unknown> | null;
+  abertaDepoisDoConflito?: Record<string, unknown> | null;
   tentativas?: unknown[];
   causas?: unknown[];
   questoes?: unknown[];
+  itens?: unknown[];
+  itensDepoisDaCorrida?: unknown[];
   inserir?: { data: unknown; error: null | { message: string; code?: string } };
   inserirItens?: { data: unknown; error: null | { message: string; code?: string } };
 } = {}) {
   const sessoes = [0];
+  const consultasDeItens = [0];
   const insercoes: unknown[] = [];
   const cliente = {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }) },
     from: vi.fn((tabela: string) => {
       let resposta: { data: unknown; error: null | { message: string; code?: string } };
       if (tabela === "sessoes") {
-        resposta = sessoes[0] === 0 ? { data: aberta, error: null } : inserir;
+        resposta =
+          sessoes[0] === 0
+            ? { data: aberta, error: null }
+            : sessoes[0] === 1
+              ? inserir
+              : { data: abertaDepoisDoConflito, error: null };
         sessoes[0] += 1;
       } else if (tabela === "tentativas") {
         resposta = { data: tentativas, error: null };
@@ -140,12 +152,18 @@ function clienteParaRefacao({
         resposta = { data: causas, error: null };
       } else if (tabela === "questoes") {
         resposta = { data: questoes, error: null };
+      } else if (tabela === "sessao_itens") {
+        resposta = {
+          data: consultasDeItens[0]++ === 0 ? itens : itensDepoisDaCorrida,
+          error: null,
+        };
       } else {
         resposta = inserirItens;
       }
       const builder = consulta(resposta);
       builder.insert = vi.fn((linhas: unknown) => {
         insercoes.push(linhas);
+        if (tabela === "sessao_itens") consultasDeItens[0] += 1;
         return consulta(tabela === "sessoes" ? inserir : inserirItens);
       });
       return builder;
@@ -320,6 +338,38 @@ describe("sessão de estudo", () => {
     ]);
   });
 
+  it("limita a refação ao teto de questões do bloco e preserva a ordem recente", async () => {
+    dependencias.getParams.mockResolvedValue([2, 30]);
+    const topicoId = "11111111-1111-4111-8111-111111111111";
+    const tentativas = ["questao-1", "questao-2", "questao-3"].map((id, indice) => ({
+      id: `tentativa-${indice + 1}`,
+      questao_id: id,
+      questao_versao: 1,
+      topico_id: topicoId,
+      causa_erro: "errei_a_conta",
+      respondida_em: `2026-08-${23 - indice}T12:00:00Z`,
+    }));
+    const { cliente, insercoes } = clienteParaRefacao({
+      tentativas,
+      questoes: [
+        linha({ id: "questao-1", topico_id: topicoId }),
+        linha({ id: "questao-2", topico_id: topicoId }),
+        linha({ id: "questao-3", topico_id: topicoId }),
+      ],
+    });
+
+    await prepararSessaoDeRefacao(cliente as never, {
+      topicoId,
+      causa: "errei_a_conta",
+    });
+
+    expect(insercoes[1]).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      expect.objectContaining({ questao_id: "questao-1", ordem: 1 }),
+      expect.objectContaining({ questao_id: "questao-2", ordem: 2 }),
+    ]);
+  });
+
   it("usa causa do simulado em tabela vizinha e nunca aceita identidade do cliente", async () => {
     const { cliente } = clienteParaRefacao({
       tentativas: [
@@ -363,6 +413,61 @@ describe("sessão de estudo", () => {
       }),
     ).resolves.toEqual({ id: "sessao-aberta", retomada: true });
     expect(cliente.from).toHaveBeenCalledTimes(1);
+  });
+
+  it("no caminho 23505 preenche a sessão vencedora que ainda estava sem itens", async () => {
+    const questao = linha({
+      id: "questao-1",
+      topico_id: "11111111-1111-4111-8111-111111111111",
+    });
+    const item = {
+      id: "item-refacao",
+      sessao_id: "sessao-vencedora",
+      questao_id: "questao-1",
+      questao_versao: 1,
+      ordem: 1,
+    };
+    const { cliente, insercoes } = clienteParaRefacao({
+      aberta: null,
+      abertaDepoisDoConflito: {
+        id: "sessao-vencedora",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: "11111111-1111-4111-8111-111111111111|errei_a_conta",
+      },
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      questoes: [questao],
+      itens: [],
+      itensDepoisDaCorrida: [item],
+      inserir: { data: null, error: { message: "colisão", code: "23505" } },
+      inserirItens: { data: null, error: { message: "colisão de item", code: "23505" } },
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-vencedora", retomada: true });
+    expect(insercoes).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-vencedora",
+        questao_id: "questao-1",
+        questao_versao: 1,
+        ordem: 1,
+      },
+    ]);
   });
 
   it("recusa filtro de refação inválido antes de consultar o banco", async () => {

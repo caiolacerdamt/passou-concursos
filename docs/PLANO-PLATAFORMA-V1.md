@@ -566,7 +566,7 @@ uma decisão real do responsável do produto.
 | 1 | concluída | `e07ec1b` | W1-A `9e2f524` + `e13bcaf`; W1-C `c8aadad`; W1-B `7c4df3e`. Unit/build e DB da onda verdes; gate DB geral mantém 4 falhas antigas dependentes de acervo/data. |
 | 2 | concluída | `3959720` | W2-A `9526442` + `efa12c1` + `5d97cbb` + `b25c467`. Unit (736)/build e DB próprio (8/8) verdes; gate DB geral mantém 3 falhas antigas dependentes de acervo/data (eram 4). |
 | 3 | concluída | `c13ad90` | W3-A `ed69597` + `08eab29` + `33f56b4` + `71883da`; W3-B `e6001e6` + `1ac88b5` + `4bfa761`; W3-C `ac957d0`. Unit (768)/build verdes; sem migration, gate DB não se aplica. |
-| 4 | pendente | — | dois domínios, sem UI compartilhada |
+| 4 | concluída | `46831de` | W4-A `d9dd796` + `126467e` + `9c05a4a` + `5d1a96e`; W4-B `324c635` + `7161738` + `cfbf757` + `d3ad89c`. Unit (786)/build e DB próprios (5/5) verdes; migrations aplicadas no dev. Gate DB geral mantém 3 falhas antigas de acervo/data e 1 expectativa temporal antiga da sequência. |
 | 5 | pendente | — | integração visual sequencial |
 | 6 | pendente | — | acervo e jornada |
 

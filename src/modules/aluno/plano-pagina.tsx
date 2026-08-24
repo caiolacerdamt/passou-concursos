@@ -2,6 +2,8 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarPerfilEstudo } from "./onboarding";
 import { consultarPlanoDoDia, type PlanoDoDia } from "./plano";
 import { consultarRotulosDosTopicos } from "./plano-rotulos";
+import { consultarPainelDoDia, type PainelDoDia } from "./painel-do-dia";
+import { PainelDoDiaTela } from "./painel-do-dia-tela";
 import { OnboardingTela } from "./onboarding-tela";
 import {
   PlanoTela,
@@ -39,21 +41,34 @@ export async function renderizarPainelDoPlano({
     );
   }
 
+  // A faixa integrada é exclusiva de Hoje: Plano continua sendo a leitura do
+  // ciclo do edital, sem repetir gamificação e acompanhamento.
+  const painel =
+    superficie === "hoje"
+      ? await consultarPainelDoDia(supabase, { dataProva: perfil.dataProva })
+      : null;
+
   return conteudoDoPlano(supabase, {
     superficie,
     resultado: resultadoDoPlano(parametros.resultado),
+    painel,
   });
 }
 
 async function conteudoDoPlano(
   supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
-  opcoes: { superficie: SuperficieDoPlano; resultado: ResultadoDoPlano },
+  opcoes: {
+    superficie: SuperficieDoPlano;
+    resultado: ResultadoDoPlano;
+    painel: PainelDoDia | null;
+  },
 ) {
   const plano = await consultarPlanoDoDia(supabase);
   if (!plano) {
     return (
       <div className="space-y-8">
         <CabecalhoDoPainel estado="preparando" superficie={opcoes.superficie} />
+        {opcoes.painel ? <PainelDoDiaTela painel={opcoes.painel} /> : null}
         <Estado
           tipo="vazio"
           titulo="Seu plano de hoje ainda está sendo preparado"
@@ -72,6 +87,7 @@ async function conteudoDoPlano(
         superficie={opcoes.superficie}
         nBlocos={plano.metaCheia.length > 0 ? plano.metaCheia.length : plano.piso.length}
       />
+      {opcoes.painel ? <PainelDoDiaTela painel={opcoes.painel} /> : null}
       <PlanoTela
         plano={plano}
         rotulosDosTopicos={rotulosDosTopicos}

@@ -6,6 +6,7 @@ const dependencias = vi.hoisted(() => ({
   flag: vi.fn(),
   cliente: vi.fn(),
   progresso: vi.fn(),
+  gamificacao: vi.fn(),
   reportar: vi.fn(),
   sair: vi.fn(),
 }));
@@ -24,7 +25,20 @@ vi.mock("@/modules/aluno/progresso", () => ({
     "nao_sei_dizer",
     "faltou_tempo",
   ],
+  NOMES_DAS_CAUSAS: {
+    nao_sabia_conteudo: "Não sabia o conteúdo",
+    errei_a_conta: "Errei a conta",
+    entendi_errado_enunciado: "Entendi errado o enunciado",
+    confundi_conceitos: "Confundi conceitos",
+    fiquei_na_duvida: "Fiquei na dúvida",
+    chutei: "Chutei",
+    nao_sei_dizer: "Não sei dizer",
+    faltou_tempo: "Faltou tempo",
+  },
   consultarProgresso: dependencias.progresso,
+}));
+vi.mock("@/modules/aluno/painel-do-dia", () => ({
+  consultarGamificacaoOpcional: dependencias.gamificacao,
 }));
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("../../entrar/acoes", () => ({ sair: dependencias.sair }));
@@ -80,6 +94,7 @@ describe("/app/progresso", () => {
     dependencias.flag.mockResolvedValue(true);
     dependencias.cliente.mockResolvedValue({});
     dependencias.progresso.mockResolvedValue(dados);
+    dependencias.gamificacao.mockResolvedValue(null);
   });
 
   it("protege a rota, passa os dois filtros e não oferece ranking", async () => {
@@ -119,6 +134,43 @@ describe("/app/progresso", () => {
     expect(html).toContain("Seu caderno ainda está vazio");
   });
 
+  it("integra pontos e conquistas quando a gamificação está ligada", async () => {
+    dependencias.gamificacao.mockResolvedValue({
+      pontos: {
+        dia: 30,
+        total: 145,
+        discriminacao: {
+          estudoPrioritario: 40,
+          conclusao: 60,
+          revisaoNoPrazo: 20,
+          recuperacaoErro: 25,
+        },
+      },
+      conquistas: [
+        {
+          id: "primeiro_bloco",
+          titulo: "Primeiro bloco",
+          descricao: "Concluiu o primeiro bloco.",
+          desbloqueada: true,
+          desbloqueadaEm: "2026-08-20T12:00:00.000Z",
+        },
+      ],
+    });
+
+    const html = renderToStaticMarkup(await renderPage());
+
+    expect(html).toContain("Pontos e conquistas");
+    expect(html).toContain("145 no total");
+    expect(html).toContain("Primeiro bloco");
+  });
+
+  it("mantém o progresso de pé com a gamificação ausente", async () => {
+    const html = renderToStaticMarkup(await renderPage());
+
+    expect(html).toContain("Relatório semanal");
+    expect(html).not.toContain("Pontos e conquistas");
+  });
+
   it("respeita flag desligada sem consultar progresso", async () => {
     dependencias.flag.mockResolvedValue(false);
 
@@ -126,6 +178,7 @@ describe("/app/progresso", () => {
     expect(html).toContain("Seu progresso está em preparação");
     expect(dependencias.cliente).not.toHaveBeenCalled();
     expect(dependencias.progresso).not.toHaveBeenCalled();
+    expect(dependencias.gamificacao).not.toHaveBeenCalled();
   });
 
   it("mostra estado seguro e reporta falha técnica", async () => {

@@ -35,7 +35,9 @@ export async function consultarRotulosDosTopicos(
     .select("id, nome")
     .in("id", ids);
 
-  if (consulta.error) return new Map();
+  if (consulta.error) {
+    throw new Error(`falha ao ler rótulos dos tópicos: ${consulta.error.message}`);
+  }
 
   return new Map(
     ((consulta.data ?? []) as TopicoBanco[])

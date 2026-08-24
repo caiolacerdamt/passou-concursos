@@ -40,11 +40,12 @@ export function PlanoTela({
   resultado = null,
 }: Props) {
   const blocos = [...plano.piso, ...plano.metaCheia];
+  const blocosDaMeta = plano.metaCheia.length > 0 ? plano.metaCheia : plano.piso;
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
   const proximoBloco = pendentes[0] ?? null;
-  const totalMinutos = blocos.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
-  const totalQuestoes = blocos.reduce((total, bloco) => total + numero(bloco.nQuestoes), 0);
-  const totalConcluidos = blocos.filter((bloco) => bloco.conclusao !== null).length;
+  const totalMinutos = blocosDaMeta.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
+  const totalQuestoes = blocosDaMeta.reduce((total, bloco) => total + numero(bloco.nQuestoes), 0);
+  const totalConcluidos = blocosDaMeta.filter((bloco) => bloco.conclusao !== null).length;
   const rotaDaTela = superficie === "plano" ? "/app/plano" : "/app";
 
   return (
@@ -69,13 +70,13 @@ export function PlanoTela({
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         aria-label="Resumo real do plano"
       >
-        <ResumoDoPlano rotulo="Blocos" valor={blocos.length} detalhe="no plano de hoje" />
-        <ResumoDoPlano rotulo="Questões" valor={totalQuestoes} detalhe="previstas no ciclo" />
-        <ResumoDoPlano rotulo="Tempo" valor={totalMinutos} unidade="min" detalhe="estimado" />
+        <ResumoDoPlano rotulo="Blocos" valor={blocosDaMeta.length} detalhe="na meta cheia" />
+        <ResumoDoPlano rotulo="Questões" valor={totalQuestoes} detalhe="previstas na meta cheia" />
+        <ResumoDoPlano rotulo="Tempo" valor={totalMinutos} unidade="min" detalhe="estimado na meta cheia" />
         <ResumoDoPlano
           rotulo="Concluídos"
           valor={totalConcluidos}
-          detalhe={blocos.length === 1 ? "de 1 bloco" : `de ${blocos.length} blocos`}
+          detalhe={blocosDaMeta.length === 1 ? "na meta cheia" : `de ${blocosDaMeta.length} na meta cheia`}
         />
       </section>
 
@@ -157,7 +158,7 @@ function FeedbackDoPlano({ resultado }: { resultado: Exclude<ResultadoDoPlano, n
       role={resultado === "erro" ? "alert" : "status"}
       className={`rounded-lg border px-4 py-3 text-sm leading-6 ${
         resultado === "erro"
-          ? "border-alerta/40 bg-alerta/5 text-texto"
+          ? "border-erro/40 bg-erro/5 text-erro"
           : "border-evolucao/40 bg-evolucao/5 text-texto"
       }`}
     >

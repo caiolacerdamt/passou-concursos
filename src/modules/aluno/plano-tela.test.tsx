@@ -50,9 +50,20 @@ describe("PlanoTela", () => {
     expect(html).toContain("Próximo bloco");
     expect(html).toContain("Matemática Financeira");
     expect(html).toContain("/app/estudo?bloco=bloco-piso");
-    expect(html).toContain("35");
-    expect(html).toContain("2 blocos");
+    expect(html).toContain("20");
+    expect(html).toContain("1");
+    expect(html).toContain("na meta cheia");
+    expect(html).not.toMatch(/>35</);
     expect(html).not.toContain("topico-1");
+  });
+
+  it("usa o piso apenas como fallback quando a meta cheia está vazia", () => {
+    const html = renderToStaticMarkup(
+      <PlanoTela plano={{ ...planoBase, metaCheia: [] }} />,
+    );
+
+    expect(html).toContain("15");
+    expect(html).toContain("na meta cheia");
   });
 
   it("separa piso e meta e expõe controles apenas para pendências", () => {

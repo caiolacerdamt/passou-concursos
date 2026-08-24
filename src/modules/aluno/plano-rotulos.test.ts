@@ -60,4 +60,19 @@ describe("consultarRotulosDosTopicos", () => {
     ).resolves.toEqual(new Map());
     expect(cliente.from).not.toHaveBeenCalled();
   });
+
+  it("propaga a falha técnica da leitura para o fallback da tela", async () => {
+    const cadeia = {
+      in: vi.fn(async () => ({ data: null, error: { message: "indisponível" } })),
+    };
+    const cliente = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => cadeia),
+      })),
+    };
+
+    await expect(consultarRotulosDosTopicos(cliente as never, plano)).rejects.toThrow(
+      "falha ao ler rótulos dos tópicos: indisponível",
+    );
+  });
 });

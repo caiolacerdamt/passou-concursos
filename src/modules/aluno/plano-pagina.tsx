@@ -10,6 +10,7 @@ import {
   type SuperficieDoPlano,
 } from "./plano-tela";
 import { Estado } from "@/modules/ui/estado";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 
 export type ParametrosDaPagina = Promise<Record<string, string | string[] | undefined>>;
 
@@ -71,7 +72,7 @@ async function conteudoDoPlano(
       <CabecalhoDoPainel
         estado="pronto"
         superficie={opcoes.superficie}
-        nBlocos={plano.piso.length + plano.metaCheia.length}
+        nBlocos={plano.metaCheia.length > 0 ? plano.metaCheia.length : plano.piso.length}
       />
       <PlanoTela
         plano={plano}
@@ -89,7 +90,8 @@ async function lerRotulosComFallback(
 ): Promise<ReadonlyMap<string, string>> {
   try {
     return await consultarRotulosDosTopicos(supabase, plano);
-  } catch {
+  } catch (erro) {
+    reportarErro(erro, { modulo: "aluno", operacao: "consultar_rotulos_plano" });
     // O plano continua útil se a leitura opcional da taxonomia falhar.
     return new Map();
   }
@@ -108,7 +110,7 @@ function CabecalhoDoPainel({
   const detalhes = {
     onboarding: "Configure seu ponto de partida para receber um plano compatível com a sua rotina.",
     preparando: "Seu perfil está salvo. A geração do plano acontece sem depender de uma resposta da IA.",
-    pronto: `${nBlocos ?? 0} ${nBlocos === 1 ? "bloco disponível" : "blocos disponíveis"} no plano de hoje.`,
+    pronto: `${nBlocos ?? 0} ${nBlocos === 1 ? "bloco" : "blocos"} na meta cheia de hoje.`,
   }[estado];
 
   const status = {

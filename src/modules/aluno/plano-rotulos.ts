@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { PlanoDoDia } from "./plano";
+import type { RotuloDoTopico } from "./rotulo-do-topico";
 export { nomeDoRotuloDoTopico, type RotuloDoTopico } from "./rotulo-do-topico";
 
 type TopicoBanco = {

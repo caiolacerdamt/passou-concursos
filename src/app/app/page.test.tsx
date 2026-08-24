@@ -102,7 +102,7 @@ describe("/app", () => {
     expect(html).toContain("A revisão vence hoje.");
     expect(html).toContain("Este tema tem peso alto na prova.");
     expect(html).toContain("Hoje, consistência antes de velocidade.");
-    expect(html).toContain("/app/sessao?bloco=bloco-piso");
+    expect(html).toContain("/app/estudo?bloco=bloco-piso");
   });
 
   it("trata plano ainda não preparado como estado vazio seguro", async () => {

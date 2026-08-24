@@ -1,0 +1,63 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { consultarRotulosDosTopicos } from "./plano-rotulos";
+import type { PlanoDoDia } from "./plano";
+
+const plano: PlanoDoDia = {
+  id: "plano-1",
+  data: "2026-08-22",
+  frase: null,
+  piso: [],
+  metaCheia: [
+    {
+      id: "bloco-1",
+      tipo: "avancar",
+      nivel: "meta_cheia",
+      ordem: 1,
+      topicoId: "topico-1",
+      nQuestoes: 10,
+      nQuestoesCheias: 10,
+      minutosEstimados: 20,
+      minutosEstimadosCheios: 20,
+      motivo: null,
+      ajusteUsuario: false,
+      adiadoDe: null,
+      conclusao: null,
+    },
+  ],
+};
+
+describe("consultarRotulosDosTopicos", () => {
+  it("retorna somente rótulos existentes para os tópicos do plano", async () => {
+    const consulta = {
+      data: [
+        { id: "topico-1", nome: "Matemática" },
+        { id: "outro", nome: "Fora do plano" },
+        { id: "topico-1", nome: "  Matemática  " },
+      ],
+      error: null,
+    };
+    const cadeia = {
+      in: vi.fn(async () => consulta),
+    };
+    const cliente = {
+      from: vi.fn(() => ({
+        select: vi.fn(() => cadeia),
+      })),
+    };
+
+    await expect(consultarRotulosDosTopicos(cliente as never, plano)).resolves.toEqual(
+      new Map([["topico-1", "Matemática"]]),
+    );
+    expect(cliente.from).toHaveBeenCalledWith("topicos");
+    expect(cadeia.in).toHaveBeenCalledWith("id", ["topico-1"]);
+  });
+
+  it("não faz leitura quando o plano não tem tópico", async () => {
+    const cliente = { from: vi.fn() };
+    await expect(
+      consultarRotulosDosTopicos(cliente as never, { ...plano, metaCheia: [{ ...plano.metaCheia[0], topicoId: null }] }),
+    ).resolves.toEqual(new Map());
+    expect(cliente.from).not.toHaveBeenCalled();
+  });
+});

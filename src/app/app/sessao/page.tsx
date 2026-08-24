@@ -5,7 +5,6 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { prepararSessao, SessaoRecusada } from "@/modules/aluno/sessao";
 import { Estado } from "@/modules/ui/estado";
-import { Shell } from "@/modules/ui/shell";
 
 /** Entrada curta que transforma o bloco do plano em uma sessão retomável. */
 type Props = {
@@ -19,13 +18,13 @@ export default async function AbrirSessao({ searchParams }: Props) {
 
   if (blocoId === undefined || blocoId === "") {
     return (
-      <Shell acoes={<Link href="/app" className="text-marca underline">Voltar ao plano</Link>}>
+      <div className="mx-auto max-w-2xl">
         <Estado
           tipo="vazio"
           titulo="Escolha um bloco do seu plano para começar"
           acao={<Link href="/app" className="text-marca underline">Voltar ao plano de hoje</Link>}
         />
-      </Shell>
+      </div>
     );
   }
 
@@ -36,9 +35,9 @@ export default async function AbrirSessao({ searchParams }: Props) {
   } catch (erro) {
     if (!(erro instanceof SessaoRecusada)) throw erro;
     return (
-      <Shell acoes={<Link href="/app" className="text-marca underline">Voltar ao plano</Link>}>
+      <div className="mx-auto max-w-2xl">
         <EstadoDaFalha motivo={erro.motivo} />
-      </Shell>
+      </div>
     );
   }
 
@@ -51,7 +50,12 @@ function EstadoDaFalha({ motivo }: { motivo: SessaoRecusada["motivo"] }) {
       <Estado
         tipo="vazio"
         titulo="Este bloco ainda não tem questões disponíveis"
-        acao="O acervo precisa de uma questão publicada para começar. Seu plano continua salvo."
+        acao={
+          <>
+            O acervo precisa de uma questão publicada para começar. Seu plano continua salvo. {" "}
+            <Link href="/app" className="font-semibold text-marca underline">Voltar ao plano</Link>
+          </>
+        }
       />
     );
   }

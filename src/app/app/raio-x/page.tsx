@@ -3,9 +3,6 @@ import { isFlagOn } from "@/modules/config";
 import { consultarRaioX } from "@/modules/raiox";
 import { RaioXTela } from "@/modules/raiox/tela";
 import { Estado } from "@/modules/ui/estado";
-import { Shell } from "@/modules/ui/shell";
-
-import { sair } from "../../entrar/acoes";
 
 /**
  * A superfície do Raio-X nasce atrás da flag global. A guarda vem antes dela e
@@ -19,15 +16,7 @@ export default async function RaioX() {
   const dados = ligado ? await consultarRaioX() : null;
 
   return (
-    <Shell
-      acoes={
-        <form action={sair}>
-          <button type="submit" className="text-marca underline">
-            Sair
-          </button>
-        </form>
-      }
-    >
+    <div className="mx-auto max-w-3xl">
       {dados ? (
         <RaioXTela dados={dados} />
       ) : (
@@ -37,6 +26,6 @@ export default async function RaioX() {
           acao="A leitura da frequência real ficará disponível quando esta superfície for ligada."
         />
       )}
-    </Shell>
+    </div>
   );
 }

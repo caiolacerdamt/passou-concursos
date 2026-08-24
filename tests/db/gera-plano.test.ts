@@ -220,14 +220,15 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
       await gerar(cliente, aluno);
       const piso = (await blocosDe(cliente, aluno)).filter((x) => x.nivel === "piso");
 
-      // A fila vencida nao pode monopolizar nem passar do tempo declarado. Com
-      // o default de 20% e um bloco de 20 minutos, cabe uma revisao; ela ainda
-      // entra no piso e a regra não cria uma lista impossível de cumprir.
-      expect(piso).toHaveLength(1);
+      // Mesmo com revisão vencida, o único slot precisa preservar avanço quando
+      // há conteúdo elegível. A revisão limitada não paralisa o edital.
+      expect(piso).toHaveLength(0);
       const meta = (await blocosDe(cliente, aluno)).filter(
         (x) => x.nivel === "meta_cheia",
       );
       expect(meta.reduce((total, bloco) => total + bloco.minutos_estimados, 0)).toBeLessThanOrEqual(20);
+      expect(meta).toHaveLength(1);
+      expect(meta[0].tipo).toBe("avancar");
     });
   });
 });

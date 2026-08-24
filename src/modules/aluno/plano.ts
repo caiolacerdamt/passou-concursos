@@ -214,6 +214,7 @@ export type ErroDeOperacaoDoPlano =
   | "bloco_concluido"
   | "permutacao_invalida"
   | "agenda_invalida"
+  | "capacidade_indisponivel"
   | "falha_operacao";
 
 export class PlanoRecusado extends Error {
@@ -235,6 +236,7 @@ function recusarOperacao(erro: { message?: string } | null, acao: string): never
     bloco_concluido: true,
     permutacao_invalida: true,
     agenda_invalida: true,
+    capacidade_indisponivel: true,
   }).find((chave) => mensagem.includes(chave)) ?? "falha_operacao") as ErroDeOperacaoDoPlano;
   throw new PlanoRecusado(motivo, mensagem);
 }

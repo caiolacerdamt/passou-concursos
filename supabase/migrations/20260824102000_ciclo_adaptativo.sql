@@ -129,9 +129,12 @@ declare
   v_selecionados_avanco     integer;
   v_selecionados_pratica    integer;
   v_minutos_revisao         integer;
+  v_minutos_disponiveis     integer;
   v_planos                  integer := 0;
   v_pass                    integer;
   v_tem_revisao             boolean;
+  v_tem_avanco              boolean;
+  v_minimo_avanco           integer;
   v_motivo                  text;
   v_tipo_extra              text;
   v_usados_topicos          uuid[];
@@ -262,12 +265,17 @@ begin
          )
        );
 
-    select coalesce(sum(b.minutos_estimados), 0)::integer,
-           count(*)::integer
-      into v_minutos_gastos, v_slots_existentes
+    select coalesce(sum(b.minutos_estimados), 0)::integer
+      into v_minutos_gastos
       from public.plano_bloco b
      where b.plano_dia_id = v_plano_id
        and b.nivel = 'meta_cheia';
+
+    -- A quantidade de linhas preservadas não representa capacidade: uma
+    -- versão curta pode ter 1 questão/1 minuto, e um ajuste antigo pode ter
+    -- outro tamanho. A soma dos minutos é a única fonte para não exceder o
+    -- limite depois de regenerar.
+    v_slots_existentes := 0;
 
     select coalesce(array_agg(b.topico_id) filter (where b.topico_id is not null), '{}'::uuid[])
       into v_usados_topicos
@@ -284,8 +292,9 @@ begin
 
     v_ordem_piso := 0;
     v_ordem_meta := 0;
-    v_total_slots := greatest(floor(v_aluno.minutos_por_dia / v_minutos_bloco)::integer, 0);
-    v_slots_restantes := greatest(v_total_slots - v_slots_existentes, 0);
+    v_minutos_disponiveis := greatest(v_aluno.minutos_por_dia - v_minutos_gastos, 0);
+    v_total_slots := greatest(floor(v_minutos_disponiveis / v_minutos_bloco)::integer, 0);
+    v_slots_restantes := v_total_slots;
 
     select exists (
       select 1
@@ -295,14 +304,60 @@ begin
          and r.due <= v_data
     ) into v_tem_revisao;
 
+    -- Reserve um slot para conteúdo novo sempre que houver algo elegível para
+    -- Avançar. A fila de revisão continua priorizada e limitada, mas não pode
+    -- consumir o único slot de um dia que ainda consegue avançar o edital.
+    select exists (
+      select 1
+        from public.topicos t
+        join public.raiox_peso_topico rx on rx.topico_id = t.id
+        left join public.dominio_topico d
+          on d.user_id = v_aluno.user_id and d.topico_id = t.id
+        left join public.revisao_agenda r
+          on r.user_id = v_aluno.user_id and r.topico_id = t.id
+        left join lateral (
+          select max((tentativa.respondida_em at time zone 'America/Sao_Paulo')::date) as ultima_data
+            from public.tentativas tentativa
+           where tentativa.user_id = v_aluno.user_id
+             and tentativa.materia_id = t.materia_id
+        ) ultima on true
+        left join lateral (
+          select count(distinct tentativa.sessao_id)::integer as n_blocos
+            from public.tentativas tentativa
+           where tentativa.user_id = v_aluno.user_id
+             and tentativa.materia_id = t.materia_id
+             and (tentativa.respondida_em at time zone 'America/Sao_Paulo')::date
+                   >= date_trunc('week', v_data::timestamp)::date
+        ) semana on true
+           where t.ativo
+         and t.id <> all(v_usados_topicos)
+         and not (r.due is not null and r.due <= v_data)
+         and (
+           coalesce(d.n_respostas, 0) = 0
+           or coalesce(semana.n_blocos, 0) < v_teto_semanal
+           or ultima.ultima_data is null
+           or v_data - ultima.ultima_data >= v_janela_maxima
+         )
+         and exists (
+           select 1 from public.questoes q
+            where q.topico_id = t.id
+              and q.status = 'publicada'
+              and q.vigente
+              and not q.anulada
+         )
+    ) into v_tem_avanco;
+
+    v_minimo_avanco := case when v_tem_avanco and v_slots_restantes > 0 then 1 else 0 end;
+
     v_review_slots := least(
-      v_slots_restantes,
+      greatest(v_slots_restantes - v_minimo_avanco, 0),
       v_teto_revisoes,
       greatest(floor(v_aluno.minutos_por_dia * v_pct_revisar / v_minutos_bloco)::integer, 0)
     );
     -- Uma capacidade menor que um bloco ainda reserva uma revisão quando há
     -- espaço para um bloco inteiro; nunca estoura o teto diário.
-    if v_tem_revisao and v_review_slots = 0 and v_slots_restantes > 0
+    if v_tem_revisao and v_review_slots = 0
+       and v_slots_restantes - v_minimo_avanco > 0
        and v_pct_revisar > 0 then
       v_review_slots := 1;
     end if;
@@ -312,6 +367,9 @@ begin
       v_slots_restantes,
       greatest(floor(v_aluno.minutos_por_dia * v_pct_avancar / v_minutos_bloco)::integer, 0)
     );
+    if v_tem_avanco and v_advance_slots = 0 and v_slots_restantes > 0 then
+      v_advance_slots := 1;
+    end if;
     v_slots_restantes := greatest(v_slots_restantes - v_advance_slots, 0);
 
     v_practice_slots := least(
@@ -452,6 +510,43 @@ begin
            or v_topico.em_cooldown and v_pass = 0 then
           continue;
         end if;
+        -- Dentro da mesma matéria, uma lacuna de cobertura vence a fraqueza
+        -- recorrente. Entre matérias a rotação/nota continua decidindo, o que
+        -- preserva o retrato frio de níveis diferentes.
+        if v_topico.n_respostas > 0 and exists (
+          select 1
+            from public.topicos virgem
+            left join public.dominio_topico dominio_virgem
+              on dominio_virgem.user_id = v_aluno.user_id
+             and dominio_virgem.topico_id = virgem.id
+            left join public.revisao_agenda revisao_virgem
+              on revisao_virgem.user_id = v_aluno.user_id
+             and revisao_virgem.topico_id = virgem.id
+           where virgem.materia_id = v_topico.materia_id
+             and (dominio_virgem.n_respostas is null or dominio_virgem.n_respostas = 0)
+             and not (revisao_virgem.due is not null and revisao_virgem.due <= v_data)
+             and virgem.id <> all(v_usados_topicos)
+             and not (
+               v_pass = 0
+               and exists (
+                 select 1
+                   from public.tentativas tentativa_virgem
+                  where tentativa_virgem.user_id = v_aluno.user_id
+                    and tentativa_virgem.materia_id = virgem.materia_id
+                    and v_data - (tentativa_virgem.respondida_em at time zone 'America/Sao_Paulo')::date
+                        <= v_cooldown_dias
+               )
+             )
+             and exists (
+               select 1 from public.questoes q
+                where q.topico_id = virgem.id
+                  and q.status = 'publicada'
+                  and q.vigente
+                  and not q.anulada
+             )
+        ) then
+          continue;
+        end if;
         if v_topico.n_blocos_semana >= v_teto_semanal
            and not (
              v_topico.n_respostas = 0
@@ -548,6 +643,11 @@ begin
         if v_topico.topico_id = any(v_usados_topicos)
            or v_topico.materia_id = any(v_usados_materias) and v_pass = 0
            or v_topico.em_cooldown and v_pass = 0 then
+          continue;
+        end if;
+        -- Conteúdo virgem é avanço. Treinar só consolida algo que o aluno já
+        -- tocou, evitando que o rótulo da prática esconda cobertura faltante.
+        if v_topico.n_respostas = 0 then
           continue;
         end if;
         if v_topico.n_blocos_semana >= v_teto_semanal
@@ -664,7 +764,11 @@ begin
           continue;
         end if;
 
-        if v_selecionados_pratica <= v_selecionados_avanco then
+        if v_topico.n_respostas = 0 then
+          v_tipo_extra := 'avancar';
+          v_motivo := 'cobertura do edital';
+          v_selecionados_avanco := v_selecionados_avanco + 1;
+        elsif v_selecionados_pratica <= v_selecionados_avanco then
           v_tipo_extra := 'treinar';
           v_motivo := 'pratica distribuida no ciclo';
           v_selecionados_pratica := v_selecionados_pratica + 1;
@@ -890,6 +994,8 @@ declare
   v_plano_destino uuid;
   v_dias smallint[];
   v_i integer;
+  v_minutos_dia integer;
+  v_minutos_comprometidos integer;
 begin
   if v_user_id is null then
     raise exception 'usuario_ausente: o adiamento exige uma sessao autenticada'
@@ -914,19 +1020,39 @@ begin
       using errcode = 'check_violation';
   end if;
 
-  select p.dias_estudo into v_dias
+  select p.dias_estudo, p.minutos_por_dia
+    into v_dias, v_minutos_dia
     from public.perfil_estudo p where p.user_id = v_user_id;
   v_data := v_bloco.data_origem;
 
   for v_i in 1..14 loop
     if v_dias is null or cardinality(v_dias) = 0
        or extract(dow from (v_data + v_i))::smallint = any(v_dias) then
-      v_alvo := v_data + v_i;
-      exit;
+      select coalesce(sum(b.minutos_estimados), 0)::integer
+        into v_minutos_comprometidos
+        from public.plano_bloco b
+        join public.plano_dia p on p.id = b.plano_dia_id
+       where p.user_id = v_user_id
+         and p.data = v_data + v_i
+         and b.nivel = 'meta_cheia'
+         and (
+           b.ajuste_usuario
+           or exists (
+             select 1 from public.sessoes s where s.plano_bloco_id = b.id
+           )
+         );
+
+      -- Um dia já comprometido por ajustes/adiamentos/sessões não recebe mais
+      -- um bloco que torne a regeneração impossível. Escolha o primeiro dia
+      -- declarado que ainda comporta este bloco.
+      if v_minutos_comprometidos + v_bloco.minutos_estimados <= v_minutos_dia then
+        v_alvo := v_data + v_i;
+        exit;
+      end if;
     end if;
   end loop;
   if v_alvo is null then
-    raise exception 'agenda_invalida: nao ha proximo dia declarado'
+    raise exception 'capacidade_indisponivel: nao ha proximo dia declarado com capacidade'
       using errcode = 'check_violation';
   end if;
 

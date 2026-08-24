@@ -63,7 +63,8 @@ describe("PlanoTela", () => {
     );
 
     expect(html).toContain("15");
-    expect(html).toContain("na meta cheia");
+    expect(html).toContain("no piso disponível");
+    expect(html).not.toContain("previstas na meta cheia");
   });
 
   it("separa piso e meta e expõe controles apenas para pendências", () => {

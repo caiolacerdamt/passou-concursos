@@ -40,7 +40,9 @@ export function PlanoTela({
   resultado = null,
 }: Props) {
   const blocos = [...plano.piso, ...plano.metaCheia];
-  const blocosDaMeta = plano.metaCheia.length > 0 ? plano.metaCheia : plano.piso;
+  const usaMetaCheia = plano.metaCheia.length > 0;
+  const blocosDaMeta = usaMetaCheia ? plano.metaCheia : plano.piso;
+  const escopoDoResumo = usaMetaCheia ? "na meta cheia" : "no piso disponível";
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
   const proximoBloco = pendentes[0] ?? null;
   const totalMinutos = blocosDaMeta.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
@@ -70,13 +72,13 @@ export function PlanoTela({
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         aria-label="Resumo real do plano"
       >
-        <ResumoDoPlano rotulo="Blocos" valor={blocosDaMeta.length} detalhe="na meta cheia" />
-        <ResumoDoPlano rotulo="Questões" valor={totalQuestoes} detalhe="previstas na meta cheia" />
-        <ResumoDoPlano rotulo="Tempo" valor={totalMinutos} unidade="min" detalhe="estimado na meta cheia" />
+        <ResumoDoPlano rotulo="Blocos" valor={blocosDaMeta.length} detalhe={escopoDoResumo} />
+        <ResumoDoPlano rotulo="Questões" valor={totalQuestoes} detalhe={`previstas ${escopoDoResumo}`} />
+        <ResumoDoPlano rotulo="Tempo" valor={totalMinutos} unidade="min" detalhe={`estimado ${escopoDoResumo}`} />
         <ResumoDoPlano
           rotulo="Concluídos"
           valor={totalConcluidos}
-          detalhe={blocosDaMeta.length === 1 ? "na meta cheia" : `de ${blocosDaMeta.length} na meta cheia`}
+          detalhe={blocosDaMeta.length === 1 ? escopoDoResumo : `de ${blocosDaMeta.length} ${escopoDoResumo}`}
         />
       </section>
 

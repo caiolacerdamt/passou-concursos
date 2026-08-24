@@ -110,7 +110,7 @@ function CabecalhoDoPainel({
   const detalhes = {
     onboarding: "Configure seu ponto de partida para receber um plano compatível com a sua rotina.",
     preparando: "Seu perfil está salvo. A geração do plano acontece sem depender de uma resposta da IA.",
-    pronto: `${nBlocos ?? 0} ${nBlocos === 1 ? "bloco" : "blocos"} na meta cheia de hoje.`,
+    pronto: `${nBlocos ?? 0} ${nBlocos === 1 ? "bloco" : "blocos"} no plano de hoje.`,
   }[estado];
 
   const status = {

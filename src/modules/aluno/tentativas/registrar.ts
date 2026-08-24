@@ -142,8 +142,12 @@ export function validarResposta(
 
   const causa = entrada.causaErro ?? null;
 
-  // ALUNO-03 AC1: errou no treino, tem de dizer por que **antes** de avancar.
-  if (entrada.contexto === "treino" && !contexto.acertou && causa === null) {
+  // ALUNO-03 AC1: errou no treino ou no plano, tem de dizer por que **antes** de avancar.
+  if (
+    (entrada.contexto === "treino" || entrada.contexto === "plano") &&
+    !contexto.acertou &&
+    causa === null
+  ) {
     throw new TentativaRecusada(
       "causa_obrigatoria",
       "Diga por que errou antes de seguir. 'Nao sei dizer' vale como resposta.",

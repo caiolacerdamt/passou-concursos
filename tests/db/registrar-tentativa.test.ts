@@ -245,6 +245,36 @@ descreveComBanco("registrar_tentativa — dedup do duplo-clique", () => {
     });
   });
 
+  it("errar no plano sem causa e recusado, e com causa grava no log", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const sessao = await criarSessao(cliente, aluno, "plano");
+      const item = await criarItemDeSessao(cliente, sessao, questao);
+
+      await cliente.query("savepoint sem_causa_plano");
+      await expect(
+        registrar(cliente, {
+          userId: aluno,
+          itemId: item,
+          contexto: "plano",
+          resposta: "A",
+        }),
+      ).rejects.toThrow(/causa_obrigatoria:/);
+      await cliente.query("rollback to savepoint sem_causa_plano");
+
+      const registro = await registrar(cliente, {
+        userId: aluno,
+        itemId: item,
+        contexto: "plano",
+        resposta: "A",
+        causa: "nao_sei_dizer",
+      });
+      expect(registro.correta).toBe(false);
+      expect(registro.duplicada).toBe(false);
+    });
+  });
+
   it("acertar no treino sem causa passa — a exigencia e so no erro", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = novoAluno();

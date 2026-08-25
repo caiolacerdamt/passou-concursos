@@ -385,26 +385,87 @@
 - **Date**: 2026-08-22
 - **Status**: active
 
+### AD-106
+- **Decision**: A ilustração da landing SHALL ser render 3D chunky com fundo recortado, revogando a
+  regra de `DESIGN.md` §Ilustração que proíbe render 3D e manda *flat paper-cut vector*. A proibição
+  segue valendo para qualquer outra superfície; o que muda é só a landing. Junto entram no `@theme`
+  os tokens do lado escuro (`--color-breu*`), os dois de preenchimento do movimento assinatura
+  (`--color-pilha-papel`, `--color-pilha-sedimento`) e as duas sombras da landing.
+- **Reason**: O dono escolheu explicitamente o 3D chunky depois de ver as duas opções lado a lado, na
+  rodada de protótipo em `scrollcraft/builds/passou-lp`. A regra do paper-cut nasceu de uma limitação
+  do `gpt-image-2` via OpenRouter, que não aceitava transparência; a série nova tem alfa de verdade e
+  senta direto no chão da seção, sem moldura. Escolha de direção de arte, não descuido.
+- **Trade-off**: A landing passa a ter uma linguagem de ilustração diferente do resto do produto — o
+  que é aceitável porque o app não tem ilustração nenhuma (`DESIGN.md`, modo Operate). O custo real é
+  peso: sete PNG de ~1 MB em `public/arte/`, servidos por `next/image`, dois deles com `priority`.
+- **Scope**: Rota `/` e os componentes de `src/modules/ui/landing/`. Substitui a linha "proibido:
+  render 3D" de `DESIGN.md` §Ilustração **apenas** para a landing.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-107
+- **Decision**: O motor de scroll `scrollcraft.js` SHALL entrar como asset estático não editado em
+  `public/motor/`, montado por um client component após a hidratação; as sete seções SHALL continuar
+  server components, expondo só ganchos `data-sc-*`. O comportamento próprio da página (barra,
+  movimento assinatura e contador) SHALL viver em `src/modules/ui/landing/assinatura.ts` e SHALL NOT
+  depender de ordem de execução em relação ao motor.
+- **Reason**: O motor é JS vanilla que escreve em `window` no topo do arquivo; importá-lo quebraria a
+  renderização no servidor, e "adaptar para importar" seria editar o motor pela porta dos fundos. A
+  independência de ordem não é preferência: com `<Script afterInteractive>` o motor monta depois do
+  `useEffect`, e a primeira medida do gráfico caía num palco ainda sem altura — os 86 chips ficavam
+  empilhados e o pico inteiro nascia em branco. O conserto é um `ResizeObserver` no campo, que mede
+  de novo quando a caixa muda, venha a mudança do motor, da fonte ou da janela.
+- **Trade-off**: O motor fica fora do lint (`eslint.config.mjs` ignora `public/motor/**`) e fora do
+  matcher do `proxy.ts` — sem essa segunda exceção o visitante deslogado recebia o HTML de `/entrar`
+  no lugar do script. Em troca, atualizar o motor é trocar um arquivo.
+- **Scope**: Rota `/`. Não vale para o app logado, que não usa o motor.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-108
+- **Decision**: A frequência real que a landing mostra SHALL sair do banco por
+  `consultarFrequenciaReal()` (módulo do acervo, cache de 1 h), contando somente `origem = 'real'`
+  entre as questões vigentes, e SHALL cair no extrato congelado de 2026-08-25 em qualquer falha de
+  leitura, reportando o erro. Nenhum número da página SHALL ser escrito na copy — incluindo o selo de
+  economia da oferta, que é a subtração entre os dois preços da configuração.
+- **Reason**: O protótipo trazia um `raiox.js` congelado. Congelado, ele mente na próxima prova
+  ingerida — e a página inteira existe para dizer que a medida é real. A queda existe porque a
+  alternativa a um número velho não é um gráfico vazio: é o último número verdadeiro que temos, com o
+  erro no Sentry. A cláusula `origem = 'real'` é o invariante 3 do `AGENTS.md` e vem de dentro da view
+  `inventario_acervo`, na coluna `importadas`.
+- **Trade-off**: A landing passa a depender do cliente de serviço do Supabase (a view é fechada para
+  `anon`), e o extrato precisa ser regerado quando o acervo crescer — `frequencia.test.ts` falha se um
+  dos números que a copy cita mudar, que é o alarme desejado.
+- **Scope**: Rota `/` e `src/modules/acervo/frequencia.ts`. A tela do Raio-X do aluno (SPEC 11) segue
+  na sua própria consulta.
+- **Date**: 2026-08-25
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: SPEC 15 — Painel do operador (`.specs/features/15-painel-do-operador/`) — concluída e verificada.
-- **Phase / Task**: Execute concluído em T127; Ritual B validado por GPT-5.6 Luna com reasoning `max`.
-- **Completed**: design e plano (`e9c3d6c`); T118 (`191fc2d`), T119 (`68b1327`), T120 (`904fb56`),
-  T121 (`ae1f718`), T122 (`c6982f9`), T123 (`d93278b`), T124 (`a1aad7f`), T125 (`a04ca25`),
-  T126 (`b25fe96`) e T127 (`47850cf`). Correção de fixture de typecheck em `fcf8217`.
-  Gates finais: 699 unitários, 378 testes de banco com rede autorizada, lint sem erros e build verde.
-- **External checks**: migrations da SPEC 15 até `20260823102000_spec15_taxonomia.sql` aplicadas no
-  Supabase de desenvolvimento. Nenhuma migration desta branch foi aplicada em produção.
+- **Feature**: Porte da landing aprovada (protótipo `scrollcraft/builds/passou-lp`) para os componentes
+  Next.js. Trabalho de porte fiel, fora da numeração de specs; o contrato de PAG-08 não mudou.
+- **Phase / Task**: concluído. Sem ritual de spec — não é feature nova, é substituição de superfície.
+- **Completed**: sete seções em `src/modules/ui/landing/` (`secoes.tsx`, `pico.tsx`, `estrutura.tsx`),
+  motor de scroll em `public/motor/scrollcraft.js` montado por `motor.tsx`, movimento assinatura em
+  `assinatura.ts`, folha própria em `landing.css`, tokens do lado escuro no `@theme`, e a frequência
+  real vinda do banco em `src/modules/acervo/frequencia.ts` com extrato de queda. `ciclo.tsx`,
+  `marca.tsx`, `props.tsx` e `movimento.tsx` (GSAP) foram removidos — a landing não usa mais GSAP.
+- **Gates**: 837 testes unitários verdes (`npm run test:unit`), `tsc --noEmit` limpo, `eslint src` sem
+  erro, `next build` verde. Captura de scroll em desktop, 390px e `prefers-reduced-motion`, comparada
+  quadro a quadro com o protótipo: sem dead scroll, sem contraste reprovado, altura de página idêntica
+  (13,8 vh no desktop).
+- **External checks**: nenhuma migration nova. A leitura usa a view `inventario_acervo`, que já existe
+  desde `20260824101000_recursos_estudo.sql`.
 - **In-progress** (file:line): none.
-- **Next step**: iniciar a SPEC 16 conforme `.specs/ROADMAP.md`; a SPEC 15 não tem task pendente.
-- **Blockers**: nenhum para a implementação. `npm test` agregado tem falha preexistente de configuração do Vitest
-  (`maxWorkers` divergente); usar os gates canônicos separados `npm run test:unit` e `npm run test:db`.
-  UAT visual e configuração de produção continuam manuais.
-- **Inherited notes**: preservar F-13 (aviso de reembolso preso à URL) e F-14 (revelar senha, sem
-  confirmação nem retorno ao login); acompanhar o primeiro estorno parcelado em produção; CI de
-  banco ainda sofre latência e executa novamente após merge; não apagar `caiolacerdamt@` nem
-  `raiox-demo@passou.dev`; a tensão do log append-only de pagamentos com esquecimento segue para a
-  SPEC 18.
-- **Uncommitted files**: somente diretórios não rastreados preexistentes do usuário:
-  `.claude/skills/`, `.github/agents/`, `.github/hooks/`, `.github/skills/`; não alterar nem incluir.
-- **Branch**: `codex/spec-15`.
+- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16. O porte não abre task pendente.
+- **Blockers**: nenhum. Dois pontos abertos, ambos conhecidos e não regressões: no celular o rótulo
+  longo do gráfico encosta no número (defeito idêntico no protótipo aprovado, some encurtando o rótulo
+  abaixo de 900px); e a verificação em aparelho real (iPhone) continua **não feita** — Chrome headless
+  não reproduz decodificador, autoplay nem toque.
+- **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
+  `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
+- **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,
+  `.github/agents/`, `.github/hooks/`, `.github/skills/`) e os PNG de referência na raiz
+  (`mm-*.png`, `neuro-*.png`, `v-hero.png`); não alterar nem incluir.
+- **Branch**: `feat/landing-porte-scrollcraft`.

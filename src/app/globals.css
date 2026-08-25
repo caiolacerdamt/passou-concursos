@@ -26,6 +26,8 @@
   --color-linha: #ddd9cd;
   --color-painel: #fffdf8;
   --color-marca-apoio: #357055;
+  /* Preenchimento e ilustração apenas — 3.56:1, nunca carrega texto (DESIGN.md). */
+  --color-marca-viva: #4f8b72;
   --color-marca-suave: #e6eee9;
   --color-conquista: #8a6318;
   --color-conquista-fundo: #faf4e6;
@@ -124,8 +126,13 @@
    * O lado escuro da landing (AD-106).
    *
    * Duas das sete seções viram breu — o problema e o pico. É esse racionamento
-   * que faz o pico valer, e é por isso que estes tokens não vazam para o app:
-   * tema escuro continua fora do escopo, isto é chão de capítulo.
+   * que faz o pico valer.
+   *
+   * O app usa os mesmos tokens, sob a mesma regra de racionamento: a barra de
+   * navegação (que é chrome, não conteúdo) e **um** cartão de conteúdo por
+   * tela — o próximo bloco do dia. Nenhum terceiro. Isto não é tema escuro,
+   * que continua fora do escopo: é a mesma matéria da landing, usada com
+   * parcimônia, para as duas superfícies não parecerem dois produtos.
    *
    * Contraste medido contra `--color-breu`, não estimado:
    * `breu-tinta` 15.1:1 · `breu-suave` 7.2:1 · `breu-verde` 8.8:1.

@@ -287,7 +287,160 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         estudo_progresso: 1,
         questoes_progresso: 2,
         revisao_progresso: 1,
+        estudo_piso_progresso: 1,
+        questoes_piso_progresso: 2,
+        revisao_piso_progresso: 1,
       });
+    });
+  });
+
+  it("satisfaz a revisao gemea nos dois sentidos e a usa na sequencia", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const piso = await criarUsuario(cliente);
+      const meta = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const data = "2026-08-17";
+      const questao = await questaoParaResponder(cliente);
+
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste gemea W4-B')`,
+        [autor],
+      );
+      for (const aluno of [piso, meta]) {
+        await cliente.query(
+          `insert into public.perfil_estudo
+             (user_id, minutos_por_dia, dias_estudo, onboarding_concluido)
+           values ($1, 60, array[1]::smallint[], true)`,
+          [aluno],
+        );
+      }
+
+      async function criarPar(aluno: string): Promise<{ piso: string; meta: string }> {
+        const plano = await cliente.query<{ id: string }>(
+          `insert into public.plano_dia (user_id, data) values ($1, $2) returning id`,
+          [aluno, data],
+        );
+        const blocoPiso = await cliente.query<{ id: string }>(
+          `insert into public.plano_bloco
+             (plano_dia_id, topico_id, tipo, nivel, ordem, n_questoes,
+              n_questoes_cheias, minutos_estimados, minutos_estimados_cheios)
+           values ($1, $2, 'revisar', 'piso', 1, 1, 1, 2, 2) returning id`,
+          [plano.rows[0].id, questao.topico_id],
+        );
+        const blocoMeta = await cliente.query<{ id: string }>(
+          `insert into public.plano_bloco
+             (plano_dia_id, topico_id, tipo, nivel, ordem, n_questoes,
+              n_questoes_cheias, minutos_estimados, minutos_estimados_cheios)
+           values ($1, $2, 'revisar', 'meta_cheia', 1, 1, 1, 2, 2) returning id`,
+          [plano.rows[0].id, questao.topico_id],
+        );
+        return { piso: blocoPiso.rows[0].id, meta: blocoMeta.rows[0].id };
+      }
+
+      const planoPiso = await criarPar(piso);
+      const planoMeta = await criarPar(meta);
+      await fecharBlocoComTentativa(cliente, piso, planoPiso.piso, data, questao);
+      await fecharBlocoComTentativa(cliente, meta, planoMeta.meta, data, questao);
+
+      for (const aluno of [piso, meta]) {
+        await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
+      }
+
+      const anel = await cliente.query<{
+        user_id: string;
+        revisao_meta: number;
+        revisao_progresso: number;
+        revisao_piso_meta: number;
+        revisao_piso_progresso: number;
+      }>(
+        `select user_id, revisao_meta, revisao_progresso,
+                revisao_piso_meta, revisao_piso_progresso
+           from public.gamificacao_dia where user_id in ($1, $2)
+          order by user_id`,
+        [piso, meta],
+      );
+      expect(anel.rows).toHaveLength(2);
+      expect(anel.rows.every((linha) => linha.revisao_meta === 1)).toBe(true);
+      expect(anel.rows.every((linha) => linha.revisao_progresso === 1)).toBe(true);
+      expect(anel.rows.every((linha) => linha.revisao_piso_meta === 1)).toBe(true);
+      expect(anel.rows.every((linha) => linha.revisao_piso_progresso === 1)).toBe(true);
+
+      await cliente.query("select public.recalcula_sequencia($1, $2::date)", [piso, data]);
+      await cliente.query("select public.recalcula_sequencia($1, $2::date)", [meta, data]);
+      const sequencias = await cliente.query<{ user_id: string; estado: string }>(
+        `select user_id, estado from public.sequencia_dia
+          where user_id in ($1, $2) and data = $3 order by user_id`,
+        [piso, meta, data],
+      );
+      expect(sequencias.rows).toEqual([
+        { user_id: piso, estado: "cumprido" },
+        { user_id: meta, estado: "cumprido" },
+      ]);
+    });
+  });
+
+  it("nao trata avancar e treinar do mesmo topico como gemeas", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const data = dataDeHojeEmSaoPaulo();
+      const primeira = await questaoParaResponder(cliente);
+      const segunda = await questaoParaResponder(cliente);
+
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste tipos gemeos W4-B')`,
+        [autor],
+      );
+      const plano = await cliente.query<{ id: string }>(
+        `insert into public.plano_dia (user_id, data) values ($1, $2) returning id`,
+        [aluno, data],
+      );
+      const piso = await cliente.query<{ id: string }>(
+        `insert into public.plano_bloco
+           (plano_dia_id, topico_id, tipo, nivel, ordem, n_questoes,
+            n_questoes_cheias, minutos_estimados, minutos_estimados_cheios)
+         values ($1, $2, 'avancar', 'piso', 1, 1, 1, 2, 2) returning id`,
+        [plano.rows[0].id, primeira.topico_id],
+      );
+      const treinoMesmoTopico = await cliente.query<{ id: string }>(
+        `insert into public.plano_bloco
+           (plano_dia_id, topico_id, tipo, nivel, ordem, n_questoes,
+            n_questoes_cheias, minutos_estimados, minutos_estimados_cheios)
+         values ($1, $2, 'treinar', 'meta_cheia', 2, 1, 1, 2, 2) returning id`,
+        [plano.rows[0].id, primeira.topico_id],
+      );
+      const treinoOutroTopico = await cliente.query<{ id: string }>(
+        `insert into public.plano_bloco
+           (plano_dia_id, topico_id, tipo, nivel, ordem, n_questoes,
+            n_questoes_cheias, minutos_estimados, minutos_estimados_cheios)
+         values ($1, $2, 'treinar', 'meta_cheia', 3, 1, 1, 2, 2) returning id`,
+        [plano.rows[0].id, segunda.topico_id],
+      );
+
+      await fecharBlocoComTentativa(cliente, aluno, piso.rows[0].id, data, primeira);
+      const satisfacao = await cliente.query<{ piso: boolean; mesmo_tipo: boolean }>(
+        `select public.plano_bloco_satisfeito($1, $2) as piso,
+                public.plano_bloco_satisfeito($3, $2) as mesmo_tipo`,
+        [piso.rows[0].id, aluno, treinoMesmoTopico.rows[0].id],
+      );
+      expect(satisfacao.rows[0]).toEqual({ piso: true, mesmo_tipo: false });
+
+      await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
+      const anel = await cliente.query<{
+        estudo_meta: number;
+        estudo_progresso: number;
+        estudo_bruto: number;
+      }>(
+        `select estudo_meta, estudo_progresso, estudo_bruto
+           from public.gamificacao_dia where user_id = $1 and data = $2`,
+        [aluno, data],
+      );
+      expect(anel.rows[0]).toEqual({ estudo_meta: 2, estudo_progresso: 1, estudo_bruto: 1 });
+      expect(treinoOutroTopico.rows[0].id).not.toBe(treinoMesmoTopico.rows[0].id);
     });
   });
 

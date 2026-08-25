@@ -7,11 +7,7 @@ import { consultarPainelDoDia, type PainelDoDia } from "./painel-do-dia";
 import { AcompanhamentoDoDia, CartaoDoDia } from "./painel-do-dia-tela";
 import { Ofensiva } from "./ofensiva-tela";
 import { OnboardingTela } from "./onboarding-tela";
-import {
-  PlanoTela,
-  type ResultadoDoPlano,
-  type SuperficieDoPlano,
-} from "./plano-tela";
+import { PlanoTela, type SuperficieDoPlano } from "./plano-tela";
 import { Estado } from "@/modules/ui/estado";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 
@@ -52,7 +48,6 @@ export async function renderizarPainelDoPlano({
 
   return conteudoDoPlano(supabase, {
     superficie,
-    resultado: resultadoDoPlano(parametros.resultado),
     painel,
   });
 }
@@ -61,7 +56,6 @@ async function conteudoDoPlano(
   supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
   opcoes: {
     superficie: SuperficieDoPlano;
-    resultado: ResultadoDoPlano;
     painel: PainelDoDia | null;
   },
 ) {
@@ -98,7 +92,6 @@ async function conteudoDoPlano(
         plano={plano}
         rotulosDosTopicos={rotulosDosTopicos}
         superficie={opcoes.superficie}
-        resultado={opcoes.resultado}
       />
       {opcoes.painel ? <AcompanhamentoDoDia painel={opcoes.painel} /> : null}
     </div>
@@ -180,13 +173,6 @@ function CabecalhoDoPainel({
       )}
     </section>
   );
-}
-
-function resultadoDoPlano(valor: string | string[] | undefined): ResultadoDoPlano {
-  const resultado = comoTexto(valor);
-  return resultado === "reordenado" || resultado === "adiado" || resultado === "curta" || resultado === "erro"
-    ? resultado
-    : null;
 }
 
 function comoTexto(valor: string | string[] | undefined): string | undefined {

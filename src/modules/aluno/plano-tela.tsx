@@ -19,14 +19,10 @@ const DESCRICOES: Record<BlocoDoPlano["tipo"], string> = {
 
 export type SuperficieDoPlano = "hoje" | "plano";
 
-/** Mantido enquanto plano-pagina.tsx ainda encaminha o resultado legado. */
-export type ResultadoDoPlano = "reordenado" | "adiado" | "curta" | "erro" | null;
-
 type Props = {
   plano: PlanoDoDia;
   rotulosDosTopicos?: ReadonlyMap<string, RotuloDoTopico>;
   superficie?: SuperficieDoPlano;
-  resultado?: ResultadoDoPlano;
 };
 
 function emHoras(minutos: number): string {

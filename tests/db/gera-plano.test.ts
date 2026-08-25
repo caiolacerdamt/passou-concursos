@@ -3,7 +3,9 @@ import { expect, it } from "vitest";
 
 import { criarProva, inserirQuestao, sufixo } from "./acervo";
 import { novoAluno } from "./aluno";
-import { comTransacaoSemPerfilConcurso } from "./conexao";
+import {
+  comTransacaoSemPerfilConcurso as comTransacaoSemPerfilConcursoBase,
+} from "./conexao";
 import { descreveComBanco } from "./setup";
 
 /**
@@ -48,6 +50,21 @@ async function topicoComQuestao(
   });
 
   return topico[0].id;
+}
+
+/**
+ * O banco de desenvolvimento tem acervo compartilhado. O motor consulta todo
+ * tópico ativo, então os testes precisam começar com um catálogo vazio para
+ * que os tópicos criados pela própria fixture controlem a seleção. A alteração
+ * fica dentro da transação e o rollback restaura o acervo real.
+ */
+async function comTransacaoSemPerfilConcurso<T>(
+  uso: (cliente: Client) => Promise<T>,
+): Promise<T> {
+  return comTransacaoSemPerfilConcursoBase(async (cliente) => {
+    await cliente.query("update public.topicos set ativo = false where ativo");
+    return uso(cliente);
+  });
 }
 
 async function criarPerfil(
@@ -214,6 +231,9 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
       const a = await topicoComQuestao(cliente);
       const b = await topicoComQuestao(cliente);
       const c = await topicoComQuestao(cliente);
+      // Há conteúdo novo elegível para o único slot de avanço; os três
+      // primeiros tópicos estão vencidos e ocupam apenas a fila de revisão.
+      await topicoComQuestao(cliente);
       await criarPerfil(cliente, aluno, 20);
       for (const t of [a, b, c]) await revisaoVencida(cliente, aluno, t);
 

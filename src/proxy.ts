@@ -67,9 +67,15 @@ export const config = {
   matcher: [
     /*
      * Tudo, menos o que nunca precisa de sessao: arquivo estatico, imagem
-     * otimizada, favicon e o tunel do Sentry. Rota de pagina nova entra no
-     * matcher sozinha — e o default seguro.
+     * otimizada, favicon, o tunel do Sentry e o motor de scroll da landing.
+     * Rota de pagina nova entra no matcher sozinha — e o default seguro.
+     *
+     * `motor/` esta na lista porque o default seguro custou um defeito real:
+     * sem a excecao, `/motor/scrollcraft.js` era tratado como rota de pagina e
+     * o visitante deslogado recebia o HTML de `/entrar` no lugar do script. A
+     * landing e publica, mas o arquivo nao vem de `_next/static` — asset em
+     * `public/` e servido pela raiz.
      */
-    "/((?!_next/static|_next/image|favicon.ico|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|monitoring|motor/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

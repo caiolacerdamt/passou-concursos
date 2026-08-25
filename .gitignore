@@ -38,6 +38,7 @@ desktop.ini
 *.tmp
 
 # Ferramentas locais de agentes e QA (nao fazem parte do produto)
+/lab/
 /.playwright-mcp/
 /.impeccable/
 /.claude/skills/

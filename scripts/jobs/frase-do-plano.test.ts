@@ -140,15 +140,57 @@ describe("o que o job manda para o modelo", () => {
       id: "p1",
       minutosPorDia: 45,
       blocos: [
-        { tipo: "revisar", topico: "Juros Compostos", motivo: "revisao vencida" },
-        { tipo: "treinar", topico: null, motivo: null },
+        {
+          tipo: "revisar",
+          materia: "Matematica Financeira",
+          topico: "Juros Compostos",
+          motivo: "revisao vencida",
+        },
+        { tipo: "treinar", materia: null, topico: null, motivo: null },
       ],
     };
 
     const entrada = entradaDoPedido(plano);
     expect(entrada).toContain("45 minutos");
-    expect(entrada).toContain("revisar: Juros Compostos (revisao vencida)");
+    expect(entrada).toContain(
+      "revisar: Matematica Financeira · Juros Compostos (revisao vencida)",
+    );
     expect(entrada).toContain("treinar: assuntos misturados");
+  });
+
+  it.each([
+    {
+      caso: "topico Geral",
+      materia: "Conhecimentos Bancarios",
+      topico: "Geral",
+      esperado: "Conhecimentos Bancarios",
+    },
+    {
+      caso: "bloco sem topico",
+      materia: "Conhecimentos Bancarios",
+      topico: null,
+      esperado: "Conhecimentos Bancarios",
+    },
+    {
+      caso: "materia ausente",
+      materia: null,
+      topico: "Juros Compostos",
+      esperado: "Juros Compostos",
+    },
+    {
+      caso: "materia e topico ausentes",
+      materia: null,
+      topico: null,
+      esperado: "assuntos misturados",
+    },
+  ])("usa o rotulo da tela quando $caso", ({ materia, topico, esperado }) => {
+    const entrada = entradaDoPedido({
+      id: "p1",
+      minutosPorDia: 30,
+      blocos: [{ tipo: "avancar", materia, topico, motivo: null }],
+    });
+
+    expect(entrada).toContain(`avancar: ${esperado}`);
   });
 
   it("aluno sem tempo declarado nao vira numero inventado", () => {
@@ -179,15 +221,30 @@ describe("planosSemFrase", () => {
         { id: "p2", minutos_por_dia: null },
       ],
       [
-        { plano_dia_id: "p1", tipo: "revisar", motivo: null, topico: "Juros" },
-        { plano_dia_id: "p1", tipo: "avancar", motivo: null, topico: "SAC" },
+        {
+          plano_dia_id: "p1",
+          tipo: "revisar",
+          motivo: null,
+          materia: "Matematica Financeira",
+          topico: "Juros",
+        },
+        {
+          plano_dia_id: "p1",
+          tipo: "avancar",
+          motivo: null,
+          materia: "Conhecimentos Bancarios",
+          topico: "SAC",
+        },
       ],
     );
 
     const planos = await planosSemFrase(cliente);
 
     expect(planos).toHaveLength(2);
-    expect(planos[0].blocos.map((b) => b.topico)).toEqual(["Juros", "SAC"]);
+    expect(planos[0].blocos.map((b) => [b.materia, b.topico])).toEqual([
+      ["Matematica Financeira", "Juros"],
+      ["Conhecimentos Bancarios", "SAC"],
+    ]);
     expect(planos[1].blocos).toEqual([]);
     expect(planos[1].minutosPorDia).toBeNull();
   });
@@ -198,6 +255,7 @@ describe("planosSemFrase", () => {
     expect(CONSULTA_DOS_PLANOS).toContain("pd.frase is null");
     expect(CONSULTA_DOS_PLANOS).toContain("pd.data = current_date");
     expect(CONSULTA_DOS_BLOCOS).toContain("nivel = 'meta_cheia'");
+    expect(CONSULTA_DOS_BLOCOS).toContain("join public.materias m");
   });
 });
 

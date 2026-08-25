@@ -12,6 +12,7 @@ import {
   correcaoDeQuestaoSchema,
   edicaoDeTaxonomiaSchema,
   alteracaoDeConfiguracaoSchema,
+  recursoEstudoSchema,
 } from "./contratos";
 import {
   comOperador,
@@ -148,5 +149,26 @@ export async function alterarConfiguracao(
       }
       throw erro;
     }
+  });
+}
+
+/** Salva ou substitui uma URL curada sem permitir autoria forjada. */
+export async function salvarRecursoEstudo(entrada: unknown): Promise<string> {
+  return comOperador("salvar_recurso_estudo", async ({ operador, cliente }) => {
+    const validada = recursoEstudoSchema.safeParse(entrada);
+    if (!validada.success) rejeitarEntrada("recurso_de_estudo_invalido");
+
+    return rpc<string>(cliente, "salvar_recurso_estudo_operador", {
+      p_recurso_id: validada.data.recursoId ?? null,
+      p_topico_id: validada.data.topicoId,
+      p_titulo: validada.data.titulo,
+      p_url: validada.data.url,
+      p_tipo: validada.data.tipo,
+      p_duracao_minutos: validada.data.duracaoMinutos,
+      p_ordem: validada.data.ordem,
+      p_ativo: validada.data.ativo,
+      p_operador: operador.id,
+      p_motivo: validada.data.motivo,
+    });
   });
 }

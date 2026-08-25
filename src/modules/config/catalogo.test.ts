@@ -42,6 +42,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.simulado_semanal",
       "flag.m4.caderno_erros",
       "flag.m5.raiox",
+      "flag.m6.gamificacao",
       "flag.m9.rota_de_erro_proposital",
       "flag.m9.analytics_logado",
     ];
@@ -58,6 +59,15 @@ describe("catalogo de chaves", () => {
       "param.m4.minutos_por_questao",
       "param.m4.diagnostico_n_questoes",
       "param.m4.dias_sem_repetir_questao",
+      "param.m4.percentual_avancar",
+      "param.m4.percentual_praticar",
+      "param.m4.percentual_revisar",
+      "param.m4.teto_revisoes_dia",
+      "param.m4.cooldown_materia_dias",
+      "param.m4.teto_semanal_materia",
+      "param.m4.limite_sem_toque_materia_dias",
+      "param.m4.fracao_minutos_versao_curta",
+      "param.m4.fracao_questoes_versao_curta",
       "param.m4.peso_devendo_revisao",
       "param.m4.fsrs_limiar_otimizacao",
       "param.m4.fsrs_passos_curtos",
@@ -71,6 +81,13 @@ describe("catalogo de chaves", () => {
       "param.m5.piso_amostra_baixa",
       "param.m5.periodo_tendencia_recente_anos",
       "param.m5.periodo_tendencia_anterior_anos",
+      "param.m6.pontos_estudo_prioritario",
+      "param.m6.pontos_conclusao",
+      "param.m6.pontos_revisao_no_prazo",
+      "param.m6.pontos_recuperacao_erro",
+      "param.m6.meta_missao_questoes",
+      "param.m6.meta_conquista_sequencia",
+      "param.m6.meta_conquista_questoes",
       "param.m2.matriz_de_modelos",
       "param.m2.precos_por_modelo",
       "param.m2.teto_gasto_mensal_usd",
@@ -113,6 +130,27 @@ describe("catalogo de chaves", () => {
     expect(CATALOGO["param.m5.piso_amostra_baixa"].padrao).toBe(10);
     expect(CATALOGO["param.m5.periodo_tendencia_recente_anos"].padrao).toBe(3);
     expect(CATALOGO["param.m5.periodo_tendencia_anterior_anos"].padrao).toBe(3);
+  });
+
+  it("declara a flag global e os valores calibráveis da gamificação", () => {
+    expect(CATALOGO["flag.m6.gamificacao"].padrao).toBe(false);
+    expect(CATALOGO["param.m6.pontos_estudo_prioritario"].padrao).toBe(10);
+    expect(CATALOGO["param.m6.pontos_conclusao"].padrao).toBe(20);
+    expect(CATALOGO["param.m6.pontos_revisao_no_prazo"].padrao).toBe(15);
+    expect(CATALOGO["param.m6.pontos_recuperacao_erro"].padrao).toBe(25);
+    expect(CATALOGO["param.m6.meta_missao_questoes"].padrao).toBe(10);
+    expect(CATALOGO["param.m6.meta_conquista_sequencia"].padrao).toBe(7);
+    expect(CATALOGO["param.m6.meta_conquista_questoes"].padrao).toBe(100);
+
+    for (const chave of [
+      "param.m6.pontos_estudo_prioritario",
+      "param.m6.pontos_conclusao",
+      "param.m6.pontos_revisao_no_prazo",
+      "param.m6.pontos_recuperacao_erro",
+    ] as const) {
+      expect(CATALOGO[chave].tipo.safeParse(-1).success).toBe(false);
+      expect(CATALOGO[chave].tipo.safeParse(0).success).toBe(true);
+    }
   });
 
   it("declara os valores comerciais do funil e a flag logada desligada", () => {

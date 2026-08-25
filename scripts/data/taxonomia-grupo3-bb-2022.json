@@ -1,0 +1,141 @@
+{
+  "materias": [
+    {
+      "nome": "Língua Portuguesa",
+      "ordem": 1,
+      "topicos": [
+        "Interpretação",
+        "Ortografia",
+        "Classes de palavras",
+        "Crase",
+        "Sintaxe",
+        "Pontuação",
+        "Concordância",
+        "Regência",
+        "Colocação pronominal",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Língua Inglesa",
+      "ordem": 2,
+      "topicos": [
+        "Compreensão de texto",
+        "Vocabulário",
+        "Gramática básica",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Matemática",
+      "ordem": 3,
+      "topicos": [
+        "Números",
+        "Medidas",
+        "Proporções, regra de três e porcentagem",
+        "Lógica proposicional",
+        "Conjuntos, relações e funções",
+        "Matrizes e sistemas",
+        "Sequências",
+        "PA e PG",
+        "Probabilidade e estatística",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Atualidades do Mercado Financeiro",
+      "ordem": 4,
+      "topicos": [
+        "Bancos digitais",
+        "Internet e mobile banking",
+        "Open banking",
+        "Fintechs, startups e big techs",
+        "Shadow banking",
+        "Moedas e blockchain",
+        "Criptoativos",
+        "Marketplace",
+        "Correspondentes bancários",
+        "Arranjos de pagamento",
+        "PIX",
+        "Transformação digital",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Matemática Financeira",
+      "ordem": 5,
+      "topicos": [
+        "Valor do dinheiro",
+        "Fluxos de caixa",
+        "Capital, juros e taxas",
+        "Juros simples",
+        "Juros compostos",
+        "Equivalência de capitais",
+        "Price e SAC",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Conhecimentos Bancários",
+      "ordem": 6,
+      "topicos": [
+        "SFN e mercados",
+        "Política monetária",
+        "Orçamento e dívida pública",
+        "Produtos e serviços",
+        "Mercado de capitais",
+        "Câmbio",
+        "Garantias",
+        "PLD/FT",
+        "Autorregulação",
+        "Sigilo bancário",
+        "LGPD",
+        "Anticorrupção",
+        "Cibersegurança",
+        "Ética",
+        "Responsabilidade socioambiental e ASG",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Conhecimentos de Informática",
+      "ordem": 7,
+      "topicos": [
+        "Windows e Linux",
+        "Microsoft 365",
+        "Segurança",
+        "Arquivos",
+        "Redes",
+        "Navegadores",
+        "E-mail e colaboração",
+        "Redes sociais",
+        "BI e analytics",
+        "EAD",
+        "Multimídia",
+        "Ferramentas de trabalho remoto",
+        "Geral"
+      ]
+    },
+    {
+      "nome": "Vendas e Negociação",
+      "ordem": 8,
+      "topicos": [
+        "Estratégia",
+        "Segmentação",
+        "Valor e experiência do cliente",
+        "Relacionamento",
+        "Marketing de serviços",
+        "Marketing digital",
+        "Vendas",
+        "Ética em vendas",
+        "Canais remotos",
+        "Comportamento do consumidor",
+        "Res. CMN 4.949/2021",
+        "Ouvidoria",
+        "Acessibilidade",
+        "CDC",
+        "Geral"
+      ]
+    }
+  ]
+}

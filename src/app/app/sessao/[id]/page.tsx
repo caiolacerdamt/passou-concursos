@@ -5,9 +5,7 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { consultarSessao, SessaoRecusada } from "@/modules/aluno/sessao";
 import { Estado } from "@/modules/ui/estado";
-import { Shell } from "@/modules/ui/shell";
 
-import { sair } from "../../../entrar/acoes";
 import { SessaoTela } from "@/modules/aluno/sessao/tela";
 
 type Props = { params: Promise<{ id: string }> };
@@ -57,19 +55,5 @@ export default async function Sessao({ params }: Props) {
 }
 
 function TelaBase({ children }: { children: ReactNode }) {
-  return (
-    <Shell
-      largura="leitura"
-      acoes={
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/app" className="text-marca underline">Plano</Link>
-          <form action={sair}>
-            <button type="submit" className="text-marca underline">Sair</button>
-          </form>
-        </div>
-      }
-    >
-      {children}
-    </Shell>
-  );
+  return <div className="mx-auto max-w-2xl">{children}</div>;
 }

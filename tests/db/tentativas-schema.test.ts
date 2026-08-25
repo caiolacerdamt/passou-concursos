@@ -226,12 +226,20 @@ descreveComBanco("tentativas — o que a tabela recusa", () => {
         tipo_questao: "certo_errado",
       });
       await expect(
-        inserirTentativa(cliente, certoErrado, { resposta_dada: "E", correta: false }),
+        inserirTentativa(cliente, certoErrado, {
+          contexto: "diagnostico",
+          resposta_dada: "E",
+          correta: false,
+        }),
       ).resolves.toBeTruthy();
 
       const multipla = await questaoParaResponder(cliente);
       await expect(
-        inserirTentativa(cliente, multipla, { resposta_dada: "D", correta: false }),
+        inserirTentativa(cliente, multipla, {
+          contexto: "diagnostico",
+          resposta_dada: "D",
+          correta: false,
+        }),
       ).resolves.toBeTruthy();
     });
   });
@@ -267,7 +275,7 @@ descreveComBanco("tentativas — o que a tabela recusa", () => {
     });
   });
 
-  it("nao pede causa fora do treino — diagnostico e simulado nao interrompem", async () => {
+  it("nao pede causa em diagnostico e simulado, mas pede no plano", async () => {
     await comTransacaoRevertida(async (cliente) => {
       await garantirParticao(cliente, new Date());
       const questao = await questaoParaResponder(cliente);
@@ -280,6 +288,15 @@ descreveComBanco("tentativas — o que a tabela recusa", () => {
           }),
         ).resolves.toBeTruthy();
       }
+
+      const mensagem = await recusa(cliente, () =>
+        inserirTentativa(cliente, questao, {
+          contexto: "plano",
+          correta: false,
+          resposta_dada: "A",
+        }),
+      );
+      expect(mensagem).toMatch(/causa_obrigatoria_no_treino/);
     });
   });
 

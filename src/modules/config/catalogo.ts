@@ -216,6 +216,69 @@ export const CATALOGO = {
     descricao:
       "Janela em que a mesma questao nao volta no Treinar, para o aluno nao decorar a alternativa.",
   }),
+  "param.m4.percentual_avancar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para avancar no edital. A capacidade nao usada por uma categoria pode ser redistribuida sem ultrapassar os minutos declarados.",
+  }),
+  "param.m4.percentual_praticar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.3,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para praticar. Vive em configuracao para calibrar o equilibrio do ciclo sem deploy.",
+  }),
+  "param.m4.percentual_revisar": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.2,
+    moduloDono: "m4",
+    descricao:
+      "Fracao-alvo da capacidade diaria reservada para revisoes vencidas. A revisao nunca pode consumir mais que a capacidade total.",
+  }),
+  "param.m4.teto_revisoes_dia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 2,
+    moduloDono: "m4",
+    descricao:
+      "Quantidade maxima de blocos de revisao por dia. Evita que a fila vencida paralise o avanco do edital.",
+  }),
+  "param.m4.cooldown_materia_dias": chave({
+    tipo: z.number().int().min(0),
+    padrao: 2,
+    moduloDono: "m4",
+    descricao:
+      "Quantidade de dias de cooldown depois de tocar uma materia, para favorecer a rotacao do ciclo.",
+  }),
+  "param.m4.teto_semanal_materia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 3,
+    moduloDono: "m4",
+    descricao:
+      "Teto de blocos concluidos por materia na semana para impedir monopolio; a janela maxima pode quebrar o teto para evitar abandono.",
+  }),
+  "param.m4.limite_sem_toque_materia_dias": chave({
+    tipo: z.number().int().positive(),
+    padrao: 7,
+    moduloDono: "m4",
+    descricao:
+      "Janela maxima sem tocar uma materia relevante. Ao vencer, a materia volta a ser elegivel mesmo que o teto semanal esteja cheio.",
+  }),
+  "param.m4.fracao_minutos_versao_curta": chave({
+    tipo: z.number().min(0.01).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao dos minutos da versao cheia usada na versao curta. A operacao e idempotente e nunca reduz abaixo de um minuto.",
+  }),
+  "param.m4.fracao_questoes_versao_curta": chave({
+    tipo: z.number().min(0.01).max(1),
+    padrao: 0.5,
+    moduloDono: "m4",
+    descricao:
+      "Fracao das questoes da versao cheia usada na versao curta. A quantidade minima e uma questao.",
+  }),
   "param.m4.peso_devendo_revisao": chave({
     tipo: z.number().positive(),
     padrao: 1.5,
@@ -300,6 +363,67 @@ export const CATALOGO = {
     moduloDono: "m5",
     descricao:
       "Tamanho, em anos, da janela anterior comparada com a janela recente da tendência.",
+  }),
+
+  // ── M6 · gamificação solo ─────────────────────────────────────────────────
+  // A flag é global e nasce desligada. Os pontos e as metas ficam em
+  // configuração versionada para que a calibragem não exija deploy nem espalhe
+  // números pelo contrato que a tela consome.
+  "flag.m6.gamificacao": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m6",
+    descricao:
+      "Contrato de gamificação solo: anel, pontos, missão e conquistas. Nasce desligado até a onda visual ligar a superfície com segurança.",
+  }),
+  "param.m6.pontos_estudo_prioritario": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 10,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de um bloco prioritário do piso concluído com respostas reais. O evento é único por bloco e não premia sessão vazia.",
+  }),
+  "param.m6.pontos_conclusao": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 20,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de um bloco da meta cheia concluído com respostas reais. O valor é congelado no evento de origem.",
+  }),
+  "param.m6.pontos_revisao_no_prazo": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 15,
+    moduloDono: "m6",
+    descricao:
+      "Pontos de uma revisão do plano concluída com respostas reais. A presença no plano de hoje é a prova server-trusted do prazo.",
+  }),
+  "param.m6.pontos_recuperacao_erro": chave({
+    tipo: z.number().int().nonnegative(),
+    padrao: 25,
+    moduloDono: "m6",
+    descricao:
+      "Pontos da primeira resposta correta posterior a um erro na mesma questão. Cada tentativa é uma origem auditável e única.",
+  }),
+  "param.m6.meta_missao_questoes": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m6",
+    descricao:
+      "Meta configurável da missão de questões quando o plano não emite um piso prioritário.",
+  }),
+  "param.m6.meta_conquista_sequencia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 7,
+    moduloDono: "m6",
+    descricao:
+      "Quantidade de dias cumpridos necessária para a conquista pessoal de sequência.",
+  }),
+  "param.m6.meta_conquista_questoes": chave({
+    tipo: z.number().int().positive(),
+    padrao: 100,
+    moduloDono: "m6",
+    descricao:
+      "Quantidade acumulada de questões respondidas necessária para a conquista pessoal de volume.",
   }),
 
   // ── M2 · camada de IA ─────────────────────────────────────────────────────

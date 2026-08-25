@@ -1,0 +1,961 @@
+{
+  "gerado_por": "Grupo 5 · Fase 2.1",
+  "criterio": "questão vigente sem tópico cujo enunciado não é idêntico ao de nenhuma questão vigente já classificada",
+  "total": 159,
+  "questoes": [
+    {
+      "id": "0ed415a9-f225-4286-9ea0-77b7d4c27a6c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 1,
+      "enunciado_inicio": "A palavra salário vem mesmo de “sal”?\n\nVem. A explicação mais popular diz que os soldados da Roma Antiga recebiam seu ordenado na forma de sal. Faz sentido. O dinheiro como o conhecemos surgiu no sécu"
+    },
+    {
+      "id": "c75bf3e3-1078-4246-a141-943378439f93",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 1,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "3a601de7-013a-47db-a037-f140f7008913",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 1,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "3214eab3-2b47-44c0-8707-1100b38e48fe",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 2,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "1f77b33e-8c42-4f68-b257-c32ec371e48d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 2,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "6a930b77-b16b-4f7c-8ff8-bd781ed130bf",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 2,
+      "enunciado_inicio": "A palavra salário vem mesmo de “sal”?\n\nVem. A explicação mais popular diz que os soldados da Roma Antiga recebiam seu ordenado na forma de sal. Faz sentido. O dinheiro como o conhecemos surgiu no sécu"
+    },
+    {
+      "id": "2b1f2985-ecfe-48a8-bb81-8b161995621b",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 3,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "06f0eae4-1033-42be-95e4-138461ae3f9f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 3,
+      "enunciado_inicio": "A palavra salário vem mesmo de “sal”?\n\nVem. A explicação mais popular diz que os soldados da Roma Antiga recebiam seu ordenado na forma de sal. Faz sentido. O dinheiro como o conhecemos surgiu no sécu"
+    },
+    {
+      "id": "fe5bd6a0-8dfc-41f4-b065-e1476f2eb9a9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 3,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "4d1f62f6-768b-40cb-a253-7a6d3b996100",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 4,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "53425439-aaff-4154-b705-a16d675a5c95",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 4,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "9b2a3200-9efb-4dbc-9a11-dd6bd2a39715",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 4,
+      "enunciado_inicio": "A palavra salário vem mesmo de “sal”?\n\nVem. A explicação mais popular diz que os soldados da Roma Antiga recebiam seu ordenado na forma de sal. Faz sentido. O dinheiro como o conhecemos surgiu no sécu"
+    },
+    {
+      "id": "0b48bcab-7b8d-4816-b992-8be3c6643b94",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 5,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "5226cf78-fc29-4490-92db-1b6ab6e3c04f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 5,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "0f592946-ea7f-4bd7-a67d-c0ff55979892",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 5,
+      "enunciado_inicio": "O período que corresponde, sem alteração de sentido, à reescritura de “Mesmo com o advento do papel-moeda, o escambo, ou troca de mercadorias, persistiu em diversas comunidades” é:"
+    },
+    {
+      "id": "427c524d-8ce2-48de-a380-f20dba8f513c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 6,
+      "enunciado_inicio": "Privacidade digital: quais são os limites\n\nAtualmente, somos mais de 126,4 milhões de brasileiros usuários de internet, representando cerca de 69,8% da população com 10 anos ou mais. Ao redor do mundo"
+    },
+    {
+      "id": "e8a379e4-df9a-422f-bdab-9dd2b1727655",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 6,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "939df657-9a72-41cc-943c-bd7a66696d47",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 7,
+      "enunciado_inicio": "O que é o QA e por que ele pode ser mais importante que o QI no mercado de trabalho\n\nHá algum tempo, se você quisesse avaliar as perspectivas de alguém crescer na carreira, poderia considerar pedir um"
+    },
+    {
+      "id": "ab6fa245-0c4f-47fd-8c87-50216c2613e5",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 8,
+      "enunciado_inicio": "A frase em que o verbo apresenta a mesma predicação que o verbo ocorrer em “Isso ocorre porque um algoritmo pode executar essas tarefas” (parágrafo 5) é:"
+    },
+    {
+      "id": "1155987b-e4d2-4c7f-8444-dce7c58b0e6a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 9,
+      "enunciado_inicio": "O pronome se destacado apresenta a mesma função e classificação que exerce em “Automatiza-se facilmente qualquer função que envolva detectar padrões nos dados [...]” (parágrafo 5) no seguinte período:"
+    },
+    {
+      "id": "1df15108-1a8e-4e73-a9ef-9e43e0534322",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 10,
+      "enunciado_inicio": "O período em que a palavra ou a expressão em destaque NÃO está empregada de acordo com a norma-padrão é:"
+    },
+    {
+      "id": "102b39e2-5b21-4ca8-941f-d799c69720e6",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 11,
+      "enunciado_inicio": "Revolution Accelerated\nHow Digital Transformation is Shaping the Future of Banking\n\nLike all businesses, banks have had to act fast to respond to the unprecedented human and economic impact of Covid-1"
+    },
+    {
+      "id": "f23cc93f-0b2a-4f03-bbba-5fb00626447d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 11,
+      "enunciado_inicio": "Robots, the next generation of soccer players\n\nIf you think a robot will steal your job, you are not alone. Soccer players should be worried too. The next Messi probably wont be of flesh and blood bu"
+    },
+    {
+      "id": "fa751c06-60f4-4a36-bd5c-f7c7ebc88424",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 12,
+      "enunciado_inicio": "Robots, the next generation of soccer players\n\nIf you think a robot will steal your job, you are not alone. Soccer players should be worried too. The next Messi probably wont be of flesh and blood bu"
+    },
+    {
+      "id": "dc3856a0-03bc-447d-8bd9-56e8c75ed04f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 12,
+      "enunciado_inicio": "Revolution Accelerated\nHow Digital Transformation is Shaping the Future of Banking\n\nLike all businesses, banks have had to act fast to respond to the unprecedented human and economic impact of Covid-1"
+    },
+    {
+      "id": "08e99d2a-362d-4136-9fed-7afb113320ff",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 13,
+      "enunciado_inicio": "Robots, the next generation of soccer players\n\nIf you think a robot will steal your job, you are not alone. Soccer players should be worried too. The next Messi probably wont be of flesh and blood bu"
+    },
+    {
+      "id": "17bdadef-5036-4afe-957c-cffe1c82e880",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 13,
+      "enunciado_inicio": "Revolution Accelerated\nHow Digital Transformation is Shaping the Future of Banking\n\nLike all businesses, banks have had to act fast to respond to the unprecedented human and economic impact of Covid-1"
+    },
+    {
+      "id": "20af48b4-f268-44ec-a518-09738b217dfe",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 14,
+      "enunciado_inicio": "Revolution Accelerated\nHow Digital Transformation is Shaping the Future of Banking\n\nLike all businesses, banks have had to act fast to respond to the unprecedented human and economic impact of Covid-1"
+    },
+    {
+      "id": "8c1ab1db-74c7-4f63-9624-d5beb021bb85",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 14,
+      "enunciado_inicio": "Robots, the next generation of soccer players\n\nIf you think a robot will steal your job, you are not alone. Soccer players should be worried too. The next Messi probably wont be of flesh and blood bu"
+    },
+    {
+      "id": "7a2849d6-c378-4817-b2d3-f8de1b1bf424",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 15,
+      "enunciado_inicio": "Robots, the next generation of soccer players\n\nIf you think a robot will steal your job, you are not alone. Soccer players should be worried too. The next Messi probably wont be of flesh and blood bu"
+    },
+    {
+      "id": "da3d92b5-d0bb-45fc-a327-769f4dbc9d33",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 15,
+      "enunciado_inicio": "Revolution Accelerated\nHow Digital Transformation is Shaping the Future of Banking\n\nLike all businesses, banks have had to act fast to respond to the unprecedented human and economic impact of Covid-1"
+    },
+    {
+      "id": "fd9312cb-86a1-4cc3-8b27-c36b4df13411",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 16,
+      "enunciado_inicio": "Para os seis primeiros meses de um investimento, a evolução, em milhares de reais, de um certo investimento de R$ 3.000,00 é expressa pela fórmula \n2\n1\nMx47\n4\nx\n , onde M(x) indica quantos milhares de"
+    },
+    {
+      "id": "ce79e6c8-99f7-4fb3-ad91-777b89e909b1",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 16,
+      "enunciado_inicio": "Um banco tem agências em três regiões do país. Em cada região, trabalha-se com a comercialização de três segmentos: seguros (X), previdência (Y) e consórcios (Z). Cada equação linear que compõe o sist"
+    },
+    {
+      "id": "b00eb831-fd3e-4a20-b84b-aad088aa1fc2",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 16,
+      "enunciado_inicio": "Antes de iniciar uma campanha publicitária, um banco fez uma pesquisa, entrevistando 1000 de seus clientes, sobre a intenção de adesão aos seus dois novos produtos. Dos clientes entrevistados, 430 dis"
+    },
+    {
+      "id": "07190dcc-3c88-4a7c-8731-1446e8bf2543",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 17,
+      "enunciado_inicio": "Um garçom ganha um salário fixo por mês mais gorjetas diárias. Como regra, ele se propôs a cada dia do mês guardar um pouco do que ganha de gorjetas para fazer uma reserva financeira, que é depositada"
+    },
+    {
+      "id": "6afd1401-9b8b-4896-88ed-ec4b5ba7946d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 17,
+      "enunciado_inicio": "A sequência de Fibonacci é bastante utilizada para exemplificar sequências definidas por recorrência, ou seja, sequências em que se pode determinar um termo a partir do conhecimento de termos anterior"
+    },
+    {
+      "id": "306d0205-5723-4613-970f-2c68b4ab8cdc",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 17,
+      "enunciado_inicio": "O rendimento de um título sofreu uma variação negativa de 3 pontos percentuais de um mês para o mês seguinte, ou seja, se no primeiro mês o título rendeu x%, no mês seguinte o mesmo título rendeu (x -"
+    },
+    {
+      "id": "c7042a46-e7ee-4a15-a682-84cd6ab4da51",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 18,
+      "enunciado_inicio": "Uma profissional liberal comprou dois apartamentos com o objetivo de vendê-los. Na venda do primeiro deles, obteve um lucro de 36% sobre o preço de compra e, na do segundo, um lucro de 12%, também sob"
+    },
+    {
+      "id": "14dfc9d1-8c90-4e02-a7d2-e0ff16c6d31e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 18,
+      "enunciado_inicio": "J modelou um problema de matemática por uma função exponencial do tipo a(x)=1000 eᵏˣ, e L, trabalhando no mesmo problema, chegou à modelagem b(x)=10²ˣ⁺³. Considerando-se que ambos modelaram o problema"
+    },
+    {
+      "id": "f1e173d2-c96b-4249-9790-70a8f10701f6",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 19,
+      "enunciado_inicio": "O método da bisseção é um algoritmo usado para encontrar aproximações das raízes de uma equação. Começa-se com um intervalo [a,b], que contém uma raiz, e, em cada passo do algoritmo, reduz-se o interv"
+    },
+    {
+      "id": "541e3f8c-7336-423f-bb5b-c2bac0115c5d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 19,
+      "enunciado_inicio": "Um banco está planejando abrir uma nova agência em uma cidade do interior. O departamento de Marketing estima que o número de clientes da agência (NC) em função do número de meses decorridos (t) desde"
+    },
+    {
+      "id": "ec4f6d85-fd17-46c1-a3b6-bc5c1f4b73fc",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 20,
+      "enunciado_inicio": "Um estudante precisa fazer um trabalho escolar em seu aparelho de telefone celular. Para isso, usará dois aplicativos, A e B, um de cada vez. Ele sabe que a bateria do seu aparelho, estando com carga "
+    },
+    {
+      "id": "2226b2ad-6bf6-4b43-9881-1e3bf150d3b8",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 20,
+      "enunciado_inicio": "Uma loja vende um produto em dois tipos de embalagem: unitária (com uma unidade do produto) e dupla (com duas unidades do produto). Em certo mês, foram vendidas 16 embalagens duplas e 20 unitárias, ge"
+    },
+    {
+      "id": "e2417880-96e7-4dba-96ee-d583f61cd318",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 20,
+      "enunciado_inicio": "Um banco está selecionando um novo escriturário e recebeu um total de 50 currículos. Para o exercício desse cargo, três habilidades foram especificadas: comunicação, relacionamento interpessoal e conh"
+    },
+    {
+      "id": "2cf84c7f-9227-4d2d-9abf-e4fd60f7a76a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 21,
+      "enunciado_inicio": "Uma das funções desempenhadas pela moeda é a de reserva de valor, no entanto, a moeda não é o único ativo que desempenha tal função.\n\nO motivo que faz com que os cidadãos retenham moeda como reserva d"
+    },
+    {
+      "id": "026bf54d-d406-4188-860f-9e1bafa0572d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 21,
+      "enunciado_inicio": "Uma pessoa estava querendo fazer um empréstimo e descobriu que algumas instituições que praticam o shadow banking (“sistema bancário sombra”) geralmente servem como intermediários entre credores e tom"
+    },
+    {
+      "id": "ea15c955-951b-43dc-b54b-27df0f5e5119",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 21,
+      "enunciado_inicio": "A cliente de um banco está chateada com as taxas bancárias sobre as suas transações e para manter a sua conta-corrente. Ela está pensando em investir em criptomoedas para ter mais domínio sobre o seu "
+    },
+    {
+      "id": "a319e86c-bd6a-47d2-a34a-fed305389eaf",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 22,
+      "enunciado_inicio": "Um meio de troca é aquilo que os compradores oferecem aos vendedores quando aqueles adquirem bens e serviços.\n\nQuando um consumidor, por exemplo, compra um perfume numa loja localizada numa economia o"
+    },
+    {
+      "id": "7cb22e10-a21b-46ae-8534-8e101d545fe7",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 23,
+      "enunciado_inicio": "A blockchain é um tipo específico de banco de dados distribuído, no qual há uma cadeia de blocos ordenados e interligados, com garantia de ordem cronológica. Os dados registrados nos blocos podem vari"
+    },
+    {
+      "id": "29ae5b62-04e1-42dd-aa00-3179bf15a3ff",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 23,
+      "enunciado_inicio": "Quando alguém vai a um shopping center pode observar que uma saia, por exemplo, apresenta o preço de R$40,00 e uma garrafa dágua, o preço de R$5,00.\n\nApesar de não ser errado afirmar que o preço da s"
+    },
+    {
+      "id": "91621e92-888f-4f12-aff4-2f97badd62d0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 23,
+      "enunciado_inicio": "Um token físico, no contexto de transações bancárias, é um dispositivo eletrônico que possui um botão de ativação e um pequeno visor. O token permite gerar senhas aleatórias, temporárias e numéricas ("
+    },
+    {
+      "id": "7454b099-0818-4ef4-aa62-faff286863d0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 24,
+      "enunciado_inicio": "Leia as considerações seguintes sobre o expressivo crescimento das criptomoedas nas movimentações financeiras internacionais.\n\nCriptomoeda, ou moeda criptografada, é um ativo digital denominado na pró"
+    },
+    {
+      "id": "9c04520e-8083-4c17-a11f-3bf36aa7d005",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 24,
+      "enunciado_inicio": "A partir do início de 2021, começou a primeira fase de implantação do open banking (sistema financeiro aberto) no Brasil. As instituições financeiras participantes devem obedecer a regras definidas pe"
+    },
+    {
+      "id": "c47950ef-f3e3-400c-ba02-286241a7b893",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 25,
+      "enunciado_inicio": "Uma investidora está querendo saber a relação entre a blockchain e o bitcoin.\n\nEm sua pesquisa, ela esclareceu sua dúvida, ao descobrir que"
+    },
+    {
+      "id": "b17af5dc-f7df-409f-897b-7eae6acdb984",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 25,
+      "enunciado_inicio": "No sistema financeiro mundial, existem muitas entidades que oferecem serviços de intermediação financeira, mas funcionam à margem do sistema de supervisão e regulação bancária. No Relatório de Estabil"
+    },
+    {
+      "id": "5a3b9cbe-ef81-4ce4-affa-1770f21bcac0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 26,
+      "enunciado_inicio": "Um negociador de investimentos de uma instituição financeira pergunta ao gerente de tal instituição qual a taxa de juros anual máxima que pode oferecer a um cliente investidor, e o gerente afirma que "
+    },
+    {
+      "id": "b0489b80-a194-4684-86a5-83741057165a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 26,
+      "enunciado_inicio": "Ao verificar o saldo devido de seu financiamento de R$ 8.000,00, um cliente percebeu que, após pagar a primeira prestação de R$ 1.726,93, ele havia amortizado apenas R$ 1.518,93. Consultando seu geren"
+    },
+    {
+      "id": "66f459d1-2fce-48c5-89ab-1dcad337718b",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 27,
+      "enunciado_inicio": "No boleto bancário da sua prestação, uma pessoa leu que é cobrada uma multa de 1,2% por dia de atraso sobre o valor da prestação, condicionada a atrasos não maiores que 30 dias. Em certo mês, essa pes"
+    },
+    {
+      "id": "6e10f01a-62a7-4bbe-8999-7d39b97fbf1f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 27,
+      "enunciado_inicio": "Um cliente montou uma estratégia financeira, aplicando parte de seu décimo terceiro salário, sempre no início de janeiro, de 2018 a 2021, conforme mostrado na Tabela a seguir.\n\njan/2018    jan/2019   "
+    },
+    {
+      "id": "b3525367-57ae-4c82-8813-e9a375d03bcf",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 28,
+      "enunciado_inicio": "Um banco ofereceu a um cliente um financiamento de R$ 120.000,00, pelo sistema SAC, a uma taxa de juros de 10% a.m., para ser pago em 4 prestações mensais ao final de cada mês, sendo a primeira presta"
+    },
+    {
+      "id": "f18775b7-a255-4999-8ec6-601681496240",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 28,
+      "enunciado_inicio": "Devido às oscilações de receita em seu negócio durante a pandemia, um cliente vai precisar pagar um boleto, cujo principal (até a data de vencimento) é de R$ 25.000,00, com 12 dias de atraso. Nesse ca"
+    },
+    {
+      "id": "89842c0b-a5a9-4f16-b285-9ebf38935327",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 29,
+      "enunciado_inicio": "Um banco fez um empréstimo de R$10.000,00 a um cliente, pelo prazo de um mês, cobrando o valor de R$ 100,00 a título de juros.\n\nQual foi a taxa de juros que o banco cobrou do cliente?"
+    },
+    {
+      "id": "c8ffc85a-e299-441d-860a-560c9b4c1716",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 29,
+      "enunciado_inicio": "Um cliente fez um investimento de R$ 100.000,00 em janeiro de 2019, comprando cotas de um fundo imobiliário, o que lhe proporcionou uma taxa de retorno de 21%, ao final de 12 meses de aplicação. Em ja"
+    },
+    {
+      "id": "f9b9bc77-8132-4b87-a0bc-f7b13185bfca",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 30,
+      "enunciado_inicio": "Um cliente deseja fazer uma aplicação em uma instituição financeira, que paga uma taxa de juros compostos de 10% ao ano, por um período de 3 anos, já que, ao final da aplicação, planeja comprar uma TV"
+    },
+    {
+      "id": "96355d14-e23b-4a14-b0b7-c16426e9c4f9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 30,
+      "enunciado_inicio": "Devido à pandemia, um microempreendedor precisou tomar um empréstimo no valor de R$ 20.000,00, em dez/2020, a ser pago em 24 prestações mensais iguais e postecipadas no sistema PRICE, de modo que a pr"
+    },
+    {
+      "id": "6bf5b035-3d95-411e-a8af-3c2d79909291",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 31,
+      "enunciado_inicio": "A pandemia do coronavírus, declarada em março de 2020, alterou significativamente as relações sociais e econômicas ao redor do globo. Em resposta, autoridades mundiais atuaram tempestivamente, recorre"
+    },
+    {
+      "id": "af1ac439-cc2d-4afd-8682-15ae33f5142e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 32,
+      "enunciado_inicio": "Existem títulos de dívida de longo prazo emitidos por sociedades de ações e destinados, geralmente, ao financiamento de projetos de investimento ou para alongamento do perfil de endividamento das empr"
+    },
+    {
+      "id": "4a6ff9eb-645e-428a-896d-f2e50e9233f4",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 32,
+      "enunciado_inicio": "A crise econômica causada pela pandemia do novo coronavírus provocou a maior fuga de capitais da história do Brasil. Dados divulgados nesta quarta-feira (24/6) pelo Banco Central (BC) explicam que os "
+    },
+    {
+      "id": "13f7f452-0dc9-44c5-ba67-174a98bff712",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 33,
+      "enunciado_inicio": "Dentro do Sistema de Metas para a inflação, o Conselho Monetário Nacional (CMN) estabelece a meta para a inflação. A partir dessa meta, o Comitê de Política Monetária (Copom) do Banco Central do Brasi"
+    },
+    {
+      "id": "e087ae0b-18db-4e26-ac51-8f151676346c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 33,
+      "enunciado_inicio": "A crise econômica causada pela pandemia do novo coronavírus provocou a maior fuga de capitais da história do Brasil. Dados divulgados nesta quarta-feira (24/6) pelo Banco Central (BC) explicam que os "
+    },
+    {
+      "id": "8a7bc8e5-1bb0-43fd-a8e5-4c3135a3db0e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 34,
+      "enunciado_inicio": "A Comissão de Valores Mobiliários (CVM) foi criada em 07/12/1976, pela Lei nº 6.385/76.\n\nA CVM"
+    },
+    {
+      "id": "80397116-f86f-4ba0-8ad3-842d1f5d4d5a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 34,
+      "enunciado_inicio": "Com evidências do enorme descolamento entre as taxas de juros de curto e de longo prazo no Brasil, o texto abaixo reproduz matéria jornalística, publicada no início de agosto de 2020, dando conta da e"
+    },
+    {
+      "id": "a86b706b-1902-49f2-a95f-c983988f2dea",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 35,
+      "enunciado_inicio": "Dentre as escolhas mais populares de investimentos, a caderneta de poupança é uma das opções mais utilizadas pelos brasileiros, sendo considerada um investimento de renda fixa.\n\nSão também investiment"
+    },
+    {
+      "id": "1fabba2a-206f-4ffb-ab25-7db9690c1493",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 35,
+      "enunciado_inicio": "Um determinado banco programou uma campanha de empréstimos a juros baixos, com o escopo de angariar clientes para sua carteira de mutuários. Após ampla campanha de divulgação, vários pretendentes comp"
+    },
+    {
+      "id": "11237d37-1453-4782-a89c-f03b2b309e45",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 36,
+      "enunciado_inicio": "O Banco do Brasil (BB) oferece diversas linhas de crédito destinadas a custear os dispêndios realizados pelos produtores rurais.\n\nA modalidade de crédito rural, oferecida pelo BB, destinada ao benefic"
+    },
+    {
+      "id": "84de0eae-d5ca-4ac2-99f5-72ae921bd311",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 36,
+      "enunciado_inicio": "Considere o seguinte trecho de reportagem publicada no jornal Valor Econômico, em 3 de novembro de 2020:\n\nO plenário do Senado aprovou, agora há pouco, um projeto que possibilita ao Banco Central subs"
+    },
+    {
+      "id": "f1a62ac3-5aec-43c3-b494-02720551e3b3",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 36,
+      "enunciado_inicio": "Um jovem atua em uma organização social com inúmeros projetos em comunidades carentes situada em região metropolitana de uma grande capital brasileira. A organização possui vários empregados, recrutad"
+    },
+    {
+      "id": "9c03ae50-367a-4c93-94d4-be338a36a447",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 37,
+      "enunciado_inicio": "O anúncio seguinte constava no site do Banco do Brasil no dia 8 de fevereiro de 2021:\n\nFinanciamento de veículos\nFinancie o seu veículo, novo ou usado, com as melhores opções e taxas reduzidas até 28 "
+    },
+    {
+      "id": "848429fa-6dcb-4e17-99ac-e0085259b92c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 37,
+      "enunciado_inicio": "Ao realizar a matrícula do seu curso, o estudante preencheu uma ficha cadastral com os seguintes dados: nome, endereço, telefone, religião, estado civil, raça, nome dos pais, número de filhos e sindic"
+    },
+    {
+      "id": "a1b13124-2581-4cfa-8f29-5dcf6abb2b1d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 38,
+      "enunciado_inicio": "Um cliente comparece ao banco em que possui conta salário para comprovação de vida, seguindo norma legal sobre o tema. Aproveitando sua presença na instituição financeira, resolve agendar reunião com "
+    },
+    {
+      "id": "e027b987-aa53-4724-9192-aa713bfa71b9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 38,
+      "enunciado_inicio": "A revista inglesa The Economist publica periodicamente o famoso Índice do Big Mac, que consiste em avaliar os preços, em dólares, do conhecido sanduíche em diferentes países na economia global. Os res"
+    },
+    {
+      "id": "f16faab4-fb94-402b-ad1f-445874552f9d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 38,
+      "enunciado_inicio": "Aqueles que participam do mercado de câmbio de um país podem ser divididos entre os que produzem divisas e os que cedem divisas.\n\nProduzem e cedem divisas, respectivamente, os"
+    },
+    {
+      "id": "303fd266-91af-48e7-991a-9f9df0f0380f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 39,
+      "enunciado_inicio": "Com o intuito de incentivar o desenvolvimento de novos negócios voltados às futuras gerações, determinada instituição financeira estabeleceu convênio com duas renomadas instituições nacionais de ensin"
+    },
+    {
+      "id": "a3afb90a-49a8-4cac-92ef-6fd952d459d9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 39,
+      "enunciado_inicio": "H é correntista da instituição financeira XYZ e mantém com esta instituição relação estável, com movimentação de recursos monetários correspondente a cem salários mínimos por ano. A partir de 2019, su"
+    },
+    {
+      "id": "86a5b74b-b0db-4982-b578-1a1f39d63cb0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 39,
+      "enunciado_inicio": "Essencialmente, o mercado de capitais canaliza a poupança da sociedade para suprir as necessidades das empresas por recursos produtivos. Promover o fortalecimento de mercados de capitais locais para q"
+    },
+    {
+      "id": "3a83249f-ce50-4ded-9af5-4a9d7ee96d35",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 40,
+      "enunciado_inicio": "B é gerente de determinada instituição financeira e recebe, como tarefa laboral, a responsabilidade de convencer os clientes a investirem na aquisição de ações de sociedade empresária que busca abrir "
+    },
+    {
+      "id": "d17c6810-dee2-443f-ae02-226c1b66449d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 40,
+      "enunciado_inicio": "Sr. W é gerente de área do Banco B, tendo-se especializado no setor de mercado de capitais e atuado no lançamento de diversas ações na Bolsa de Valores, sempre conseguindo bater suas metas, diante da "
+    },
+    {
+      "id": "7314b30b-d9c8-4ff9-b2bf-1d85e590feb0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 40,
+      "enunciado_inicio": "Considere as informações contidas no Código de Ética do Banco do Brasil:\n\nO propósito assumido pelo Banco é cuidar do que é valioso para as pessoas, mantendo a visão de ser a empresa que proporciona a"
+    },
+    {
+      "id": "6185dfa0-220b-4858-9e5f-7ec92fb71eb9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 41,
+      "enunciado_inicio": "Uma opção de navegador web (browser) de internet disponível para instalação em diversas plataformas é o Mozilla Firefox, que apresenta um conjunto de funcionalidades, entre elas o seu histórico de nav"
+    },
+    {
+      "id": "3b035113-8057-497c-88b3-42d405788aa9",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 41,
+      "enunciado_inicio": "Existem soluções de hardware e software que buscam minimizar as chances de um ataque a sistemas computacionais ser bem-sucedido. Dentre tais soluções de segurança, há uma que monitora o tráfego de ent"
+    },
+    {
+      "id": "572c8b92-7877-4ca1-887e-427eb3782ef3",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 42,
+      "enunciado_inicio": "O armazenamento de dados ou informações em sistemas computacionais é possível com a utilização de arquivos, que servem como importante suporte tecnológico para o atendimento das diversas demandas dos "
+    },
+    {
+      "id": "ed55fb9e-ed6c-4575-a2dc-4d8bdbb6cfd5",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 42,
+      "enunciado_inicio": "O serviço de correio eletrônico é uma ferramenta essencial para o trabalho do dia a dia dos colaboradores de uma empresa.\n\nPara garantir a segurança da comunicação do cliente de correio eletrônico com"
+    },
+    {
+      "id": "c1bb76d1-72a1-42e2-b4f3-e7fd43d8d932",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 43,
+      "enunciado_inicio": "A gravação de vídeos digitais gera, em boa parte das vezes, arquivos com tamanho aumentado, o que é um desafio para a sua transmissão ou armazenamento em disco. Para contornar esse problema, existem f"
+    },
+    {
+      "id": "7e191cbe-d20a-40b3-8dc9-bd20d8b073ca",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 43,
+      "enunciado_inicio": "Um usuário precisa utilizar o Explorador de Arquivos do Windows 10 para listar, pelo menos, os atributos de nome e data e hora de modificação dos arquivos e das subpastas, contidos em uma pasta.\n\nPara"
+    },
+    {
+      "id": "7af3fc7b-b122-404e-834f-7917de59c0ad",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 44,
+      "enunciado_inicio": "Devido à pandemia, muitos funcionários de um determinado banco precisaram trabalhar de casa. Percebendo que seria necessário um novo procedimento de acesso remoto que atendesse às necessidades de segu"
+    },
+    {
+      "id": "d76dde1c-d816-4f6e-98ea-9075fa4fe8d0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 44,
+      "enunciado_inicio": "O Microsoft Teams possui recursos que apoiam reuniões de times de trabalho em discussões, tais como o desenho ou a readequação de procedimentos organizacionais.\n\nUma opção disponível para reuniões é o"
+    },
+    {
+      "id": "113bbe06-942b-4ca1-a8d0-87a724de9d1a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 45,
+      "enunciado_inicio": "As informações sobre um processo essencial de determinado banco nunca foram documentadas, porém são conhecidas implicitamente por seus muitos funcionários. Responsável por recuperar e documentar esse "
+    },
+    {
+      "id": "32f9f76a-536e-444d-820c-483b4d493e01",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 45,
+      "enunciado_inicio": "Existem diferentes soluções tecnológicas baseadas em multimídia, que permitem a uma empresa difundir seus objetivos e valores, estabelecendo, assim, pontes com todos com quem interage. Podcasts repres"
+    },
+    {
+      "id": "5967d5eb-de91-4e6e-b391-d17c6018604c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 46,
+      "enunciado_inicio": "Portais corporativos revelam-se uma interessante alternativa de comunicação com seu público-alvo. Esses portais permitem que a organização transmita, pela internet, sua mensagem diretamente para o mei"
+    },
+    {
+      "id": "136a2837-f4eb-4591-80af-942fb65efe00",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 46,
+      "enunciado_inicio": "Um funcionário de um banco foi incumbido de acompanhar o perfil dos clientes de um determinado produto por meio da Análise de Dados, de forma a aprimorar as atividades de marketing relativas a esse pr"
+    },
+    {
+      "id": "5b384caa-6567-4a9e-85a0-cb260192737d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 47,
+      "enunciado_inicio": "Em uma organização, o uso do Telegram pode otimizar a tarefa de gestão de equipes por meio de uma comunicação mais eficiente entre seus membros.\n\nNesse contexto, qual é a função dos links t.me?"
+    },
+    {
+      "id": "eb799999-410e-4288-b59c-da353bda69c7",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 47,
+      "enunciado_inicio": "O serviço de buscas do Google é um dos mais usados em todo o mundo. Para as pesquisas, o mais comum é a pessoa informar livremente algumas palavras e verificar se o resultado atende às suas expectativ"
+    },
+    {
+      "id": "9e839a72-c033-4263-96dc-4ca4acbe421e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 48,
+      "enunciado_inicio": "O envio e o recebimento de mensagens de correio eletrônico são atividades corriqueiras, tanto nas organizações quanto no dia a dia da grande maioria da população brasileira. No entanto, há situações e"
+    },
+    {
+      "id": "e6636d57-fa15-4e0d-933d-96963d22bbcd",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 48,
+      "enunciado_inicio": "Um colaborador da empresa utilizou o Word do Microsoft Office 365 para produzir um documento. Depois que o documento foi salvo, o usuário pressionou o botão Compartilhar para acessar a janela Enviar l"
+    },
+    {
+      "id": "ba5bb875-d81a-4567-8194-a2c23784b89f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 49,
+      "enunciado_inicio": "Um banco decidiu realizar uma ação de marketing de um novo produto. Buscando apoiar essa ação, a área de TI decidiu estabelecer um mecanismo para identificar quais clientes estariam mais inclinados a "
+    },
+    {
+      "id": "05a24666-d5c8-4b1c-8b57-96fbdddf3475",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 49,
+      "enunciado_inicio": "A Segurança da Informação é uma preocupação permanente dos agentes comerciais, principalmente em relação a assuntos contratuais e financeiros e às facilidades advindas dos meios digitais.\n\nOs recursos"
+    },
+    {
+      "id": "d95f747d-ff6c-4336-a9ea-4bbc9ed24ac1",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 49,
+      "enunciado_inicio": "O trabalho em coautoria no Microsoft Office 365 permite que vários colaboradores atuem em conjunto. Ao longo do tempo de colaboração dos coautores, várias versões do documento serão produzidas e armaz"
+    },
+    {
+      "id": "5ac2ad48-5edb-47c0-9de4-fc49a787cc7e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 50,
+      "enunciado_inicio": "O Microsoft Teams é um software que facilita a gestão de equipes, com o propósito de integrar funcionalidades que dão suporte ao trabalho dos membros dessas equipes em um único ambiente.\n\nQuanto às eq"
+    },
+    {
+      "id": "f8860bff-c65f-4a03-bc56-da117a02fcca",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 50,
+      "enunciado_inicio": "Designado para relatar a qualidade das atividades desenvolvidas em um determinado banco, um funcionário recebeu a seguinte Tabela, com a quantidade de notas relativas à avaliação dos correntistas sobr"
+    },
+    {
+      "id": "37756567-d139-46a0-a7f1-0e292b1ad0d1",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 50,
+      "enunciado_inicio": "O agente comercial de uma empresa elaborou uma planilha no software Microsoft Excel para lançar os débitos de seus clientes. Ele a configurou para controlar automaticamente as seguintes regras:\na) adm"
+    },
+    {
+      "id": "300cc14b-ab0b-4145-877a-d99baf51c8d5",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 51,
+      "enunciado_inicio": "O LinkedIn é uma plataforma que viabiliza o estabelecimento de redes sociais direcionadas ao contexto profissional. Estimular os colaboradores da organização a cadastrarem e manterem suas informações "
+    },
+    {
+      "id": "071d60c5-e7aa-4f51-8f98-1906d8b17593",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 51,
+      "enunciado_inicio": "Um funcionário de um determinado banco, ao ser designado para trabalhar no data center da instituição, identificou problemas de segurança. Por essa razão, formulou duas propostas de melhoria: instalar"
+    },
+    {
+      "id": "90616726-90bb-4f8a-9cd8-5d70c2c9f16c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 51,
+      "enunciado_inicio": "Apesar de os navegadores serem as ferramentas dominantes na internet, vários serviços possuem ferramentas próprias mais adequadas e, inclusive, mais otimizadas para protocolos específicos. Um desses p"
+    },
+    {
+      "id": "dce08b05-2f71-442c-9961-3310b91ba9dd",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 52,
+      "enunciado_inicio": "Muitos códigos maliciosos aproveitam-se de um recurso do Windows 10 que possibilita a execução de um programa presente em um dispositivo de armazenamento USB imediatamente após a sua conexão ao comput"
+    },
+    {
+      "id": "8af8b36a-1434-4846-809a-bddf94387ac6",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 52,
+      "enunciado_inicio": "A área de atendimento ao cliente de um determinado banco precisava treinar todos os atendentes e gerentes em um novo software de apoio à negociação de empréstimos. Buscando os meios adequados para ate"
+    },
+    {
+      "id": "25728cb6-d068-40c5-bec4-b069aa89dd3b",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 53,
+      "enunciado_inicio": "O Mozilla Firefox apresentou uma página de resultado de uma pesquisa na Web na qual o usuário deseja procurar uma palavra específica.\n\nPara fazer isso, o usuário pode acessar a caixa de texto de procu"
+    },
+    {
+      "id": "30f26e28-c847-41be-806d-754f1384423c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 53,
+      "enunciado_inicio": "Foi solicitado a um funcionário de um determinado banco que realizasse uma pesquisa, exclusivamente com variáveis do tipo qualitativa, sobre a satisfação dos clientes com os serviços oferecidos pela i"
+    },
+    {
+      "id": "6442e268-3ef9-4892-ab30-39f312ef6d77",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 53,
+      "enunciado_inicio": "Ao visitar uma agência, um funcionário de TI de um banco percebeu, durante sua conversa com um bancário, que, a cada 15 minutos, um alarme tocava no celular do empregado, e que, nesse momento, ele exe"
+    },
+    {
+      "id": "93c08da0-3279-4c20-a74c-3f3f184925bd",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 54,
+      "enunciado_inicio": "Os bancos investem em recursos de segurança para minimizar os riscos de fraude nas operações bancárias através de Internet Banking. Os usuários, porém, precisam estar atentos aos golpistas que procura"
+    },
+    {
+      "id": "f2d86b57-c05e-434a-8805-4549c1b24557",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 54,
+      "enunciado_inicio": "Ao chegar para seu primeiro dia de emprego no banco, um novo gerente de TI percebeu que era demandado muito esforço no setor para controle do número IP de cada computador, o que causava, também, algun"
+    },
+    {
+      "id": "7da57200-e888-4f57-8160-fb037b6e6e3d",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 54,
+      "enunciado_inicio": "No código de práticas de segurança da informação, recomenda-se que o acesso ao ambiente operacional (área de trabalho) do computador seja bloqueado quando o usuário do sistema se ausentar do seu posto"
+    },
+    {
+      "id": "0fa1f22f-566b-44e5-b1ac-04ce357c8dd0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 55,
+      "enunciado_inicio": "O Google Drive é uma ferramenta que permite o armazenamento de arquivos na nuvem. Suponha que um usuário A tenha criado uma pasta no Google Drive para arquivos de um Projeto X qualquer.\n\nPara comparti"
+    },
+    {
+      "id": "a7f46409-5687-4bfc-bceb-2c03d389f21e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 55,
+      "enunciado_inicio": "A segurança da informação deve fazer parte da postura dos colaboradores da empresa no dia a dia de trabalho. Com o objetivo de garantir a autoria dos seus documentos digitais, o colaborador deve execu"
+    },
+    {
+      "id": "36307d80-1281-4a1e-ba02-56ea13637fe1",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 55,
+      "enunciado_inicio": "Responsável por entender o comportamento dos produtos oferecidos por determinado banco onde trabalhava, e preocupado com a quantidade enorme de dados disponíveis para a análise, um funcionário decidiu"
+    },
+    {
+      "id": "2f5e0472-0ac4-4e05-9884-c7479198eb0b",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 56,
+      "enunciado_inicio": "KB foi convidado para realizar auditoria no Banco C, instituição de pequeno porte, sediada no interior do Brasil, sendo sua carteira diversificada, abrangendo o financiamento de pequenos empreendedore"
+    },
+    {
+      "id": "3075f4bc-0159-4020-a76a-585ed152b746",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 56,
+      "enunciado_inicio": "VENDAS E NEGOCIAÇÃO\n\nUm empreendedor atua em várias sociedades empresariais tendo, por consequência, contratos com inúmeras instituições financeiras. Por força desse contexto, possui visão ampla dos s"
+    },
+    {
+      "id": "982b1b0f-0e4e-4552-969e-55327e6eef8f",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 57,
+      "enunciado_inicio": "Um banco brasileiro de investimentos decidiu tornar-se banco múltiplo, oferecendo conta-corrente apenas no formato digital, com taxa zero aos seus clientes. Sustentou sua decisão por reconhecer a pere"
+    },
+    {
+      "id": "84318866-7cb3-4fa8-bee1-2e6e433a4013",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 57,
+      "enunciado_inicio": "Poucos clientes conhecem suficientemente o mercado financeiro, de modo a avaliar se o seu analista de investimentos conseguiu os melhores retornos para os seus fundos investidos.\n\nSendo assim, verific"
+    },
+    {
+      "id": "fa8f6021-3cc0-433d-b36a-1b52d1bdf517",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 58,
+      "enunciado_inicio": "Um cliente migrou para um banco digital e está avaliando a qualidade do serviço contrastando a expectativa que possui com o serviço que recebe de fato. Ele tem considerado a qualidade bastante satisfa"
+    },
+    {
+      "id": "aca2a2c6-dfad-4c47-9074-a8619ae26363",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 58,
+      "enunciado_inicio": "Das cinco dimensões da qualidade do serviço - confiabilidade, tangibilidade, sensibilidade, segurança e empatia -, a confiabilidade tem constantemente se mostrado como o fator mais importante na avali"
+    },
+    {
+      "id": "bcfced48-f981-4f7b-b67f-9b3021c72104",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 59,
+      "enunciado_inicio": "Em 26 de março de 2021, o Banco do Brasil informou a seus clientes que, a partir dessa data, suas agências passariam a operar das 10h às 14h, seguindo determinação da Febraban, para proteger seus func"
+    },
+    {
+      "id": "c51188e0-c80a-44c2-b009-0a3877854a3e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 59,
+      "enunciado_inicio": "Um grupo empresarial, atuando em transportes terrestres, recebeu autorização da ANAC para operar voos comerciais no território nacional e decidiu lançar ações no mercado, visando a encomenda de aerona"
+    },
+    {
+      "id": "67395e84-faa8-44e2-bdfb-86423cf53721",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 60,
+      "enunciado_inicio": "Sr. X precisava planejar a comercialização de um serviço para um cliente exigente, que demanda a personalização e o serviço de alto contato.\n\nPara isso, ele planejou em sua estratégia comercial"
+    },
+    {
+      "id": "2bfcef40-440f-475f-a885-7103b7b418e0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 60,
+      "enunciado_inicio": "No marketing de relacionamento de uma empresa, foi utilizada uma venda consultiva.\n\nIsso significa que tal venda foi focada"
+    },
+    {
+      "id": "3db3a85a-8906-4596-822d-188a59cb6f48",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 61,
+      "enunciado_inicio": "K é correntista do Banco S e possui cartões de crédito e de débito expedidos pela instituição financeira. Diante de dificuldades momentâneas, não conseguiu cobrir o total das despesas realizadas com o"
+    },
+    {
+      "id": "1574e35a-f09c-49f5-af35-dda375454b13",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 61,
+      "enunciado_inicio": "Um atendente comercial de um banco privilegia dois tipos de habilidades para a realização de seu trabalho: a observação refletida e a conceitualização abstrata. Assim sendo, ele gosta de criar modelos"
+    },
+    {
+      "id": "d4f29158-9ae2-47fb-b970-bf141f15dd21",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 62,
+      "enunciado_inicio": "MX abre o aplicativo de seu banco em seu smartphone e tem a grata surpresa de constatar que a família chegou ao final do mês com algum dinheiro sobrando na conta conjunta que ela tem com seu marido, J"
+    },
+    {
+      "id": "80c338b5-3065-4528-b1cc-f4a521047b84",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 62,
+      "enunciado_inicio": "O crescimento dos canais eletrônicos está criando uma mudança fundamental na natureza do marketing, conforme notado no setor dos bancos.\n\nMuitas organizações estão substituindo um local físico onde fo"
+    },
+    {
+      "id": "88b6dacd-45aa-48a1-80ee-c3779989b04a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 62,
+      "enunciado_inicio": "Um dos princípios básicos de um bom atendimento é que ele seja considerado parte integrante de um processo mais amplo e que gere a satisfação do cliente. Preocupada com os baixos índices de satisfação"
+    },
+    {
+      "id": "eacce451-e6a8-44dd-a4dd-723a8b74c31c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 63,
+      "enunciado_inicio": "Uma pesquisa junto aos clientes de um banco revelou que havia problemas com a dimensão da qualidade de serviços empatia.\n\nDessa forma, para melhorar a percepção da qualidade do serviço desse banco, os"
+    },
+    {
+      "id": "26ae140f-c5f7-4067-b4ec-5e492ba14102",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 63,
+      "enunciado_inicio": "O Instagram é uma rede social baseada em imagens, e o Twitter limita a escrita a 280 caracteres. Talvez por isso, o marketing digital seja comumente associado ao uso de imagens e vídeos. No entanto, o"
+    },
+    {
+      "id": "301fb16b-1bf0-4829-9bb2-c2f8aa89cdcb",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 64,
+      "enunciado_inicio": "O portfólio de fundos de investimento de um banco é formado por fundos de investimentos conservadores, moderados e arrojados. Segundo o diretor desse banco, os fundos conservadores são adequados para "
+    },
+    {
+      "id": "31ff5891-c59a-4331-b49d-a284820c4780",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 64,
+      "enunciado_inicio": "DD é estudante universitário na área de Ciências Exatas e participa de núcleo que constrói sistemas operacionais para facilitar a vida cotidiana. Um dos projetos é destinado a viabilizar a virtualizaç"
+    },
+    {
+      "id": "01e2e5f1-fd18-4cde-b3d2-b38f5d13622a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 64,
+      "enunciado_inicio": "Um motorista estava preocupado com os pneus de seu carro. Como muitas pessoas costumam fazer, ele decidiu realizar uma busca na internet e, para isso, usou o termo pneus velhos. Como resultado da pe"
+    },
+    {
+      "id": "efab66af-9320-4242-b1f3-f946f06a4fa1",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 65,
+      "enunciado_inicio": "B é empregado do Banco G, atuando como caixa em agências. Após cursos de capacitação, foi promovido a gerente e, por consequência, transferido para local de trabalho distante de sua residência. No per"
+    },
+    {
+      "id": "7d3ea0ae-8bb2-4c5f-925d-0a09a743a144",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 65,
+      "enunciado_inicio": "MEK é correntista do Banco L, mantendo relações negociais frequentes, bem como sua família. Por força desse relacionamento, possui dois contratos de cartão de crédito que utiliza nas suas compras coti"
+    },
+    {
+      "id": "69fc03bb-7ef1-4a84-a80c-5cd50c9bc500",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 65,
+      "enunciado_inicio": "As empresas, cada vez mais, procuram gerir seus negócios e suas atividades de forma que sua posição seja neutra ou positiva no atendimento ao Tripé da Sustentabilidade. Como a empresa YYZ não pensa de"
+    },
+    {
+      "id": "3ab4c967-6015-4763-a51e-b7507e19e78c",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 66,
+      "enunciado_inicio": "A ampliação das fronteiras do marketing digital fez com que os canais remotos de vendas passassem a ter importância muito grande nos negócios. Como forma de monitorar os resultados das atividades de m"
+    },
+    {
+      "id": "77bca6a3-0419-45a3-bc46-d22c17095013",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 66,
+      "enunciado_inicio": "O cliente da empresa W, procurando um produto no site dessa empresa, ficou em dúvida a respeito das suas especificações técnicas, entrou no chat online para conhecer mais a respeito do equipamento e t"
+    },
+    {
+      "id": "4d319410-b1f8-44e7-ac8a-ebb0d20a5eab",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 66,
+      "enunciado_inicio": "AN é bancária e recebe, mensalmente, plano de metas para realizar com a sua clientela ou com novos clientes que venha a consolidar. Muitos dos seus clientes são idosos que percebem razoável remuneraçã"
+    },
+    {
+      "id": "f27e6078-c9d4-4eb3-b8d9-53d322e3b823",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 67,
+      "enunciado_inicio": "Mesmo sendo, ainda, alvo de controvérsias entre acadêmicos, as técnicas de gatilhos mentais são muito usadas por gestores de vendas e marketing. Uma empresa que vende roupas estabeleceu um tempo limit"
+    },
+    {
+      "id": "f6c69c10-f3d1-42bf-a064-b3e541236a0a",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 67,
+      "enunciado_inicio": "Um funcionário, em um determinado setor, desenvolveu uma maneira própria de atuar, alinhado à visão e à missão da organização e aos normativos internos. Ele se tornou uma referência, por sempre ter um"
+    },
+    {
+      "id": "88f5b073-e608-41cc-84eb-de8f4f250440",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 67,
+      "enunciado_inicio": "LL é aposentada pelo regime geral de previdência, recebendo o valor correspondente através de repasse do Instituto Nacional do Seguro Social (INSS). Três meses após receber a primeira parcela de sua a"
+    },
+    {
+      "id": "9212eadb-d32e-46fb-b6aa-10c1ac5759bc",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 68,
+      "enunciado_inicio": "A gestão da experiência do cliente é fundamental para reter os clientes numa empresa. Depois de mapear a jornada do cliente e fazer adequações nos canais de relacionamentos remotos e presenciais, o ge"
+    },
+    {
+      "id": "5a41c38e-e467-4349-b8ac-d095906eb725",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 68,
+      "enunciado_inicio": "KO é gerente Júnior de um banco e atua no contato direto com os clientes que têm pouca experiência na atividade de investimentos financeiros. Buscando promoção no quadro interno da instituição finance"
+    },
+    {
+      "id": "e6da441e-2b46-4cba-bea6-aeb4063197c0",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 69,
+      "enunciado_inicio": "Os gerentes de vendas devem sempre divulgar o código de ética da empresa e se colocar contra práticas antiéticas de vendas. Condutas antiéticas de vendedores podem ser muito danosas para a imagem da e"
+    },
+    {
+      "id": "21d47e92-58d1-426f-a10e-497066c290fb",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 69,
+      "enunciado_inicio": "Segundo pesquisa contratada por um banco, os clientes tendem a perceber melhor a vontade que os funcionários têm de ajudar os clientes e atendê-los sem demora, quando isso é mostrado em uma propaganda"
+    },
+    {
+      "id": "6b026416-d856-44c6-9c09-f00924a2687e",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 70,
+      "enunciado_inicio": "Storytelling é a técnica de contar histórias para se aproximar dos clientes e facilitar a venda.\n\nUma forma eficiente de praticar essa técnica ocorre quando o vendedor narra"
+    },
+    {
+      "id": "5442c85d-95a8-42f1-979c-d7785773a322",
+      "prova": "Cesgranrio 2021 — Banco do Brasil",
+      "numero": 70,
+      "enunciado_inicio": "Como forma de acompanhar o desempenho de campanhas de marketing digital, os gestores costumam utilizar métricas de marketing digital.\n\nUma das métricas de conversão mais comumente usadas é a média de "
+    }
+  ]
+}

@@ -2,7 +2,6 @@
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
-import { fonteCitacaoDaExplicacaoSchema } from "@/modules/ia";
 import {
   SessaoRecusada,
   obterItemParaResposta,
@@ -13,18 +12,9 @@ import {
   validarResposta,
   type CausaDoTreino,
 } from "@/modules/aluno/tentativas";
+import { agendarRevisao } from "@/modules/aluno/revisao";
+import { finalizarBloco } from "@/modules/aluno/progresso";
 import { reportarErro } from "@/modules/observabilidade/reporte";
-
-export type FonteDaExplicacao = {
-  docId: string;
-  trecho: string;
-};
-
-export type ExplicacaoPublica = {
-  texto: string;
-  alternativaCorreta: string;
-  fontesCitadas: readonly FonteDaExplicacao[];
-};
 
 export type EstadoDaResposta =
   | { status: "inicial" }
@@ -44,7 +34,6 @@ export type EstadoDaResposta =
       correta: boolean;
       duplicada: boolean;
       respostaCorreta: string;
-      explicacao: ExplicacaoPublica | null;
       sessaoConcluida: boolean;
     }
   | {
@@ -142,15 +131,13 @@ export async function responderQuestao(
       supabase,
     );
 
-    const [explicacao, sessaoConcluida] = await Promise.all([
-      lerExplicacaoPublica(
-        supabase,
-        alvo.item.questaoId,
-        alvo.item.questaoVersao,
-        alvo.questao.respostaCorreta,
-      ),
-      encerrarSeNaoHouverPendencias(supabase, sessaoId),
-    ]);
+    const sessaoConcluida = await encerrarSeNaoHouverPendencias(supabase, sessaoId);
+    if (sessaoConcluida) {
+      // A tentativa já está confirmada no log. A sincronização é uma segunda
+      // transação deliberada: se ela falhar, o fato append-only continua salvo
+      // e a action devolve erro visível para uma nova tentativa.
+      await sincronizarDepoisDoFechamento(supabase, sessaoId);
+    }
 
     return {
       status: "respondida",
@@ -159,7 +146,6 @@ export async function responderQuestao(
       correta: resultado.correta,
       duplicada: resultado.duplicada,
       respostaCorreta: alvo.questao.respostaCorreta,
-      explicacao,
       sessaoConcluida,
     };
   } catch (erro) {
@@ -206,6 +192,32 @@ export async function responderQuestao(
   }
 }
 
+async function sincronizarDepoisDoFechamento(
+  supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
+  sessaoId: string,
+): Promise<void> {
+  const fechamento = await finalizarBloco(supabase, sessaoId);
+  const eConteudo = fechamento.contexto === "plano" || fechamento.contexto === "treino";
+  if (fechamento.contexto !== "revisao" && !eConteudo) return;
+  if (fechamento.topicoId === null) {
+    if (fechamento.contexto === "revisao") {
+      throw new Error("bloco de revisão concluído sem tópico");
+    }
+    return;
+  }
+
+  await agendarRevisao(
+    {
+      userId: fechamento.userId,
+      topicoId: fechamento.topicoId,
+      percentualAcerto: fechamento.nAcertos / fechamento.nRespostas,
+      sessaoId,
+      primeiraRevisao: eConteudo,
+    },
+    supabase,
+  );
+}
+
 function texto(formulario: FormData, campo: string): string {
   const valor = formulario.get(campo);
   return typeof valor === "string" ? valor.trim() : "";
@@ -218,50 +230,6 @@ function tempoDoFormulario(valor: FormDataEntryValue | null): number | null | "i
   return Number.isSafeInteger(tempo) && tempo >= 0 && tempo <= 2_147_483_647
     ? tempo
     : "invalido";
-}
-
-async function lerExplicacaoPublica(
-  supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
-  questaoId: string,
-  questaoVersao: number,
-  respostaCorreta: string,
-): Promise<ExplicacaoPublica | null> {
-  const { data, error } = await supabase.rpc("ler_explicacao_publica", {
-    p_questao_id: questaoId,
-    p_questao_versao: questaoVersao,
-  });
-
-  if (error) {
-    reportarErro(error, { modulo: "aluno", operacao: "ler_explicacao_publica" });
-    return null;
-  }
-
-  const linha = Array.isArray(data) ? data[0] : data;
-  if (linha === undefined || linha === null) return null;
-
-  const fontes = fonteCitacaoDaExplicacaoSchema.array().safeParse(linha.fontes_citadas);
-  if (
-    typeof linha.texto !== "string" ||
-    typeof linha.alternativa_correta !== "string" ||
-    linha.alternativa_correta !== respostaCorreta ||
-    !fontes.success ||
-    fontes.data.length === 0
-  ) {
-    reportarErro(new Error("RPC de explicação devolveu formato inválido"), {
-      modulo: "aluno",
-      operacao: "validar_explicacao_publica",
-    });
-    return null;
-  }
-
-  return {
-    texto: linha.texto,
-    alternativaCorreta: linha.alternativa_correta,
-    fontesCitadas: fontes.data.map((fonte) => ({
-      docId: fonte.doc_id,
-      trecho: fonte.trecho,
-    })),
-  };
 }
 
 function ehRedirecionamentoDoNext(erro: unknown): boolean {

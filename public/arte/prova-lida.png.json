@@ -1,0 +1,7 @@
+{
+  "model": "openai/gpt-image-2",
+  "prompt": "A cheerful young Brazilian woman with an afro stands centre-right, holding up one exam sheet like a small trophy; to her left a tall untidy stack of exam papers, and a few loose sheets floating in the air around her. She is mid-step, confident and warm. Full body, wide horizontal composition with generous empty space at the left. Style: pure flat vector shapes with NO outline at all, colour blocks define every form, very rounded soft chunky silhouettes like a friendly mobile game mascot, large head, simple face with big round eyes and a wide smile. Vivid multi-colour palette, use ALL of these and do not let green dominate: forest green #245B46, sage green #4F8B72, sky blue #3D8FD1, coral red #E4674F, sunny yellow #F0B429, warm gold #B8862D, cream #FFFDF8, ink #1B1D1A. Plain pure white background. No gradients, no shading, no texture, no drop shadows, no 3D, no photorealism, no text, no letters, no numbers, no logos, no flags, no purple, no neon.",
+  "size": "1536x1024",
+  "media_type": "image/png",
+  "custo": 0.005995
+}

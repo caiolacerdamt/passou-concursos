@@ -9,7 +9,14 @@ import {
 } from "@/modules/config/leitura";
 
 import { criarTopico } from "./acervo";
-import { comoAluno, novoAluno, recusa } from "./aluno";
+import {
+  comoAluno,
+  criarSessao,
+  inserirTentativa,
+  novoAluno,
+  questaoParaResponder,
+  recusa,
+} from "./aluno";
 import { comTransacaoRevertida } from "./conexao";
 import { descreveComBanco } from "./setup";
 import { supabaseNaTransacao } from "./supabase-na-transacao";
@@ -314,6 +321,90 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
     });
   });
 
+  it("chamada autenticada sem sessao e recusada sem criar agenda", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const topico = await criarTopico(cliente);
+
+      await comoAluno(cliente, aluno, async () => {
+        await recusa(
+          cliente,
+          () =>
+            cliente.query(
+              `select * from public.registrar_revisao(
+                 $1, $2, 'fsrs', current_date + 3, 3::smallint, 0.8::numeric)`,
+              [aluno, topico],
+            ),
+          /sessao_obrigatoria/,
+        );
+      });
+
+      const { rows: eventos } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_evento where user_id = $1",
+        [aluno],
+      );
+      const { rows: agendas } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_agenda where user_id = $1",
+        [aluno],
+      );
+      expect(eventos[0].n).toBe("0");
+      expect(agendas[0].n).toBe("0");
+    });
+  });
+
+  it("sessao propria nao aceita topico que nao aparece nas tentativas", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = novoAluno();
+      const sessao = await criarSessao(cliente, aluno, "revisao");
+      const questao = await questaoParaResponder(cliente);
+      const topicoAlheio = await criarTopico(cliente);
+
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        sessao_id: sessao,
+        contexto: "revisao",
+        correta: true,
+      });
+      await cliente.query(
+        "update public.sessoes set encerrada_em = now() where id = $1",
+        [sessao],
+      );
+
+      await comoAluno(cliente, aluno, async () => {
+        await recusa(
+          cliente,
+          () =>
+            cliente.query(
+              `select * from public.registrar_revisao(
+                 p_user_id => $1::uuid,
+                 p_topico_id => $2::uuid,
+                 p_algoritmo => 'fsrs'::text,
+                 p_due => (current_date + 3)::date,
+                 p_nota => 3::smallint,
+                 p_percentual => 0.8::numeric,
+                 p_fsrs_card => null::jsonb,
+                 p_regua_passo => 0::smallint,
+                 p_sessao_id => $3::uuid,
+                 p_so_agenda => false::boolean)`,
+              [aluno, topicoAlheio, sessao],
+            ),
+          /topico_invalido/,
+        );
+      });
+
+      const { rows: eventos } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_evento where user_id = $1",
+        [aluno],
+      );
+      const { rows: agendas } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_agenda where user_id = $1",
+        [aluno],
+      );
+      expect(eventos[0].n).toBe("0");
+      expect(agendas[0].n).toBe("0");
+    });
+  });
+
   it("o job, sem sessao, continua podendo agendar por qualquer aluno", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = novoAluno();
@@ -327,6 +418,101 @@ descreveComBanco("agendarRevisao — o que sai do modulo (ALUNO-09 AC3)", () => 
         [aluno, topico],
       );
       expect(rows).toHaveLength(1);
+    });
+  });
+
+  it("conteúdo novo agenda amanhã sem criar falso evento de revisão", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      configFixa({});
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const topico = questao.topico_id;
+      const sessao = await criarSessao(cliente, aluno, "treino");
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        sessao_id: sessao,
+        contexto: "treino",
+        correta: false,
+        causa_erro: "nao_sei_dizer",
+        causa_origem: "aluno",
+      });
+      await cliente.query(
+        "update public.sessoes set encerrada_em = now() where id = $1",
+        [sessao],
+      );
+
+      const resultado = await agendarRevisao(
+        {
+          userId: aluno,
+          topicoId: topico,
+          percentualAcerto: 0.1,
+          primeiraRevisao: true,
+          sessaoId: sessao,
+          agora: HOJE,
+        },
+        supabaseNaTransacao(cliente),
+      );
+
+      expect(diasEntre(resultado.due, HOJE)).toBe(1);
+      const { rows: eventos } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_evento where user_id = $1",
+        [aluno],
+      );
+      expect(eventos[0].n).toBe("0");
+    });
+  });
+
+  it("retry do mesmo bloco nao duplica evento nem agenda", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      configFixa({});
+      const aluno = novoAluno();
+      const questao = await questaoParaResponder(cliente);
+      const topico = questao.topico_id;
+      const sessao = await criarSessao(cliente, aluno, "revisao");
+      await inserirTentativa(cliente, questao, {
+        user_id: aluno,
+        sessao_id: sessao,
+        contexto: "revisao",
+        correta: true,
+      });
+      await cliente.query(
+        "update public.sessoes set encerrada_em = now() where id = $1",
+        [sessao],
+      );
+      const supabase = supabaseNaTransacao(cliente);
+
+      const primeira = await agendarRevisao(
+        {
+          userId: aluno,
+          topicoId: topico,
+          percentualAcerto: 0.8,
+          sessaoId: sessao,
+          agora: HOJE,
+        },
+        supabase,
+      );
+      const segunda = await agendarRevisao(
+        {
+          userId: aluno,
+          topicoId: topico,
+          percentualAcerto: 0.2,
+          sessaoId: sessao,
+          agora: new Date("2026-08-25T12:00:00Z"),
+        },
+        supabase,
+      );
+
+      expect(segunda.due).toEqual(primeira.due);
+      const { rows: eventos } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_evento where user_id = $1",
+        [aluno],
+      );
+      const { rows: agendas } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.revisao_agenda where user_id = $1",
+        [aluno],
+      );
+      expect(eventos[0].n).toBe("1");
+      expect(agendas[0].n).toBe("1");
     });
   });
 

@@ -14,27 +14,30 @@
  * Tema claro/escuro esta FORA do escopo da SPEC 07.
  */
 @theme {
-  --color-fundo: #f7f8f6;
-  --color-fundo-suave: #eef2f5;
-  --color-texto: #162438;
-  --color-suave: #475569;
-  --color-marca: #2f64d6;
-  --color-evolucao: #238b7a;
-  --color-erro: #b42318;
-  --color-aviso: #9a5c0a;
-  --color-ok: #177245;
-  --color-linha: #d7dee8;
-  --color-painel: #ffffff;
+  --color-fundo: #f5f2e9;
+  --color-fundo-suave: #f1f2ee;
+  --color-texto: #1b1d1a;
+  --color-suave: #63665e;
+  --color-marca: #245b46;
+  --color-evolucao: #357055;
+  --color-erro: #c03a3a;
+  --color-aviso: #8a6510;
+  --color-ok: #2c7a55;
+  --color-linha: #ddd9cd;
+  --color-painel: #fffdf8;
+  --color-marca-apoio: #357055;
+  --color-marca-suave: #e6eee9;
+  --color-conquista: #8a6318;
+  --color-conquista-fundo: #faf4e6;
+  --color-erro-fundo: #fbeded;
 
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
-  --font-display: Georgia, "Times New Roman", serif;
-  --font-utilitaria: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  --font-sans: var(--fonte-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--fonte-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-utilitaria: var(--fonte-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --radius-card: 0.875rem;
-  --shadow-card: 0 12px 32px rgb(22 36 56 / 0.07);
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(27 29 26 / 0.04), 0 8px 24px -16px rgb(27 29 26 / 0.2);
 
   /*
    * Largura de leitura do shell (UI-01 AC3). Em `rem`, nunca em px fixo — e o
@@ -45,6 +48,142 @@
    */
   --container-leitura: 44rem;
   --container-painel: 72rem;
+}
+
+/*
+ * Tokens da superfície editorial (`DESIGN.md`, modo Persuade) compartilhados
+ * com as rotas públicas, de estudo e da mesa.
+ *
+ * Os nomes históricos do app continuam válidos para não obrigar cada tela a
+ * migrar de uma vez. Os valores agora compartilham a mesma matéria visual da
+ * landing: papel quente, tinta escura e verde como âncora.
+ *
+ * Contraste conferido contra `--color-papel` (`DESIGN.md` §Tokens): todo token
+ * terminado em `-texto` passa 4.5:1; os de preenchimento não carregam texto.
+ */
+@theme {
+  --color-papel: #f5f2e9;
+  --color-papel-alto: #fffdf8;
+  --color-papel-recuo: #f1f2ee;
+  --color-tinta: #1b1d1a;
+  --color-tinta-suave: #63665e;
+  --color-risco: #ddd9cd;
+
+  --color-verde: #245b46;
+  --color-verde-texto: #357055;
+  --color-verde-vivo: #4f8b72;
+  --color-verde-tenue: #e6eee9;
+
+  --color-ouro: #b8862d;
+  --color-ouro-texto: #8a6318;
+  --color-ouro-fundo: #faf4e6;
+
+  /*
+   * Paleta de **ilustração**, não de interface.
+   *
+   * O briefing manda 85% neutro / 10% verde / 5% acento e "cor com significado"
+   * — e isso continua valendo para a UI: botão, link, estado e seleção seguem
+   * só no verde. Estas quatro existem para a arte e os props decorativos, que
+   * é onde o MindMarket e o Duolingo tiram a energia deles.
+   *
+   * Regra dura: nenhuma delas pinta controle, estado ou texto de interface. Se
+   * uma dessas cores aparecer num botão, é bug.
+   */
+  --color-arte-azul: #3d8fd1;
+  --color-arte-coral: #e4674f;
+  --color-arte-amarelo: #f0b429;
+  --color-arte-verde: #4f8b72;
+
+  /*
+   * Teto de 6rem no display: acima disso a linha quebra em lugar feio no
+   * celular e o `text-wrap: balance` deixa de dar conta.
+   */
+  --text-display: 4.25rem;
+  --text-display--line-height: 0.96;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 500;
+
+  --text-display-lg: 6rem;
+  --text-display-lg--line-height: 0.94;
+  --text-display-lg--letter-spacing: -0.045em;
+  --text-display-lg--font-weight: 500;
+
+  --text-titulo: 2.25rem;
+  --text-titulo--line-height: 1.12;
+  --text-titulo--letter-spacing: -0.022em;
+  --text-titulo--font-weight: 500;
+
+  --text-subtitulo: 1.375rem;
+  --text-subtitulo--line-height: 1.35;
+  --text-subtitulo--letter-spacing: -0.01em;
+
+  --text-corpo: 1.0625rem;
+  --text-corpo--line-height: 1.6;
+
+  /*
+   * O lado escuro da landing (AD-106).
+   *
+   * Duas das sete seções viram breu — o problema e o pico. É esse racionamento
+   * que faz o pico valer, e é por isso que estes tokens não vazam para o app:
+   * tema escuro continua fora do escopo, isto é chão de capítulo.
+   *
+   * Contraste medido contra `--color-breu`, não estimado:
+   * `breu-tinta` 15.1:1 · `breu-suave` 7.2:1 · `breu-verde` 8.8:1.
+   * `breu-linha` é divisor decorativo — 1.5:1, e por isso nunca carrega texto.
+   */
+  --color-breu: #191a15;
+  --color-breu-alto: #23251d;
+  --color-breu-tinta: #f3eee2;
+  --color-breu-suave: #aca697;
+  --color-breu-verde: #8cc4a6;
+  --color-breu-linha: #383a2f;
+
+  /*
+   * As duas cores do movimento assinatura que não são a marca. Os 86 chips
+   * saem de papel, e os doze do topo viram `--color-verde-vivo` enquanto os 74
+   * restantes viram sedimento. São preenchimento de ilustração, nunca texto —
+   * e existem como token porque o laço de desenho as interpola por quadro: se
+   * o CSS tivesse uma cópia e o JS outra, as duas divergiriam na primeira
+   * troca de paleta.
+   */
+  --color-pilha-papel: #e7e2d3;
+  --color-pilha-sedimento: #4a4e42;
+
+  /*
+   * Elevação da landing. Sombra com deslocamento e desfoque de verdade — halo
+   * colorido em offset zero é adesivo, não luz (`DESIGN.md` §Anti-slop).
+   */
+  --shadow-lp: 0 1px 2px rgb(27 29 26 / 0.05), 0 12px 28px -14px rgb(27 29 26 / 0.28);
+  --shadow-lp-alta: 0 2px 4px rgb(27 29 26 / 0.06), 0 28px 56px -22px rgb(27 29 26 / 0.38);
+
+  --radius-bloco: 1.75rem;
+  --container-lp: 68rem;
+
+  /*
+   * `--fonte-geist` e `--fonte-geist-mono` nascem do `next/font` no layout raiz
+   * e são mantidos no layout da landing por compatibilidade. O fallback completo
+   * mantém a página legível se a fonte não carregar.
+   */
+  --font-lp: var(--fonte-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-lp-mono: var(--fonte-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/*
+ * As superficies que o navegador desenha, e nao nos: sem isto a landing herda a
+ * selecao azul do app e entrega que a pagina foi montada, nao desenhada.
+ */
+.lp ::selection {
+  background-color: color-mix(in srgb, var(--color-verde) 20%, transparent);
+}
+
+.lp :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-verde);
+  outline-offset: 3px;
+}
+
+.lp {
+  caret-color: var(--color-verde);
+  scrollbar-color: var(--color-risco) var(--color-papel);
 }
 
 /*
@@ -73,6 +212,101 @@ body {
    * codigo rola dentro do proprio container, nunca no documento.
    */
   overflow-x: hidden;
+}
+
+/*
+ * Base visual das superfícies que usam Shell. A landing mantém sua própria
+ * composição; as demais rotas compartilham este acabamento para não parecerem
+ * um produto diferente ao navegar.
+ */
+.app-ui {
+  min-height: 100dvh;
+  background: var(--color-fundo);
+  color: var(--color-texto);
+  font-family: var(--font-sans);
+}
+
+.app-ui input:not([type="checkbox"]):not([type="radio"]),
+.app-ui select,
+.app-ui textarea {
+  border-color: var(--color-linha);
+  border-radius: 0.625rem;
+  background-color: var(--color-painel);
+  color: var(--color-texto);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.app-ui input:not([type="checkbox"]):not([type="radio"]):focus,
+.app-ui select:focus,
+.app-ui textarea:focus {
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-marca) 16%, transparent);
+  outline: none;
+}
+
+.app-ui button {
+  border-radius: var(--radius-pill);
+}
+
+.app-ui a {
+  text-underline-offset: 0.2em;
+}
+
+.app-ui .app-actions a,
+.app-ui .app-actions button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 0.55rem 0.9rem;
+  color: var(--color-marca);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.app-ui .app-actions a:hover,
+.app-ui .app-actions button:hover {
+  border-color: color-mix(in srgb, var(--color-marca) 24%, var(--color-linha));
+  background: var(--color-marca-suave);
+}
+
+.app-ui .app-actions form:last-child button {
+  border-color: var(--color-linha);
+  color: var(--color-suave);
+}
+
+.app-ui .app-actions form:last-child button:hover {
+  border-color: var(--color-marca);
+  color: var(--color-marca);
+}
+
+.app-ui h1,
+.app-ui h2,
+.app-ui h3,
+.app-ui h4 {
+  letter-spacing: -0.025em;
+}
+
+.app-ui .app-card {
+  border-color: var(--color-linha);
+  background: var(--color-painel);
+  box-shadow: var(--shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-ui input:not([type="checkbox"]):not([type="radio"]),
+  .app-ui select,
+  .app-ui textarea {
+    transition: none;
+  }
+
+  .app-ui .app-actions a,
+  .app-ui .app-actions button {
+    transition: none;
+  }
 }
 
 ::selection {

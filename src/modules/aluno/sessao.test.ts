@@ -19,6 +19,7 @@ import {
   itensPendentes,
   mapearQuestaoParaTela,
   prepararSessao,
+  prepararSessaoDeRefacao,
   selecionarQuestoesDisponiveis,
 } from "./sessao";
 
@@ -67,6 +68,7 @@ function clienteParaPreparar({
     plano_dia_id: "plano-1",
     tipo: "treinar",
     topico_id: "topico-1",
+    n_questoes: 10,
   },
   abertas = null,
   questoes = [linha()],
@@ -106,6 +108,68 @@ function clienteParaPreparar({
     }),
   };
   return { cliente, consultas };
+}
+
+function clienteParaRefacao({
+  aberta = null,
+  abertaDepoisDoConflito = aberta,
+  tentativas = [],
+  causas = [],
+  questoes = [],
+  itens = [],
+  itensDepoisDaCorrida = itens,
+  inserir = { data: { id: "sessao-refacao" }, error: null },
+  inserirItens = { data: null, error: null },
+}: {
+  aberta?: Record<string, unknown> | null;
+  abertaDepoisDoConflito?: Record<string, unknown> | null;
+  tentativas?: unknown[];
+  causas?: unknown[];
+  questoes?: unknown[];
+  itens?: unknown[];
+  itensDepoisDaCorrida?: unknown[];
+  inserir?: { data: unknown; error: null | { message: string; code?: string } };
+  inserirItens?: { data: unknown; error: null | { message: string; code?: string } };
+} = {}) {
+  const sessoes = [0];
+  const consultasDeItens = [0];
+  const insercoes: unknown[] = [];
+  const cliente = {
+    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }) },
+    from: vi.fn((tabela: string) => {
+      let resposta: { data: unknown; error: null | { message: string; code?: string } };
+      if (tabela === "sessoes") {
+        resposta =
+          sessoes[0] === 0
+            ? { data: aberta, error: null }
+            : sessoes[0] === 1
+              ? inserir
+              : { data: abertaDepoisDoConflito, error: null };
+        sessoes[0] += 1;
+      } else if (tabela === "tentativas") {
+        resposta = { data: tentativas, error: null };
+      } else if (tabela === "tentativa_causa_simulado") {
+        resposta = { data: causas, error: null };
+      } else if (tabela === "questoes") {
+        resposta = { data: questoes, error: null };
+      } else if (tabela === "sessao_itens") {
+        resposta = {
+          data: consultasDeItens[0]++ === 0 ? itens : itensDepoisDaCorrida,
+          error: null,
+        };
+      } else {
+        resposta = inserirItens;
+      }
+      const builder = consulta(resposta);
+      builder.insert = vi.fn((linhas: unknown) => {
+        insercoes.push(linhas);
+        if (tabela === "sessao_itens") consultasDeItens[0] += 1;
+        return consulta(tabela === "sessoes" ? inserir : inserirItens);
+      });
+      return builder;
+    }),
+  };
+  return { cliente, insercoes };
 }
 
 describe("sessão de estudo", () => {
@@ -182,6 +246,22 @@ describe("sessão de estudo", () => {
     expect(cliente.from).toHaveBeenCalledWith("sessao_itens");
   });
 
+  it("usa a quantidade gravada no bloco, inclusive quando é menor que o padrão", async () => {
+    const { cliente, consultas } = clienteParaPreparar({
+      bloco: {
+        id: "bloco-1",
+        plano_dia_id: "plano-1",
+        tipo: "treinar",
+        topico_id: "topico-1",
+        n_questoes: 3,
+      },
+    });
+
+    await prepararSessao(cliente as never, "bloco-1");
+
+    expect(consultas.questoes[0].limit).toHaveBeenCalledWith(3);
+  });
+
   it("retoma sessão aberta e não busca nem insere outro conjunto", async () => {
     const { cliente } = clienteParaPreparar({ abertas: { id: "sessao-aberta", plano_bloco_id: "bloco-1", contexto: "treino", encerrada_em: null } });
 
@@ -199,5 +279,263 @@ describe("sessão de estudo", () => {
       constructor: SessaoRecusada,
       motivo: "acervo_vazio",
     });
+  });
+
+  it("monta refação somente com erros do titular e versões publicadas", async () => {
+    const { cliente, insercoes } = clienteParaRefacao({
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 2,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+        {
+          id: "tentativa-2",
+          questao_id: "questao-2",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-22T12:00:00Z",
+        },
+      ],
+      questoes: [
+        linha({
+          id: "questao-1",
+          questao_versao: 2,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          status: "publicada",
+          vigente: true,
+          anulada: false,
+        }),
+        linha({
+          id: "questao-2",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          status: "rascunho",
+          vigente: true,
+          anulada: false,
+        }),
+      ],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-refacao", retomada: false });
+    expect(insercoes).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-refacao",
+        questao_id: "questao-1",
+        questao_versao: 2,
+        ordem: 1,
+      },
+    ]);
+  });
+
+  it("limita a refação ao teto de questões do bloco e preserva a ordem recente", async () => {
+    dependencias.getParams.mockResolvedValue([2, 30]);
+    const topicoId = "11111111-1111-4111-8111-111111111111";
+    const tentativas = ["questao-1", "questao-2", "questao-3"].map((id, indice) => ({
+      id: `tentativa-${indice + 1}`,
+      questao_id: id,
+      questao_versao: 1,
+      topico_id: topicoId,
+      causa_erro: "errei_a_conta",
+      respondida_em: `2026-08-${23 - indice}T12:00:00Z`,
+    }));
+    const { cliente, insercoes } = clienteParaRefacao({
+      tentativas,
+      questoes: [
+        linha({ id: "questao-1", topico_id: topicoId }),
+        linha({ id: "questao-2", topico_id: topicoId }),
+        linha({ id: "questao-3", topico_id: topicoId }),
+      ],
+    });
+
+    await prepararSessaoDeRefacao(cliente as never, {
+      topicoId,
+      causa: "errei_a_conta",
+    });
+
+    expect(insercoes[1]).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      expect.objectContaining({ questao_id: "questao-1", ordem: 1 }),
+      expect.objectContaining({ questao_id: "questao-2", ordem: 2 }),
+    ]);
+  });
+
+  it("usa causa do simulado em tabela vizinha e nunca aceita identidade do cliente", async () => {
+    const { cliente } = clienteParaRefacao({
+      tentativas: [
+        {
+          id: "tentativa-simulado",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: null,
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      causas: [{ tentativa_id: "tentativa-simulado", causa_erro: "faltou_tempo" }],
+      questoes: [linha({ topico_id: "11111111-1111-4111-8111-111111111111" })],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "faltou_tempo",
+      }),
+    ).resolves.toMatchObject({ id: "sessao-refacao" });
+    expect(cliente.auth.getUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("retoma a sessão de refação aberta e não refaz a seleção", async () => {
+    const { cliente } = clienteParaRefacao({
+      aberta: {
+        id: "sessao-aberta",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: "11111111-1111-4111-8111-111111111111|errei_a_conta",
+      },
+      itens: [
+        {
+          id: "item-refacao",
+          sessao_id: "sessao-aberta",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          ordem: 1,
+        },
+      ],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-aberta", retomada: true });
+    expect(cliente.from).toHaveBeenCalledTimes(2);
+  });
+
+  it("repara sessão aberta sem itens e retorna retomada", async () => {
+    const topicoId = "11111111-1111-4111-8111-111111111111";
+    const { cliente, insercoes } = clienteParaRefacao({
+      aberta: {
+        id: "sessao-vazia",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: `${topicoId}|errei_a_conta`,
+      },
+      abertaDepoisDoConflito: {
+        id: "sessao-vazia",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: `${topicoId}|errei_a_conta`,
+      },
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: topicoId,
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      questoes: [linha({ id: "questao-1", topico_id: topicoId })],
+      itens: [],
+      itensDepoisDaCorrida: [],
+      inserir: { data: null, error: { message: "colisão", code: "23505" } },
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId,
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-vazia", retomada: true });
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-vazia",
+        questao_id: "questao-1",
+        questao_versao: 1,
+        ordem: 1,
+      },
+    ]);
+  });
+
+  it("no caminho 23505 preenche a sessão vencedora que ainda estava sem itens", async () => {
+    const questao = linha({
+      id: "questao-1",
+      topico_id: "11111111-1111-4111-8111-111111111111",
+    });
+    const item = {
+      id: "item-refacao",
+      sessao_id: "sessao-vencedora",
+      questao_id: "questao-1",
+      questao_versao: 1,
+      ordem: 1,
+    };
+    const { cliente, insercoes } = clienteParaRefacao({
+      aberta: null,
+      abertaDepoisDoConflito: {
+        id: "sessao-vencedora",
+        plano_bloco_id: null,
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: "11111111-1111-4111-8111-111111111111|errei_a_conta",
+      },
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: "11111111-1111-4111-8111-111111111111",
+          causa_erro: "errei_a_conta",
+          respondida_em: "2026-08-23T12:00:00Z",
+        },
+      ],
+      questoes: [questao],
+      itens: [],
+      itensDepoisDaCorrida: [item],
+      inserir: { data: null, error: { message: "colisão", code: "23505" } },
+      inserirItens: { data: null, error: { message: "colisão de item", code: "23505" } },
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "errei_a_conta",
+      }),
+    ).resolves.toEqual({ id: "sessao-vencedora", retomada: true });
+    expect(insercoes).toHaveLength(2);
+    expect(insercoes[1]).toEqual([
+      {
+        sessao_id: "sessao-vencedora",
+        questao_id: "questao-1",
+        questao_versao: 1,
+        ordem: 1,
+      },
+    ]);
+  });
+
+  it("recusa filtro de refação inválido antes de consultar o banco", async () => {
+    const { cliente } = clienteParaRefacao();
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "topico-alheio",
+        causa: "errei_a_conta",
+      }),
+    ).rejects.toMatchObject({ motivo: "refacao_indisponivel" });
+    expect(cliente.auth.getUser).not.toHaveBeenCalled();
   });
 });

@@ -21,7 +21,9 @@ export default async function Entrar({
 
   return (
     <Shell>
-      <h1 className="text-2xl font-semibold">Entrar</h1>
+      <section className="mx-auto max-w-md rounded-card border border-linha bg-painel p-6 shadow-card sm:p-9" aria-labelledby="titulo-entrar">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Passou Concursos</p>
+      <h1 id="titulo-entrar" className="mt-3 font-display text-4xl leading-tight tracking-tight">Entrar</h1>
 
       {erro ? (
         /*
@@ -73,7 +75,7 @@ export default async function Entrar({
 
         <button
           type="submit"
-          className="rounded-md bg-marca px-4 py-2 font-medium text-fundo"
+          className="min-h-11 rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio"
         >
           Entrar
         </button>
@@ -83,7 +85,7 @@ export default async function Entrar({
         <input type="hidden" name="proximo" value={proximo} />
         <button
           type="submit"
-          className="w-full rounded-md border border-linha px-4 py-2 font-medium"
+          className="min-h-11 w-full rounded-full border border-linha px-4 py-3 font-medium text-texto transition hover:border-marca hover:bg-marca-suave"
         >
           Entrar com Google
         </button>
@@ -95,6 +97,7 @@ export default async function Entrar({
           Definir uma nova
         </Link>
       </p>
+      </section>
     </Shell>
   );
 }

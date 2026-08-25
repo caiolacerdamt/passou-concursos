@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
-import type { EstadoDaResposta, ExplicacaoPublica } from "@/app/app/sessao/acoes";
+import type { EstadoDaResposta } from "@/app/app/sessao/acoes";
 import { responderQuestao } from "@/app/app/sessao/acoes";
 import type { ItemDaSessao, ImagemDaSessao, QuestaoDaSessao, SessaoDaTela } from "@/modules/aluno/sessao";
 
@@ -34,7 +34,7 @@ export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
       <div className="space-y-4">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-evolucao">Sessão salva</p>
         <h1 className="font-display text-4xl leading-tight">Você chegou ao fim deste bloco.</h1>
-        <Link href="/app" className="inline-flex rounded-lg bg-marca px-4 py-3 font-semibold text-white">
+        <Link href="/app" className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 py-3 font-semibold text-white">
           Voltar ao plano
         </Link>
       </div>
@@ -160,7 +160,7 @@ function QuestaoAtual({
         <button
           type="submit"
           disabled={pendente}
-          className="w-full rounded-lg bg-marca px-4 py-3 font-semibold text-white shadow-sm transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
+          className="min-h-11 w-full rounded-full bg-marca px-4 py-3 font-semibold text-white transition hover:bg-marca-apoio disabled:cursor-wait disabled:opacity-60"
         >
           {pendente ? "Registrando…" : pedindoCausa ? "Enviar causa e continuar" : "Responder"}
         </button>
@@ -197,7 +197,7 @@ function Alternativas({ questao }: { questao: QuestaoDaSessao }) {
         return (
           <label
             key={alternativa.letra}
-            className="flex cursor-pointer items-start gap-3 rounded-card border border-linha bg-painel p-4 text-base leading-7 shadow-sm transition hover:border-marca has-[:checked]:border-marca has-[:checked]:bg-marca/10"
+          className="flex cursor-pointer items-start gap-3 rounded-card border border-linha bg-painel p-4 text-base leading-7 shadow-card transition hover:border-marca has-[:checked]:border-marca has-[:checked]:bg-marca-suave"
           >
             <input
               type="radio"
@@ -262,50 +262,20 @@ export function FeedbackDaResposta({
         <p className="mt-1 font-utilitaria text-2xl font-bold text-marca">{estado.respostaCorreta}</p>
       </section>
 
-      {estado.explicacao ? <Explicacao explicacao={estado.explicacao} /> : (
-        <div className="rounded-card border border-aviso/40 bg-painel p-5 shadow-card sm:p-6">
-          <p className="font-semibold text-aviso">Explicação em revisão</p>
-          <p className="mt-2 text-sm leading-6 text-suave">
-            Esta versão ainda não tem uma explicação conferida. A resposta correta continua sendo a do gabarito oficial.
-          </p>
-        </div>
-      )}
-
       {ultima ? (
-        <Link href="/app" className="inline-flex w-full justify-center rounded-lg bg-marca px-4 py-3 font-semibold text-white">
+        <Link href="/app" className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-marca px-4 py-3 font-semibold text-white">
           Concluir e voltar ao plano
         </Link>
       ) : (
         <button
           type="button"
           onClick={aoAvancar}
-          className="w-full rounded-lg border border-marca px-4 py-3 font-semibold text-marca transition hover:bg-marca hover:text-white"
+          className="min-h-11 w-full rounded-full border border-marca px-4 py-3 font-semibold text-marca transition hover:bg-marca hover:text-white"
         >
           Próxima questão
         </button>
       )}
     </article>
-  );
-}
-
-function Explicacao({ explicacao }: { explicacao: ExplicacaoPublica }) {
-  return (
-    <section className="space-y-5 rounded-card border border-linha bg-painel p-5 shadow-card sm:p-6">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-evolucao">Explicação conferida</p>
-        <p className="mt-3 whitespace-pre-wrap text-base leading-8">{explicacao.texto}</p>
-      </div>
-      <div className="border-t border-linha pt-4">
-        <p className="text-sm font-semibold">Fontes citadas</p>
-        <ul className="mt-2 space-y-2 text-sm leading-6 text-suave">
-          {explicacao.fontesCitadas.map((fonte) => (
-            <li key={`${fonte.docId}-${fonte.trecho}`}>
-              <span className="font-utilitaria text-xs text-marca">{fonte.docId}</span>{" — "}{fonte.trecho}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
   );
 }
 

@@ -1,8 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 
+const dependencias = vi.hoisted(() => ({
+  servico: { rpc: vi.fn() },
+}));
+
+vi.mock("@/lib/db/servidor", () => ({
+  clienteDeServico: () => dependencias.servico,
+}));
+
 import {
   CAUSAS_DO_CADERNO,
+  calcularTendencia,
   consultarProgresso,
+  finalizarBloco,
   normalizarFiltrosProgresso,
 } from "./progresso";
 
@@ -13,6 +23,8 @@ function cadeia(resposta: Resposta) {
     select: vi.fn(() => api),
     eq: vi.fn(() => api),
     in: vi.fn(() => api),
+    gte: vi.fn(() => api),
+    lte: vi.fn(() => api),
     order: vi.fn(() => api),
     then: (
       resolve: (valor: Resposta) => unknown,
@@ -34,7 +46,9 @@ function clienteFalso(
     cliente: {
       from(tabela: string) {
         chamadas.push(tabela);
-        cadeias[tabela] ??= cadeia(respostas[tabela]);
+        cadeias[tabela] ??= cadeia(
+          respostas[tabela] ?? { data: [], error: null },
+        );
         return cadeias[tabela];
       },
       rpc: vi.fn(async () => sequencia),
@@ -113,11 +127,13 @@ describe("consultarProgresso", () => {
       nRespostas: 10,
       nAcertos: 6,
       score: 0.6,
+      dominio: "em_desenvolvimento",
+      tendencia: "sem_base",
     });
     expect(resultado.caderno[0].nErros).toBe(3);
     expect(resultado.sequencia?.sequencia).toBe(4);
     expect(resultado.estadoInicial).toBe(false);
-    expect(falso.chamadas).not.toContain("tentativas");
+    expect(falso.chamadas).toContain("tentativas");
     expect(falso.cadeias.caderno_erros.eq).toHaveBeenCalledWith(
       "causa_erro",
       "errei_a_conta",
@@ -142,7 +158,12 @@ describe("consultarProgresso", () => {
       sequencia: null,
       estadoInicial: true,
     });
-    expect(falso.chamadas).toEqual(["dominio_topico", "caderno_erros"]);
+    expect(falso.chamadas).toEqual([
+      "dominio_topico",
+      "caderno_erros",
+      "tentativas",
+      "revisao_evento",
+    ]);
   });
 
   it("nomeia o recurso cuja leitura falhou e não mostra detalhes como sucesso", async () => {
@@ -203,5 +224,121 @@ describe("consultarProgresso", () => {
     await expect(consultarProgresso(falso.cliente as never)).rejects.toThrow(
       "falha ao ler sequência: rpc indisponível",
     );
+  });
+
+  it("reconstroi projeções e calcula o percentual do bloco pela sessão autenticada", async () => {
+    dependencias.servico.rpc.mockResolvedValue({ data: 2, error: null });
+    const sessao = {
+      select: vi.fn(() => sessao),
+      eq: vi.fn(() => sessao),
+      maybeSingle: vi.fn(async () => ({
+        data: { contexto: "revisao", encerrada_em: "2026-08-24T10:00:00Z" },
+        error: null,
+      })),
+    };
+    const tentativas = {
+      select: vi.fn(() => tentativas),
+      eq: vi.fn(() => tentativas),
+      then: (
+        resolve: (valor: Resposta) => unknown,
+        reject?: (erro: unknown) => unknown,
+      ) =>
+        Promise.resolve({
+          data: [
+            { topico_id: UUID_A, correta: true },
+            { topico_id: UUID_A, correta: false },
+            { topico_id: UUID_A, correta: true },
+          ],
+          error: null,
+        }).then(resolve, reject),
+    };
+    const cliente = {
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: { id: "aluno-1" } }, error: null })),
+      },
+      from: vi.fn((tabela: string) => (tabela === "sessoes" ? sessao : tentativas)),
+    };
+
+    await expect(finalizarBloco(cliente as never, "sessao-1")).resolves.toEqual({
+      userId: "aluno-1",
+      contexto: "revisao",
+      topicoId: UUID_A,
+      nRespostas: 3,
+      nAcertos: 2,
+    });
+    expect(dependencias.servico.rpc).toHaveBeenCalledWith("recalcula_projecoes", {
+      p_user_id: "aluno-1",
+    });
+  });
+
+  it("torna ocupação ou falha da projeção visível", async () => {
+    dependencias.servico.rpc.mockResolvedValue({ data: -1, error: null });
+    const cliente = {
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: { id: "aluno-1" } }, error: null })),
+      },
+    };
+
+    await expect(finalizarBloco(cliente as never, "sessao-1")).rejects.toThrow(
+      "está ocupada",
+    );
+  });
+
+  it("compara as janelas de sete dias e monta relatório somente com fatos", async () => {
+    const falso = clienteFalso(
+      {
+        dominio_topico: {
+          data: [{ topico_id: UUID_A, n_respostas: 2, n_acertos: 1, score: 0.5 }],
+          error: null,
+        },
+        caderno_erros: { data: [], error: null },
+        topicos: { data: [{ id: UUID_A, nome: "Matemática" }], error: null },
+        tentativas: {
+          data: [
+            { topico_id: UUID_A, correta: true, respondida_em: "2026-08-12T12:00:00Z" },
+            { topico_id: UUID_A, correta: false, respondida_em: "2026-08-20T12:00:00Z" },
+            { topico_id: UUID_A, correta: true, respondida_em: "2026-08-21T12:00:00Z" },
+          ],
+          error: null,
+        },
+        revisao_evento: {
+          data: [{ topico_id: UUID_A, revisado_em: "2026-08-21T12:00:00Z" }],
+          error: null,
+        },
+      },
+      { data: [], error: null },
+    );
+
+    const resultado = await consultarProgresso(
+      falso.cliente as never,
+      {},
+      "2026-08-24T12:00:00Z",
+    );
+
+    expect(resultado.relatorioSemanal).toMatchObject({
+      questoesRespondidas: 2,
+      acertos: 1,
+      percentualAcertos: 0.5,
+      topicosTocados: 1,
+      revisoesConcluidas: 1,
+      tendencia: "caindo",
+    });
+    expect(resultado.historico[0].tendencia).toBe("caindo");
+  });
+});
+
+describe("calcularTendencia", () => {
+  const tentativa = (correta: boolean) => ({
+    topico_id: UUID_A,
+    correta,
+    respondida_em: "2026-08-20T12:00:00Z",
+  });
+
+  it("explicita sem base quando uma das janelas está vazia", () => {
+    expect(calcularTendencia([tentativa(true)], [])).toBe("sem_base");
+  });
+
+  it("classifica taxas iguais como estáveis sem arredondamento", () => {
+    expect(calcularTendencia([tentativa(true), tentativa(false)], [tentativa(false), tentativa(true)])).toBe("estavel");
   });
 });

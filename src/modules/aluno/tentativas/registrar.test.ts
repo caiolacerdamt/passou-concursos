@@ -97,6 +97,24 @@ describe("validarResposta — o que e recusado antes de gravar", () => {
     ).not.toThrow();
   });
 
+  it("errar no plano sem causa tambem e recusado antes de gravar", () => {
+    expect(() =>
+      validarResposta(entrada({ contexto: "plano" }), {
+        tipoQuestao: "multipla_escolha",
+        acertou: false,
+      }),
+    ).toThrowError(TentativaRecusada);
+  });
+
+  it("acertar no plano nao pede causa", () => {
+    expect(() =>
+      validarResposta(entrada({ contexto: "plano" }), {
+        tipoQuestao: "multipla_escolha",
+        acertou: true,
+      }),
+    ).not.toThrow();
+  });
+
   it("causa em resposta certa e recusada", () => {
     try {
       validarResposta(entrada({ causaErro: "chutei" }), {

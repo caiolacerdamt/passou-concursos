@@ -136,3 +136,41 @@ export {
   relatorioDoEstado,
   vereditoDaInspecao,
 } from "./inspecao";
+
+export {
+  TIPOS_RECURSO_ESTUDO,
+  type TipoRecursoEstudo,
+  type RecursoParaCarga,
+  type RecursoDeEstudo,
+  lerRecursosCsv,
+  lerRecursosJson,
+  lerRecursosEstudo,
+  consultarRecursosDoTopico,
+  consultarRecursosAtivos,
+} from "./recursos";
+
+export {
+  CONSULTA_DO_INVENTARIO_ACERVO,
+  type LinhaDoInventarioAcervo,
+  consultarInventarioAcervo,
+} from "./relatorio";
+
+export {
+  CONSULTA_DA_PRONTIDAO_CONTEUDO,
+  type LinhaDaProntidaoConteudo,
+  consultarProntidaoConteudo,
+  pendenciasDoEdital,
+} from "./prontidao";
+
+export {
+  CONSULTA_DA_FREQUENCIA_REAL,
+  type FrequenciaReal,
+  TETO_DA_CAUDA,
+  TOPO_DO_RAIOX,
+  type TopicoFrequente,
+  consultarFrequenciaReal,
+  frequenciaDoExtrato,
+  inteiroEmPtBr,
+  percentualEmPtBr,
+  resumirFrequencia,
+} from "./frequencia";

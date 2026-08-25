@@ -23,6 +23,7 @@ const {
   decidirRevisoesEmLote,
   decidirTopicoCandidato,
   editarTaxonomia,
+  salvarRecursoEstudo,
 } = await import("./comandos");
 
 describe("comandos do operador", () => {
@@ -136,6 +137,37 @@ describe("comandos do operador", () => {
     );
   });
 
+  it("grava recurso curado com autoria da sessão", async () => {
+    dependencias.rpc.mockResolvedValue({ data: "recurso-1", error: null });
+
+    await expect(
+      salvarRecursoEstudo({
+        recursoId: null,
+        topicoId: "44444444-4444-4444-8444-444444444444",
+        titulo: "Aula de juros",
+        url: "https://conteudo.test/juros",
+        tipo: "video",
+        duracaoMinutos: 20,
+        ordem: 1,
+        ativo: true,
+        motivo: "link conferido pelo operador",
+      }),
+    ).resolves.toBe("recurso-1");
+
+    expect(dependencias.rpc).toHaveBeenCalledWith("salvar_recurso_estudo_operador", {
+      p_recurso_id: null,
+      p_topico_id: "44444444-4444-4444-8444-444444444444",
+      p_titulo: "Aula de juros",
+      p_url: "https://conteudo.test/juros",
+      p_tipo: "video",
+      p_duracao_minutos: 20,
+      p_ordem: 1,
+      p_ativo: true,
+      p_operador: "operador-da-sessao",
+      p_motivo: "link conferido pelo operador",
+    });
+  });
+
   it("recusa entrada extra ou motivo vazio sem chamar a RPC", async () => {
     await expect(
       decidirRevisoesEmLote({
@@ -172,6 +204,18 @@ describe("comandos do operador", () => {
         valor: true,
         motivo: "ajuste",
         autorId: "autor-forjado",
+      }),
+    ).rejects.toMatchObject({ name: "EntradaDoOperadorInvalida" });
+    await expect(
+      salvarRecursoEstudo({
+        topicoId: "44444444-4444-4444-8444-444444444444",
+        titulo: "Aula",
+        url: "http://nao-seguro.test/aula",
+        tipo: "video",
+        duracaoMinutos: 20,
+        ordem: 1,
+        ativo: true,
+        motivo: "ajuste",
       }),
     ).rejects.toMatchObject({ name: "EntradaDoOperadorInvalida" });
 

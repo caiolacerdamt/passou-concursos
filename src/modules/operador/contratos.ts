@@ -168,3 +168,19 @@ export const alteracaoDeConfiguracaoSchema = z
 export type AlteracaoDeConfiguracaoInput = z.infer<
   typeof alteracaoDeConfiguracaoSchema
 >;
+
+export const recursoEstudoSchema = z
+  .object({
+    recursoId: uuid.nullable().optional(),
+    topicoId: uuid,
+    titulo: textoObrigatorio,
+    url: z.string().trim().regex(/^https:\/\/[^\s]+$/i, "url_do_recurso_invalida"),
+    tipo: z.enum(["video", "artigo", "pdf"]),
+    duracaoMinutos: z.number().int().positive(),
+    ordem: z.number().int().positive(),
+    ativo: z.boolean(),
+    motivo: textoObrigatorio,
+  })
+  .strict();
+
+export type RecursoEstudoInput = z.infer<typeof recursoEstudoSchema>;

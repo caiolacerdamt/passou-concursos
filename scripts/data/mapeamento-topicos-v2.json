@@ -1,0 +1,5582 @@
+{
+  "00b5cfc0-9825-4c3b-8d01-43aa951a8afc": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "00b8f95f-1578-453c-a353-15d1aac10a36": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "00e5a1db-4bb5-42ed-b0ff-3e163bf25883": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "013ece69-d42d-4256-8dc8-b1d53153a934": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "0149f7f4-bdb7-467d-afc1-b9e20779fa8f": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "0248b4ec-9ffb-4381-8e64-73e14225ea94": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "02702ba3-cadd-40b6-b14a-b3cc18dd5abd": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "02932ba7-95ab-4fa7-b0fa-7aaaf8cc591e": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "02ad3ca7-9a33-4438-80f1-c44b55756d87": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "02ae5c6a-c869-49f9-bf9b-071ae9b1534e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "03287b45-eeb2-4d19-a3ae-7d054be35113": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "034f5bc3-1d0c-44ff-a6b9-2047841757ad": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "0355e03e-e56b-4bd5-a5ed-16fcf38dd8bb": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "035ff915-8e64-4fe0-880a-6e76e3e36e60": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "0385949d-6173-4b9f-b7cc-f1f432b73fd5": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "039e6e2b-b95c-4fa6-b867-51b436cabf39": {
+    "materia": "Matemática",
+    "topico": "Medidas"
+  },
+  "03fe5d28-7adf-43f5-9b30-e6d8f338841c": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "0430495a-6117-48ef-a209-a302b09db768": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "04337546-91ee-462e-ac82-7863b524832a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "04a32ba9-94c6-4395-9820-a3cc4e62dda5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "04e0c665-3c5d-4142-b3e3-d8d562f41716": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "04e94628-cd6f-4849-8ff8-fffa3f3e15e6": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "05520363-b495-48f3-8a9e-37469b931071": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "05692478-5750-4bf7-a5a4-5419f4d0bfd0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "057fbd13-2abb-40ec-b82d-7af1a510f87a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "05b7c0da-99ee-44da-a3f7-3acfb62be0b0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "060e1c52-b3e8-472a-a753-1a47da8c2f08": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "060f5e9a-56e6-4ced-9e10-24199aaea3ef": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "0640977f-2dcd-4558-a7ba-97a2af67baf4": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "066a1af6-dec2-4388-8d89-b9d544a1b32b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "069d3fae-c80d-416e-b7f5-f7b29d095c98": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "06a0f2a3-81d5-4178-bbfb-8e1797ef4c3d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "076a8ba9-43a0-4181-9064-9abac51c2a41": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "0783beb5-02e8-40bb-b730-2d518c1491bc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "07a278bc-68a4-4051-a0cb-1d4615a78c44": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "07b8e80a-de36-40f8-9326-fab385de7dab": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "07c6dacc-5f61-4c60-88fd-2b1742dfc86f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "EAD"
+  },
+  "081eefd1-6f94-4701-abfd-c114dcda213a": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "08606dba-0ab2-4ae1-b960-7b817d1dc5df": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "08bbad25-b992-4755-8306-3e55e8840afe": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "08c4ec82-4944-449c-8e90-5dcdbca1459c": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "08ce77f9-83e1-4ed4-ba26-a331b615e922": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "08feb0cc-b4a2-4722-abfa-85a6faca7d79": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "0966aa77-e1d2-456f-9426-571b2ce41a36": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "09a3ac12-2e6e-4d33-a003-a13e6fb1f6e2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "09a3ddab-1534-4d93-a21d-f08e38a3bdaa": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "09c158b7-8094-4b78-822e-329ec4302736": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "09c2cffb-0833-4cab-bc0c-8ae54f3042b2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "09cc4455-0090-49ea-85fe-ae2adf0425a7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "09e18892-778b-4355-8c49-a70f783bf60e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "09e3c9d9-1ce5-41cd-bafe-74ccbe31f7c9": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "0a0e9256-47fd-4b02-8a5d-9120655d80d1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "0a2b8353-a283-463d-a67d-ac2dc58cf08e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "0a53330f-1118-40a4-86ec-4dd5b7725cd7": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "0a69fc27-c8e0-43b9-a697-cbe3e84d1d95": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "0a6cab20-9d06-434c-919f-b3113648e204": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "0a8bd773-e937-43cd-a026-af283f0d2bd1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "0aa986ff-0a1d-47a0-bf46-135b80189195": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "0b2db739-594f-47ed-8b6d-f7da26d999e7": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "0b8bb150-e026-4a9a-9bb5-dec63cb2b9c9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "0b9ce03c-ecfa-424a-9bdd-b29f88cb15e8": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "0baaf75f-0d3b-4672-8e88-7d73bb4cd4c0": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "0be0d55b-8b6d-4664-a2ac-dfcff2943ec6": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "0c354295-0014-437e-b0b3-4ec9e0a90ab8": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "0c3f6b14-d5d9-4e7f-941e-98668ad63002": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "0c7ec901-6b1d-4316-a330-57c9ee5d3740": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "0ca10a51-b685-42b6-baeb-e32756070ceb": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "0cf26bd7-9270-4800-bbee-d73fd0605dc4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "0d6cc74d-0252-470c-bf6e-d5a18a64f21b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "0d8197eb-9679-419b-96c5-f773421d4e7f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "0d8d523e-abf2-4fa7-b088-cab649bfd0f9": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "0dc3a855-c1b6-4b9d-93e0-040ec639663c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "0de819bb-b3f1-4c96-96f8-d1e8effab047": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Internet e mobile banking"
+  },
+  "0dfd8f71-a2a5-4353-81ae-8c16456f0b2b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "0e02cbe0-8bd3-4c39-93fb-d9f787aae470": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "0e179e31-bda6-4a4e-8d09-c29d0f18b808": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "0e3913f9-0cce-410e-9a81-63aed29a1ff5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "0e49e824-ae7d-4ad7-8e64-91e4b43e4ad5": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "0e766f11-e3b1-4427-9d6d-6fe10bfe52d1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "0ec39df1-1176-4497-a036-f9b728e85e1d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Sigilo bancário"
+  },
+  "0ecaf628-0988-4583-ba20-2ce118801ae4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "0f16b29d-546a-40cf-90e4-1af2a9f44981": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "0f300083-3079-40c9-a4eb-556db63ff9e1": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "0f31f973-8a5e-4fc6-960b-7e69f6dbf3f8": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "0f6278ab-051e-4602-9e3b-8464c25ce0a4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "0f64b4aa-58ca-480d-8ff9-35f2ca3bf68f": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "0fa704cb-e9ab-4dde-b32a-1458ca624108": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "0fbbc126-aefc-45b6-b92a-02664956cc5b": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "0fbc1cf4-5889-4cd5-9794-87aeeed31ff7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "10085523-bbf0-429d-b42e-157621b8e05f": {
+    "materia": "Matemática Financeira",
+    "topico": "Valor do dinheiro"
+  },
+  "108a56ac-b6c4-41c2-8497-2158dc71693a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "10e0fc11-5ff9-467b-b1d5-1211d4ffd886": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "112f49f8-740e-430b-ad2f-bed963863258": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "11a87a27-cbbf-42e8-9d97-484b4a67188d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "1216c92e-8306-4434-9dc1-6395cbf816b5": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "12671776-1d64-4493-b6cb-d6afe093b2ce": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "129de5ff-6841-4423-a316-4ff0ff034ef4": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "1332802a-90ec-4ee9-b4bd-96511a3095fb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "138e1ba2-c318-4b74-a0c3-bc42f0a96ad1": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "13fbf81c-de55-4bb1-8c59-6596bc7b9fcc": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "1418c1ed-67f8-490a-ac0f-5a86d7ea7b3e": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "141af912-b45b-44bf-a306-44137a4260e6": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "1439674f-7c4e-4dd0-9559-91e93ac92427": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "1457b343-d5b1-4866-88e4-7ba29a7eb21b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "1463c934-0701-464b-b356-fb115ae5a99a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "146f393c-2e73-4d0a-b213-b6fdf0b2a064": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "14759dd7-f8c7-41f0-b4ac-9b36bccf3197": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "14a3568c-ec62-408c-a4a8-7645f1c110ce": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "15003a73-b84e-48a3-80f5-3ba1a05e616a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "150429b0-318e-455c-9021-4508d1bcfb15": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "15184463-7f7b-4dfd-9961-fd90a3f1dbba": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "15651c78-37a7-4059-952f-6a77c52e231d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "15740a18-33eb-4d23-abe5-ae5a8a18775c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "157e3717-d3d5-43d4-8e2c-1b9e82cade86": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "15890c7b-5d49-4e1f-8932-1808c98d5e18": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "15910971-3498-403d-8109-58026a0a0e69": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "15b4dbdf-82d3-40b9-a4f0-4344ad37eb28": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "15c85cf6-86c9-4866-8e2a-288daccf541e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "15dcb16c-db5f-4bec-a5c3-21a649c25ce1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "15e31918-9d96-468f-bab9-e76e496943e3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "161722e9-bb7c-4329-be3a-b29f7e0110fe": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "161e4729-ba80-4816-b63f-b6d6869fa869": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "162bbaaa-b1c0-4c75-a456-b698a58ae82f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "1640be18-a228-4c82-90a5-928450de07a5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "16527152-9830-4168-9ce8-c8f7ec33364d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "167f7820-abcb-4168-bcb0-fbf2f86ea54b": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "169327c7-2fc0-439b-a13d-a7c193175ee4": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "16b9e432-b7fc-4129-8e96-ddd7b64407a1": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "16bb904f-13fb-406c-9671-b7b041e979ce": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "16bd9cb6-4682-4e08-b158-7b01ecc495dd": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "16f1bf69-6376-4c62-8af0-378f937aa243": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "17180a3d-fef8-4c0e-aa9c-6560b679a5a0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "1733959a-c32c-46e4-b766-1add7e059f92": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "17472c73-fdbb-4436-a46f-f49690694de8": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "17afb4c1-898a-4ad2-8ccd-614ff5b7d232": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "17b23ff3-4532-4514-856a-88523dcb6b9b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "17e67258-9a25-44d5-873a-a0932a2ca760": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "1805b01e-7331-4d30-ba2c-fee2a913a070": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "1853f0fe-8921-454b-ad15-7d26813ab7c9": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "1895c08f-0074-4187-8a0e-d722c73f5f06": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "18995e8b-0ff3-4492-bcba-f38ad576f091": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "18a4424d-e872-47a3-bcdc-c08ef4ddba79": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "18d0a34c-439f-485a-9117-7c90f190f9f2": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "18e204dd-e41e-462a-8128-7d73fe1e9fa6": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "1932087c-1c32-407b-8e4c-0736abb26156": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "19391476-6c53-48d9-a029-a5cbfe97d097": {
+    "materia": "Matemática",
+    "topico": "Medidas"
+  },
+  "193ded3f-889b-49d3-b8e3-f967e2296bd7": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "1972ae83-3a0a-4194-b3b2-8ded7cfd74ef": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "1a617d66-6b54-40ac-ab2a-75817ee4b529": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "1a755e34-d958-4a12-8007-a8c93e6822f7": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "1a82735b-9815-4ca0-a0c9-a04c75926328": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "1ae7a110-489a-420b-8691-e798c298e4e4": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "1b39a532-39f5-49ad-b2da-26260fda35b5": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "1b66221e-e25f-4626-825e-e2a1b862fd32": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "1b7c1340-5826-4ff4-8720-33d853e7e77c": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "1b845309-6b04-4837-9cb6-cf4223053ff5": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "1ba44bcc-7d16-4f08-b48a-fe840efc75ba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Cibersegurança"
+  },
+  "1bbee137-21de-4bda-9122-584f4da60b5a": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "1bedffc8-5a65-46f1-bbb4-01b1829d28ea": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "1bff524d-16d4-4464-aac7-3177561c0a70": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "1c4ac395-285b-459d-ac0c-8da2648c1013": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "1c7ba944-374e-436a-96c4-d982b01be2a7": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "1caa1054-0217-4b70-9674-b7b28150e1c8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "1d0a8553-fa70-47f5-b439-cdb206ca7c30": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "1de4b65f-3168-4272-b8b4-f829e3e26cec": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "1deaeb48-42f2-4967-b33d-e73915ac3652": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "1e383443-cf34-4fbd-8d17-553b36f04615": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "1e9499aa-66af-490d-bebc-15f1c7451b30": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "1e968adb-0c1e-402f-8ee3-bb2f0cd9f00b": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "1eb243a1-2b1d-4c67-831f-8326ad4bada0": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "1ed52e4f-c57e-4b83-86b5-7aee358d4a03": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "1f13c565-9afc-4c63-94e8-fe55e6bfd979": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "1fa2a4bc-fe97-44d0-a4f2-96ec93d6a3ee": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "1fbf8174-dcba-4104-89c7-da31f300a07c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "1fd2378f-84d7-4d30-8736-8f7f431c8413": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "2027c9e9-70dc-4f1f-b7ab-0dae5926d3ec": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "20488b48-872c-4328-a268-f2a850151a8d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "204f6fd4-7fb4-4fd4-b901-9eb6f6733470": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "20f517f2-76be-49e9-aa55-e0635b081c35": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "21064408-d257-4fe1-b934-c63dddb06470": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "2121d124-7532-4060-beba-86b231f7e310": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "21401c88-7d9d-4290-b57f-753ed897ed42": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "214609dd-8354-468b-855c-db6813444a3b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "2177c540-4cee-4b73-a4f4-7a657c9f5efb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "21855bf9-a7af-4c8c-9690-c799d6deaf97": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "21ed60c6-78a7-4b16-8aff-897ae60faa7a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "220626cb-eb51-46f7-b3b7-60fb1cdf266a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "22079b5e-c9d2-43d0-887b-bd17eba46062": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "2218c6c7-de8d-4d23-ba6c-5e21c7641a19": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "2225a560-5bec-473f-bc74-b7f5008b0457": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "2237b568-7c8e-4eb0-9df0-f1f2245b9b23": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "22846854-7c0f-4541-beb7-0abefa8ea81f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "2298c61a-bb90-47d9-bb8d-eeb2baddde49": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "229ff29f-b603-4940-a294-d789c9ebbb97": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Shadow banking"
+  },
+  "22b4f915-0715-48b7-b9df-b1cda34127a6": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "22c9a07d-953d-4a06-99d2-b2b3920fbde8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "22f86c16-bec6-488e-b285-33e18fba2dd3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "237de027-cb62-464e-9bd4-6b0f3d0f8398": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "23aea2a2-5e7c-4c29-ab88-7bc05c9d1817": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "23dec82c-0323-4bc8-8315-6f6dc73c9e39": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "244b1c0b-4e9c-48f9-970d-442f6e72721f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "252b72de-cd1f-4906-805f-aba6e8b19999": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "25557b6f-ee32-43a6-8f17-f0d8d614ee25": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "255bd14b-db1d-466f-9933-a816878184fe": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "25ac3f0a-8121-4f1f-ba7a-d6185ceac8fb": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "25c8f63e-e12e-4ec9-8c79-98904c156822": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "2638d03f-4726-49e1-ad1b-c9b9faa11bc0": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "26522983-d4b0-4172-947d-643d4bff1472": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "2665c99e-c7dc-48f0-afc7-0eaed16e790e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "267dce77-8d37-4f78-a232-0d702b4475fd": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "2710596e-1e6d-4e1a-8f8d-7d778aea8bd9": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "2776fc81-1a14-41f6-9fcf-0f33b462d8fe": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "283e02ce-0a13-4e38-86c6-35e7fa7a7988": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "2841136a-ead2-4eb0-954a-515bc023b783": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "284f2b98-de97-4e78-ab92-049efeda86f5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "288ef33b-0752-4523-9cb8-51b59b52c433": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "28afe46d-62fe-477b-8727-b207923e2fbf": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "28ec4796-a069-4469-9f0c-9402082ef85a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "29198237-2959-41d6-a9e2-fbfe49e4cfa4": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "292208a2-07b7-4d69-ae1e-e3a1c858b312": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "293658f0-29b0-48bf-aa0e-10ccfb6df02a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "2967706c-3db8-45c5-90fc-18efedadc6eb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "29a18fe9-3b0c-4d9d-ac26-10fd69c29caa": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "29fa6570-c248-46aa-a0ea-4a551c343249": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "2a207409-0d21-4b9a-879d-60176ce7b4f4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "2abae60a-03cd-4b56-aa3b-f586e8bc8414": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "2ac68e70-0b62-4814-8425-630833ace0f1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "2b0295b1-1449-42a9-b1a6-e55e46c74f13": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "2b33ed8d-c6a7-41f1-9102-2b95b5032da6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "2b7e316f-bc30-46be-a629-557c43a944b2": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "2bbf0f82-bc85-4d13-b9e3-ba6c6ce5ee00": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "2bcd60a6-5f52-4f18-96be-285dceaa586e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "2beeff46-1dc1-4593-950d-f570e12a25d8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "2c3b648c-b916-4b86-8759-8c4bb628b950": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "2c756ff7-4bac-440f-9e6e-231abe103e99": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "2c772331-8e62-4188-bf18-8c2db86b6209": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Sigilo bancário"
+  },
+  "2c82175f-1fff-44a2-8049-afaa5a4e83b6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "2c97abc5-f22b-4cfa-8251-2e35834de3be": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "2d38eaf0-5b37-42b9-ab3f-18bea76da397": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "2d428f9b-a10b-4089-8de7-54a59140a78f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "2d9ec54d-290b-4d8a-ad36-7b2563d056c3": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "2dd2995a-18a1-4e92-9d0c-77fb6f620e41": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "2dd6f9d0-4240-4dbe-822a-980c33872721": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "2e06b169-d23b-433d-9ac8-eaf177e301a3": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "2e16d860-8150-4f6f-83f7-9d5582d65bd5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "2e1d2288-ac9e-4644-a575-781760769f28": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "2e3a06bf-85b6-407d-aae3-00a64e65408a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "2e68766b-6766-477f-b108-0fae0db516e3": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "2e78f82e-90af-4be9-b89f-afd9ce9b9318": {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021"
+  },
+  "2e903403-290a-47b1-b391-2d2fb56a475d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "2e94a22a-166a-4876-b33a-ac7154ccf272": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "2e959461-91a8-4779-9f55-45c2de5bfe40": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "2ea06122-00e8-4738-bf9c-141707649f4a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "2ed4570f-9de0-49b0-82e6-07030b39b8c8": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "2ef4806d-cec7-4cb0-ad04-fde3fc7eb0fa": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "2f2f90f3-3e46-4dcd-a9af-fe8d7041c591": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "2f32691f-2b26-4089-8cd5-c4ed6b31bcdb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "2f59604c-53ea-4960-8fef-2a12936ef6bb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "2f7c55fb-1a2a-4592-8ce7-7816c52bb1bf": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "2fc1eb5b-c6bf-4890-9422-e3fcd5dc2ec3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "2fdb5678-8055-4014-ab0f-107a1d8fdd2a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "2fe26749-4902-4bf8-bd7d-722da33ece16": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "2ff921b8-ddae-4100-b215-6211e9812170": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "3030f653-a60f-454e-836a-23e1fecd62f2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "307be346-9b19-4f17-a7dc-d5cf88fbc014": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "30d022a9-6340-43d2-8ecd-0ef1db6624d3": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "30d91efa-11bc-47e0-a0d4-c26bad618520": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "30f323ca-c88f-483f-9ff1-f7781639f18a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "310afa3e-545f-4d4d-aa83-3fdf5bcb20e1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "312435bc-bd9c-4c09-ad41-3f90987edc20": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "31503e17-fa38-4f9c-b523-d5257baf9e2c": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "3173652e-373c-494d-9d57-5250de6b819c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "31917bc6-48ba-4c72-a4e2-22db0cd1b7f1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "31f5a565-e636-48be-a67b-c81e89780f40": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "32137fcc-f13a-4e96-87cf-29657b2df8a7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "32b903c0-1383-4bc8-bb1c-d7610fd14252": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "331c526e-b279-49e2-8d31-40bffc8b69bc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "33a3ce6a-95b2-4075-9a3c-dfe1f20890e9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "33f2e2ed-e815-43d0-8990-697d4577df57": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "33fc4176-bdfd-45df-86e3-68576308e187": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "342ca958-7738-4c3c-801b-2bf22cec8575": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "344a3aa9-5591-4f7e-8150-0082ff42f2eb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "34abc666-e269-4fb3-b9e1-27a4f88cc99a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "34bf3c74-5f38-43a2-be9b-64c0a7e041ee": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "34c73e0d-dd44-4a7e-ad30-51a2ed5fbb3f": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "34e4d2f9-9e8d-4ab2-a7c7-ba72808a1e6d": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "34ec2d1d-369b-4137-b7bb-cbdf55415cee": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "3550a562-44ec-462b-84f0-68689a330618": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "3579066b-e261-40a8-9138-f9e8a392897d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "35a4740f-b302-42bd-bc89-24c36a87c093": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "35e6bf22-b5f7-4378-81f7-9917c165cb24": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "35ee5108-36a1-4d65-b172-64bb70029e1c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "35f74b3a-d6b2-4576-8351-3811d5223aa4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "36187046-346d-4444-8d0e-4dcc5c98161d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "361fd6f6-a965-48fb-a69d-ac49ed12627d": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Internet e mobile banking"
+  },
+  "362c7e4e-80cb-4108-b752-efc96b52f4e8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "369b55fd-0a00-476c-9145-3c0105a54463": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "36f27e74-a1d9-4087-8e0f-6afd89c6532d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "36f88cf8-d3ae-4e53-b466-f22571a35483": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "370d2f6f-5081-4a12-82c5-6191387b2513": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "370ecd21-a32e-4338-a50b-f0d2ec19608b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "37478544-3664-4c91-a8df-8879568792f0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "374c9008-f5f6-4ce6-aa0c-595f5a3ba9ba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "37bacedd-6684-4a66-9241-7d620eddf780": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "37d41b88-85be-4ce0-85ef-d7af4fbffdaf": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "38132fac-9a78-40da-807b-2c6ace0178ac": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "3822e4aa-589d-43a6-b865-d07edd4bbdfe": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "38375e93-6515-4442-9e0e-725cbcb7f338": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "387e2eee-1ec1-41e1-843f-0e075aea6425": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "38cc6389-c2ce-472e-8e3e-fa68c5e23780": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "39a3b744-21d3-4178-b96d-a1b6b13ef042": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "39ab2a00-be0a-41df-b60e-23d1104418f0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "39cb0cda-3409-48aa-91c8-8ba70e3cfd27": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "39de5ab3-551e-41ed-9346-d88521476fa0": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "3a477418-06e0-4cf7-8bef-801d225d0e47": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "3a6ceca2-7597-4f4a-a17c-3e9db6111a96": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "3aa1247a-09b3-4a2b-abd8-11bc6e4f5e0b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "3ab6fbf5-85cd-4081-845f-af6a2de46021": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "3b1067e9-11fd-4af5-807e-64397828ee7e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "3b3d2192-59aa-4f87-a4f6-8effc906b3a4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "3b810c01-482d-4773-b794-edcece9ded81": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "3bc9e51d-17df-4d50-8fa5-cce0008f6244": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "3bcac018-83ee-4df1-93c9-770f6bcf53b4": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "3bf8a919-406e-4da1-a730-f4d7dd9a0d16": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "3c53fa6f-a8a3-41ac-b2b9-74ac606beb4d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "3cb75de0-7542-4109-bf5b-f4f41232e64e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "3cc7217b-41a1-4522-ae97-fe9bb027b613": {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021"
+  },
+  "3d45fd4f-7b6a-472d-a869-9a1d83d177ff": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "3d5aa628-b50c-4df2-b9a3-b69ac18d87cf": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "3d605127-f2b7-40f5-a6ef-5b4789bac2be": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "3d793607-637b-44d0-b44b-d0e30c7e1f44": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "3deb4dfd-bce4-438a-818e-4bc11232f4dc": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "3e06c14c-be95-4baa-989d-98b4c95122d5": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "3e21cf14-b0da-4f59-b8df-d89269dfa64f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "3e9d5460-fa5a-41d9-8ace-c83a331fbab0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "3e9e9fdd-9189-416b-9302-a0bd3748d868": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "3ebe7f20-95db-432d-9ac1-1a6cca1b1ab1": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "3f4419ac-7321-4080-b495-100e43e95ba4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "3f7fc203-d41d-4e1a-a642-f287f375d510": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "3f8d116b-4bce-47ae-8fb7-0024e77b3c54": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "3fa33e3e-cfb7-4586-80e0-482f6bcc472a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "3fef4883-0b41-407d-8e19-4b69e19a7b50": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "40053b8b-9546-4891-ae50-a6a72c86f204": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "4010cf6d-22da-42ba-8b65-ac31083dab92": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "4012c14b-3b70-47bb-a5cb-59600649bae8": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "404d8609-6f0d-4b89-9860-5fbac95b0fed": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "407eaf80-636e-4146-97d2-52bffc9fa7eb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "40e64b5e-43cf-4bb6-b054-18d29c5abfc8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "40f3b190-b26e-4484-bc09-55320bcdf675": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "40fd5cc3-fc79-4386-90ca-af730a070903": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "41253e18-fcd2-41af-80ca-1292c4c272ce": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "413be821-650c-4b29-a1dd-4a5ac5c5f515": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "413d5664-a1cf-473a-bd39-33c95370e848": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "414e2621-3055-4c7c-b7a0-2d48ef236fba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "41c7ecd6-da40-44aa-9244-b8dc9f50f9e4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "41fb981c-40f3-4dcc-8dc9-a398d35ebea4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "4205b1a1-94b4-4d18-8c40-240da194a003": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "421ad304-1e27-453f-a1f1-4083f498543b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "42b94ed9-a8ae-4d2a-ad54-fe85f9dd25a5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "42d95994-24ab-48cc-8389-1216ae42f62e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "42f324f0-2f7f-4ea5-81ba-6f4194c83301": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "430e5bda-0923-4fa1-b646-9993834ed93c": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "43965795-9b96-4e19-9a9f-f57c4abc8aec": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "43a9ed19-ab3c-49e6-bbbb-64dcccc36509": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "44ab8f2d-1bf0-41ff-8790-688b6e397d32": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "44f88324-a6cc-4f7b-9604-3d5dab5a8b75": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "4523175b-0d8a-4c50-a989-f05f0e261cea": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "452aee71-3f8b-40e9-a533-ddf81a45c14a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "4542fd3d-8ef8-4f0d-856d-3c256b512777": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "456054c6-ab53-4b13-a4d8-f33c5f2fe38b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "456058d2-6521-445b-98aa-6399f1520ece": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "456d2ed6-ee99-48b0-a3b5-2143ffc93b87": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "4581c3b7-14b1-493a-b5d8-be776bad45b6": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "45cd9a46-4062-4091-aa7d-72f21fc695c2": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "45d961e4-22f5-46f7-8608-1770eb54ac51": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "461c54fb-03f2-4890-bec6-03ec47b1c419": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "465eb86d-2aad-465d-90cc-243c6c5e3667": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "4664801b-0b3f-4297-8963-93639e709204": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "4676e171-602c-4b98-911c-6b2b015e5ec9": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "46949d7c-f5aa-4a35-93d7-5bfc9fd82d13": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "46ab5311-4e78-4c37-823e-0b6ce8237754": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "4703c736-9054-481c-88ba-adb780b65928": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "471d3d99-fc05-494a-9821-14928fce8d1c": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "473b500d-dd80-4982-8090-486f79b270ae": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "4771a5a0-7c62-4a19-a037-49effeb65e3c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "477db82f-3948-4010-ac6e-1b6d7179e89a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "477f31b6-a758-4911-b115-523d4352e06f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "47eeef23-3ec2-46ed-9cde-28ae2a05617e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "48260038-9289-43f0-ad42-ca6a9621365b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "48695e49-9c42-4543-bdbc-f1cf4ab40f58": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "48e7133e-c1ae-4b9e-ad10-48498bd66be9": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "4907a964-a8e0-4dec-9cf0-5bee6ec2e447": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "493068ff-3ff6-4f7d-9171-9bfc1e0db5fd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "496644b6-3ad2-4225-a708-2d745cefe496": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "49a448ee-f165-4848-809a-b0b10d1d2281": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "49ad1838-e28d-45eb-9d5a-2a54ff2b8806": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "49c7b845-02a5-4279-88df-e261b42f3021": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "49ea992f-d9ad-4b12-af0b-32bf8f8fb18d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "49f5404c-1e16-4dee-b37f-a0d417c14ef0": {
+    "materia": "Matemática",
+    "topico": "Sequências"
+  },
+  "4a2dd83b-d631-4158-b9d3-4084ab86704e": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "4a80bb58-df3f-4615-b175-b6b0b66b2709": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "4aac8103-5fa7-470c-bd76-3bf262d9ac93": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "4abeabe1-8c29-4173-a137-4711aab28334": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "4ac77c47-948b-4156-8638-099f84c5a3e0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "4aec8824-50c1-4534-94ca-5a40fa86e0e5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "4b518426-d8ff-4dbd-9117-f0c51599b1cc": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "4b7464b2-36d1-48b4-9387-f3d116f391a5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "4b77fa2a-039a-42ea-9a8a-0f63ab9fb653": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "4b8f3740-93d4-48a9-9395-991aada58c36": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "4b925c54-26b8-4d77-9e76-6222ee98b2d1": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "4bef7574-2e81-4900-a18c-50b2f8484968": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "4c6ae31e-fc87-4478-aaa6-fad426d5b7df": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "4cf1ea28-57f6-4469-8aeb-d9a7573dbe25": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "4cfd852c-8541-4fc1-bc1f-83a06c4b6640": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "4cfe17bb-b2b1-44ee-8450-40aeddfbc298": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "4d374a0d-9ac3-49a1-ac41-0736f2c3d506": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "4d3f0b0d-1938-4185-9b3e-978879c876bf": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "4d45e410-2c6b-42d6-af2a-f8498d4ab93f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "4dda2fea-c855-4194-b4cd-78187bb3fc5f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "4de98e1d-6f8c-4753-a39e-5347ee98e59e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "4e27e6f8-94b2-426b-a060-90b80088b394": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "4e2bfd2b-7cb4-4949-9606-300b20867e47": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "4e4a5c57-dfbf-4938-8635-febb324d6746": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "4e4bff92-5195-428a-9c33-bd24de71b09f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "4e7f4cc0-d1a3-48e8-b52a-b646743fd448": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "4ef450ee-70ca-48ca-a7ba-5770cc22c2dd": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "4f1bc527-0b52-4cc2-8893-47cb9a216c67": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "4f4c123d-2c06-4f2f-aa01-a7e851daf8fd": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "4f99ca05-e6cc-4efc-89a2-418ced5505d3": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "4fdedcde-40d4-404f-a54a-f83342296dcf": {
+    "materia": "Matemática",
+    "topico": "Medidas"
+  },
+  "4ffdaa33-e565-4f58-9f52-2d699dd992f5": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "501e4b80-7142-439c-9dde-0c3cc4cc00dd": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "504550fd-1d04-41ba-a80c-2fff823663da": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "507a367f-ce63-4607-8009-7dad461f7f6c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "507fa78e-f6e6-4fdb-9687-dbeb0b8e9d7a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "50db23cd-065b-47c0-9e21-fe92ece9f93b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "510b3bfe-15b4-4fd3-9f39-cccb23cb7697": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "51155fe1-4070-49bd-b86a-4357b6b50fef": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "512193d6-cffe-4888-a28b-239604a3f90b": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "514d0bd9-41cc-4733-ac0a-c2a183547b0c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "5154aabb-0f1a-42f4-bec5-66ccd981d055": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "517ba238-8232-43b0-a390-5c5f16ef5ef7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "518920bb-9994-491f-86a8-3e81daf753ab": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "51f18ac0-0e04-44de-b491-bf47b988c819": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "51f6f9e0-64ca-46d7-89ce-71a6fa16e887": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "52135c69-de5c-4bff-a963-a2631461d8ee": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "5279ea77-36c3-404f-995f-a28732b7e177": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "527fa9af-b5a0-4ec4-aeaf-ad25d0e53423": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "52c8cba5-69c7-457e-a06b-397a3944f516": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "52d32f0d-a5d2-41e7-8267-970d5ed36e07": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "534d9faa-aff0-4751-a8e8-641c335df0a1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "53cab22d-bfc3-46f8-bab2-6fe6ae5baaa7": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "53dbce27-cd5b-472a-aa2f-18ff5b32af80": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "540e60e3-e812-4dc3-ac2d-73d3f0e1fb2d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "5430e153-6179-4893-bb2a-482494ee9eba": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "54780a9c-6ef4-4b1d-b934-e32e4e2a547b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "5480ee07-d021-4259-82d4-4ba22a7ef270": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "54820d5e-d9df-44cc-82db-2694d526843e": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "5486d973-17bc-4f71-acb3-400ed5ebdd50": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "54a09572-d4e3-45c9-96bf-11142c27d4d2": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "54a670a4-5d8f-4f4c-b4d5-2779f05ea7b3": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "54cf2b83-1433-43be-9025-08d2b458a131": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "5536c634-1749-4c09-bba0-6daa50bed04d": {
+    "materia": "Matemática Financeira",
+    "topico": "Fluxos de caixa"
+  },
+  "5563e079-9029-4c42-b3d5-c8edf4559df1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "557bc530-1cf8-4e67-8d34-71b50cf8ed1d": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "55a28b5a-e5e0-4c74-a5ed-6717beba050f": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "55c60261-9c70-4302-8fe3-16e15f6ef0eb": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "55cecf61-7a5b-4837-be52-09af29e171f9": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "55dae7dd-f15a-43fe-8d1f-887885f27ff9": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "55f6522b-d0fd-4434-af54-4cde5278ad85": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "56154ca4-320d-4b87-a59b-c026719a03b6": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "565068cc-74e7-44b6-8d66-18d5e4bfecab": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "5696bc7a-2ec3-4c7d-8b23-a74bc797726c": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "56adde95-84c6-4043-93d1-d7a393049822": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "56aece7b-ee1f-42f8-99f7-f8d919e8d09f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "56c59832-2340-4563-8705-059dc28fe8ae": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "56cb9f3b-e310-4ffe-a145-8b4fe43c5bae": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "56cd6ab7-8e94-43d1-a9bd-fece2963616e": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "577f88e0-8951-4b33-a4e0-2e2222d63f34": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "57964f8d-1fda-4f72-89a0-c58a57a1deba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "5808e57c-d136-4476-a8bd-12c84753a75d": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "580d3bdf-167d-4584-a9cb-a537914cb6bc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "58169bd1-eb46-43cb-9718-390efcfca847": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "582ccc01-97ee-441e-9efb-9234f9dab068": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Criptoativos"
+  },
+  "585e6fbf-d42c-4a91-90ce-831e65de7456": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "586ee11f-a860-4d91-b5ee-9170e19ecb48": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "58a1fa81-f975-4886-ab02-a8926dea2d8b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "58a787a7-8046-487c-8e31-ca9952102f6d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "58e2aece-1b84-4977-9530-61eb3a2848de": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "58f71df1-0be2-468e-8469-1dee817e1fbb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "58fb55fe-745e-43b7-b199-5859ab9342ba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "592d7a0f-709a-42f5-9445-6778ab232576": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "592e0481-73a0-4657-bd81-bfab02797851": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "5957492b-b039-4004-8f2a-96ab798d32aa": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "5974fe62-a148-4f62-acd6-96754ce9b354": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "599c4eac-ae9b-4a49-956a-4c67a360e080": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "599f382f-84c7-4887-aacd-db25f6ac183e": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "59a28441-c0d7-4975-ab15-402b2a576d76": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "59dc9bc1-0cac-43b1-99bd-490580138a22": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "59f8ca38-d4a3-4937-a6f1-9b55efafad34": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "59fdaa0a-7b3a-4374-89d7-aa83db0390ad": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "5a33a89d-71f1-47db-b460-525dafec6984": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "5a3b4cb0-c127-4838-9e09-7476e3cb3ffb": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "5a631407-9901-45d3-8b61-cfb37bdfabf2": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "5a814337-26d4-43a1-b693-07baaf299f8f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "5a927e61-1ebd-421b-ac7e-81cb0a933f17": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "5acc73db-3c3e-4b4a-ad0d-bb0b3bfd4340": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "5b05d063-e757-496f-b761-bc8aa82ca910": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "5bcac5d6-e992-4635-bab4-d56e1291c051": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "5bd02f81-550e-4a23-abd0-326643903be1": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "5c70fa90-a570-4aab-8176-05b771e20929": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "5d8b05bc-0412-4ea4-bc26-1a255ea0d8d8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "5da381b9-d531-44e8-b38d-a65c68828302": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "5db3ed45-33be-4abb-b5e7-b8079a73d137": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "5df07c26-5113-4497-ae0d-52752cffe2df": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "5dff7df0-fe03-4fae-bcb2-e950f67c4187": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "5ee6281f-d941-4db2-ba8d-098995d1bb49": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "5f6af032-d3d2-4fce-896d-cbd9030081e1": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "5f930d0e-47ca-4174-bd3e-a56c73dc1631": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "5fd43ce8-91d4-44f5-8214-1b62b974de5d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "5fd9a3f6-4968-4b52-affb-2539418143e1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "60124868-82ca-4d90-9b5e-f03240d5daba": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "60135028-9e1e-4663-962a-0ad5a0e1588e": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "602bdfad-4bb3-495f-a337-4bd74717b2ad": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "6037cadb-d4d8-40f7-b4f3-f678416d8e11": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "6045d0a5-1b13-425e-ade4-ad6de88595e4": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "606dea7a-7350-49e4-bd86-bbbbab9b0940": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "6078d62c-a558-4210-ab5d-4ce4b81f16f6": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "607beda7-cc02-4bb9-bedc-3ebc6ea674d5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "60a5cb3e-61ee-4911-92ea-53188a20c3a3": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "60ca8778-fb0c-4487-9e11-e82d37f7dfcc": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "60f6031c-e2e9-4f59-8771-6aba705fab52": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "60ff23e1-e0cc-4ea1-ad8d-340933884840": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "61011cd6-cead-4b82-8895-d673561ac383": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "610ed12c-6425-46fa-9efa-875b2a0c26fd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "6146f7e0-bb6b-4bed-8605-fa3481b10bd4": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "615b905c-0fc8-4735-b932-bb74cc503940": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "61b7de1e-deca-4af1-8b3d-74559bf3f000": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "61ca4803-0fd2-4c49-90c6-fefb0c32df37": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "61fff93d-aba7-48de-8e80-84d0ee964b1a": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "EAD"
+  },
+  "62047c0f-6029-45f4-8de4-dad41e2dd865": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "62091ecc-455e-4eda-907f-4751df30cdb0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "620db230-c1cc-4f0a-be7b-54440ff77544": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "62145616-d8db-47d3-acdb-0b6580bed85c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "6244b4bc-9aef-41a8-a2a7-fd9d982b0d17": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "62824ca7-cb3c-41fc-acf5-06b6b8798cfb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "62b922be-5614-414f-a6bc-9610558e255e": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "62edefdf-6744-45ae-8462-bcce88235fbe": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "62f87475-c659-44c5-842c-1708f2b1aa5b": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "62f986fe-0431-41af-bda5-d2f98b510a91": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "630e648c-2c51-4263-a51b-075f4f28638a": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "631c980f-6704-40a0-ac4a-77485f7a583b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "6353d2a9-ad37-46a8-8522-55d1e3b12b73": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "635725c8-4892-4912-84cb-3eb5cbedf06c": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "6358e46a-0ee3-412b-ad07-3ff330d2c878": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "63ebb984-fdf1-4ebf-9eb6-e097e60a21ac": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "647ba250-99ca-4819-9f7c-9aca0316b5c0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "649bb7f2-1bc6-4d95-a8b9-0978493daf7c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "64ea9726-6f5b-4dd2-94ac-503332318fbf": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "64fedf34-7392-4d28-af7b-87ca56936804": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "654e3687-85a7-4888-8396-750396b36dac": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "6554e1bf-d4fa-48e8-8563-3a6f173259cf": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "65710b1d-c74f-4ee4-a7b3-9fcf845c4dd8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "65865e8d-b3f3-4015-9153-7afa9714f352": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "658d2d3f-7854-495f-ab5e-4a10d823c417": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "65c52a39-6a7a-4281-86f6-7c2c3269470f": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "65de38c6-04c4-4eaf-bf8f-b6ff3abec863": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "65eb92e6-b851-4db5-aacd-9121d1fcde53": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "6628db60-231c-4c38-8d9c-1e9512be9a7e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "6635b6ed-41b0-45bf-8819-0a8d54a5d727": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "6636a47b-9fb0-498c-83c4-f1ac9d6f6a88": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "665b8200-7c5a-410c-b83e-bd97362f968a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "6675212b-51f8-4d12-8f92-c26ef1a955a0": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "668da9ce-baa2-4bae-ae3c-3bee12afbbd2": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "66a8c8e1-5e5c-4146-ac3f-423d66d7d17b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "66b532b7-f3d5-4934-be7d-e77c5e4d6b6b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "6729b7df-4c82-4bfc-b711-e88e6aead26b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "677190c0-eb5f-405a-882d-cbebce545a6d": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "682ce99a-4d96-484d-8cf6-531c90f89e8a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "6872ad01-7f9e-421b-a65c-1c6ffe4427a7": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "68b3175b-7fea-4131-b6b4-8b02f47c66f4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "68f15600-bea2-4419-9845-2c2d187e59a7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "68f9544d-3ba2-433e-85c1-5f09aaec722c": {
+    "materia": "Língua Portuguesa",
+    "topico": "Ortografia"
+  },
+  "69498175-b7ed-468e-bca8-5819d41e571c": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "699cfc26-1be9-4153-915e-65a7201ad022": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "69d4212a-6004-43c7-a7d3-682e10989e34": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "69d679b5-b7a2-4ec3-b3f8-c66def6c5881": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Internet e mobile banking"
+  },
+  "6a2afae7-bda2-4b03-bf8b-41b83f7fde45": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "6a3a4fd2-e37a-4324-b0ad-517c455f7d49": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "6a7c1f9b-e894-4361-a872-e87fa03ec069": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "6a80855b-1bfe-4c1b-8902-d8ac09e66b11": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "6a9781bb-2233-468e-8639-4a5d32a0b70f": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "6b93bf1c-e932-4788-9ef1-2537516bc4a1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "6bc0cc09-ad04-47b0-99d6-065891c514a0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "6c003f8c-1d5a-4fb2-8534-bda83fc18cab": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "6c36194e-0197-4bef-a9b1-916c0ab8c741": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "6c85f5be-2f8f-426f-84f4-6eb753e2fabb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "6c90968c-7dd6-44c2-bf46-b6a0d5550523": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "6c931038-9973-4fcb-bd9f-39b89f721fd2": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "6d231513-5c47-4d8f-957b-2652c5e3f041": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "6d279c0a-5a82-43ef-b395-a243ece651fb": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "6d27cd99-2ee4-4c8a-9e29-1e839a6fd985": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "6deddcb7-1f5c-4753-b1c2-b7bc0bf09188": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "6e69f725-47da-42a4-9fd5-a0b65dfce380": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "6e8b9e17-1430-415b-b333-c745ff059d0e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "6e8bbda7-54ce-4dee-9cc1-724300ffb6bd": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "6f35b085-7f83-4e65-8a45-851cb5b66199": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "6f36a17f-9410-4ed6-bfae-61d69dcbad2a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "6f3900b6-4056-457f-9b7c-0e75b66c68a5": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "6f9bdcc9-6144-4f3c-b82e-842e0e98f20c": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "7004976a-4209-488b-97fa-f1fda3a01f81": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "7018dd80-7494-4198-8f68-5dada3f64461": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "704bf14d-52b8-43a2-a3e7-74014c6b5992": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Sigilo bancário"
+  },
+  "70953976-970d-414b-9eff-e8f3f485dde0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "70b634d6-f6e1-4f0a-9602-2aab8811cc8f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "713f59fd-4b57-447b-9eb3-b54e2542adfb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "71423a19-3234-4079-9e87-a940c28af3d2": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "71679a4f-1285-4ced-b02f-cb83983bf5f1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "719401ae-376f-44cd-9e37-eee41acb4808": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "71976956-518d-45d5-beba-9c0fec1db890": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "71cc709a-01c6-49b5-99f6-46913a961def": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "71dd3ea4-fde0-4f7d-ba4a-1bb8eb17fa14": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "721d943e-8414-407d-934c-ac2812018e86": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "7229f4ff-7448-4935-8755-368eb15d36ba": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "727277fe-1cb4-4fab-87c3-429d98b2059e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "72892930-d0bf-4a36-a9a0-46a870fbec71": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "72c80f5a-6572-4911-8dc6-121e825c7b57": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "72c838b1-9121-4297-be64-8f7aedbccbd4": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "72ff41cc-4beb-4ca4-9048-86f7f8fa9c4f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "7304c79f-caff-4262-aa23-2bee285db667": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "73dc965c-83a0-4140-b1b0-91ee2808a1c2": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "73e69116-7911-4ffa-a33d-ac4f5b936940": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "73ea7355-5154-4f54-8aa1-dddbc61483cc": {
+    "materia": "Matemática Financeira",
+    "topico": "Fluxos de caixa"
+  },
+  "7418fe68-1096-4000-9257-1450c6b33f92": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "745c5b34-c03a-46bf-a9f8-fe1dbfa1147a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "7489aebd-f7e3-4796-affd-3df848e0d1ac": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "748d3d73-2387-42e7-91ad-01a7a3ca4608": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "74b26fc1-3ad5-4626-8881-e663225ac67e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "74bcddcd-d98f-4f68-88fb-5e0497476b81": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "76722fb2-07a1-4d2d-8303-f664b4149507": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "769d230e-7e7c-4a10-8d60-6846bd6788e4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "769f4251-04d1-4ff1-a5c8-cce1f2b1f2b9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "76b09691-bb15-499a-abb6-6ea074ea675e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "76b0fee6-c4d1-411f-9d55-da75fa554c4d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "76e4b641-52e0-4459-89ba-4889b1716ceb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "76ebab23-ed06-4a50-8d3b-9e75d80c9d43": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "76f3469e-418d-4846-9211-6556c958ca0b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "774c1454-50c3-45a6-af84-2ef0fdd30cdb": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "77734f84-83ad-462e-aac8-04b8cb66dbf7": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "77bd71f4-6acf-403d-adde-2970eaa84cff": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "781d9756-da18-4a64-8541-a6d306e23b0a": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "78213bce-bb17-49df-8d0f-a4cd3cd1793b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "78521137-605a-46ed-a155-47e2f110c16d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "785755ee-9389-4580-99e4-459e4dda3fea": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "7860870c-2095-4479-ad8f-60614a3d225b": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "787d2541-16c3-4110-aa46-29feb2563958": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "78b9a149-1bf8-4675-849d-b3711e3220f5": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "78ba35e5-a26c-46f6-a03e-357e0028263f": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "78bcdf2e-d50d-4a50-b99c-8cfdb38f633f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "78d70ac7-0361-46fe-978b-7b63ed64e668": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "78e15446-23b7-4971-9c7c-279c6f337344": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "7921c29d-2805-465c-a9e6-156ffe201cc3": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "792ead0d-888e-4841-824a-b2f1a4fce3d0": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "79424f3d-4f41-4898-9539-fb3592730b00": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "7966bfea-51fb-4e69-a0d8-f0f8e942210b": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "79852e55-65db-47da-b9d2-cd01188c2072": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "7a14fb83-ac55-45c7-ab87-e6888d5ebfaa": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "7a2d0639-3a32-4d62-aa63-ac4e5d66dc78": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "7a37ce2b-2f67-4dff-a42d-ac7226146103": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "7a3a8f49-d9df-442f-b317-f26f84db9d36": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "7a67bf1e-8efb-47e9-b257-bf424540b329": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "7aad2104-aa12-4211-b068-a12cc01282ce": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "7b3cafa0-4f47-40d3-b5e3-d8e6f55cbf82": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "7b4c5463-4ad9-45ff-9a15-f24198d2f97b": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "7b98bcf3-d050-44a6-8486-9994f2a9d112": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "7bd378b8-17a1-4152-b093-4133f7d43053": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "7be7ef74-e7f2-4a35-8b5e-ccf5319d0c0c": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "7c3f0a01-5633-428a-aaa6-08e45c54a1a0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "7c436761-4b51-41ae-b88a-0cf6e1ece1c1": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Bancos digitais"
+  },
+  "7c7fe836-b4f9-4948-ba92-7a3dc3891888": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "7c8ebac9-fd22-4a14-b52f-b0dbe401d711": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "7c9e451f-99b5-4eeb-b7d2-6d1602efcddb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "7cc09841-cc48-49b3-ad3e-7451c37b743b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "7cd8768e-360f-43f5-98c6-013190ab47f2": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "7cea0459-440a-44d0-9147-fbc1f6e00026": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "7d043577-57ab-4557-a68c-cb36bee8b19b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "7d1b486d-1808-43b0-99e5-0b20a10b1c61": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "7da14b61-df97-439e-8974-5aff34993e2a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "7de23278-5d69-4498-b845-3380845f6fd4": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Criptoativos"
+  },
+  "7dfae8e3-96bc-4cd1-848e-0b36614167c9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "7e16a1cb-ede2-409b-9e1f-ca0175956912": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "7e3f3704-ab9f-46f3-9629-dd4db36c7e8d": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "7e48a35c-4657-4a91-bf6f-b582e2046702": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "7e81d66a-ad30-4f4c-9b39-adae6f4c5d16": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "7ea71655-8421-4e30-a14e-a0b742e78ad8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "7eab5fc3-c638-4efa-a287-1433dbcc5c12": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "7eac92e6-0b50-457a-a9f5-766c0c794521": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "7f14bf0d-5d61-4027-8ad2-4efcf475e8c9": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "7f229b20-ac7e-4383-975a-6db90c4f8c70": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "7f2410d4-4476-4314-a897-0fc42c754d40": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "7f25f08e-5b69-42a7-870a-c134af056730": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "7f7c3596-a8e2-403e-b402-636574f59e8d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "7fce1764-8ca5-4cd8-9e54-b4d7db7bab74": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "80034790-de4b-4278-80f0-6cfdc1c20488": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "80849864-c7a4-4355-a153-03043800b992": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "809133f2-4b15-4b8d-8f03-01b36d7a1e3a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "80b665e0-9fc1-4c88-8633-015ba7038c8e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "80c3d0d9-d343-4210-af54-b98f63a25a6b": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "813c55c8-3157-413a-8c4a-af72a09942f2": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "817b5963-d5c1-4ee1-9743-d41308ad9459": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "819d242a-29b4-4908-b4ef-bf4a30bfb53c": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "81fb38f8-9578-4548-9fc4-ebd20f66fc68": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "82020428-8ab5-4077-a4e0-8ffe6ee93c85": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "820be5d8-5b9c-4f80-9084-842038171cec": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "823eae29-7502-4504-93c9-1f7397e3c716": {
+    "materia": "Vendas e Negociação",
+    "topico": "Geral"
+  },
+  "826c593f-a644-4f32-94e2-cd4d8e74d150": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "82765466-54ca-4323-82ed-7ea49bceb504": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "827f1186-a77b-49db-a17b-baa68880114e": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "82a4caf5-3141-4df5-ae98-6e933c24e651": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "8307838b-78ae-435d-a132-2332151da5c4": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "836ef8ae-3eab-47d4-b02c-0003dc8e22e0": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "837c4d48-c2c6-46f8-8c8c-0cef59263f22": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "8398caca-db62-4bcf-9a79-83c3862a3809": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "83a971e5-5019-41ae-8371-b8a0626bf45c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "83af981a-18b9-4215-9852-8d3662967eff": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "83c49078-2e44-4e57-ad39-26ed3f5d7076": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "8410c99c-9b65-4581-ac29-1f4e3b159ed9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "844ec54f-7165-4a55-ae6c-a85951de7959": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "84608ca7-3711-4855-b338-4726b41b6858": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "849c69a0-5246-42e3-9290-aa574a42337a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "84b77e02-6576-439d-9557-3a61b5bd856d": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "84fe0be7-945b-4617-90e0-7d899ea64152": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "85052038-870a-4ef7-ac0b-393a0a4bd0af": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "85145f7e-abed-40de-8f2b-ccdc68fd1995": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "852e75db-d012-4bc7-871f-20d08e8c8ec3": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "8555ce32-edfb-4521-bea8-7660ccc08dec": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "857bc1f9-7552-415c-b91f-0622af8684be": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "858bb3dc-6e03-4f6f-8eea-5dca935447d5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "85d7cc80-90a0-43ee-932e-cae3551e18b4": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "861f72c8-bdbf-43cf-b18b-4376bd9e2fd1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "86259c95-b70c-443d-91d6-05d1a289417f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "8628faf9-e770-49b9-84ab-995a0a2739cc": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "866ced00-c09d-4bb1-9003-e871175a20a5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "8699e460-48c2-4741-b84b-cfb3eb112d58": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "86a77127-8002-489e-8a19-403c22a750f6": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "86f9dcec-42ff-4b0c-bdd4-e32cdea9bf91": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "86fdb997-0446-4747-b97a-edd91174394c": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "872622fc-b2ff-40d7-b9b7-7c518233aacc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "87283576-21f6-43c8-9e36-6caa9fe71966": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "8741a96a-d095-4192-83be-063112b64cdd": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "8815673b-9496-47aa-8292-70b8f34e0e64": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "882629cc-4b5f-4347-af99-182dd4bc06ff": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "88832fc2-b637-4f2f-9f7e-91d10229e128": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "88bc842d-1f7e-4196-940b-4c1ab8a78c77": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "89173cf6-defe-4a93-8e47-b32879f73641": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "891d1cb4-834a-4b1f-9797-dd5c6496dd9e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "8958808a-4ee3-4fea-a88b-d576b5bb09a9": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "899309f2-5e85-4701-a4a3-187dc56b7fd2": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "89b9dd34-e82b-43b2-af30-18955f262649": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "8a09e343-91b3-4d0c-b108-88f42cc3768e": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "8a0d2d24-1616-42b3-b3b6-9367a9c49d5f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "8a2c15fa-58a0-4b91-85a2-dfcda63af408": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "8a380b59-eb7e-43c7-918a-e17413b013cc": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "8ac1cd59-d420-40dd-b2a5-955a53bddc6e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "8acaa16c-96f4-41ee-a675-cfa7618d0402": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "8ad937a0-6532-45ef-abae-2869a92a3c8d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "8b23a751-ccb0-4fb7-8a66-5b8bcd0939af": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "8b25abe7-cf11-4f72-9c48-538ea241ac8a": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "8b643313-e3c8-4ff3-b68c-7e35d3c7f97a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "8b816b8f-9494-4fbe-ad03-1984acb0c59f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Criptoativos"
+  },
+  "8c2006e3-fee8-4e3e-bfbe-abfc970db84d": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "8c27aae1-370f-4b03-8dec-19f9f64efa5a": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "8c3617b1-2fb5-423c-a5ce-63d769f4c19c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "8c5a45bd-d153-41c5-b26b-110d1084d066": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "8c85b769-6437-4104-bed1-8733a5689c25": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "8c8d64ba-c29a-4538-8f51-5b9be7b045c2": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "8e10e9be-3505-4061-8a45-847ce411aa31": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Criptoativos"
+  },
+  "8e475348-9a30-4768-8d05-4d24e259edaf": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "8e571ebb-3338-4b46-8558-211baa9c4460": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "8e70931d-046e-46cf-bcea-fa53d1f59cf8": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "8eba66e0-d2ca-42dc-abf8-4748ddc1bb97": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "8f387dd2-aed2-429b-a249-eea5672a0158": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "8f43afc7-a352-48f0-9ed2-4a4d1c79633e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "8faab038-2db9-43b2-85b8-899050e797f8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Geral"
+  },
+  "8fc5ff5a-05ab-49be-80e6-d1c1eb338bf2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "8ff38a9a-8785-4dec-ab5c-bfa199d5884f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "8fff5702-ef64-4223-9b4f-e41cda1bddee": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "901d1ace-a48f-4a10-bcc9-f87315e30ad2": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "90275619-b9a3-4d98-b0ad-42a72f458706": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "90a1cb76-4fb1-423a-838d-11f4aa4799da": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "90fd57e2-e9ac-4abe-9f57-3b5b650a2037": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "9109328f-9395-4a19-93fb-fcab42d5be5b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "9116a038-484c-4fb2-9db3-659bc73ec505": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "914cc9a8-e2b6-4aea-8ed5-db59d822b3e2": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "9181db96-b8db-4a1b-92c3-bd1ee2021507": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "918bb255-34b8-4556-9c16-cbab3c202781": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "91aca94b-caf9-4159-b3d0-eadf5855b502": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "91b5570b-2315-46b0-9555-022445525873": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "91d3d30d-2cf2-47d0-8790-2fb66404b5c5": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "91f2f64b-ce6c-401e-b2ec-1a47e3e081d5": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "927c041a-bb69-4e22-a628-11fd3786f7a8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "92c5096f-0de7-4340-a180-b208ad1cb56d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "92f18114-e9bc-40d0-a778-d94cfe572fab": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "930bbd93-f7ee-4638-a105-a8c0f66ab046": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "93183cdf-b0cf-49e1-a7d8-16fd34d55ffb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "93351d6f-256f-4f40-88b4-4fde3a978a65": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "93526f25-0e61-454d-83f3-4b7ef506aada": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "93b051a8-09f0-4c2c-9ada-a31617daea7a": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "93c36618-3ca0-4a95-8f5f-0008d3aec6ea": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "93c692ba-a277-40bb-963f-40c08840024d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "9400d417-00ba-46d7-b9d2-15cf6a721599": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "94419a43-b06d-4795-98ca-3060a79dc45f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Shadow banking"
+  },
+  "946b317c-a32e-4b97-b9d1-99b1f3b5ce9d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "947be76b-79de-4f40-9de1-2d480be92133": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "948786ba-166a-4759-b907-5bf9c50ff64f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "94887c26-86f8-4340-8ed2-f37ca11dc8ac": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "94b34807-d826-4253-9281-1481a2c1035c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "94c588b9-a162-462e-a0e5-61c01101a9fc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "94fd491c-c124-419c-a544-6969e6f86026": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "9509d3ad-4043-4d93-bed9-708718f197c7": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "957305ef-fe46-4cbf-b4fd-36b0f5e44b99": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "95c5ba86-ca22-4d44-a5e1-1df627a49dd8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "9627841a-d3cb-4d57-8456-d4388a482485": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "963cb3f6-5add-4e51-9b00-a964cc361c89": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "967b5ff2-bbc8-4433-b991-e81475ed4d4a": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "969ea715-af7c-4292-bd26-5c8af6ee01b5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "96b0a238-e4cd-4c0f-b395-68cd61ab4021": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "96b2d4b1-4754-4d45-a78e-b6044bf0f2ad": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "96e80a19-fbb3-4614-8c64-f55d4010ef14": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "9700119e-bc29-4aa0-be91-8b0be42fae7b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "970a67af-f5dc-43fd-b9c4-b72c389640aa": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "9767158f-d42a-4ea7-b2eb-ba7cbf614214": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "97ab1821-6cee-43a1-938e-daedb1770f50": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "97c8b576-1703-4050-9a56-bc548eed258d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "97d61e04-3505-482c-bfe0-85c8ca2671bc": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "97e524a5-ef90-424c-8e47-4adf57e842ba": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "98223461-1142-43c6-9595-d99f64c07d88": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "982a768e-9ab5-4c99-936b-a38518ae7e2a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "982cf562-9885-42dd-851f-9bf29ed70610": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "9848bda5-2f38-443c-8734-a39ff2ffae05": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "98660a0d-da4a-4663-8e40-876bef2fad35": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "986cb335-311a-4a99-bfb7-8bfd58234930": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "987f9855-6a2a-483f-87b4-cd71fd202522": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "991b54e5-0485-4647-b8f8-e323406af63a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "9926aaa4-1df5-48f9-b46c-e77641ee3ecf": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "9978b033-3a22-49ae-acfc-d506be55608f": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "99d86663-4de9-4de0-986c-83c969c41392": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "9a0d679e-a2ec-46e1-ab52-9ac63bed7408": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "9a7e28ee-ff4b-4dbb-a004-fc3839ca5f9a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "9aa55336-ad0a-49e1-a9c3-4d77166104f6": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "9bcc0268-1e72-4df0-9c25-a20c3da521b8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "9c0a4662-8be9-44ac-aa5a-b3d349270475": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "9c725522-2cea-49a2-a117-a22e10e18ac4": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "9d44a5cc-5750-4558-9eb3-ac3407b1d3a3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "9d6c44b8-7477-4fd8-8bb1-196b32460617": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "9df86f78-95ff-420d-b106-38f96fa79012": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "9e748129-e10d-4aeb-a797-8dce706040a5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "9e7f2877-da16-45e7-b1dd-8c8d1a65b03f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "9e8714aa-e949-4277-b8c3-d3f83960429a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "9ea8944a-7a15-47e8-8580-57f428fc2a7a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "9ea9400b-5996-4f0c-bd5f-66da51aa9793": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "9ef6184c-ac72-4732-8086-75c15779f7e7": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "9efe566b-d2a5-4a9a-bbd5-25f513ec853d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "9f4e16df-cea1-478b-8220-45284c4b6ce3": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "9fef5398-c56c-4971-9315-9e96ebfac67d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "EAD"
+  },
+  "9ffa7d6a-0cc4-4006-ad71-f5ae7db3bd9d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "a0313d14-6179-4c0b-a58f-de8796e0fd3a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "a048df7d-5554-4fab-99f4-7224f5882ce4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "a072f212-945a-4f45-94ff-b9ae6ac57ecc": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "a084fba3-b516-414b-a4be-dbd3d302c3ee": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "a0d432bb-437c-4486-8242-aaa72c8c1ab9": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "a118d6e3-66c8-4e4f-ae70-004292459a9b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "a15ea70e-57e7-46df-9725-256acc82871e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "a185e17a-750a-4cf7-bdbf-8ffab5378a72": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "a189da68-48ee-4127-8004-7a583c7cc577": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "a1e49db1-35ed-402b-a01d-78c471770bad": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "a2290a9f-ac90-463a-ad87-d60ac056b152": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "a25219e6-c090-4517-86b8-cf13fe33aa9e": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "a262c447-9715-4c43-b154-875a33476f06": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "a265e1e1-a69e-4836-8f7b-353bbd41a179": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "a26a13ed-79d7-4e19-bf15-5c960ad2d7dd": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "a2792ff5-7e39-456a-a1a7-125bdb209b36": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "a3220768-6252-4ae7-b1c3-a953971a6c1e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "a3642019-a6e5-4cf4-95ce-5333235133c8": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "a3709df5-0364-4891-8c3b-6caeb94540f7": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "a3923680-6e99-41a9-ba06-f99162ca140a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "a3aa9d29-b849-49d3-be08-c384398507a4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Autorregulação"
+  },
+  "a3c587c7-2c33-4d20-988f-d210d4b3c01c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "a41090c6-3ffb-4cf5-a7cf-18d3a37cfabc": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "a48e336b-377c-4873-b513-edb1aeb34694": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "a4dc92cd-b40d-4919-886a-94ec399b9acd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "a4f43748-6712-4ad9-90ac-b2c722681916": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "a5581ff9-12b6-4eac-a651-b124d93a53b4": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "a58a8976-cfa1-41cb-857d-8ae613b647ed": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "a59ee7b6-1f7e-4571-972d-5db809931aae": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "a5b36173-8a47-46ca-bd45-ffdcdd60f068": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "a5c8b5d4-ba3b-49a7-b7ee-33fcbedc77c1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "a5d18978-c0ef-43ac-b47d-d1c344f6c3ca": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "a5f34c0a-9963-4afb-ae7a-aabfb948efc7": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "EAD"
+  },
+  "a6003bac-7076-469b-9032-f4e66c4cf44d": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "a601c894-9baf-4048-a36f-9559356d66b5": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "a611b5a4-b215-4889-8812-fe673ba655e1": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "a67f0886-8464-4af0-bff8-d8850be87825": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "a68ab084-5669-491b-9c19-188165d562c9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "a713ddc1-e31c-4338-85a9-219d274751f5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "a7315072-c893-46f1-b910-ac34245e1d00": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "a76599d2-c087-46c1-b72f-d13aaec07837": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "a7890fc9-a412-48db-8f81-b349f31ae075": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "a7d3cb5d-92a6-4c40-a642-c37eada18226": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "a876a785-5b41-47ee-9658-3a34f4d25a2b": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "a918f8f2-62ed-422b-8d9e-6c603abd1d1d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "a95bb436-de74-42de-a4fa-c8be5f51d4dd": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "a9f4a9cd-0d78-4f14-9044-f83c5ea21a1b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor"
+  },
+  "aa67ff25-0d9f-43b9-8388-a414f76ff56a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "aa70b581-5725-42eb-b003-22e5d3570096": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "aa7c7f41-5842-4f66-960b-4a5ba50e5b76": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "aab3e64e-c747-4b7b-95f7-859f18d6bea9": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "aaebb140-fc34-4c89-9062-94aad2e09ee2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "ab2bca82-d48d-49f3-96e8-5a4f1ceaa8fa": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "ab5c19f1-f8e9-4ba2-8680-fe2cd4f9cc5b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "ab6ba20e-99c0-4d09-994c-e9cc9b74388c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "ab6bbc40-edf5-4966-bbcd-d326b7c7209f": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "ac1c6751-de8c-41c3-924d-83876ffce65a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "ac4e7d34-03ca-4442-ab37-4457ddbc0148": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "ac54682d-3879-4ef8-ba7a-dd6df970f0ed": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "ac6ba656-1aed-4d6e-99ee-4bd210801d87": {
+    "materia": "Matemática",
+    "topico": "Sequências"
+  },
+  "ac797e73-3de4-4053-b083-4d4c27ad3299": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "ac8935bf-ea49-4d33-ab53-7ef348d9748e": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "acbfff7b-8e6e-4519-805e-c071b49b350e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "acec99e2-1900-461d-b811-5289930f3be0": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "ad8dbe29-a549-441b-a3b3-2d84a6b67eac": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "adad8e04-e206-454e-98aa-48bb417e6afe": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "adaedb8a-4804-4ed5-9788-e7a2412bb070": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "adbc5d64-a03f-477e-a4c8-a6586be2c70d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "ae4966d3-9874-464c-92c0-aeddf6f8b451": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "ae4ddfd4-5db8-449b-bedd-b7b267907724": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "aed20e68-5fd4-49cc-ae48-7ada5388a63e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "af326141-6995-4836-bc00-ca1f04f760ab": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "af64ab54-9bef-4c46-b120-93c67490ad17": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "af6e6098-bcac-46a4-ad0d-c2560a2423af": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "afa1c505-8cfc-406a-b845-813651227693": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "afc290d1-b1d7-4be7-96f0-040100718c32": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "b0134737-d8f9-442b-adcb-0f43c7e34585": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "b02a4c13-f8a7-468c-b4fe-d083a075af87": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "b03aff9e-88ef-4c6f-89db-1c77d1de4d35": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "b0733435-77e0-4e15-952b-61b2207f5d29": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "b0a0f756-9862-4000-b48c-0587b647f117": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "b0d34e09-c13b-4209-8b5f-1771a4f0d181": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "b143d404-9b37-4a9e-9931-a190d429fb37": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b1576b31-0018-43a1-b9e1-68e9c82eb2e7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "b166a9c0-e997-4dae-aada-10224b96c70d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b16b0707-d25e-4e96-a4f7-13512cccb180": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "b1891dbe-485b-44cb-b507-254b59956bf9": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "b1c1bf4a-a28f-4d96-b4f9-13a3047767ab": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "b1e5da1f-3593-4c10-977f-e2c7d6fe45f0": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "b21fe0b8-363c-4a0a-a76e-edf8536f5beb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "b23eec38-272e-4bc9-af6b-3bf0e245815a": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "b24e9f07-6f25-46a4-8380-ea1f4f78573d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b2afbff3-ad60-4305-bc95-da8b21d2ba28": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b2b6df82-58b7-4c69-95fa-228b484ccf85": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "b2b8e494-7b7c-4af0-827b-765451bc177f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "b2b96913-4865-4ba0-bcf9-cd953437008c": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "b2d46469-3807-49a4-8d9f-1a60e540355a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "b2da1047-15ea-4d56-bb24-b28efd7423f8": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "b2f16200-c750-4174-be3f-51b4104dd45f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "b31f266e-af23-46bd-bd08-23f3ae78ebac": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "b3228172-6b04-4ada-afaa-527e27890f82": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b3239a10-cffe-4fda-aee5-6afe9a2c9730": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "b327982d-763d-42ac-a71a-3bdd6c16b8eb": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "b350831d-4461-485e-8e22-407ec2920e49": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "b3957e57-53f5-47b4-8cb4-e325c9793be0": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "b3d66767-854a-4cde-860a-83ae14108d3f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "b435314e-6348-4b0e-bff1-f89dc086649f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "b467ed67-43b1-41af-aa74-4097a61c35ad": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "b4684b78-8a08-4331-b2d3-90eaa2ee2dde": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "b47a5061-f96a-45c6-860d-c02d6bf9913f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "b4929baf-b423-4a53-b59c-48ca95f1105b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "b55110b9-f9c4-4046-9ef6-fdd9ec73b714": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b5522ce2-9434-42c9-94a8-3369fb204868": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "b560356f-b3f8-4673-912d-c8fedd37f323": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "b56feb2d-3ffb-4087-95d8-ab9b47a3966e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "b5a6ba12-2588-433a-9828-9f3ac7fba92e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "b5e23350-0b85-4341-88df-cd3f8965117b": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "b5ef4fe3-9fe4-4320-b94b-e9587bb7e21a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "b64917ef-0814-4577-b93e-32ec49014531": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "b6548d61-f772-4604-b96a-d30b6688734b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b6875f4e-3ae2-433a-87be-12e3e5799bf1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "b6d977a4-f71f-4eab-9418-b38901cd2e24": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "b6f977f9-5931-4d0f-ba62-9471b37d478c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "b6fd85b3-36db-4fea-85ef-82b681f4b112": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "b6fed3d2-a703-41c6-92ec-117280a65b14": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "b726cffc-c359-4abb-a77a-bbbf2baafd11": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "b744ec09-18ad-4289-a271-d22666565f2a": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "b82524c9-6483-4604-ba9f-05376f3f6447": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "b8384219-39e7-4508-9bbb-a18c8c4911be": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "b839d0e0-1035-4814-ae98-fc01d0779d57": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "b84a87b0-1ade-46ce-93dc-29e79b3a10f4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "b88465c6-58c8-4f1c-a438-8e054b0d29f1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "b8a57afa-6e72-46a4-b636-faa93cf091fd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "b8d0919a-563c-44f4-bc8c-7d644d4cc5c3": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "b9035807-eb66-4133-a61a-4d284730745b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "b9405fcc-912f-4358-871c-48b869b2941e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "b9745ec3-e221-45e0-b919-50a7e5a67d84": {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021"
+  },
+  "b985d3e5-ba2a-479d-826e-ac61676ec31f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "b98e9657-01e3-4040-a616-61d5626a9dce": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "b9911b15-525e-459a-8b0d-62cc1f3a5fe3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "b9a482fc-1eb3-4c8f-8ba5-191f0f0a6545": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "b9a67c7f-8317-46a0-8036-619fdd253468": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "b9efb6f3-becc-408b-afed-fb1e162808af": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "ba0a0199-f9aa-4287-b5f3-78b0840e9d95": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "ba602cdc-114f-4b03-8317-a8d839947c58": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "ba8d10b8-d8a9-4b89-98fb-b536a5b0a86a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Ortografia"
+  },
+  "bab4ca0c-a393-4fef-a6d5-c980ab6ef516": {
+    "materia": "Matemática",
+    "topico": "Sequências"
+  },
+  "bac3ec64-4a59-4f90-afd4-d900929e6c5d": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "baeb779a-39b3-4667-a3bb-e0b40389d2e9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "baf2e4c3-2a27-4d65-b021-50db8c18f50e": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "baf806e1-2069-42e8-90dc-1623e516630f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "bb0f1ce5-4fd0-4c92-9ee4-f7489aeaba34": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "bb10088b-842a-45d5-922a-8539f6e47b21": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "bb38992e-263b-457d-8028-1c21f3555a15": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "bba87a62-9cc6-41f1-a5ba-df0ef443cd8b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "bbd8539f-bb54-44d0-9de6-66daf45eabbe": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "bbe72c61-4e64-4854-8494-fe697ad278ea": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "bbfec023-6c44-44fd-98f0-711ef178057b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "bc26ed8e-f113-4425-9a56-42a75a0c1b8e": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "bc2fd181-38ad-4818-a874-c9bbd75a75ef": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "bc7a4739-4d62-428d-a924-8cd6d6c53fcd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "bc7c58b5-8169-4be3-bdad-43ab18bef954": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "bce15d2b-c65b-4a5e-8406-aca43cf43839": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "bce19d63-8b90-4390-963f-8cac6faa5302": {
+    "materia": "Matemática",
+    "topico": "Medidas"
+  },
+  "bd0c6fe9-d586-46d9-8cea-b9a7b7062f57": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "bd0cdc16-c62d-486b-b135-4188692c251f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "bd6e0179-f6e7-486c-ad30-e02f43523b64": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "bd991df8-81cd-47be-92ef-f0cea88d4de8": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "bdceeba2-019a-4fa0-b446-298a80c2820e": {
+    "materia": "Língua Portuguesa",
+    "topico": "Ortografia"
+  },
+  "bddb971f-a4c4-4fdf-b577-36041ffd5085": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Correspondentes bancários"
+  },
+  "bdf2e2fc-a56b-471b-8b2d-5ca6cf34bc99": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "be106b72-f9b4-49d5-8671-bf6d2c867b15": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "be36ca93-7bba-4a73-94ae-c8451da4283f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "be7238e4-29dc-405d-ada5-5c902599b417": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "be87a54f-c014-42a9-96c0-ffa306177c4b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "be8ccd11-92f6-4670-bf07-3fb3ec24ccc6": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "bec8960b-0c0f-40b5-973e-13dd6232dddb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "bedf03e1-f8c7-4349-8939-fe245352b147": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "bef69f01-c7ed-46d9-8816-88b2d0c4cbd9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "bf630721-b609-48dd-9fd1-45a8fc8d0aef": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "bf784be9-5cf1-4739-ab2f-52486f214bd5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "bf853838-ceed-4615-b203-8716a91257f3": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "bfa1b44a-7911-4453-8780-b65885f92a1e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "bfbb2ae0-9514-4cd2-8977-4f05eead89a1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "c021665e-8ff5-45f6-8216-881694c36f4d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "c048eae7-7124-493c-b9f0-accdced04628": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "c04fd35f-9fe2-4a5a-8b65-5632cc3250e1": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "c0709528-04cf-4ce4-9db9-7885d8f383e6": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "c073c0c5-d871-46b5-a5a0-664e4f7059ef": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "c087f191-f09c-4f1d-a900-4800c48d8c28": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "c0b3e53b-4287-458a-84cd-0e580b119408": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "c0d487a3-0c40-4884-a01f-3de2c8aa6915": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "c0f81194-4f9f-4d0e-ab31-12000e840ff9": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "c10d2b20-c5a4-4ea0-9814-f118ce39ae70": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "c11bf727-b102-4c66-9105-699ddb9d8965": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "c1379ed4-fed3-40b4-9afd-9a2eff1e80ff": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "c152a572-dd4c-479f-aba9-9b3f0e843ce6": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "c16cf0c0-1cf2-4457-b538-cf050de86aed": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "c192d5e6-2c77-43d5-8c5b-0fd693841058": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "c1c92d4c-e826-4e36-bbe2-fcac1f636102": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "c1cc776d-cc57-4067-bfa9-b7ae6f1878f4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "c1edd10c-d03e-48c2-8205-25c2a62ec344": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "c1f2d237-bffc-4a0d-916d-75bce9994628": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "c20a95f4-4d60-438b-aa04-95f4165b923d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "c2a70028-7bda-452d-987c-2368e255e93a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "c3069a20-392c-4819-b559-285ec9069d39": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "c345fd00-6c91-4303-b7bf-60e2ac9ff2a8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "c385f62e-2bf3-4bb2-9d70-533a1b1887fa": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "c395eb9e-4cde-4e62-852b-b59212314607": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "c3a31685-289b-4e93-9804-d2a96e1c6086": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "c3a3200b-d29d-46d4-9cc6-15228cd75f88": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "c3b448ac-fddd-4059-aea6-248c6a580497": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "c3eb63d9-67fe-4ef6-a4dc-fe5d60bd4360": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "c3ff4ba6-839f-43e5-924a-a7dd6429f573": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "c412affe-42bf-4dcb-aad2-6aca651ea73d": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "c4300b91-92c1-4016-98df-196feed480da": {
+    "materia": "Língua Inglesa",
+    "topico": "Gramática básica"
+  },
+  "c4799b86-8876-40b0-a9a5-cbac104e4fbc": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "c48b424b-f522-410e-acf3-39655e59d3f5": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "c496358e-ec9e-4d95-8217-86fc2c90f8f3": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "c4d39597-2bde-47bb-8fc6-4f40de57bdd6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "c4d928a8-7da3-440a-b0e5-bcf773c7ab58": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "c5156e4f-0a84-4a58-9fbc-855246aa762c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "c54e154f-150b-4e0b-b3c1-934aa74bd401": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "c5b3b06a-1c89-4bff-ad79-6627d304ad18": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "c620a646-2158-403e-ac38-e075ab2bdfeb": {
+    "materia": "Matemática Financeira",
+    "topico": "Valor do dinheiro"
+  },
+  "c656d1cf-0512-4d38-9954-8afb5d9238ea": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "c67ea397-0b11-474f-8482-e9108c65ddbf": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "c6cc1497-bbd1-4214-b7f0-908860bf7daa": {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021"
+  },
+  "c6ddcd80-4413-4022-9744-07370579fb26": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Shadow banking"
+  },
+  "c7a37a23-22bd-423b-901d-9b8cd58bddbf": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "c7c43ca9-d26d-49b7-a79f-1e9f03d848ed": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "c7e4ec22-46dd-4cfb-9567-f1f2d542e523": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "c7fb665f-6b57-4011-a819-247a6b27cbf8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "c8510513-16f9-4831-b916-13356eb3dac3": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "c873370b-8706-4273-98e0-aa428b022a25": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "c8b2fbba-2427-4189-b29e-4e6eebffdf17": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "c8c326c4-fc13-4520-812c-37aa546a6e8a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "c8d7d92f-7986-405d-a5c0-3ea6c351ede9": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "c8e5cfb1-cb2a-4f4c-a3fc-299bbcf07616": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "c91c2a8c-31d8-4043-888f-1d0a5bdf74ee": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "c97528d1-35ad-4f34-8c35-4d14a4aa62f7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "c97ed477-ea2a-425f-bf1e-b6cade3279ad": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "c9b96d87-4b10-4594-ae8e-60a43ccf3e82": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria"
+  },
+  "c9b9af21-419d-4119-a350-a7c5c7fb7bb1": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "c9c3bf90-8dc4-47cf-89cc-69ad9ddb2847": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "c9e60ef3-5053-431d-a94f-51261b9a5358": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "c9e9ed3a-37d3-4b05-afdc-6eec32dc4913": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "ca0df350-682d-46e7-bd6d-d149a094defd": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "ca7d3a56-55ca-43ab-bd13-f16d53cd5db3": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "cacb683c-1621-4089-aaca-291cc34734dc": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "cae95a8d-42e1-4bca-8a99-8cd2cae2c3db": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "cb276978-24ea-43d7-bd36-cfa34dba0771": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "cb361407-fa17-4032-996d-3814b93a5a54": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "cb394396-8c25-40a2-a8e5-330ad9c2cfae": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "cb867d77-b2bb-4a53-9331-558deb2757a5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "cbbbaf93-45a2-425a-a205-1ef81bacab68": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "cbbf3f5f-7155-4234-a22c-68422960e1a6": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "cbcbcefc-afcc-4886-8de2-6f95dfc95ce6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "cc1002ba-8700-493d-9994-5695ee8be7d4": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "cc3116dc-50d6-4c69-b7bf-f86ebed85e33": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "cc548ef2-6a38-451d-89fe-cf5b4502d200": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "cc60f18f-f224-497e-9524-7df5c19435ae": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "cc8b84dd-7f91-4925-a05f-7beb43b379b4": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "cccb1436-77dd-4628-b73c-a1a537d6ac89": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "ccda4d7e-df3b-4806-83f8-a67cdfed55f5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "ccec20b1-1630-430e-8a4c-6389eb9571ce": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "ccf0e100-aab9-4953-85af-26b42e3c4cdf": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "ccf8166d-8d4c-49ae-b501-790758d14455": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "ccf90a32-d4f2-4bb1-9fa4-3ee308e8282c": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "cd0044dc-3fc5-41a1-8191-90675d51bac7": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "cd0bd8ad-5001-4ff1-aa4d-7a46ea42e90c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "cd0dd046-5081-4c2e-ac5d-97cbac9d769e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "cd2c0df5-f735-4088-98d4-d8bd1ba9cab9": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "cd49fef8-c868-432b-85db-b4b816c234bc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "cdfec60b-5407-4014-81a0-93cf35e52292": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "ce68e212-d700-4418-834e-025685f83019": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "cf474550-dd4e-45f7-bae1-fd5461bc1cda": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX"
+  },
+  "cf887db9-67b3-4cff-a9ab-cc75d28fde9c": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "cfb40821-da56-4e2c-992b-97abe86226e1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "d037837a-02bb-4d52-85fc-0dee7c0e4b36": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "d05b8279-d7e1-4f88-9360-bf5963e9b918": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "d060b0ba-de7f-4791-9c77-a20ea1f12a9f": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "d0a064ba-e505-4f0b-871b-a3c3d8f0e109": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "d0a5ea11-7e97-47a7-9851-8553c6f68529": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "d0c0cb63-7fb7-41c7-921e-cf7365060a94": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "d0c3299e-08c9-420a-bebb-10527c6d35b7": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Correspondentes bancários"
+  },
+  "d1426bcc-9575-4d6c-9f1e-fcc13e7a6ff7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "d1c1ab3a-f6de-42ac-af43-f3bdd9c31a5d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "d1e6e2c5-da30-4be8-b4fc-9eaf99880e4d": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "d1ff0f90-ad09-4f8b-bfec-784c68a96ec1": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "d25147ac-1337-49ae-9726-b55916c00af5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "d39b9d66-a6a9-4609-8534-1449fca8072f": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "d3db8be2-efcd-4a49-b9f0-055f8d60e359": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "d41afda5-cdde-402f-b184-ec39c48f8b40": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "d44cad1a-9240-4d18-91da-f3ce8cb0b584": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "d44d6298-49f6-4c1a-a5b3-469161ccfc1d": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "d451dab7-92bd-42db-a202-409d3c8c231b": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "d4692009-921f-48e1-9e9e-08599c504d77": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "d4990e39-b3df-4b91-9123-4b9d70a9a707": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "d49e1d4c-f8c0-4ba2-a214-cb441a1b3168": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "d4bd8657-6756-4be3-b3b3-ecb99b3b3f1e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021"
+  },
+  "d4f83eac-e26c-447f-b46b-b434367f1f0e": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais"
+  },
+  "d5392ca1-ec93-478a-badf-79db173e62a4": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "d54e5048-9771-4f18-9337-392261770153": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "d5981b4b-afd8-4fe1-bbe1-f7a183dd4858": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "d5b16d69-4c2b-4664-841c-c96be95a83ba": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "d5b59979-eaf1-403b-a73e-76992d2dcf9c": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "d5bf7312-9dd9-48b4-859d-359c8f309bce": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "d5d2af19-52a9-4086-b641-fd42c015f510": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "d5d67153-e372-4c07-8825-2f9b78d9f41c": {
+    "materia": "Língua Portuguesa",
+    "topico": "Ortografia"
+  },
+  "d5e3518c-9cd4-4bd3-a19a-b91b40071626": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "d601da7a-6b4c-47c1-b2f0-560cd7ed2e1d": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "d67fab9b-769c-473c-af15-4182e72b37ab": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes"
+  },
+  "d6885666-8a16-4576-b1ad-0eb2394077de": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "d68f63e9-8ca6-41a6-b50f-c1004d3dfd0c": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "d6af4981-fc35-4071-8a36-efaacf307fe2": {
+    "materia": "Matemática",
+    "topico": "Matrizes e sistemas"
+  },
+  "d6b290af-cf34-4851-a02e-bb8842be225e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "d74fce93-3ad3-40ae-b343-87559485eaac": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "d758deba-9ad1-4fa0-b3d6-b2ae3d2cb6e7": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "d7a8ef70-d798-41f1-89ac-b39ac868e8bf": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "d7c9d284-dfcb-4b5e-8cf9-476d3a856e65": {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação"
+  },
+  "d7de1f3d-2792-48b4-b7c5-9ead7a3d095b": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "d7def21d-c1de-4ac0-8526-b36e91d5257b": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "d7eb4d57-e218-41db-9272-67632e472103": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "d7ee310a-9f7e-4c1f-b6b1-e0cef13bd34b": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "d8144905-17b7-4b4c-9696-fd9e8130dc78": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "d853a176-e7f1-43d0-be7d-127ec08b2f07": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "d88bf88e-39d6-4668-842e-b7b87ea3a6a6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "d8f1f3e8-e2af-44aa-85e4-6074a503a69e": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "d90eed89-301f-459f-8011-7a6df80c5776": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "d95a211a-f7db-4163-8cde-697d5860c5f4": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "d99dea9b-82eb-472e-a53f-343e8879d781": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "d9ba0440-7a76-49da-bdcf-112fd8a2d9e5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "d9bc5acc-426e-4510-9108-d65f9cf44b10": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "d9ec0f6f-a4bb-467c-97b6-bc18d6e79917": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Sigilo bancário"
+  },
+  "d9ec9626-5e7d-424d-8527-41e3734aecbb": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto"
+  },
+  "d9f9300e-6b0c-4bff-8223-5988ffa7c5fc": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "da0c0bf5-e27e-4210-a860-1c24b4bff3bf": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "da244924-6874-4ccf-9898-62abece14fac": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "da3fb711-716c-45b7-bbb6-1adb5b046b62": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "da86e5cc-f3f5-48bf-9570-d6c8c07080b5": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "da954947-4253-457f-b6fc-8885cce047e4": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "da9c8576-a769-4525-bf1a-3b699828e55d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "db4f4ee5-af39-4d7c-8459-b0a8a799498e": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "dbbb3192-e84c-4bab-aac1-7e5f62a501c9": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "dbc4f437-5fc9-4808-a92d-22954c7352a8": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "dbdc81f5-8868-4b55-a61a-888522d85c10": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "dc0b9d12-1319-4ad1-b424-9be6a768f976": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "dc98ee25-6d87-419c-866b-389627908ff3": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "dcc5140b-21e6-4e09-be32-c003c8568979": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "dd4e8e85-7844-4bb2-9f48-35abc0c8d379": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "dd64d9ae-fee8-492a-a955-2245e4e18fed": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "dd67c6a2-68b3-48bc-876b-5cce812518e5": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "dd68946b-cabd-4822-af8e-5ff0fe582d1f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "ddb5c44b-7e68-481f-98a7-cd92275bfc1f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "de4508f1-0dd4-4392-af56-ebb1c5a54694": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "decebee2-5580-4229-91af-d83e82934080": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "df092cad-b2c3-4f9a-921c-8f41a06909f7": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "df89e7dc-08c7-45b9-87f1-12d0fc6240d2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "df9f093a-bcec-4cc6-a3ac-bf1834845020": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "dfa3b196-ee4b-4cb0-9970-be80b0b5e387": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "dfcbb13b-4b18-4ab8-a81e-cd363f573fe1": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "dfcc0c7a-786b-4e26-b65f-290cd223faf7": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "dfe94ead-dc08-4707-818b-e664889a558a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "e02ce9a8-fb42-486a-93fe-cac881a0a1fd": {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais"
+  },
+  "e0395934-8a89-4af6-970e-3d72f1852042": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "e08a6041-b795-4667-bbfc-5195a06b3c2a": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "e0c11682-0ba3-44ae-847f-9b30ef832945": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "e0f21176-9d3f-49cb-a30a-eebb602ca6fc": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "e1006672-c21d-407e-b2c0-a939b9245643": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "e119cd9e-cd76-4faa-baf1-d54bc9f338a8": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Arquivos"
+  },
+  "e122d8fa-d938-45f9-b431-f9ed93405488": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "e21f214f-6734-4a99-ba68-5d6b7cb300ca": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "e237fc4d-3290-4d67-b151-5f5de1fe900a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "e2c12aa8-52a4-4810-b785-016a7c59e9f7": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "e2c701d2-f06e-448b-a931-553b7c11aa8e": {
+    "materia": "Matemática",
+    "topico": "Números"
+  },
+  "e2e328a3-17a1-4dd2-89bb-74a439b8923e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "e2fd56ec-4457-4d11-b205-d8568826a2df": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "e2fd7da9-b73d-4c84-b153-ba7eac87eee9": {
+    "materia": "Matemática Financeira",
+    "topico": "Fluxos de caixa"
+  },
+  "e30e8e4c-4291-40b6-b813-f4e36b41ea8f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "e3139c17-23f4-46af-89b4-eeb388eb4ecb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "e34aafc0-1bc2-4a4b-9736-6f0fc79cf220": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "e3907dc3-4091-4cf7-883f-928f62a64d63": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "e39aa45c-af85-4cc9-bf83-c61231dc7eb9": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "e3c66c33-9f12-45bf-be39-2f908280e62a": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "e3d4b25f-8df2-4c75-94a4-8ac50ba4db06": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Multimídia"
+  },
+  "e3e69a51-c106-4cb7-9f66-a3e9ba2b723d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "e40d4d0f-f0d5-4e6f-b425-7fa090561cc4": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "e40f07b3-323c-4bb8-b811-7584cf1db88d": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Open banking"
+  },
+  "e424abc7-6baa-4f09-8355-6521d2d0bfd1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "e4728117-db2a-4998-a25f-b3f51873b372": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Ética"
+  },
+  "e4812c2a-476d-4c78-8ca7-051d9c1b3375": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "e4a80cee-72f7-449a-9238-7bc8d486c98f": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Internet e mobile banking"
+  },
+  "e53b810f-77cb-4d20-902d-e2b9372a6887": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "e55db468-f1f3-4f12-b175-148ea3992b04": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Microsoft 365"
+  },
+  "e5731f17-2f15-4d10-9304-96c4268c0a41": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "e5c2f06b-65cd-432d-b134-e264be5e4e7d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "e5ca3d9d-9555-4bb5-9215-3ccb40332860": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "e5e7e74e-5471-4e8f-b77b-aa3318946a2f": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "e656d77a-9585-43c7-b712-e561ffc7e403": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "e682fb9f-b963-4bb3-b040-796153724734": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "e6906fd1-eb76-4202-8b25-1303a3d291c4": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "e6c20539-70c1-4f44-87e9-b34370a313c3": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "e7045767-527a-4b54-82d3-48bf7612aa52": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Shadow banking"
+  },
+  "e721327c-0d83-4424-9f45-2e06b5250724": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "e7262920-a86a-422c-9454-0cee4cc72d12": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "e74308aa-c171-4a30-a8cf-6af00ed1c8fc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "e7dc856d-6310-4662-8435-54cb41549acc": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "e7df9264-f099-4279-9e58-eec3b5fc20ed": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "e7ffa3c9-5987-43c1-9145-6421d4a3d812": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "e8853a63-a926-4c2c-9da4-cddfa9e3efd5": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "e888db3e-18b8-4eb8-bea3-4d9b1df608ea": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "e8ec71b2-3cc6-493d-ac96-b01616a96528": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "e9134671-11f9-44d6-9af8-9a23bd2fde15": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "e92239f5-5def-40f0-b90c-e854093824b4": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "e96e6f87-ba17-4d07-bc26-eacdd262e2a7": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "e985c225-c6a8-4fff-ad0c-8bce4294ca0c": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "e996237a-d1df-48d5-858d-89bd544817a4": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "e9c289d2-0ba7-426c-815f-1e4df9ca13f1": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "ea1ccc46-d692-4869-a0e4-fd4f96149882": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "ea1d02a1-3c09-4318-8241-96ec9d6cad6d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "ea374d4d-c506-42b0-a8bc-a8de07a00c36": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "ea430c2e-c50d-4ac4-92cd-a33a71c6ce0b": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "eaa496dd-1916-42c0-a856-1a5a18aa9882": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "eaeb891d-5bdf-4a1a-b63e-e57ff187f81f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "eb5ac879-2409-40a2-9223-8deed02604dd": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "eb8e24c2-bffc-47bb-ad85-efe1e05e896a": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Transformação digital"
+  },
+  "ebeeb598-057f-4dde-851c-a356537e0c49": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Shadow banking"
+  },
+  "ebf01d62-4959-41f4-8ea6-82d3308974da": {
+    "materia": "Vendas e Negociação",
+    "topico": "Relacionamento"
+  },
+  "ec31273b-f880-4cf7-950d-851d2b4e32bb": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "ec387973-778b-4519-b45a-7cc9e0b2a5c6": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Geral"
+  },
+  "ec5f0a63-3506-4400-b6ed-76af5edb94fc": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "ec7e768e-c415-4a71-ae13-fedebfdea207": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "ecc38a93-052d-4ffa-b145-67ab43bdc3c7": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Geral"
+  },
+  "ecd9bb3d-0738-4f8a-9297-735599dc6e10": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "ecdad684-b19a-44c4-9964-a264e5466a54": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing digital"
+  },
+  "ecea7a03-3001-4e43-9d99-e86a87335705": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "ed122755-3d7d-4aaa-8838-4d8b9cb53559": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "ed93829e-9f05-4bcb-8424-f300ddd5b44d": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "ed9465b0-e5de-477a-85a0-d02e0ae16c01": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "ee205f1f-5dfe-4f27-afb8-773c22029ac3": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "ee544a24-0c66-4d69-85e1-de89ace2bc03": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "ee6efdc2-e4f8-4085-b0ee-8d85abc9edc1": {
+    "materia": "Vendas e Negociação",
+    "topico": "Segmentação"
+  },
+  "ee7e5028-395f-4f09-bf6b-5aa75d093200": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Segurança"
+  },
+  "eeb3a944-83a0-4823-8887-753c1be5769f": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "eeffb2bb-0474-4982-91d6-9f34c5cb1d0d": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "ef1ecaf8-eeb8-4867-9e12-289797ff1011": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Responsabilidade socioambiental e ASG"
+  },
+  "ef6880ed-6f06-45c5-a663-0619a74a878c": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "efcf8d96-5ffb-4b71-9b49-cc80a6418a33": {
+    "materia": "Matemática",
+    "topico": "PA e PG"
+  },
+  "f004e574-694d-4c1d-9f9e-346c19824603": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "f045e6a2-26df-4785-abee-8c395a147a5f": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "f06f5c72-80ab-4695-aa54-9ec7ab26d25b": {
+    "materia": "Matemática",
+    "topico": "Medidas"
+  },
+  "f0b00fd0-ac52-4c4f-9620-8abb594eb173": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "f0ccf9bb-c9e5-4c6c-84ff-4b272c4913d3": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "f165ca2d-f903-4669-9a20-b547d26fe3e2": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Windows e Linux"
+  },
+  "f1987ee4-7fb3-40e2-9ec5-0e5a19d6c247": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "f1e72c2d-2712-4da2-8f39-c22ee169f595": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "f1f37424-791b-475d-9aec-3fd7d7efd4ff": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "f20983a4-9e64-405f-b600-386262945754": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Autorregulação"
+  },
+  "f20fb0e1-1201-4088-b189-4a0d8ba06c41": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "f2521e83-600c-4f29-83bf-8d9eb8422fbd": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "f2b48734-0ed1-4b3e-bf44-71c1501084f2": {
+    "materia": "Língua Portuguesa",
+    "topico": "Classes de palavras"
+  },
+  "f2d04d36-776d-4f74-997e-e1999741e095": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "f2f25dd3-d103-4e47-9a60-40f5498cbf0a": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Garantias"
+  },
+  "f2f7ae35-92a9-43d7-936f-05513251ca75": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública"
+  },
+  "f30443df-47cb-4e9a-9865-0782337996df": {
+    "materia": "Língua Portuguesa",
+    "topico": "Crase"
+  },
+  "f35a026b-d63c-49ba-8099-3817a009a952": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "f3b38e22-c50e-4c98-82f2-dd48c6015ee6": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "f3c7f12b-c2e2-42b8-97b0-e920b5ac3a36": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Câmbio"
+  },
+  "f41b7d23-973b-47c5-858d-d6df3da4fb0d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "f44d7932-f069-4e0b-8ddc-23f1b6ef3d6a": {
+    "materia": "Língua Portuguesa",
+    "topico": "Concordância"
+  },
+  "f44dc5d6-d66b-4471-b263-502bd4564c07": {
+    "materia": "Matemática Financeira",
+    "topico": "Price e SAC"
+  },
+  "f4621fa1-58af-40a3-ac54-a783e29acf56": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Mercado de capitais"
+  },
+  "f4c91b28-546d-4f8f-bbcd-c4d494c901e0": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "BI e analytics"
+  },
+  "f4fd75e1-f99f-435c-85ff-982be0b927fd": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Moedas e blockchain"
+  },
+  "f54cb33b-9c87-4057-87a2-1c967bfac121": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "f5d9982b-00c9-4b32-91cf-601282572f70": {
+    "materia": "Língua Inglesa",
+    "topico": "Vocabulário"
+  },
+  "f5f55dd1-63d9-4bc6-9840-426807648f63": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Fintechs, startups e big techs"
+  },
+  "f69b1146-2383-49aa-8501-3bac116856dc": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "f69c67ac-4cf1-4f31-8fb6-360ff39ad6cf": {
+    "materia": "Matemática",
+    "topico": "Geral"
+  },
+  "f6e9a343-be29-4d98-bfda-3fbf9daa61fa": {
+    "materia": "Vendas e Negociação",
+    "topico": "Marketing de serviços"
+  },
+  "f7b93d8d-24b0-42fd-90b2-3bb2e92f97d6": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "f7ddfafb-6aa7-4bc7-990b-f195c4891a2c": {
+    "materia": "Vendas e Negociação",
+    "topico": "Vendas"
+  },
+  "f7dea0da-fa7e-4ab1-a522-37a57496f5cb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "f8107014-46f1-41c3-a407-c5285fdc3e12": {
+    "materia": "Língua Portuguesa",
+    "topico": "Sintaxe"
+  },
+  "f91223d2-d2d0-44cf-b2d5-d9fd7a46af9d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "f91bf3e3-a85e-4844-bb7b-2aca3cb8c74d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "f9234b88-684b-4b69-81a0-fa84c5095b28": {
+    "materia": "Matemática",
+    "topico": "Lógica proposicional"
+  },
+  "f997474c-d52a-4bf1-aeb7-f907af32580d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "f9993e99-f991-4af9-aeb5-e8030861a87d": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "f9aafed0-cb31-4c94-8217-fb4993615d19": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "fa427e85-bcbe-4a51-acac-f98c69113ecb": {
+    "materia": "Língua Portuguesa",
+    "topico": "Interpretação"
+  },
+  "fa6a3831-75d5-4183-b7b2-40aef20bbfd9": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "fa7cd4fb-cc4e-4ca0-8c9b-271b50309b31": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "LGPD"
+  },
+  "fb0f5efe-73ce-42c2-abdc-a9cd0f025bfb": {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia"
+  },
+  "fb470964-4a47-4b44-8152-ee2ec57908cd": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "E-mail e colaboração"
+  },
+  "fb56243d-0338-430e-a1d2-7e384844d6d5": {
+    "materia": "Vendas e Negociação",
+    "topico": "Acessibilidade"
+  },
+  "fb9179fa-634f-4341-8976-05a015e4f602": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  },
+  "fbc3edc4-7753-489d-9bec-80c4062dea4f": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "fbd65bbd-8a90-48bf-91ed-f88ca9db0aab": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "fbe5e00c-be1d-4e05-a40c-f7de15a5b904": {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas"
+  },
+  "fc0689b7-dbf6-4f9d-897b-7e998b38c07a": {
+    "materia": "Vendas e Negociação",
+    "topico": "CDC"
+  },
+  "fc3310b0-5e09-4781-81c7-3bb137425caf": {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Navegadores"
+  },
+  "fc499ce9-67da-404e-b9ac-74282f7323d4": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros simples"
+  },
+  "fc4e8f88-be1a-43cd-919b-ebe3f72d19a2": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "fc7b5ebf-4118-4411-9b59-acb6e0633f13": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Geral"
+  },
+  "fc7bb124-99d1-4846-b4a3-a5bd43560c0b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "fcb6ace2-a2f6-49de-bfa2-11978f1b34bd": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "fcc6db04-5595-4fb6-a60b-63c43bddeeb6": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Política monetária"
+  },
+  "fccb0c33-bf94-4e65-aacd-234ea11bc75b": {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento"
+  },
+  "fcd86ae8-5d48-49f2-9ab4-835b69ccd8af": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "fcf2de3f-689c-4853-bda7-f1dea409078c": {
+    "materia": "Matemática Financeira",
+    "topico": "Capital, juros e taxas"
+  },
+  "fd38ec8b-8220-42d1-bf6e-01b2da9735ff": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "fd3c3161-64a7-4ccc-9420-c6e3b3dcb4d8": {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência"
+  },
+  "fd68a7c6-eee6-494f-bbd8-e66e9a5218ad": {
+    "materia": "Matemática",
+    "topico": "Sequências"
+  },
+  "fd8055f5-9544-4d8a-b1d0-a0fb58b9e027": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "fd84e8aa-c433-4191-a17b-574dbb4377d1": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção"
+  },
+  "fd8d3f4e-812e-4646-acd3-2d842f7c2eee": {
+    "materia": "Matemática",
+    "topico": "Probabilidade e estatística"
+  },
+  "fda7a159-ce9a-4219-99fc-28fef66531c8": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "fdf34b75-d681-4e5f-8df1-b43ad10de71e": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "PLD/FT"
+  },
+  "fdf98d52-32b2-4c91-8b85-388cee6b514b": {
+    "materia": "Matemática",
+    "topico": "Conjuntos, relações e funções"
+  },
+  "fdfa26fe-7b95-4b0e-bdf6-0dde0b538e6b": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Produtos e serviços"
+  },
+  "fe6735cb-fdc0-4129-b276-56b15ca6b63f": {
+    "materia": "Matemática",
+    "topico": "Proporções, regra de três e porcentagem"
+  },
+  "febe2b6c-4f61-49f1-a534-d35519a673d9": {
+    "materia": "Língua Inglesa",
+    "topico": "Compreensão de texto"
+  },
+  "ff0a7ca4-8b30-4567-b15e-292c9de20819": {
+    "materia": "Língua Portuguesa",
+    "topico": "Colocação pronominal"
+  },
+  "ff7454f7-99ee-4233-85f4-1a798bd3171d": {
+    "materia": "Vendas e Negociação",
+    "topico": "Canais remotos"
+  },
+  "ff8fddfd-e060-4a70-87e3-324f5e172fa9": {
+    "materia": "Conhecimentos Bancários",
+    "topico": "SFN e mercados"
+  },
+  "ffab25b1-847a-41de-9796-93f416b4f829": {
+    "materia": "Vendas e Negociação",
+    "topico": "Valor e experiência do cliente"
+  },
+  "ffbcde14-9718-4d8a-8c66-87db24f5cd80": {
+    "materia": "Matemática Financeira",
+    "topico": "Juros compostos"
+  }
+}

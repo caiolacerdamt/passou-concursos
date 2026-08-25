@@ -10,7 +10,6 @@ import {
   type ResultadoDaGarantia,
 } from "@/modules/pagamentos/garantia";
 import { criarRepositorioDePagamentos } from "@/modules/pagamentos/repositorio";
-import { Shell } from "@/modules/ui/shell";
 
 import { pedirReembolso } from "./acoes";
 
@@ -59,10 +58,11 @@ export default async function Reembolso({
   const pagamento = await criarRepositorioDePagamentos(clienteDeServico()).buscarUltimoPagamentoDoUsuario(user.id);
   if (!pagamento) {
     return (
-      <Shell acoes={<Link href="/app" className="text-marca underline">Voltar para o estudo</Link>}>
-        <h1 className="text-2xl font-semibold">Garantia do pagamento</h1>
+      <div className="mx-auto max-w-2xl">
+        <h1 className="font-display text-4xl leading-tight tracking-tight">Garantia do pagamento</h1>
         <p className="mt-4 text-suave">Não há um pagamento confirmado para consultar.</p>
-      </Shell>
+        <Link href="/app" className="mt-5 inline-flex text-sm font-semibold text-marca underline">Voltar para o estudo</Link>
+      </div>
     );
   }
 
@@ -74,13 +74,14 @@ export default async function Reembolso({
   );
 
   return (
-    <Shell acoes={<Link href="/app" className="text-marca underline">Voltar para o estudo</Link>}>
-      <p className="text-sm font-semibold uppercase tracking-wide text-marca">Garantia</p>
-      <h1 className="mt-2 text-3xl font-semibold">Pedido de reembolso</h1>
-      <p className="mt-4 leading-7 text-suave">
+    <div className="mx-auto max-w-2xl">
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Garantia</p>
+      <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">Pedido de reembolso</h1>
+      <p className="mt-5 text-lg leading-8 text-suave">
         A janela é contada em dias corridos desde a confirmação do pagamento.
       </p>
-      <p className="mt-5 rounded-md border border-linha bg-fundo-suave p-4 text-sm" role="status">
+      <Link href="/app" className="mt-4 inline-flex text-sm font-semibold text-marca underline">Voltar para o estudo</Link>
+      <p className="mt-6 rounded-card border border-linha bg-painel p-5 text-sm shadow-card" role="status">
         {tela.resultado.diasPassados === null
           ? "Pagamento ainda não confirmado."
           : `Dia ${tela.resultado.diasPassados} de ${precos.garantiaDias}; ${tela.resultado.diasRestantes} dia(s) restante(s).`}
@@ -99,7 +100,7 @@ export default async function Reembolso({
 
       {tela.resultado.disponivel ? (
         <form action={pedirReembolso} className="mt-6">
-          <button type="submit" className="rounded-md bg-marca px-5 py-3 font-medium text-fundo">
+          <button type="submit" className="min-h-11 rounded-full bg-marca px-5 py-3 font-medium text-fundo transition hover:bg-marca-apoio">
             Solicitar reembolso
           </button>
         </form>
@@ -108,6 +109,6 @@ export default async function Reembolso({
           {tela.recusa ?? "O pedido não está disponível para este pagamento."}
         </p>
       )}
-    </Shell>
+    </div>
   );
 }

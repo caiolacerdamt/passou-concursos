@@ -385,26 +385,141 @@
 - **Date**: 2026-08-22
 - **Status**: active
 
+### AD-106
+- **Decision**: A ilustração da landing SHALL ser render 3D chunky com fundo recortado, revogando a
+  regra de `DESIGN.md` §Ilustração que proíbe render 3D e manda *flat paper-cut vector*. A proibição
+  segue valendo para qualquer outra superfície; o que muda é só a landing. Junto entram no `@theme`
+  os tokens do lado escuro (`--color-breu*`), os dois de preenchimento do movimento assinatura
+  (`--color-pilha-papel`, `--color-pilha-sedimento`) e as duas sombras da landing.
+- **Reason**: O dono escolheu explicitamente o 3D chunky depois de ver as duas opções lado a lado, na
+  rodada de protótipo em `scrollcraft/builds/passou-lp`. A regra do paper-cut nasceu de uma limitação
+  do `gpt-image-2` via OpenRouter, que não aceitava transparência; a série nova tem alfa de verdade e
+  senta direto no chão da seção, sem moldura. Escolha de direção de arte, não descuido.
+- **Trade-off**: A landing passa a ter uma linguagem de ilustração diferente do resto do produto — o
+  que é aceitável porque o app não tem ilustração nenhuma (`DESIGN.md`, modo Operate). O custo real é
+  peso: sete PNG de ~1 MB em `public/arte/`, servidos por `next/image`, dois deles com `priority`.
+- **Scope**: Rota `/` e os componentes de `src/modules/ui/landing/`. Substitui a linha "proibido:
+  render 3D" de `DESIGN.md` §Ilustração **apenas** para a landing.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-107
+- **Decision**: O motor de scroll `scrollcraft.js` SHALL entrar como asset estático não editado em
+  `public/motor/`, montado por um client component após a hidratação; as sete seções SHALL continuar
+  server components, expondo só ganchos `data-sc-*`. O comportamento próprio da página (barra,
+  movimento assinatura e contador) SHALL viver em `src/modules/ui/landing/assinatura.ts` e SHALL NOT
+  depender de ordem de execução em relação ao motor.
+- **Reason**: O motor é JS vanilla que escreve em `window` no topo do arquivo; importá-lo quebraria a
+  renderização no servidor, e "adaptar para importar" seria editar o motor pela porta dos fundos. A
+  independência de ordem não é preferência: com `<Script afterInteractive>` o motor monta depois do
+  `useEffect`, e a primeira medida do gráfico caía num palco ainda sem altura — os 86 chips ficavam
+  empilhados e o pico inteiro nascia em branco. O conserto é um `ResizeObserver` no campo, que mede
+  de novo quando a caixa muda, venha a mudança do motor, da fonte ou da janela.
+- **Trade-off**: O motor fica fora do lint (`eslint.config.mjs` ignora `public/motor/**`) e fora do
+  matcher do `proxy.ts` — sem essa segunda exceção o visitante deslogado recebia o HTML de `/entrar`
+  no lugar do script. Em troca, atualizar o motor é trocar um arquivo.
+- **Scope**: Rota `/`. Não vale para o app logado, que não usa o motor.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-108
+- **Decision**: A frequência real que a landing mostra SHALL sair do banco por
+  `consultarFrequenciaReal()` (módulo do acervo, cache de 1 h), contando somente `origem = 'real'`
+  entre as questões vigentes, e SHALL cair no extrato congelado de 2026-08-25 em qualquer falha de
+  leitura, reportando o erro. Nenhum número da página SHALL ser escrito na copy — incluindo o selo de
+  economia da oferta, que é a subtração entre os dois preços da configuração.
+- **Reason**: O protótipo trazia um `raiox.js` congelado. Congelado, ele mente na próxima prova
+  ingerida — e a página inteira existe para dizer que a medida é real. A queda existe porque a
+  alternativa a um número velho não é um gráfico vazio: é o último número verdadeiro que temos, com o
+  erro no Sentry. A cláusula `origem = 'real'` é o invariante 3 do `AGENTS.md` e vem de dentro da view
+  `inventario_acervo`, na coluna `importadas`.
+- **Trade-off**: A landing passa a depender do cliente de serviço do Supabase (a view é fechada para
+  `anon`), e o extrato precisa ser regerado quando o acervo crescer — `frequencia.test.ts` falha se um
+  dos números que a copy cita mudar, que é o alarme desejado.
+- **Scope**: Rota `/` e `src/modules/acervo/frequencia.ts`. A tela do Raio-X do aluno (SPEC 11) segue
+  na sua própria consulta.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-109
+- **Decision**: O movimento da landing SHALL ser contínuo e dirigido por `--sc-p`, nunca por
+  revelação de `clip-path` disparada uma vez. As artes das seções 5, 6 e 7 e os dois cartões
+  `hoje × ainda não` SHALL usar transform contínuo; `data-sc-reveal` fica apenas na seção 3, que o
+  dono aprovou. O herói SHALL ter **uma** ilustração (`/arte/heroi-medida.png`), não duas sobrepostas.
+  E os 86 chips do pico SHALL cair **em cascata por posto**, com o nome do tópico escrito no papel
+  desde o repouso em telas ≥ 900px.
+- **Reason**: Revisão de design pedida pelo dono depois de ver a página no ar. Três queixas, três
+  causas: (a) as duas artes do herói eram peças posicionadas em absoluto — só ficam juntas na largura
+  em que foram posicionadas, e no celular saíam cortadas por bordas diferentes; (b) o corte de
+  `clip-path` é um evento que dispara e termina, e três deles na mesma página viram tique — pior nos
+  cartões, onde o corte decepa texto no meio da palavra; (c) o pico movia os 86 papéis com uma curva
+  só e sem rótulo visível, então o leitor via um monte virar outro monte sem ver a regra sendo
+  aplicada. O nome no papel é o que transforma 86 retângulos em 86 tópicos do edital.
+- **Trade-off**: O rótulo na pilha custa uma leitura de `offsetWidth` por chip em cada `medir()` (para
+  a escala caber na folha) e fica **desligado abaixo de 900px** — lá a folha não comporta texto
+  legível e 86 escritas de estilo a mais por quadro não se pagam. No celular a leitura fica só com a
+  cascata e o eixo. A fita de tópicos do herói é `aria-hidden`: é a mesma informação que o pico
+  entrega em texto de verdade.
+- **Scope**: Rota `/` — `secoes.tsx`, `assinatura.ts`, `landing.css` e a arte nova. Motor
+  (`public/motor/scrollcraft.js`) intocado, como manda a skill.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-110
+- **Decision**: A copy da landing SHALL vender o método (o que o aluno recebe), não a ausência de
+  aprovação nem o roteiro do que falta construir. Concretamente: (a) o headline, a sub, o CTA do herói
+  e o CTA da barra mudam de tom informativo/defensivo para direto; (b) a seção "hoje × ainda não"
+  perde o cartão "ainda não" — fica só o que já está de pé, sob o título "O que você recebe quando
+  assina"; (c) o headline do fecho deixa de abrir com "Esta página não promete aprovação" e passa a
+  fechar em tom positivo, mantendo a mesma ressalva (sem fórmula mágica, sem aprovação garantida) como
+  frase de apoio, não como manchete. Isto **revoga**, só para esta página, a AC2 de `m8-negocio-
+  pagamentos/spec.md §P1` ("a página SHALL declarar honestamente o que existe hoje e o que não
+  existe") e o trecho equivalente da AD-076.
+- **Reason**: Pedido direto do dono depois de ler a página no ar: a copy inteira soava genérica,
+  defensiva e não deixava claro o que a plataforma entrega nem por que alguém pagaria. Ele foi
+  avisado, nesta conversa, de que a seção "ainda não" e o headline "não promete aprovação" vinham de
+  uma decisão registrada (AD-076) sobre nunca prometer o que não existe — e manteve a decisão de
+  tirar mesmo assim. O produto continua sem prometer nada que não entrega: só deixou de haver, na
+  página de vendas, uma seção dedicada a enumerar o que falta.
+- **Trade-off**: A landing não avisa mais o comprador, na própria página, sobre tutor de IA, tela do
+  Raio-X, diagnóstico adaptativo e gamificação além da sequência ainda não estarem ligados. Esse aviso
+  continua valendo como fato do produto (nada disso é vendido em nenhum outro texto da página); só
+  deixou de ser exibido como lista. Se isso gerar reclamação ou reembolso por expectativa não batida,
+  é o primeiro sinal de que a AD precisa ser revista.
+- **Scope**: Rota `/` — `secoes.tsx` (Heroi, Problema, Medida, Metodo, Hoje, Oferta), `estrutura.tsx`
+  (barra: CTA + link `/entrar` que faltava) e `landing.css` (regra nova só para o link de entrar).
+  `page.test.tsx` ajustado para guardar a AC nova. Nenhum outro módulo muda: a régua de honestidade do
+  invariante 14 (`AGENTS.md`) segue valendo para o produto e para qualquer outra superfície.
+- **Date**: 2026-08-25
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: SPEC 15 — Painel do operador (`.specs/features/15-painel-do-operador/`) — concluída e verificada.
-- **Phase / Task**: Execute concluído em T127; Ritual B validado por GPT-5.6 Luna com reasoning `max`.
-- **Completed**: design e plano (`e9c3d6c`); T118 (`191fc2d`), T119 (`68b1327`), T120 (`904fb56`),
-  T121 (`ae1f718`), T122 (`c6982f9`), T123 (`d93278b`), T124 (`a1aad7f`), T125 (`a04ca25`),
-  T126 (`b25fe96`) e T127 (`47850cf`). Correção de fixture de typecheck em `fcf8217`.
-  Gates finais: 699 unitários, 378 testes de banco com rede autorizada, lint sem erros e build verde.
-- **External checks**: migrations da SPEC 15 até `20260823102000_spec15_taxonomia.sql` aplicadas no
-  Supabase de desenvolvimento. Nenhuma migration desta branch foi aplicada em produção.
-- **In-progress** (file:line): none.
-- **Next step**: iniciar a SPEC 16 conforme `.specs/ROADMAP.md`; a SPEC 15 não tem task pendente.
-- **Blockers**: nenhum para a implementação. `npm test` agregado tem falha preexistente de configuração do Vitest
-  (`maxWorkers` divergente); usar os gates canônicos separados `npm run test:unit` e `npm run test:db`.
-  UAT visual e configuração de produção continuam manuais.
-- **Inherited notes**: preservar F-13 (aviso de reembolso preso à URL) e F-14 (revelar senha, sem
-  confirmação nem retorno ao login); acompanhar o primeiro estorno parcelado em produção; CI de
-  banco ainda sofre latência e executa novamente após merge; não apagar `caiolacerdamt@` nem
-  `raiox-demo@passou.dev`; a tensão do log append-only de pagamentos com esquecimento segue para a
-  SPEC 18.
-- **Uncommitted files**: somente diretórios não rastreados preexistentes do usuário:
-  `.claude/skills/`, `.github/agents/`, `.github/hooks/`, `.github/skills/`; não alterar nem incluir.
-- **Branch**: `codex/spec-15`.
+- **Feature**: Rodada de copy da landing pedida pelo dono (AD-110), depois da rodada de design
+  (AD-109). Ajuste de superfície, fora da numeração de specs.
+- **Phase / Task**: concluído. Sem ritual de spec.
+- **Completed**: barra com link "Entrar" (`/entrar`) que faltava e CTA "Começar"; herói com headline,
+  sub e CTA novos, rótulo de prova removido do topo e a contagem de provas movida para a linha de
+  confiança sob o CTA; seção 2 com as três falas reescritas e os rótulos acima de cada uma removidos,
+  mais um multiplicador calculado (nunca escrito à mão, AD-108) entre o maior e o menor tópico; seção 3
+  com rótulo e título novos; seção 5 com título e os três cartões reescritos em tom positivo; seção 6
+  reduzida a um cartão só (tirou "ainda não", ver AD-110) sob o título "O que você recebe quando
+  assina"; fecho com headline e sub novos, tirando "Esta página não promete aprovação" como manchete.
+- **Gates**: `tsc --noEmit` limpo, `eslint src/modules/ui/landing src/app/(landing)` sem erro,
+  `vitest --project unit` 837/837 (suíte inteira, não só a rota).
+- **External checks**: nenhuma migration, nenhuma geração de arte nova — as ilustrações da AD-106/109
+  não mudaram.
+- **In-progress** (file:line): captura de scroll (desktop/390px/`prefers-reduced-motion`) da copy nova
+  **não feita** nesta rodada — a rodada anterior (AD-109) já tinha validado o motor e o layout; esta
+  rodada só trocou texto e removeu um cartão do grid `auto-fit`, sem tocar `data-sc-*` nem CSS de
+  animação.
+- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Blockers**: nenhum. O rótulo longo encostando no número no celular **foi corrigido** (teto de 20
+  caracteres abaixo de 900px), herdado da AD-109. Continua **não feita** a verificação em aparelho real
+  (iPhone) — Chrome headless não reproduz decodificador, autoplay nem toque.
+- **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
+  `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
+- **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,
+  `.github/agents/`, `.github/hooks/`, `.github/skills/`) e os PNG de referência na raiz
+  (`mm-*.png`, `neuro-*.png`, `v-hero.png`); não alterar nem incluir.
+- **Branch**: `feat/landing-porte-scrollcraft`.

@@ -47,6 +47,10 @@ export type DimensaoDoAnel = {
   progresso: number;
   /** Teto derivado dos blocos `piso` do plano de hoje. */
   meta: number;
+  /** Recorte do mínimo dentro da meta do dia; usado pela marcação do anel. */
+  pisoMeta: number;
+  /** Progresso do mínimo, sempre limitado ao piso. */
+  pisoProgresso: number;
   /** Valor bruto server-trusted, preservado para auditoria. */
   bruto: number;
   /** Proporção pronta para apresentação, entre 0 e 1. */
@@ -137,6 +141,8 @@ export class GamificacaoRecusada extends Error {
 type LinhaDaDimensao = {
   progresso?: unknown;
   meta?: unknown;
+  piso_meta?: unknown;
+  piso_progresso?: unknown;
   bruto?: unknown;
   percentual?: unknown;
   concluido?: unknown;
@@ -237,6 +243,15 @@ function mapearDimensao(
   const meta = numero(linha?.meta, `${campo}.meta`);
   const progressoInformado = numero(linha?.progresso, `${campo}.progresso`);
   const progresso = limitar(progressoInformado, meta);
+  const pisoMeta = numero(linha?.piso_meta, `${campo}.piso_meta`);
+  const pisoProgressoInformado = numero(linha?.piso_progresso, `${campo}.piso_progresso`);
+  if (pisoMeta > meta) {
+    throw new GamificacaoRecusada(
+      "resposta_invalida",
+      `${campo}.piso_meta ultrapassa meta`,
+    );
+  }
+  const pisoProgresso = limitar(pisoProgressoInformado, pisoMeta);
   const percentualInformado = numero(linha?.percentual, `${campo}.percentual`);
   if (percentualInformado > 1) {
     throw new GamificacaoRecusada(
@@ -248,6 +263,8 @@ function mapearDimensao(
   return {
     progresso,
     meta,
+    pisoMeta,
+    pisoProgresso,
     bruto,
     percentual: percentualInformado,
     concluido: booleano(linha?.concluido, `${campo}.concluido`),
@@ -297,6 +314,8 @@ function vazioDoAnel(): AnelDoDia {
   const vazio: DimensaoDoAnel = {
     progresso: 0,
     meta: 0,
+    pisoMeta: 0,
+    pisoProgresso: 0,
     bruto: 0,
     percentual: 0,
     concluido: false,

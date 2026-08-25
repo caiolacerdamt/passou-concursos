@@ -5,10 +5,12 @@ import { CATALOGO_DE_CONQUISTAS, type DadosGamificacao } from "./gamificacao";
 import type { PainelDoDia } from "./painel-do-dia";
 import { AcompanhamentoDoDia, CartaoDoDia, GamificacaoNoProgresso } from "./painel-do-dia-tela";
 
-function dimensao(progresso: number, meta: number) {
+function dimensao(progresso: number, meta: number, pisoMeta = 0, pisoProgresso = 0) {
   return {
     progresso,
     meta,
+    pisoMeta,
+    pisoProgresso,
     bruto: progresso,
     percentual: meta === 0 ? 0 : progresso / meta,
     concluido: meta > 0 && progresso >= meta,
@@ -92,9 +94,11 @@ describe("CartaoDoDia", () => {
     const html = renderToStaticMarkup(<CartaoDoDia dados={gamificacao} />);
 
     expect(html).toContain("Você está no meio do dia");
-    expect(html).toContain("Concluir o essencial de hoje");
+    expect(html).toContain("Concluir o mínimo de hoje");
+    expect(html).toContain('href="#nivel-minimo"');
+    expect(html).toContain(">Blocos</span>");
     expect(html).toContain("Em andamento");
-    expect(html).toContain("4 dias de sequência");
+    expect(html).not.toContain("dias de sequência");
     expect(html).toContain("1/2");
     expect(html).toContain("10/10");
   });
@@ -125,6 +129,49 @@ describe("CartaoDoDia", () => {
     expect(html).toContain("Dia cumprido");
     expect(html).toContain("Concluída");
   });
+
+  it("marca o limite do mínimo somente quando ele fica antes da meta", () => {
+    const comMarcacao = renderToStaticMarkup(
+      <CartaoDoDia
+        dados={{
+          ...gamificacao,
+          anel: {
+            estudo: dimensao(4, 30, 10, 4),
+            questoes: dimensao(0, 10),
+            revisao: dimensao(0, 1),
+          },
+        }}
+      />,
+    );
+    const pisoZerado = renderToStaticMarkup(
+      <CartaoDoDia
+        dados={{
+          ...gamificacao,
+          anel: {
+            estudo: dimensao(0, 30, 0),
+            questoes: dimensao(0, 10),
+            revisao: dimensao(0, 1),
+          },
+        }}
+      />,
+    );
+    const pisoIgualMeta = renderToStaticMarkup(
+      <CartaoDoDia
+        dados={{
+          ...gamificacao,
+          anel: {
+            estudo: dimensao(0, 30, 30, 30),
+            questoes: dimensao(0, 10),
+            revisao: dimensao(0, 1),
+          },
+        }}
+      />,
+    );
+
+    expect(comMarcacao.match(/data-piso-marcacao="true"/g) ?? []).toHaveLength(1);
+    expect(pisoZerado).not.toContain('data-piso-marcacao="true"');
+    expect(pisoIgualMeta).not.toContain('data-piso-marcacao="true"');
+  });
 });
 
 describe("AcompanhamentoDoDia", () => {
@@ -132,6 +179,7 @@ describe("AcompanhamentoDoDia", () => {
     const html = renderToStaticMarkup(<AcompanhamentoDoDia painel={painel} />);
 
     expect(html).toContain("17 dias para a prova");
+    expect(html).toContain("Data da prova");
     expect(html).toContain("Sua semana até aqui");
     expect(html).toContain("Tendência: Subindo");
     expect(html).toContain("Concordância verbal");
@@ -163,8 +211,32 @@ describe("AcompanhamentoDoDia", () => {
     );
 
     expect(html).toContain("Data da prova ainda não definida");
+    expect(html).toContain("Data da prova");
+    expect(html).not.toContain("Contagem da prova");
+    expect(html).toContain("painel-calendario-flutua");
+    expect(html).toContain("5s ease-in-out infinite");
+    expect(html).toContain("prefers-reduced-motion: reduce");
     expect(html).not.toContain("Erros que merecem outra chance");
     expect(html).toContain("Sua semana até aqui");
+
+    const comData = renderToStaticMarkup(<AcompanhamentoDoDia painel={painel} />);
+    expect(comData).toContain("Data da prova");
+    expect(comData).not.toContain("painel-calendario-flutua");
+  });
+
+  it("esconde a etiqueta de tendência quando ainda não há base", () => {
+    const html = renderToStaticMarkup(
+      <AcompanhamentoDoDia
+        painel={{
+          ...painel,
+          relatorioSemanal: { ...painel.relatorioSemanal!, tendencia: "sem_base" },
+        }}
+      />,
+    );
+
+    expect(html).toContain("Sua semana até aqui");
+    expect(html).not.toContain("Tendência:");
+    expect(html).not.toContain("Sem base");
   });
 
   it("avisa quando o acompanhamento não pôde ser lido", () => {

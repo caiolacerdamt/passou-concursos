@@ -17,6 +17,13 @@ const DESCRICOES: Record<BlocoDoPlano["tipo"], string> = {
   simulado: "Uma prova curta para medir seu ritmo.",
 };
 
+const ESTILO_DO_TIPO: Record<BlocoDoPlano["tipo"], string> = {
+  revisar: "border-conquista/30 bg-conquista-fundo text-conquista",
+  avancar: "border-marca/25 bg-marca-suave text-marca",
+  treinar: "border-evolucao/30 bg-fundo-suave text-evolucao",
+  simulado: "border-linha bg-fundo-suave text-suave",
+};
+
 export type SuperficieDoPlano = "hoje" | "plano";
 
 type Props = {
@@ -113,7 +120,7 @@ export function PlanoTela({
       />
 
       <section
-        className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]"
+        className="grid gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-stretch"
         aria-label="Níveis do plano"
       >
         <NivelDoPlano
@@ -256,12 +263,12 @@ function NivelDoPlano({
   return (
     <div
       id={nivel === "piso" ? "nivel-minimo" : undefined}
-      className={`rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5 ${
+      className={`flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5 ${
         nivel === "piso" ? "scroll-mt-24" : ""
       }`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
           <p
             className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${
               nivel === "piso" ? "text-evolucao" : "text-marca-apoio"
@@ -284,7 +291,7 @@ function NivelDoPlano({
             aria-label={`Blocos do ${titulo.toLowerCase()}`}
           >
             {blocos.map((bloco) => (
-              <li key={bloco.id}>
+              <li key={bloco.id} className="min-w-0">
                 <BlocoCard
                   bloco={bloco}
                   compacto={compacto}
@@ -330,38 +337,25 @@ function BlocoCard({
   const conclusao = bloco.conclusao;
   const nome = nomeDoBloco(bloco, rotulosDosTopicos);
   const nQuestoes = numero(bloco.nQuestoes);
+  const estiloDoTipo = ESTILO_DO_TIPO[bloco.tipo];
+  const rotuloDoTipo = emFoco && conclusao === null ? `Em foco · ${TITULOS[bloco.tipo]}` : TITULOS[bloco.tipo];
 
   return (
-    <div
-      className={`flex h-full flex-col rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
+    <article
+      data-tipo={bloco.tipo}
+      className={`flex h-full min-w-0 flex-col rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
         compacto ? "px-4 py-3.5" : "p-4"
       }`}
     >
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <span
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.6875rem] font-semibold ${
-            conclusao
-              ? "bg-ok/15 text-ok"
-              : emFoco
-                ? "bg-marca-suave text-marca"
-                : "bg-fundo-suave text-suave"
-          }`}
+          aria-label={`Tipo de estudo: ${rotuloDoTipo}`}
+          className={`inline-flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[0.6875rem] font-semibold ${estiloDoTipo}`}
         >
-          {conclusao ? (
-            <svg
-              viewBox="0 0 24 24"
-              className="size-3"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m5 12.5 4.5 4.5L19 7" />
-            </svg>
-          ) : null}
-          {conclusao ? "Concluído" : emFoco ? `Em foco · ${TITULOS[bloco.tipo]}` : TITULOS[bloco.tipo]}
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-painel/70" aria-hidden="true">
+            <IconeDoTipo tipo={bloco.tipo} />
+          </span>
+          <span className="truncate">{rotuloDoTipo}</span>
         </span>
         <span className="shrink-0 font-utilitaria text-xs text-suave">
           {numero(bloco.minutosEstimados)} min
@@ -380,12 +374,27 @@ function BlocoCard({
 
       {conclusao ? (
         <>
-          <p className="mt-3.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
+          <p className="mt-3.5 inline-flex items-center gap-1.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
+            <svg
+              viewBox="0 0 24 24"
+              className="size-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7" />
+            </svg>
+            <span className="sr-only">Status: </span>
+            <span>Concluído</span>
+            <span aria-hidden="true">·</span>
             {conclusao.nQuestoes} questões · {conclusao.nAcertos} acertos
           </p>
           <Link
             href={`/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`}
-            className="mt-auto inline-flex min-h-10 items-center self-start rounded-full border border-marca/30 px-4 py-2.5 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel"
+            className="mt-auto inline-flex min-h-10 items-center self-start rounded-full border border-marca/30 px-4 py-2.5 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
           >
             Ver resumo
           </Link>
@@ -397,12 +406,49 @@ function BlocoCard({
             emFoco
               ? "bg-marca text-painel hover:bg-marca-apoio"
               : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
-          }`}
+          } focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca`}
         >
           {emFoco ? "Continuar" : "Começar"}
         </Link>
       )}
-    </div>
+    </article>
+  );
+}
+
+function IconeDoTipo({ tipo }: { tipo: BlocoDoPlano["tipo"] }) {
+  if (tipo === "revisar") {
+    return (
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 11a8 8 0 1 0-2.35 5.65" />
+        <path d="M20 4v7h-7" />
+      </svg>
+    );
+  }
+
+  if (tipo === "avancar") {
+    return (
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+        <path d="M4 5.5v15M8 7h8M8 11h6" />
+      </svg>
+    );
+  }
+
+  if (tipo === "treinar") {
+    return (
+      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="2.5" />
+        <path d="M12 4V2.5M12 21.5V20M4 12H2.5M21.5 12H20" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h3" />
+    </svg>
   );
 }
 

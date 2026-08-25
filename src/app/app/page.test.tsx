@@ -121,6 +121,7 @@ describe("/app", () => {
     expect(dependencias.plano).toHaveBeenCalledTimes(1);
     expect(html).toContain("MÍNIMO");
     expect(html).toContain("META");
+    expect(html).toContain("lg:items-end");
     expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
     expect(html).toContain("Assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem.");
     expect(html).not.toContain("A revisão vence hoje.");

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { CATALOGO_DE_CONQUISTAS, type DadosGamificacao } from "./gamificacao";
 import type { PainelDoDia } from "./painel-do-dia";
-import { GamificacaoNoProgresso, PainelDoDiaTela } from "./painel-do-dia-tela";
+import { AcompanhamentoDoDia, CartaoDoDia, GamificacaoNoProgresso } from "./painel-do-dia-tela";
 
 function dimensao(progresso: number, meta: number) {
   return {
@@ -65,6 +65,15 @@ const painel: PainelDoDia = {
     topicosTocados: 3,
     revisoesConcluidas: 2,
     tendencia: "subindo",
+    porDia: [
+      { data: "2026-08-18", questoes: 0, acertos: 0 },
+      { data: "2026-08-19", questoes: 2, acertos: 2 },
+      { data: "2026-08-20", questoes: 3, acertos: 2 },
+      { data: "2026-08-21", questoes: 0, acertos: 0 },
+      { data: "2026-08-22", questoes: 4, acertos: 3 },
+      { data: "2026-08-23", questoes: 1, acertos: 0 },
+      { data: "2026-08-24", questoes: 2, acertos: 2 },
+    ],
   },
   recuperacao: [
     {
@@ -78,15 +87,51 @@ const painel: PainelDoDia = {
   acompanhamentoIndisponivel: false,
 };
 
-describe("PainelDoDiaTela", () => {
-  it("mostra contagem da prova, anel, semana e atalho de recuperação", () => {
-    const html = renderToStaticMarkup(<PainelDoDiaTela painel={painel} />);
+describe("CartaoDoDia", () => {
+  it("lê o dia em andamento a partir do anel e da missão", () => {
+    const html = renderToStaticMarkup(<CartaoDoDia dados={gamificacao} />);
+
+    expect(html).toContain("Você está no meio do dia");
+    expect(html).toContain("Concluir o essencial de hoje");
+    expect(html).toContain("Em andamento");
+    expect(html).toContain("4 dias de sequência");
+    expect(html).toContain("1/2");
+    expect(html).toContain("10/10");
+  });
+
+  it("chama de pendente o dia sem nenhum progresso no anel", () => {
+    const html = renderToStaticMarkup(
+      <CartaoDoDia
+        dados={{
+          ...gamificacao,
+          anel: { estudo: dimensao(0, 2), questoes: dimensao(0, 10), revisao: dimensao(0, 1) },
+          missao: { ...gamificacao.missao!, progresso: 0, progressoBruto: 0, estado: "pendente" },
+        }}
+      />,
+    );
+
+    expect(html).toContain("O dia ainda não começou");
+    expect(html).toContain("Pendente");
+    expect(html).not.toContain("Você está no meio do dia");
+  });
+
+  it("fecha o cartão quando a missão do dia foi concluída", () => {
+    const html = renderToStaticMarkup(
+      <CartaoDoDia
+        dados={{ ...gamificacao, missao: { ...gamificacao.missao!, progresso: 2, estado: "concluida" } }}
+      />,
+    );
+
+    expect(html).toContain("Dia cumprido");
+    expect(html).toContain("Concluída");
+  });
+});
+
+describe("AcompanhamentoDoDia", () => {
+  it("mostra contagem da prova, semana e atalho de recuperação", () => {
+    const html = renderToStaticMarkup(<AcompanhamentoDoDia painel={painel} />);
 
     expect(html).toContain("17 dias para a prova");
-    expect(html).toContain("Anel de hoje");
-    expect(html).toContain("30 pontos hoje");
-    expect(html).toContain("Concluir o essencial de hoje");
-    expect(html).toContain("4 dias de sequência");
     expect(html).toContain("Sua semana até aqui");
     expect(html).toContain("Tendência: Subindo");
     expect(html).toContain("Concordância verbal");
@@ -97,27 +142,34 @@ describe("PainelDoDiaTela", () => {
     expect(html).toContain("/app/progresso");
   });
 
-  it("cala a contagem quando não há data e não mostra gamificação desligada", () => {
+  it("desenha uma coluna por dia da janela de sete", () => {
+    const html = renderToStaticMarkup(<AcompanhamentoDoDia painel={painel} />);
+
+    // Sete colunas, e o dia sem questão continua sendo coluna — não buraco.
+    expect(html).toContain("grid-cols-7");
+    expect(html.split('style="height:').length - 1).toBe(7);
+    expect(html).toContain("–");
+  });
+
+  it("cala a contagem quando não há data e omite recuperação vazia", () => {
     const html = renderToStaticMarkup(
-      <PainelDoDiaTela
+      <AcompanhamentoDoDia
         painel={{
           ...painel,
           contagem: { dataProva: null, dias: null, estado: "indefinida" },
-          gamificacao: null,
           recuperacao: [],
         }}
       />,
     );
 
     expect(html).toContain("Data da prova ainda não definida");
-    expect(html).not.toContain("Anel de hoje");
     expect(html).not.toContain("Erros que merecem outra chance");
     expect(html).toContain("Sua semana até aqui");
   });
 
   it("avisa quando o acompanhamento não pôde ser lido", () => {
     const html = renderToStaticMarkup(
-      <PainelDoDiaTela
+      <AcompanhamentoDoDia
         painel={{
           ...painel,
           relatorioSemanal: null,
@@ -133,15 +185,15 @@ describe("PainelDoDiaTela", () => {
 
   it("trata prova de hoje e prova passada sem número negativo na tela", () => {
     const hoje = renderToStaticMarkup(
-      <PainelDoDiaTela painel={{ ...painel, contagem: { dataProva: "2026-08-24", dias: 0, estado: "hoje" } }} />,
+      <AcompanhamentoDoDia painel={{ ...painel, contagem: { dataProva: "2026-08-24", dias: 0, estado: "hoje" } }} />,
     );
     const passada = renderToStaticMarkup(
-      <PainelDoDiaTela painel={{ ...painel, contagem: { dataProva: "2026-08-20", dias: -4, estado: "passada" } }} />,
+      <AcompanhamentoDoDia painel={{ ...painel, contagem: { dataProva: "2026-08-20", dias: -4, estado: "passada" } }} />,
     );
 
     expect(hoje).toContain("A prova é hoje");
     expect(passada).toContain("A data da prova já passou");
-    expect(passada).not.toContain("-4 dias");
+    expect(passada).not.toContain("-4 dia");
   });
 });
 

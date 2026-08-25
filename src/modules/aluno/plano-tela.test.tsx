@@ -51,6 +51,12 @@ describe("PlanoTela", () => {
     expect(html).toContain("Estudo de hoje");
     expect(html).not.toContain("Comece pelo essencial.");
     expect(html).toContain("Revisar");
+    expect(html).toContain('data-tipo="revisar"');
+    expect(html).toContain('data-tipo="avancar"');
+    expect(html).toContain('aria-label="Tipo de estudo: Em foco · Revisar"');
+    expect(html).toContain('aria-label="Tipo de estudo: Aprender"');
+    expect(html).toContain("bg-conquista-fundo text-conquista");
+    expect(html).toContain("bg-marca-suave text-marca");
     expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
     expect(html).not.toContain("A revisão vence hoje.");
     expect(html).not.toContain("TEXTO CRU DO BANCO");
@@ -149,6 +155,7 @@ describe("PlanoTela", () => {
     expect(html).toContain("O mínimo para contar sua ofensiva de hoje");
     expect(html).toContain("META");
     expect(html).toContain("Estudo completo do dia");
+    expect(html).toContain("lg:items-stretch");
     expect(html).toContain('id="nivel-minimo"');
     expect(html).toContain("scroll-mt-24");
     expect(html).not.toContain("Piso");

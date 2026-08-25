@@ -146,8 +146,8 @@ function CabecalhoDoPainel({
   }[estado];
 
   return (
-    <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-start">
-      <div className="lg:pt-1.5">
+    <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-end">
+      <div className="min-w-0 lg:pt-1.5">
         <p className="font-utilitaria text-xs font-semibold uppercase tracking-[0.16em] text-marca-apoio">
           Área do aluno
         </p>

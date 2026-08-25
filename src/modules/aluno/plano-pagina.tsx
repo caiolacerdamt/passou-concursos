@@ -5,6 +5,7 @@ import { consultarRotulosDosTopicos, type RotuloDoTopico } from "./plano-rotulos
 import type { DadosGamificacao } from "./gamificacao";
 import { consultarPainelDoDia, type PainelDoDia } from "./painel-do-dia";
 import { AcompanhamentoDoDia, CartaoDoDia } from "./painel-do-dia-tela";
+import { Ofensiva } from "./ofensiva-tela";
 import { OnboardingTela } from "./onboarding-tela";
 import {
   PlanoTela,
@@ -138,7 +139,7 @@ function CabecalhoDoPainel({
   superficie: SuperficieDoPlano;
   gamificacao?: DadosGamificacao | null;
 }) {
-  const nomeDaTela = superficie === "plano" ? "Seu plano de estudo" : "Hoje, um passo de cada vez";
+  const nomeDaTela = superficie === "plano" ? "Seu plano de estudo" : "O que estudar hoje";
   const detalhes = {
     onboarding: "Configure seu ponto de partida para receber um plano compatível com a sua rotina.",
     preparando: "Seu perfil está salvo. A geração do plano acontece sem depender de uma resposta da IA.",
@@ -154,15 +155,16 @@ function CabecalhoDoPainel({
   return (
     <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-start">
       <div className="lg:pt-1.5">
-        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+        <p className="font-utilitaria text-xs font-semibold uppercase tracking-[0.16em] text-marca-apoio">
           Área do aluno
         </p>
         <h1 className="mt-3.5 max-w-[15ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]">
           {nomeDaTela}
         </h1>
         <p className="mt-3.5 max-w-[44ch] text-[1.0625rem] leading-relaxed text-suave">
-          O que importa para hoje aparece aqui, em um só lugar.
+          Estudo, revisão, questões, tudo em um só lugar planejado
         </p>
+        {gamificacao?.sequencia ? <Ofensiva sequencia={gamificacao.sequencia} /> : null}
       </div>
 
       {gamificacao ? (

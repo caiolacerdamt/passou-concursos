@@ -103,6 +103,19 @@ export const ITENS_DE_ACOMPANHAMENTO: ItemDaNavegacao[] = [
 
 export const ITENS_DE_CONTA: ItemDaNavegacao[] = [
   {
+    href: "/app/preferencias",
+    nome: "Preferências de estudo",
+    descricao: "Tempo, dias e nível",
+    icone: (
+      <Traco>
+        <path d="M5 6.5h4m4 0h6M5 12h7m4 0h3M5 17.5h2m4 0h8" />
+        <circle cx="11" cy="6.5" r="2" />
+        <circle cx="13" cy="12" r="2" />
+        <circle cx="8" cy="17.5" r="2" />
+      </Traco>
+    ),
+  },
+  {
     href: "/app/conta",
     nome: "Conta",
     descricao: "Privacidade e acesso",

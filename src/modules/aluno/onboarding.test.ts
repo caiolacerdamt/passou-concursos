@@ -50,6 +50,12 @@ describe("validarOnboarding", () => {
     recusa("minutos_invalidos", { ...entradaValida(), minutosPorDia: "30.5" });
     recusa("minutos_invalidos", { ...entradaValida(), minutosPorDia: "1441" });
   });
+
+  it("aceita o domingo e o sábado como limites da agenda", () => {
+    expect(
+      validarOnboarding({ ...entradaValida(), diasEstudo: ["0", "6"] }).diasEstudo,
+    ).toEqual([0, 6]);
+  });
 });
 
 describe("consultarPerfilEstudo", () => {

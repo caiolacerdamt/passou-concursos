@@ -34,10 +34,12 @@ describe("AppShell", () => {
     expect(html).toContain('href="/app/raio-x"');
     expect(html).toContain('href="/app/sessao"');
     expect(html).toContain('href="/app/progresso"');
+    expect(html).toContain('href="/app/preferencias"');
     expect(html).toContain('href="/app/conta"');
     expect(html).toContain('href="/app/reembolso"');
     expect(html).toContain("Hoje");
     expect(html).toContain("Questões e revisões");
+    expect(html).toContain("Preferências de estudo");
     expect(html).toContain("Sair da conta");
   });
 
@@ -70,6 +72,7 @@ describe("AppShell", () => {
     const html = await renderizar();
 
     expect(html).toContain('href="/app/conta"');
+    expect(html).toContain('href="/app/preferencias"');
     expect(html).toContain('href="/app/reembolso"');
     expect(html).toContain("Sair da conta");
   });

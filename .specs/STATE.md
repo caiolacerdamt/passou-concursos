@@ -493,33 +493,71 @@
 - **Date**: 2026-08-25
 - **Status**: active
 
+### AD-111
+- **Decision**: **Rodada de design do app (`/app`)** — a que o `DESIGN.md` deixou marcada quando a
+  rodada 1 cobriu só a landing. Três mudanças de fundo. **(a) O breu entra no app.** Os tokens
+  `--color-breu-*` deixam de ser exclusivos da landing e passam a valer em `/app/*` sob a MESMA regra
+  de racionamento que os governa lá: a barra de navegação (que é chrome, não conteúdo) e **um** cartão
+  de conteúdo por tela — o próximo bloco do dia. Nenhum terceiro. Isto **não** é tema escuro, que
+  continua fora do escopo. **(b) Duas linhas do `DESIGN.md` caem, com critério**: "sem hero card dentro
+  do app" e "app: 14–32px, sem display". O cartão do próximo bloco é cartão-herói e o título dele é
+  36px. Só ele — o resto do painel fica dentro da régua antiga. **(c) A ordem da superfície Hoje passa
+  a ser**: cabeçalho + cartão do dia (no lugar da caixa "Estado atual") → estudo de hoje → últimos 7
+  dias com a contagem da prova ao lado → recuperar erro. Some o grid de quatro cartões de métrica do
+  plano, que era exatamente o "grid automático de 3–4 cards de métrica" que o anti-slop proíbe; o
+  resumo vira uma linha com uma barra de progresso só.
+- **Reason**: A landing e o app pareciam dois produtos. Compartilhar a paleta de neutros não bastou:
+  o que dá caráter à landing é a escala tipográfica, o rótulo mono e o racionamento do escuro, e nada
+  disso existia do outro lado do login. A régua "sem hero card" foi escrita para impedir decoração,
+  não para impedir hierarquia — e a superfície Hoje tem exatamente um item que merece hierarquia, que é
+  o próximo bloco. A caixa "Estado atual" dizia o estado do *sistema* ("Plano de hoje disponível"), não
+  o do aluno; o cartão do dia responde a pergunta que ele traz ao abrir a tela.
+- **Trade-off**: O app ganha uma superfície escura para manter em duas paletas — toda cor nova no
+  cartão do próximo bloco precisa de par no breu, e um contribuidor distraído pode pintar um terceiro
+  bloco de escuro e furar o racionamento sem que nada quebre. A barra colapsável introduz o primeiro
+  componente cliente do shell (estado + cookie), então `AppShell` virou assíncrono e o teste dele passa
+  a precisar de `next/headers` mockado.
+- **Scope**: `src/modules/ui/{app-shell,barra-lateral,barra-do-celular,navegacao}.tsx`,
+  `src/modules/aluno/{plano-pagina,plano-tela,painel-do-dia-tela,progresso}.*`,
+  `src/app/globals.css`, `DESIGN.md`.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-112
+- **Decision**: `RelatorioSemanal` ganha `porDia`: sete posições, do mais antigo ao dia de hoje, cada
+  uma com `data` (calendário do produto), `questoes` e `acertos`. Sai da **mesma lista de tentativas**
+  que já alimenta o total — nenhuma consulta nova, nenhum número estimado. Dia sem tentativa é `0`, e a
+  tela desenha coluna de altura mínima em vez de buraco.
+- **Reason**: A leitura semanal do painel mostra os sete dias lado a lado e um agregado não sustenta
+  essa coluna. A alternativa era desenhar o gráfico sem dado atrás, o que é inventar número — proibido.
+  As chaves saem de `dataHojeDoProduto` e não de UTC: uma tentativa das 22h de Brasília cairia no dia
+  seguinte e a coluna de hoje apareceria vazia com o aluno tendo estudado.
+- **Trade-off**: O contrato de `RelatorioSemanal` fica maior e toda fixture de teste que o monta passa
+  a precisar das sete posições.
+- **Scope**: `src/modules/aluno/progresso.ts` e as telas que leem o relatório.
+- **Date**: 2026-08-25
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Rodada de copy da landing pedida pelo dono (AD-110), depois da rodada de design
-  (AD-109). Ajuste de superfície, fora da numeração de specs.
-- **Phase / Task**: concluído. Sem ritual de spec.
-- **Completed**: barra com link "Entrar" (`/entrar`) que faltava e CTA "Começar"; herói com headline,
-  sub e CTA novos, rótulo de prova removido do topo e a contagem de provas movida para a linha de
-  confiança sob o CTA; seção 2 com as três falas reescritas e os rótulos acima de cada uma removidos,
-  mais um multiplicador calculado (nunca escrito à mão, AD-108) entre o maior e o menor tópico; seção 3
-  com rótulo e título novos; seção 5 com título e os três cartões reescritos em tom positivo; seção 6
-  reduzida a um cartão só (tirou "ainda não", ver AD-110) sob o título "O que você recebe quando
-  assina"; fecho com headline e sub novos, tirando "Esta página não promete aprovação" como manchete.
-- **Gates**: `tsc --noEmit` limpo, `eslint src/modules/ui/landing src/app/(landing)` sem erro,
-  `vitest --project unit` 837/837 (suíte inteira, não só a rota).
-- **External checks**: nenhuma migration, nenhuma geração de arte nova — as ilustrações da AD-106/109
-  não mudaram.
-- **In-progress** (file:line): captura de scroll (desktop/390px/`prefers-reduced-motion`) da copy nova
-  **não feita** nesta rodada — a rodada anterior (AD-109) já tinha validado o motor e o layout; esta
-  rodada só trocou texto e removeu um cartão do grid `auto-fit`, sem tocar `data-sc-*` nem CSS de
-  animação.
-- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
-- **Blockers**: nenhum. O rótulo longo encostando no número no celular **foi corrigido** (teto de 20
-  caracteres abaixo de 900px), herdado da AD-109. Continua **não feita** a verificação em aparelho real
-  (iPhone) — Chrome headless não reproduz decodificador, autoplay nem toque.
-- **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
-  `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
-- **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,
-  `.github/agents/`, `.github/hooks/`, `.github/skills/`) e os PNG de referência na raiz
-  (`mm-*.png`, `neuro-*.png`, `v-hero.png`); não alterar nem incluir.
-- **Branch**: `feat/landing-porte-scrollcraft`.
+- **Feature**: Rodada de design do app (`/app`), pedida pelo dono (AD-111/AD-112) — a rodada própria
+  que o `DESIGN.md` já previa. Ajuste de superfície, fora da numeração de specs, sem ritual.
+- **Phase / Task**: concluído nesta rodada apenas a **superfície Hoje** (`/app`). As demais telas de
+  `/app/*` herdaram a barra nova com o conteúdo antigo dentro — combinado com o dono, ficam para a
+  próxima sessão.
+- **Completed**: barra lateral em breu com ícones SVG próprios (`navegacao.tsx`), colapsável com a
+  preferência em cookie lido no servidor (sem piscada), conta e reembolso no pé; rail flutuante quando
+  fechada, com o nome aparecendo por item no hover e no foco; barra do celular em duas peças (pílula
+  inferior para estudo, topo para conta/reembolso/sair); cabeçalho com o cartão do dia no lugar de
+  "Estado atual", em três estados (pendente / em andamento / cumprido); estudo de hoje com o próximo
+  bloco em breu; últimos 7 dias com as sete colunas reais e a contagem da prova ao lado; `porDia` no
+  `RelatorioSemanal`. O `<h1>` duplicado (cabeçalho + `PlanoTela`) virou um só.
+- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/ui`, `src/modules/aluno` e
+  `src/app/app`, `vitest --project unit` 843/843, `next build` exit 0 (as 15 rotas compilam).
+- **External checks**: nenhuma migration. `test:db` não rodado — a rodada não toca schema nem RPC.
+- **In-progress** (file:line): **verificação visual de `/app` não feita** — a rota exige matrícula
+  ativa e o agente não faz login. O que cobre a fronteira cliente/servidor é o `next build` e os
+  quatro testes de `app-shell.test.tsx`, incluindo o que prova que o estado da barra vem do servidor.
+  Falta olho humano em: hover do rail, `prefers-reduced-motion`, e a barra do celular a 390px.
+- **Next step**: as demais telas de `/app/*` (Plano, Raio-X, Sessão, Progresso, Conta, Reembolso), ou
+  seguir a `.specs/ROADMAP.md` a partir da SPEC 16.

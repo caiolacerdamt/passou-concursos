@@ -14,11 +14,12 @@ O erro caro seria tratar tudo como um sistema só. Não é.
 | --- | --- | --- |
 | Modo | **Persuade** — o visitante decide e compra | **Operate** — o aluno executa uma tarefa |
 | Referência | MindMarket / Duolingo: editorial, ilustrado, quente | Precision SaaS: denso, quieto, previsível |
-| Escala tipográfica | display gigante (72–128px) | 14–32px, sem display |
+| Escala tipográfica | display gigante (72–128px) | 14–32px, sem display — **uma exceção**, abaixo |
 | Ilustração | protagonista | nenhuma |
 | Movimento | GSAP, scroll-linked | transição de estado, 150–200ms |
 | Raio | generoso (24–40px em cards, pill em botão) | contido (8–14px) |
 | Cor | verde vivo pode pintar superfície | verde **só** indica ação, seleção, progresso e estado |
+| Breu | duas das sete seções | barra de navegação + **um** cartão por tela (AD-111) |
 
 **O que as duas compartilham:** a paleta de neutros, os tokens semânticos de estado, a família
 tipográfica (Geist) e a régua de acessibilidade. É isso que impede o produto de parecer dois
@@ -135,7 +136,9 @@ O redesign muda a forma. Não muda estes:
 
 Herdada do briefing e mantida como gate de revisão:
 
-sem hero card dentro do app · sem grid automático de 3–4 cards de métrica · nem todo agrupamento é
+sem hero card dentro do app (**exceção única, AD-111:** o cartão do próximo bloco em `/app` — é
+cartão-herói, título de 36px e fundo breu; é um por tela, e um segundo é bug) · sem grid automático de
+3–4 cards de métrica · nem todo agrupamento é
 card · raio não é igual em tudo · sombra não é em toda superfície · eyebrow label não é em toda
 seção · sem ícone decorativo nem badge sem função · sem bento grid automático · sem texto genérico
 de demo · prioriza tipografia, espaço, alinhamento, divisor, lista, row e tabela · cor com

@@ -570,6 +570,226 @@
     "ativo": true
   },
   {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Arranjos de pagamento",
+    "titulo": "Banco Central — arranjos e instituições de pagamento",
+    "url": "https://www.bcb.gov.br/estabilidadefinanceira/arranjospagamento",
+    "tipo": "artigo",
+    "duracaoMinutos": 25,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Bancos digitais",
+    "titulo": "Wikipédia — banco digital",
+    "url": "https://pt.wikipedia.org/wiki/Banco_digital",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "Correspondentes bancários",
+    "titulo": "Banco Central — correspondentes no País",
+    "url": "https://www.bcb.gov.br/estabilidadefinanceira/correspondentes",
+    "tipo": "artigo",
+    "duracaoMinutos": 25,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Atualidades do Mercado Financeiro",
+    "topico": "PIX",
+    "titulo": "Banco Central — Pix",
+    "url": "https://www.bcb.gov.br/estabilidadefinanceira/pix",
+    "tipo": "artigo",
+    "duracaoMinutos": 25,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Anticorrupção",
+    "titulo": "Lei 12.846/2013 — Lei Anticorrupção",
+    "url": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/lei/l12846.htm",
+    "tipo": "artigo",
+    "duracaoMinutos": 30,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Autorregulação",
+    "titulo": "FEBRABAN — portal da federação dos bancos e da autorregulação bancária",
+    "url": "https://portal.febraban.org.br/",
+    "tipo": "artigo",
+    "duracaoMinutos": 25,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Orçamento e dívida pública",
+    "titulo": "Tesouro Nacional — Tesouro Transparente",
+    "url": "https://www.tesourotransparente.gov.br/",
+    "tipo": "artigo",
+    "duracaoMinutos": 25,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos Bancários",
+    "topico": "Sigilo bancário",
+    "titulo": "Lei Complementar 105/2001 — sigilo das operações financeiras",
+    "url": "https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp105.htm",
+    "tipo": "artigo",
+    "duracaoMinutos": 30,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos de Informática",
+    "topico": "EAD",
+    "titulo": "Wikipédia — educação a distância",
+    "url": "https://pt.wikipedia.org/wiki/Educa%C3%A7%C3%A3o_a_dist%C3%A2ncia",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Ferramentas de trabalho remoto",
+    "titulo": "Wikipédia — teletrabalho",
+    "url": "https://pt.wikipedia.org/wiki/Teletrabalho",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Conhecimentos de Informática",
+    "topico": "Redes sociais",
+    "titulo": "Wikipédia — rede social",
+    "url": "https://pt.wikipedia.org/wiki/Rede_social",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Língua Portuguesa",
+    "topico": "Pontuação",
+    "titulo": "Wikipédia — pontuação",
+    "url": "https://pt.wikipedia.org/wiki/Pontua%C3%A7%C3%A3o",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Língua Portuguesa",
+    "topico": "Regência",
+    "titulo": "Wikipédia — regência verbal",
+    "url": "https://pt.wikipedia.org/wiki/Reg%C3%AAncia_verbal",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Matemática",
+    "topico": "Medidas",
+    "titulo": "Wikipédia — Sistema Internacional de Unidades",
+    "url": "https://pt.wikipedia.org/wiki/Sistema_Internacional_de_Unidades",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Matemática",
+    "topico": "Números",
+    "titulo": "Wikipédia — número",
+    "url": "https://pt.wikipedia.org/wiki/N%C3%BAmero",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Matemática Financeira",
+    "topico": "Equivalência de capitais",
+    "titulo": "Wikipédia — desconto",
+    "url": "https://pt.wikipedia.org/wiki/Desconto",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Matemática Financeira",
+    "topico": "Valor do dinheiro",
+    "titulo": "Wikipédia — matemática financeira",
+    "url": "https://pt.wikipedia.org/wiki/Matem%C3%A1tica_financeira",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Vendas e Negociação",
+    "topico": "Comportamento do consumidor",
+    "titulo": "Wikipédia — comportamento do consumidor",
+    "url": "https://pt.wikipedia.org/wiki/Comportamento_do_consumidor",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Vendas e Negociação",
+    "topico": "Estratégia",
+    "titulo": "Wikipédia — planejamento estratégico",
+    "url": "https://pt.wikipedia.org/wiki/Planejamento_estrat%C3%A9gico",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Vendas e Negociação",
+    "topico": "Ética em vendas",
+    "titulo": "Wikipédia — ética empresarial",
+    "url": "https://pt.wikipedia.org/wiki/%C3%89tica_empresarial",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Vendas e Negociação",
+    "topico": "Ouvidoria",
+    "titulo": "Wikipédia — ouvidoria",
+    "url": "https://pt.wikipedia.org/wiki/Ouvidoria",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
+    "materia": "Vendas e Negociação",
+    "topico": "Res. CMN 4.949/2021",
+    "titulo": "Banco Central — Resolução CMN 4.949/2021, relacionamento com clientes e usuários",
+    "url": "https://www.bcb.gov.br/estabilidadefinanceira/exibenormativo?tipo=Resolu%C3%A7%C3%A3o%20CMN&numero=4949",
+    "tipo": "artigo",
+    "duracaoMinutos": 20,
+    "ordem": 1,
+    "ativo": true
+  },
+  {
     "materia": "Cultura e Comportamento Digital",
     "topico": "Geral",
     "titulo": "Governo Digital — transformação digital de serviços",

@@ -1,30 +1,25 @@
 import Link from "next/link";
 
-import {
-  adiarBloco,
-  escolherVersaoCurta,
-  reordenarBlocosPendentes,
-} from "@/app/app/plano/acoes";
-
 import type { BlocoDoPlano, NivelDoPlano, PlanoDoDia } from "./plano";
 import { nomeDoRotuloDoTopico, type RotuloDoTopico } from "./rotulo-do-topico";
 
 const TITULOS: Record<BlocoDoPlano["tipo"], string> = {
   revisar: "Revisar",
-  avancar: "Avançar",
-  treinar: "Treinar",
+  avancar: "Aprender",
+  treinar: "Praticar",
   simulado: "Simulado",
 };
 
 const DESCRICOES: Record<BlocoDoPlano["tipo"], string> = {
-  revisar: "Revisão de um assunto que já entrou na sua memória.",
-  avancar: "Um assunto novo para aumentar seu domínio.",
-  treinar: "Questões misturadas para testar se o conhecimento se sustenta.",
+  revisar: "Assunto que já está na sua memória e venceu a data de revisão.",
+  avancar: "Assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem.",
+  treinar: "Assunto que você já viu, para firmar o que ainda não está firme.",
   simulado: "Uma prova curta para medir seu ritmo.",
 };
 
 export type SuperficieDoPlano = "hoje" | "plano";
 
+/** Mantido enquanto plano-pagina.tsx ainda encaminha o resultado legado. */
 export type ResultadoDoPlano = "reordenado" | "adiado" | "curta" | "erro" | null;
 
 type Props = {
@@ -45,7 +40,6 @@ export function PlanoTela({
   plano,
   rotulosDosTopicos = new Map(),
   superficie = "hoje",
-  resultado = null,
 }: Props) {
   const blocos = [...plano.piso, ...plano.metaCheia];
   const usaMetaCheia = plano.metaCheia.length > 0;
@@ -70,14 +64,20 @@ export function PlanoTela({
       */}
       <header className="flex flex-col gap-5 border-b border-linha pb-4.5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
-            {superficie === "plano" ? "Ciclo do edital" : "Estudo de hoje"}
-          </p>
-          <h2 className="mt-3 max-w-[20ch] text-[2.125rem] font-semibold leading-[1.1] tracking-[-0.03em]">
+          {superficie === "plano" ? (
+            <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+              Ciclo do edital
+            </p>
+          ) : null}
+          <h2
+            className={`max-w-[20ch] text-[2.125rem] font-semibold leading-[1.1] tracking-[-0.03em] ${
+              superficie === "plano" ? "mt-3" : "mt-0"
+            }`}
+          >
             {superficie === "plano"
               ? "Seu plano, na ordem que faz sentido."
               : proximoBloco
-                ? "Comece pelo essencial."
+                ? "Estudo de hoje"
                 : "Você fechou o dia."}
           </h2>
         </div>
@@ -97,8 +97,6 @@ export function PlanoTela({
           <p className="mt-2 text-xs text-suave">{escopoDoResumo}</p>
         </div>
       </header>
-
-      {resultado ? <FeedbackDoPlano resultado={resultado} /> : null}
 
       {/*
         A frase do plano é texto, não caixa. Ela já é a única voz em primeira
@@ -124,51 +122,23 @@ export function PlanoTela({
       >
         <NivelDoPlano
           nivel="piso"
-          titulo="Piso"
-          subtitulo="O mínimo que mantém o ritmo"
-          explicacao="Revisões devidas. Cumprir este bloco já protege o que você conquistou."
+          titulo="MÍNIMO"
+          subtitulo="O mínimo para contar sua ofensiva de hoje"
           blocos={plano.piso}
           compacto
-          planoId={plano.id}
           rotulosDosTopicos={rotulosDosTopicos}
-          origem={superficie}
           idEmFoco={proximoBloco?.id ?? null}
         />
         <NivelDoPlano
           nivel="meta_cheia"
-          titulo="Meta cheia"
-          subtitulo="O dia inteiro de estudo"
-          explicacao="Revisar, avançar e treinar dentro do tempo que você declarou."
+          titulo="META"
+          subtitulo="Estudo completo do dia"
           blocos={plano.metaCheia}
-          planoId={plano.id}
           rotulosDosTopicos={rotulosDosTopicos}
-          origem={superficie}
           idEmFoco={proximoBloco?.id ?? null}
         />
       </section>
     </div>
-  );
-}
-
-function FeedbackDoPlano({ resultado }: { resultado: Exclude<ResultadoDoPlano, null> }) {
-  const mensagens: Record<Exclude<ResultadoDoPlano, null>, string> = {
-    reordenado: "A ordem das pendências foi atualizada.",
-    adiado: "Bloco adiado para o próximo dia disponível da sua agenda.",
-    curta: "Versão curta escolhida. O bloco agora cabe em menos tempo.",
-    erro: "Não foi possível atualizar este bloco. Recarregue o plano e tente novamente.",
-  };
-
-  return (
-    <p
-      role={resultado === "erro" ? "alert" : "status"}
-      className={`rounded-xl border px-4 py-3 text-sm leading-6 ${
-        resultado === "erro"
-          ? "border-erro/40 bg-erro-fundo text-erro"
-          : "border-evolucao/40 bg-marca-suave text-texto"
-      }`}
-    >
-      {mensagens[resultado]}
-    </p>
   );
 }
 
@@ -235,7 +205,7 @@ function ProximoBloco({
           {nomeDoBloco(bloco, rotulosDosTopicos)}
         </h3>
         <p className="mt-3.5 max-w-[52ch] leading-relaxed text-breu-suave">
-          {bloco.motivo ?? DESCRICOES[bloco.tipo]}
+          {DESCRICOES[bloco.tipo]}
         </p>
         <p className="mt-5 font-utilitaria text-[0.8125rem] text-breu-suave">
           {numero(bloco.minutosEstimados)} min
@@ -262,22 +232,6 @@ function ProximoBloco({
             <path d="M5 12h13m0 0-4.6-4.6M18 12l-4.6 4.6" />
           </svg>
         </Link>
-        {!versaoCurta(bloco) ? (
-          <form action={escolherVersaoCurta}>
-            <input type="hidden" name="blocoId" value={bloco.id} />
-            <input type="hidden" name="origem" value={rotaDaTela === "/app/plano" ? "plano" : "hoje"} />
-            <button
-              type="submit"
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-breu-linha px-5 text-[0.8125rem] font-semibold text-breu-suave transition-colors duration-150 hover:border-breu-verde hover:text-breu-tinta"
-            >
-              Escolher versão curta
-            </button>
-          </form>
-        ) : (
-          <span className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-breu-verde/40 px-5 text-[0.8125rem] font-semibold text-breu-verde">
-            Versão curta escolhida
-          </span>
-        )}
       </div>
     </section>
   );
@@ -287,30 +241,29 @@ function NivelDoPlano({
   nivel,
   titulo,
   subtitulo,
-  explicacao,
   blocos,
   compacto = false,
-  planoId,
   rotulosDosTopicos,
-  origem,
   idEmFoco,
 }: {
   nivel: NivelDoPlano;
   titulo: string;
   subtitulo: string;
-  explicacao: string;
   blocos: BlocoDoPlano[];
   compacto?: boolean;
-  planoId: string;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
-  origem: SuperficieDoPlano;
   idEmFoco: string | null;
 }) {
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
   const minutos = blocos.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
 
   return (
-    <div className="rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5">
+    <div
+      id={nivel === "piso" ? "nivel-minimo" : undefined}
+      className={`rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5 ${
+        nivel === "piso" ? "scroll-mt-24" : ""
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p
@@ -327,7 +280,6 @@ function NivelDoPlano({
           {pendentes.length > 0 ? ` · ${pendentes.length} pendente${pendentes.length === 1 ? "" : "s"}` : ""}
         </p>
       </div>
-      <p className="mt-2 text-sm leading-6 text-suave">{explicacao}</p>
 
       <div className="mt-5">
         {blocos.length > 0 ? (
@@ -340,11 +292,7 @@ function NivelDoPlano({
                 <BlocoCard
                   bloco={bloco}
                   compacto={compacto}
-                  planoId={planoId}
-                  nivel={nivel}
-                  pendentes={pendentes}
                   rotulosDosTopicos={rotulosDosTopicos}
-                  origem={origem}
                   emFoco={bloco.id === idEmFoco}
                 />
               </li>
@@ -375,32 +323,21 @@ function materiaDoBloco(feito: boolean, emFoco: boolean): string {
 function BlocoCard({
   bloco,
   compacto = false,
-  planoId,
-  nivel,
-  pendentes,
   rotulosDosTopicos,
-  origem,
   emFoco,
 }: {
   bloco: BlocoDoPlano;
   compacto?: boolean;
-  planoId: string;
-  nivel: NivelDoPlano;
-  pendentes: BlocoDoPlano[];
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
-  origem: SuperficieDoPlano;
   emFoco: boolean;
 }) {
   const conclusao = bloco.conclusao;
-  const pendente = conclusao === null;
-  const curta = versaoCurta(bloco);
-  const indicePendente = pendentes.findIndex((pendenteDoPlano) => pendenteDoPlano.id === bloco.id);
-  const podeSubir = pendente && indicePendente > 0;
-  const podeDescer = pendente && indicePendente >= 0 && indicePendente < pendentes.length - 1;
+  const nome = nomeDoBloco(bloco, rotulosDosTopicos);
+  const nQuestoes = numero(bloco.nQuestoes);
 
   return (
     <div
-      className={`h-full rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
+      className={`flex h-full flex-col rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
         compacto ? "px-4 py-3.5" : "p-4"
       }`}
     >
@@ -436,137 +373,35 @@ function BlocoCard({
       </div>
 
       <h4 className="mt-2.5 font-semibold tracking-[-0.015em]">
-        {nomeDoBloco(bloco, rotulosDosTopicos)}
+        {nome}
       </h4>
-      <p className="mt-1.5 text-[0.8125rem] leading-6 text-suave">
-        {bloco.motivo ?? DESCRICOES[bloco.tipo]}
+      <p className="mt-1.5 font-utilitaria text-xs text-suave">
+        {numero(bloco.minutosEstimados)} min · {nQuestoes} {nQuestoes === 1 ? "questão" : "questões"}
       </p>
 
       {conclusao ? (
         <>
-          <p className="mt-2.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
+          <p className="mt-3.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
             {conclusao.nQuestoes} questões · {conclusao.nAcertos} acertos
           </p>
           <Link
             href={`/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`}
-            className="mt-3.5 inline-flex min-h-10 items-center rounded-full border border-marca/30 px-4 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel"
+            className="mt-auto inline-flex min-h-10 items-center self-start rounded-full border border-marca/30 px-4 py-2.5 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel"
           >
             Ver resumo
           </Link>
         </>
       ) : (
-        <>
-          {/*
-            Uma linha de ação, não uma pilha.
-            Três pílulas do mesmo peso empilhadas dobravam a altura do cartão e
-            davam a "adiar" a mesma voz que a "começar", que é a única coisa que
-            o aluno vem fazer aqui. Agora: primário em pílula, secundários em
-            texto, e a reordenação como duas setas no fim da linha — sem faixa
-            "ORDEM" com borda própria, que era uma segunda régua dentro de um
-            cartão que já tem uma.
-          */}
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <Link
-              href={hrefDoBloco(bloco.id)}
-              className={`inline-flex min-h-10 items-center rounded-full px-4 text-[0.8125rem] font-semibold transition-colors duration-150 ${
-                emFoco
-                  ? "bg-marca text-painel hover:bg-marca-apoio"
-                  : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
-              }`}
-            >
-              {emFoco ? "Continuar" : "Começar"}
-            </Link>
-
-            {!curta ? (
-              <form action={escolherVersaoCurta}>
-                <input type="hidden" name="blocoId" value={bloco.id} />
-                <input type="hidden" name="origem" value={origem} />
-                <button
-                  type="submit"
-                  aria-label={`Escolher versão curta de ${nomeDoBloco(bloco, rotulosDosTopicos)}`}
-                  className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-suave underline-offset-4 transition-colors duration-150 hover:text-marca hover:underline"
-                >
-                  Versão curta
-                </button>
-              </form>
-            ) : (
-              <span className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-evolucao">
-                Versão curta ativa
-              </span>
-            )}
-
-            <form action={adiarBloco}>
-              <input type="hidden" name="blocoId" value={bloco.id} />
-              <input type="hidden" name="origem" value={origem} />
-              <button
-                type="submit"
-                aria-label={`Adiar ${nomeDoBloco(bloco, rotulosDosTopicos)} para outro dia`}
-                className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-suave underline-offset-4 transition-colors duration-150 hover:text-marca hover:underline"
-              >
-                Adiar
-              </button>
-            </form>
-
-            {podeSubir || podeDescer ? (
-              <span className="ml-auto flex items-center gap-1">
-                <form action={reordenarBlocosPendentes}>
-                  <input type="hidden" name="planoId" value={planoId} />
-                  <input type="hidden" name="nivel" value={nivel} />
-                  <input type="hidden" name="origem" value={origem} />
-                  {ordemPendenteIds(pendentes, bloco, "cima").map((id) => (
-                    <input key={id} type="hidden" name="blocoIds" value={id} />
-                  ))}
-                  <button
-                    type="submit"
-                    disabled={!podeSubir}
-                    aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para cima`}
-                    className="grid size-9 place-items-center rounded-lg text-suave transition-colors duration-150 hover:bg-fundo-suave hover:text-marca disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 19V5m0 0-5 5m5-5 5 5" />
-                    </svg>
-                  </button>
-                </form>
-                <form action={reordenarBlocosPendentes}>
-                  <input type="hidden" name="planoId" value={planoId} />
-                  <input type="hidden" name="nivel" value={nivel} />
-                  <input type="hidden" name="origem" value={origem} />
-                  {ordemPendenteIds(pendentes, bloco, "baixo").map((id) => (
-                    <input key={id} type="hidden" name="blocoIds" value={id} />
-                  ))}
-                  <button
-                    type="submit"
-                    disabled={!podeDescer}
-                    aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para baixo`}
-                    className="grid size-9 place-items-center rounded-lg text-suave transition-colors duration-150 hover:bg-fundo-suave hover:text-marca disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-4"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 5v14m0 0 5-5m-5 5-5-5" />
-                    </svg>
-                  </button>
-                </form>
-              </span>
-            ) : null}
-          </div>
-        </>
+        <Link
+          href={hrefDoBloco(bloco.id)}
+          className={`mt-auto inline-flex min-h-10 items-center self-start rounded-full px-4 py-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 ${
+            emFoco
+              ? "bg-marca text-painel hover:bg-marca-apoio"
+              : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
+          }`}
+        >
+          {emFoco ? "Continuar" : "Começar"}
+        </Link>
       )}
     </div>
   );
@@ -583,22 +418,4 @@ function hrefDoBloco(blocoId: string): string {
 
 function numero(valor: number | null | undefined): number {
   return typeof valor === "number" && Number.isFinite(valor) ? valor : 0;
-}
-
-function versaoCurta(bloco: BlocoDoPlano): boolean {
-  return numero(bloco.nQuestoes) < numero(bloco.nQuestoesCheias)
-    || numero(bloco.minutosEstimados) < numero(bloco.minutosEstimadosCheios);
-}
-
-function ordemPendenteIds(
-  pendentes: BlocoDoPlano[],
-  bloco: BlocoDoPlano,
-  direcao: "cima" | "baixo",
-): string[] {
-  const ordem = pendentes.map((pendente) => pendente.id);
-  const indice = ordem.indexOf(bloco.id);
-  if (indice < 0) return ordem;
-  const outro = direcao === "cima" ? indice - 1 : indice + 1;
-  if (outro >= 0 && outro < ordem.length) [ordem[indice], ordem[outro]] = [ordem[outro], ordem[indice]];
-  return ordem;
 }

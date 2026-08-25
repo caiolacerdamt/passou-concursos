@@ -371,6 +371,9 @@ function BlocoCard({
       <h4 className="mt-2.5 font-semibold tracking-[-0.015em]">
         {nome}
       </h4>
+      <p className="mt-2 text-sm leading-6 text-suave">
+        {DESCRICOES[bloco.tipo]}
+      </p>
       <p className="mt-1.5 font-utilitaria text-xs text-suave">
         {numero(bloco.minutosEstimados)} min · {nQuestoes} {nQuestoes === 1 ? "questão" : "questões"}
       </p>

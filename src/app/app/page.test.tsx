@@ -112,17 +112,19 @@ describe("/app", () => {
     expect(html).toContain("O diagnóstico adaptativo é opcional");
   });
 
-  it("mostra piso, meta cheia, motivo e frase quando o plano existe", async () => {
+  it("mostra mínimo, meta, descrição do tipo e frase quando o plano existe", async () => {
     dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
     dependencias.plano.mockResolvedValue(plano);
 
     const html = renderToStaticMarkup(await renderApp());
 
     expect(dependencias.plano).toHaveBeenCalledTimes(1);
-    expect(html).toContain("Piso");
-    expect(html).toContain("Meta cheia");
-    expect(html).toContain("A revisão vence hoje.");
-    expect(html).toContain("Este tema tem peso alto na prova.");
+    expect(html).toContain("MÍNIMO");
+    expect(html).toContain("META");
+    expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
+    expect(html).toContain("Assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem.");
+    expect(html).not.toContain("A revisão vence hoje.");
+    expect(html).not.toContain("Este tema tem peso alto na prova.");
     expect(html).toContain("Hoje, consistência antes de velocidade.");
     expect(html).toContain("/app/estudo?bloco=bloco-piso");
   });

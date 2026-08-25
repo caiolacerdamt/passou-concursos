@@ -161,3 +161,16 @@ export {
   consultarProntidaoConteudo,
   pendenciasDoEdital,
 } from "./prontidao";
+
+export {
+  CONSULTA_DA_FREQUENCIA_REAL,
+  type FrequenciaReal,
+  TETO_DA_CAUDA,
+  TOPO_DO_RAIOX,
+  type TopicoFrequente,
+  consultarFrequenciaReal,
+  frequenciaDoExtrato,
+  inteiroEmPtBr,
+  percentualEmPtBr,
+  resumirFrequencia,
+} from "./frequencia";

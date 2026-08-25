@@ -1,0 +1,879 @@
+/* ==========================================================================
+   Landing — a folha de estilo própria da página de vendas.
+
+   Porte fiel de `scrollcraft/builds/passou-lp/pagina.css`, com uma diferença
+   de fundo: **nenhuma cor mora aqui**. Toda cor vem do `@theme` do
+   `globals.css`, que é a regra escrita do `DESIGN.md`. O que sobrou neste
+   arquivo é composição: grade, escala, espaço e movimento.
+
+   Layout convencional: sete seções empilhadas em largura cheia, cada uma com
+   o seu movimento. Chão creme quase o tempo todo; duas seções viram breu, e
+   uma delas é o pico. É esse racionamento que faz o pico valer.
+
+   A escala tipográfica é deliberadamente grande, na referência do MindMarket:
+   uma família só (Geist), e a autoridade vem do tamanho, do tracking negativo
+   e do espaço em volta — não de uma segunda fonte.
+
+   Esta folha **não reestiliza** `.sc-stage`, `.sc-copy` nem nenhum seletor
+   `[data-sc-*]`: aquilo é o mecanismo. Os tokens `--sc-*` são remapeados uma
+   vez, no `:root`, e o motor continua intocado.
+   ========================================================================== */
+
+/*
+ * O remap do motor mora no `:root` e não em `.lp` de propósito: o `body` não
+ * carrega a classe, e `scrollcraft.css` pinta o `body` com `var(--sc-canvas)`.
+ * Escopado em `.lp`, a variável não chegaria lá e o fundo do documento ficaria
+ * com o preto padrão do motor aparecendo no repique do scroll.
+ *
+ * Vale só nas rotas deste layout: CSS importado num layout do App Router é
+ * carregado no bundle daquele segmento, e o grupo `(landing)` tem uma rota só.
+ */
+:root {
+  --sc-canvas: var(--color-papel);
+  --sc-surface: var(--color-papel-alto);
+  --sc-ink: var(--color-tinta);
+  --sc-ink-soft: var(--color-tinta-suave);
+  --sc-accent: var(--color-verde);
+  --sc-accent-ink: var(--color-papel);
+  --sc-font-display: var(--font-lp);
+  --sc-font-text: var(--font-lp);
+  --sc-font-mono: var(--font-lp-mono);
+}
+
+.lp {
+  --gutter: clamp(1.25rem, 4vw, 3.5rem);
+  --largura: 80rem;
+  --folga: clamp(5rem, 13vh, 11rem);
+  --barra-h: 4.5rem;
+
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.lp .faixa {
+  width: 100%;
+  max-width: var(--largura);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ================================================================ BARRA == */
+.lp .barra {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+  height: var(--barra-h);
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  padding-inline: var(--gutter);
+  /* Opaca, não translúcida: sobre as duas seções escuras uma barra de vidro
+     fica ilegível — foi um defeito real da verificação. */
+  background: var(--color-papel);
+  transition: box-shadow 220ms ease;
+}
+.lp .barra--flutua {
+  box-shadow: 0 1px 0 var(--color-risco), 0 8px 28px -20px rgb(27 29 26 / 0.5);
+}
+.lp .barra__marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-right: auto;
+  color: var(--color-tinta);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  text-decoration: none;
+}
+.lp .barra__selo {
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 8px;
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
+}
+.lp .barra__nav {
+  display: flex;
+  gap: clamp(1rem, 2.2vw, 2rem);
+}
+.lp .barra__nav a {
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+.lp .barra__nav a:hover {
+  color: var(--color-tinta);
+}
+/* Uma barra de progresso só. A do motor fica desligada; esta é a nossa, e
+   duas empilhadas foi defeito pego na verificação. */
+.lp .barra__progresso {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progresso, 0));
+  background: var(--color-verde-vivo);
+}
+
+/* =============================================================== SEÇÕES ==
+   Cada seção pinta o próprio fundo. Corte duro entre elas, nunca interpolação:
+   `drift` é para páginas que são um lugar só, e esta é uma sequência de
+   capítulos.
+
+   O fundo é pintado **por seção** e nunca numa camada `position: fixed`. Chão
+   fixo reprovou a régua de contraste inteira na verificação: a régua esconde
+   todo elemento fixo para amostrar o que está atrás da chrome, e media texto
+   creme contra creme. A ferramenta estava certa sobre o chão ser frágil. */
+.lp .secao {
+  position: relative;
+  background: var(--color-papel);
+}
+.lp .secao--heroi {
+  padding-top: calc(var(--barra-h) + clamp(1.5rem, 5vh, 4rem));
+  padding-bottom: var(--folga);
+}
+.lp .secao--medida {
+  background: var(--color-papel-recuo);
+  padding-block: clamp(3rem, 8vh, 6rem) var(--folga);
+}
+.lp .secao--metodo {
+  padding-block: clamp(3rem, 8vh, 6rem) var(--folga);
+}
+.lp .secao--hoje {
+  background: var(--color-papel-recuo);
+  padding-block: var(--folga);
+}
+.lp .secao--problema,
+.lp .secao--pico {
+  background: var(--color-breu);
+}
+
+.lp .palco {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: inherit;
+}
+
+/* ============================================================ TIPOGRAFIA ==
+   Escala grande. O tracking fecha conforme o corpo cresce: -0.045em a 92px é
+   o que impede um display grande de parecer esticado. */
+.lp .display {
+  font-size: clamp(2.5rem, 1.2rem + 5.2vw, 5.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  font-weight: 500;
+  margin: 1rem 0 0;
+  max-width: 17ch;
+  text-wrap: balance;
+}
+.lp .titulo {
+  font-size: clamp(1.875rem, 1.15rem + 2.6vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.032em;
+  font-weight: 500;
+  margin: 0 0 1rem;
+  max-width: 20ch;
+  text-wrap: balance;
+}
+.lp .titulo--gigante {
+  font-size: clamp(2.25rem, 1.2rem + 4.2vw, 4.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  max-width: 17ch;
+}
+.lp .titulo--claro {
+  color: var(--color-breu-tinta);
+}
+.lp .realce {
+  font-style: normal;
+  color: var(--color-verde);
+}
+.lp .titulo--claro .realce {
+  color: var(--color-breu-verde);
+}
+
+.lp .rotulo {
+  margin: 0 0 1.25rem;
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.lp .rotulo--claro {
+  color: var(--color-breu-verde);
+}
+.lp .rotulo--cinza {
+  color: var(--color-tinta-suave);
+}
+
+.lp .lede {
+  font-size: clamp(1.125rem, 1rem + 0.68vw, 1.5rem);
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  color: var(--color-tinta-suave);
+  max-width: 40ch;
+  margin: 1.5rem 0 0;
+}
+.lp .lede--clara {
+  color: var(--color-breu-suave);
+}
+.lp .lede--fraca {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+}
+
+.lp .micro {
+  margin: 1.75rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.lp .elo {
+  color: var(--color-verde-texto);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.lp .elo:hover {
+  color: var(--color-verde);
+}
+.lp em {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--color-tinta);
+}
+.lp .lede--clara em {
+  color: var(--color-breu-tinta);
+}
+
+/* ================================================================ BOTÕES == */
+.lp .botao {
+  display: inline-block;
+  padding: 0.9rem 1.6rem;
+  border-radius: 999px;
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+.lp .botao:hover {
+  background: var(--color-verde-texto);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgb(36 91 70 / 0.7);
+}
+.lp .botao--pequeno {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9375rem;
+}
+.lp .botao--grande {
+  padding: 1.05rem 2rem;
+  font-size: 1.0625rem;
+}
+.lp .botao--vazado {
+  background: transparent;
+  color: var(--color-tinta);
+  box-shadow: inset 0 0 0 1px var(--color-risco);
+}
+.lp .botao--vazado:hover {
+  background: var(--color-papel-alto);
+  box-shadow: inset 0 0 0 1px var(--color-tinta-suave);
+}
+/* O anel de foco global do `globals.css` é verde escuro: sobre o breu ele
+   some. Nas duas seções escuras o anel troca de cor, não de existência. */
+.lp .secao--problema a:focus-visible,
+.lp .secao--pico a:focus-visible {
+  outline-color: var(--color-breu-verde);
+}
+
+/* ================================================================ FALAS ==
+   Blocos empilhados na MESMA célula do grid, um por cima do outro, que se
+   substituem por cue. Parágrafo solto com margem colide assim que um título
+   quebra numa linha a mais — foi um defeito real do pico, e é esta estrutura
+   que impede ele de voltar. */
+.lp .falas {
+  display: grid;
+  align-content: center;
+}
+.lp .falas > .fala {
+  grid-area: 1 / 1;
+  align-self: center;
+}
+.lp .fala > :first-child {
+  margin-top: 0;
+}
+/*
+ * O bloco `.fala` é quem carrega a cue, e sem cor própria ele herdava a tinta
+ * escura do corpo por cima de um fundo escuro. Invisível a olho nu — os filhos
+ * declaram a própria cor — e reprovado por qualquer régua que leia o elemento
+ * em vez do filho, incluindo `forced-colors`.
+ */
+.lp .secao--problema .fala,
+.lp .secao--pico .fala {
+  color: var(--color-breu-tinta);
+}
+
+/* =============================================================== SEÇÃO 1 == */
+.lp .heroi {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+}
+.lp .heroi__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 2.5rem;
+}
+.lp .heroi__arte {
+  position: relative;
+  min-height: clamp(24rem, 62vh, 42rem);
+}
+.lp .arte {
+  position: absolute;
+  width: auto;
+  user-select: none;
+  pointer-events: none;
+}
+/* A arte sangra para fora da coluna de propósito: contida na grade ela vira
+   miniatura, e a referência do briefing tem ilustração em escala de herói. */
+.lp .arte--tras {
+  left: -6%;
+  bottom: 2%;
+  height: clamp(15rem, 42vh, 28rem);
+  opacity: 0.95;
+}
+.lp .arte--frente {
+  right: -4%;
+  bottom: 0;
+  height: clamp(19rem, 56vh, 38rem);
+}
+
+/* =============================================================== SEÇÃO 2 == */
+.lp .palco__grade {
+  display: grid;
+  gap: clamp(2rem, 5vw, 5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+}
+/* A torre sangra sobre o breu em altura de palco. O contraste de escala entre
+   a figura minúscula e a torre é o argumento da seção — pôr isso dentro de um
+   cartão de 300px mataria exatamente o que ela diz. */
+.lp .palco__arte {
+  margin: 0;
+  align-self: center;
+}
+.lp .palco__arte img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: clamp(20rem, 66vh, 42rem);
+  margin-inline: auto;
+}
+
+/* =============================================================== SEÇÃO 3 ==
+   O `clip-path` do reveal corta a CAIXA, não a tinta. Um numerão com
+   line-height 1 tem caixa mais curta que os glifos, e o wipe decepa o topo dos
+   algarismos. Nenhuma auditoria estática pega isso — só a captura. Daí o
+   `padding-block` no invólucro. */
+.lp .medida {
+  padding-block: 0.4em;
+}
+.lp .numerao {
+  font-size: clamp(4rem, 1.5rem + 9vw, 10rem);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-weight: 500;
+  color: var(--color-verde);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.lp .medida__grade {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+}
+.lp .medida__pe {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  border-top: 1px solid var(--color-risco);
+  padding-top: clamp(2rem, 5vh, 3rem);
+}
+.lp .medida__pe .lede {
+  margin-top: 0;
+}
+.lp .medida__arte {
+  margin: 0;
+}
+
+/* =============================================================== SEÇÃO 4 ==
+   O PICO. Tudo desenhado em `transform` — 86 elementos por quadro só cabem em
+   16ms se nenhum deles pedir layout. */
+.lp .palco--pico {
+  justify-content: flex-start;
+  padding-top: clamp(5rem, 13vh, 8rem);
+}
+.lp .falas--pico {
+  flex: 0 0 auto;
+  min-height: clamp(9rem, 22vh, 14rem);
+  align-content: start;
+}
+.lp .falas--pico .titulo {
+  max-width: 22ch;
+}
+.lp .falas--pico .lede {
+  max-width: 44ch;
+}
+
+/* `width` e não `padding`: filho absoluto se posiciona pelo padding box, então
+   padding aqui faria x=0 cair antes da margem e o gráfico nascer torto. */
+.lp .raiox {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: clamp(1rem, 3vh, 2rem);
+  width: min(100% - var(--gutter) * 2, var(--largura));
+  margin-inline: auto;
+}
+.lp .chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200px;   /* base fixa: toda variação é escala */
+  height: 24px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.lp .chip__b {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 50%;
+  background: var(--color-pilha-papel);
+  border-radius: 2px;
+  /* Sombra estática de propósito: na fase de pilha o chip lê como folha de
+     papel solta, e escrever `box-shadow` em 86 elementos por quadro custaria
+     mais do que mostra. */
+  box-shadow: 0 2px 7px rgb(0 0 0 / 0.34);
+  will-change: transform, background-color;
+}
+.lp .chip__l,
+.lp .chip__n {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  white-space: nowrap;
+  line-height: 1;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.lp .chip__l {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-breu-tinta);
+}
+.lp .chip__n {
+  font-size: 0.8125rem;
+  color: var(--color-breu-verde);
+  font-family: var(--font-lp-mono);
+  font-variant-numeric: tabular-nums;
+}
+.lp .raiox__nota {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+  color: var(--color-breu-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+  white-space: nowrap;
+  will-change: transform, opacity;
+}
+.lp .raiox-texto {
+  color: var(--color-breu-suave);
+  padding-block: 2rem;
+}
+
+/* ================================================================ CARTÕES ==
+   Superfície elevada de verdade: fundo mais alto que o canvas, raio generoso,
+   sombra com deslocamento. A inclinação vem do ponteiro (`data-sc-tilt`), que
+   é o que dá a leitura tridimensional sem gradiente. */
+.lp .cartao {
+  background: var(--color-papel-alto);
+  border-radius: 28px;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: var(--shadow-lp);
+  transition: box-shadow 240ms ease;
+}
+.lp .cartao:hover {
+  box-shadow: var(--shadow-lp-alta);
+}
+.lp .cartao--alto {
+  padding: clamp(1.75rem, 3.4vw, 2.75rem);
+}
+.lp .cartao__k {
+  margin: 0 0 2.5rem;
+  color: var(--color-verde-vivo);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+}
+.lp .cartao__t {
+  font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.625rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.022em;
+  color: var(--color-tinta);
+  margin: 0 0 0.75rem;
+}
+.lp .cartao__p {
+  margin: 0;
+  color: var(--color-tinta-suave);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.lp .pilares {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+}
+
+.lp .evidencia {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  align-items: center;
+  margin-top: clamp(4rem, 10vh, 7rem);
+}
+.lp .evidencia__arte {
+  margin: 0;
+}
+.lp .evidencia__texto .titulo {
+  max-width: 14ch;
+}
+
+/* =============================================================== SEÇÃO 6 ==
+   Título e arte lado a lado. A arte aqui é literal — um painel com quatro
+   vistos e um painel vazio — então ela diz a mesma coisa que os dois cartões
+   abaixo, em vez de decorar. */
+.lp .hoje__cabeca {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  align-items: center;
+}
+.lp .hoje__arte {
+  margin: 0;
+}
+.lp .razonetes {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+}
+.lp .razonete {
+  will-change: clip-path;
+}
+.lp .cartao--fora {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-risco);
+}
+.lp .cartao--fora:hover {
+  box-shadow: inset 0 0 0 1px var(--color-risco);
+}
+.lp .lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lp .lista li {
+  position: relative;
+  padding-left: 1.9rem;
+  margin-bottom: 1.1rem;
+}
+.lp .lista li:last-child {
+  margin-bottom: 0;
+}
+.lp .lista--dentro li {
+  color: var(--color-tinta);
+}
+.lp .lista--fora li {
+  color: var(--color-tinta-suave);
+}
+.lp .lista--miuda li {
+  font-size: 0.9375rem;
+  margin-bottom: 0.7rem;
+  padding-left: 1.6rem;
+}
+.lp .lista--dentro li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.46em;
+  width: 0.8rem;
+  height: 0.42rem;
+  border-left: 2.2px solid var(--color-verde);
+  border-bottom: 2.2px solid var(--color-verde);
+  transform: rotate(-45deg);
+}
+.lp .lista--miuda li::before {
+  top: 0.4em;
+  width: 0.68rem;
+  height: 0.36rem;
+}
+.lp .lista--fora li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 0.8rem;
+  height: 2px;
+  background: var(--color-risco);
+}
+.lp .nota {
+  margin: clamp(3rem, 7vh, 4.5rem) 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-risco);
+  max-width: 62ch;
+  color: var(--color-tinta-suave);
+}
+.lp .nota strong {
+  color: var(--color-tinta);
+  font-weight: 500;
+}
+
+/* =============================================================== SEÇÃO 7 ==
+   `flow`, não `pin`. Foi ato fixado numa rodada anterior e o palco de 100vh não
+   comportava título gigante + arte + dois cartões de preço + garantia + legal +
+   CTA: sobrava rolagem aninhada dentro do palco, e o texto legal acabava medido
+   contra o rodapé escuro. Conteúdo que não cabe numa tela não é ato, é seção. */
+.lp .secao--oferta {
+  padding-block: var(--folga);
+}
+.lp .fecho__cabeca {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+}
+.lp .fecho__arte {
+  margin: 0;
+}
+.lp .fecho__acao {
+  margin-top: 1.75rem;
+}
+.lp .oferta {
+  margin-top: clamp(2rem, 5vh, 3.5rem);
+}
+.lp .precos {
+  display: grid;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  margin-bottom: clamp(1.5rem, 3vh, 2.25rem);
+}
+.lp .cartao--preco {
+  position: relative;
+}
+.lp .cartao--destaque {
+  background: var(--color-verde-tenue);
+  box-shadow: var(--shadow-lp-alta), inset 0 0 0 1.5px var(--color-verde-vivo);
+}
+.lp .selo {
+  position: absolute;
+  top: -0.75rem;
+  left: clamp(1.5rem, 3vw, 2.25rem);
+  margin: 0;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.lp .preco__k {
+  margin: 0 0 0.85rem;
+  color: var(--color-tinta-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.lp .preco__v {
+  font-size: clamp(1.375rem, 1.1rem + 1.1vw, 1.875rem);
+  font-weight: 400;
+  letter-spacing: -0.028em;
+  margin: 0 0 0.6rem;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+}
+.lp .preco__v strong {
+  font-weight: 500;
+}
+.lp .preco__v--verde {
+  color: var(--color-verde);
+  font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+}
+.lp .preco__n {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-tinta-suave);
+  margin: 0 0 1.4rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--color-risco);
+}
+.lp .cartao--destaque .preco__n {
+  border-bottom-color: color-mix(in oklab, var(--color-verde-vivo) 40%, transparent);
+}
+
+.lp .garantia {
+  background: var(--color-ouro-fundo);
+  border-radius: 24px;
+  padding: 1.6rem 1.9rem;
+}
+.lp .garantia__t {
+  margin: 0 0 0.5rem;
+  color: var(--color-ouro-texto);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+.lp .garantia__p {
+  margin: 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  max-width: 62ch;
+}
+
+.lp .legal {
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+  color: var(--color-tinta-suave);
+  max-width: 62ch;
+}
+
+/* ================================================================ RODAPÉ == */
+.lp .rodape {
+  background: var(--color-breu);
+  color: var(--color-breu-suave);
+  padding-block: clamp(3rem, 8vh, 5rem);
+}
+.lp .rodape__grade {
+  display: grid;
+  gap: 1.25rem clamp(2rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: start;
+}
+.lp .rodape__marca {
+  margin: 0;
+  color: var(--color-breu-tinta);
+  font-weight: 500;
+}
+.lp .rodape__linha {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 0.9375rem;
+}
+.lp .rodape__elos {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+.lp .rodape__elos a {
+  color: var(--color-breu-suave);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+.lp .rodape__elos a:hover {
+  color: var(--color-breu-tinta);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.lp .rodape a:focus-visible {
+  outline-color: var(--color-breu-verde);
+}
+
+/* Arte de personagem que senta direto no chão da seção, sem cartão: o recorte
+   já tem alfa de verdade, então moldura seria uma caixa em volta de nada. */
+.lp figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ============================================================== CELULAR == */
+@media (max-width: 899px) {
+  .lp .barra__nav {
+    display: none;
+  }
+  .lp .heroi,
+  .lp .palco__grade,
+  .lp .medida__grade,
+  .lp .evidencia,
+  .lp .hoje__cabeca,
+  .lp .fecho__cabeca,
+  .lp .rodape__grade {
+    grid-template-columns: 1fr;
+  }
+  .lp .heroi__arte {
+    min-height: clamp(17rem, 38vh, 24rem);
+  }
+  .lp .arte--tras {
+    left: -8%;
+    height: clamp(10rem, 24vh, 15rem);
+  }
+  .lp .arte--frente {
+    right: -6%;
+    height: clamp(13rem, 30vh, 19rem);
+  }
+  /* O palco tem 100vh: arte e falas não cabem juntas. */
+  .lp .palco__arte {
+    display: none;
+  }
+  /* Idem: o fecho precisa caber numa tela. */
+  .lp .fecho__arte {
+    display: none;
+  }
+  .lp .falas--pico {
+    min-height: clamp(8rem, 26vh, 12rem);
+  }
+  .lp .rodape__elos {
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: 1.25rem;
+  }
+  .lp .selo {
+    left: 1.25rem;
+  }
+}
+
+/* ==================================================== MOVIMENTO REDUZIDO == */
+@media (prefers-reduced-motion: reduce) {
+  .lp .botao,
+  .lp .barra,
+  .lp .barra__nav a,
+  .lp .cartao {
+    transition: none;
+  }
+  .lp .botao:hover {
+    transform: none;
+  }
+}

@@ -120,6 +120,42 @@
   --text-corpo: 1.0625rem;
   --text-corpo--line-height: 1.6;
 
+  /*
+   * O lado escuro da landing (AD-106).
+   *
+   * Duas das sete seções viram breu — o problema e o pico. É esse racionamento
+   * que faz o pico valer, e é por isso que estes tokens não vazam para o app:
+   * tema escuro continua fora do escopo, isto é chão de capítulo.
+   *
+   * Contraste medido contra `--color-breu`, não estimado:
+   * `breu-tinta` 15.1:1 · `breu-suave` 7.2:1 · `breu-verde` 8.8:1.
+   * `breu-linha` é divisor decorativo — 1.5:1, e por isso nunca carrega texto.
+   */
+  --color-breu: #191a15;
+  --color-breu-alto: #23251d;
+  --color-breu-tinta: #f3eee2;
+  --color-breu-suave: #aca697;
+  --color-breu-verde: #8cc4a6;
+  --color-breu-linha: #383a2f;
+
+  /*
+   * As duas cores do movimento assinatura que não são a marca. Os 86 chips
+   * saem de papel, e os doze do topo viram `--color-verde-vivo` enquanto os 74
+   * restantes viram sedimento. São preenchimento de ilustração, nunca texto —
+   * e existem como token porque o laço de desenho as interpola por quadro: se
+   * o CSS tivesse uma cópia e o JS outra, as duas divergiriam na primeira
+   * troca de paleta.
+   */
+  --color-pilha-papel: #e7e2d3;
+  --color-pilha-sedimento: #4a4e42;
+
+  /*
+   * Elevação da landing. Sombra com deslocamento e desfoque de verdade — halo
+   * colorido em offset zero é adesivo, não luz (`DESIGN.md` §Anti-slop).
+   */
+  --shadow-lp: 0 1px 2px rgb(27 29 26 / 0.05), 0 12px 28px -14px rgb(27 29 26 / 0.28);
+  --shadow-lp-alta: 0 2px 4px rgb(27 29 26 / 0.06), 0 28px 56px -22px rgb(27 29 26 / 0.38);
+
   --radius-bloco: 1.75rem;
   --container-lp: 68rem;
 

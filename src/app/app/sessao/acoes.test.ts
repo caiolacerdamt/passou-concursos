@@ -100,7 +100,7 @@ function formulario({
   return form;
 }
 
-function clienteDaResposta({ pendente = true, explicacao = true } = {}) {
+function clienteDaResposta({ pendente = true } = {}) {
   const pendingBuilder = builder({
     data: pendente ? { id: "item-2" } : null,
     error: null,
@@ -110,18 +110,7 @@ function clienteDaResposta({ pendente = true, explicacao = true } = {}) {
     auth: {
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }),
     },
-    rpc: vi.fn().mockResolvedValue({
-      data: explicacao
-        ? [
-            {
-              texto: "A alternativa B é apoiada pelo documento.",
-              alternativa_correta: "B",
-              fontes_citadas: [{ doc_id: "base:1", trecho: "trecho oficial" }],
-            },
-          ]
-        : [],
-      error: null,
-    }),
+    rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
     from: vi.fn((tabela: string) => {
       if (tabela === "sessao_itens") return pendingBuilder;
       return fechamentoBuilder;
@@ -168,7 +157,7 @@ describe("responderQuestao", () => {
     });
   });
 
-  it("deriva contexto e usuário da sessão, registra uma vez e mostra fonte da explicação", async () => {
+  it("deriva contexto e usuário da sessão, registra uma vez e devolve só o gabarito", async () => {
     const { cliente } = clienteDaResposta();
     dependencias.cliente.mockResolvedValue(cliente);
 
@@ -189,11 +178,6 @@ describe("responderQuestao", () => {
       correta: true,
       duplicada: false,
       respostaCorreta: "B",
-      explicacao: {
-        texto: "A alternativa B é apoiada pelo documento.",
-        alternativaCorreta: "B",
-        fontesCitadas: [{ docId: "base:1", trecho: "trecho oficial" }],
-      },
       sessaoConcluida: false,
     });
   });
@@ -249,13 +233,15 @@ describe("responderQuestao", () => {
     });
   });
 
-  it("mostra em revisão quando a RPC não tem explicação aprovada", async () => {
-    const { cliente } = clienteDaResposta({ explicacao: false });
+  it("não consulta nem devolve explicação ao responder", async () => {
+    const { cliente } = clienteDaResposta();
     dependencias.cliente.mockResolvedValue(cliente);
 
     const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
 
-    expect(estado).toMatchObject({ status: "respondida", explicacao: null });
+    expect(cliente.rpc).not.toHaveBeenCalled();
+    expect(estado).toMatchObject({ status: "respondida" });
+    expect(estado).not.toHaveProperty("explicacao");
   });
 
   it("recalcula antes de agendar a primeira revisão com identidade e tópico do servidor", async () => {
@@ -367,29 +353,6 @@ describe("responderQuestao", () => {
 
     expect(estado).toMatchObject({ status: "erro", mensagem: expect.any(String) });
     expect(dependencias.registrar).toHaveBeenCalledTimes(1);
-  });
-
-  it("não exibe explicação que contradiz o gabarito da questão-versão", async () => {
-    const { cliente } = clienteDaResposta();
-    cliente.rpc.mockResolvedValue({
-      data: [
-        {
-          texto: "Texto que não pode ser servido.",
-          alternativa_correta: "A",
-          fontes_citadas: [{ doc_id: "base:1", trecho: "trecho oficial" }],
-        },
-      ],
-      error: null,
-    });
-    dependencias.cliente.mockResolvedValue(cliente);
-
-    const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
-
-    expect(estado).toMatchObject({ status: "respondida", explicacao: null });
-    expect(dependencias.reportar).toHaveBeenCalledWith(
-      expect.any(Error),
-      expect.objectContaining({ operacao: "validar_explicacao_publica" }),
-    );
   });
 
   it("deixa o redirect do paywall atravessar a action", async () => {

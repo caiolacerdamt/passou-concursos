@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Passou Concursos — estude o que a banca cobra de verdade",
   description:
-    "Questões das provas oficiais do Banco do Brasil, com banca e ano na etiqueta, explicação conferida e um plano diário que sai do seu histórico.",
+    "Questões das provas oficiais do Banco do Brasil, com banca e ano na etiqueta, gabarito oficial e um plano diário que sai do seu histórico.",
 };
 
 /**

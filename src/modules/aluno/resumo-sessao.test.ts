@@ -21,9 +21,7 @@ function clienteCom(respostas: Record<string, Resposta>) {
     return { select: vi.fn(() => consulta) };
   });
 
-  const rpc = vi.fn(async (_nome: string, args: { p_questao_id: string }) => {
-    return respostas[`explicacao:${args.p_questao_id}`] ?? { data: [], error: null };
-  });
+  const rpc = vi.fn(async () => ({ data: [], error: null }));
 
   return { cliente: { from, rpc }, from, rpc };
 }
@@ -37,7 +35,7 @@ const FONTE = {
 };
 
 describe("consultarResumoDaSessao", () => {
-  it("entrega placar e questões na ordem com resposta, gabarito, fonte e explicação", async () => {
+  it("entrega placar e questões na ordem com resposta, gabarito e fonte, sem explicação", async () => {
     const { cliente } = clienteCom({
       sessoes: {
         data: {
@@ -90,15 +88,9 @@ describe("consultarResumoDaSessao", () => {
         ],
         error: null,
       },
-      "explicacao:questao-1": {
-        data: [{
-          texto: "A multa e os juros levam ao total da alternativa D.",
-          alternativa_correta: "D",
-          fontes_citadas: [{ doc_id: "ref-1", trecho: "Juros simples" }],
-        }],
-        error: null,
-      },
     });
+
+    const { rpc } = { rpc: (cliente as { rpc: ReturnType<typeof vi.fn> }).rpc };
 
     await expect(consultarResumoDaSessao(cliente as never, "sessao-1")).resolves.toEqual({
       id: "sessao-1",
@@ -120,11 +112,6 @@ describe("consultarResumoDaSessao", () => {
             fonteCitacao: FONTE,
             respostaCorreta: "D",
           },
-          explicacao: {
-            texto: "A multa e os juros levam ao total da alternativa D.",
-            alternativaCorreta: "D",
-            fontesCitadas: [{ docId: "ref-1", trecho: "Juros simples" }],
-          },
         },
         {
           ordem: 2,
@@ -139,10 +126,10 @@ describe("consultarResumoDaSessao", () => {
             fonteCitacao: { ...FONTE, numero: 29 },
             respostaCorreta: "C",
           },
-          explicacao: null,
         },
       ],
     });
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("não consulta respostas nem gabarito quando a sessão encerrada não está acessível", async () => {

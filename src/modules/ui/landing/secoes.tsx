@@ -73,7 +73,7 @@ const METODO = [
   {
     titulo: "A alternativa certa é a do gabarito oficial",
     texto:
-      "A IA não decide resposta. A alternativa vem do gabarito da banca, é conferida por código e a explicação passa por revisão antes de existir para você.",
+      "A IA não decide resposta. A alternativa vem do gabarito da banca e é conferida por código antes de existir para você.",
   },
 ];
 
@@ -143,7 +143,7 @@ export function Evidencias() {
 
 const NO_AR = [
   "Plano do dia, montado a partir do seu histórico",
-  "Sessão de questões com explicação conferida",
+  "Sessão de questões de provas reais, com gabarito oficial",
   "Progresso e sequência de dias",
   "Sua conta e seus dados",
 ];

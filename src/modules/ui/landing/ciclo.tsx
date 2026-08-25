@@ -25,7 +25,7 @@ const PASSOS = [
   {
     Prop: Visto,
     titulo: "Vê o certo",
-    texto: "Alternativa do gabarito oficial e explicação revisada antes de chegar em você.",
+    texto: "A alternativa que a banca deu como certa, com banca e ano na etiqueta.",
   },
   {
     Prop: Relogio,

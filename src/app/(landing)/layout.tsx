@@ -1,5 +1,16 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
+/*
+ * A folha do motor entra ANTES da nossa: as duas declaram tokens no `:root`, e
+ * com a mesma especificidade quem vem depois vence. É assim que o remap de
+ * marca (`--sc-canvas` e companhia) sobrescreve o padrão escuro do motor.
+ *
+ * `scrollcraft.css` é cópia literal da skill e não é editada — nem aqui, nem
+ * em `landing.css`, que não reestiliza um seletor `[data-sc-*]` sequer.
+ */
+import "@/modules/ui/landing/scrollcraft.css";
+import "@/modules/ui/landing/landing.css";
+
 /**
  * Camada visual da landing (modo Persuade, `DESIGN.md`).
  *

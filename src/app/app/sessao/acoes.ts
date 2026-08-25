@@ -3,10 +3,6 @@
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import {
-  lerExplicacaoPublica,
-  type ExplicacaoPublica,
-} from "@/modules/aluno/explicacao-publica";
-import {
   SessaoRecusada,
   obterItemParaResposta,
 } from "@/modules/aluno/sessao";
@@ -19,8 +15,6 @@ import {
 import { agendarRevisao } from "@/modules/aluno/revisao";
 import { finalizarBloco } from "@/modules/aluno/progresso";
 import { reportarErro } from "@/modules/observabilidade/reporte";
-
-export type { ExplicacaoPublica } from "@/modules/aluno/explicacao-publica";
 
 export type EstadoDaResposta =
   | { status: "inicial" }
@@ -40,7 +34,6 @@ export type EstadoDaResposta =
       correta: boolean;
       duplicada: boolean;
       respostaCorreta: string;
-      explicacao: ExplicacaoPublica | null;
       sessaoConcluida: boolean;
     }
   | {
@@ -146,13 +139,6 @@ export async function responderQuestao(
       await sincronizarDepoisDoFechamento(supabase, sessaoId);
     }
 
-    const explicacao = await lerExplicacaoPublica(
-      supabase,
-      alvo.item.questaoId,
-      alvo.item.questaoVersao,
-      alvo.questao.respostaCorreta,
-    );
-
     return {
       status: "respondida",
       sessaoId,
@@ -160,7 +146,6 @@ export async function responderQuestao(
       correta: resultado.correta,
       duplicada: resultado.duplicada,
       respostaCorreta: alvo.questao.respostaCorreta,
-      explicacao,
       sessaoConcluida,
     };
   } catch (erro) {

@@ -7,8 +7,6 @@ import {
   type TipoQuestao,
 } from "@/modules/acervo";
 
-import { lerExplicacaoPublica, type ExplicacaoPublica } from "./explicacao-publica";
-
 export type QuestaoDoResumo = {
   id: string;
   questaoVersao: number;
@@ -24,7 +22,6 @@ export type ItemDoResumo = {
   respostaDada: string;
   correta: boolean;
   questao: QuestaoDoResumo;
-  explicacao: ExplicacaoPublica | null;
 };
 
 export type ResumoDaSessao = {
@@ -113,37 +110,29 @@ export async function consultarResumoDaSessao(
     ]),
   );
 
-  const itens = await Promise.all(
-    tentativas.map(async (tentativa): Promise<ItemDoResumo> => {
-      const linha = porVersao.get(`${tentativa.questao_id}:${tentativa.questao_versao}`);
-      if (!linha || !linha.resposta_correta) {
-        throw new Error("resumo aponta para questão-versão sem gabarito");
-      }
+  const itens = tentativas.map((tentativa): ItemDoResumo => {
+    const linha = porVersao.get(`${tentativa.questao_id}:${tentativa.questao_versao}`);
+    if (!linha || !linha.resposta_correta) {
+      throw new Error("resumo aponta para questão-versão sem gabarito");
+    }
 
-      const questao: QuestaoDoResumo = {
-        id: linha.id,
-        questaoVersao: linha.questao_versao,
-        origem: linha.origem,
-        tipoQuestao: linha.tipo_questao,
-        enunciado: linha.enunciado,
-        fonteCitacao: fonteDaQuestao(linha),
-        respostaCorreta: linha.resposta_correta,
-      };
+    const questao: QuestaoDoResumo = {
+      id: linha.id,
+      questaoVersao: linha.questao_versao,
+      origem: linha.origem,
+      tipoQuestao: linha.tipo_questao,
+      enunciado: linha.enunciado,
+      fonteCitacao: fonteDaQuestao(linha),
+      respostaCorreta: linha.resposta_correta,
+    };
 
-      return {
-        ordem: Number(tentativa.ordem_na_sessao),
-        respostaDada: tentativa.resposta_dada,
-        correta: tentativa.correta,
-        questao,
-        explicacao: await lerExplicacaoPublica(
-          cliente,
-          linha.id,
-          linha.questao_versao,
-          linha.resposta_correta,
-        ),
-      };
-    }),
-  );
+    return {
+      ordem: Number(tentativa.ordem_na_sessao),
+      respostaDada: tentativa.resposta_dada,
+      correta: tentativa.correta,
+      questao,
+    };
+  });
 
   return {
     id: sessao.id,

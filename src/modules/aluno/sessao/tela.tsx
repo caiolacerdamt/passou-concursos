@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 
-import type { EstadoDaResposta, ExplicacaoPublica } from "@/app/app/sessao/acoes";
+import type { EstadoDaResposta } from "@/app/app/sessao/acoes";
 import { responderQuestao } from "@/app/app/sessao/acoes";
 import type { ItemDaSessao, ImagemDaSessao, QuestaoDaSessao, SessaoDaTela } from "@/modules/aluno/sessao";
 
@@ -262,15 +262,6 @@ export function FeedbackDaResposta({
         <p className="mt-1 font-utilitaria text-2xl font-bold text-marca">{estado.respostaCorreta}</p>
       </section>
 
-      {estado.explicacao ? <Explicacao explicacao={estado.explicacao} /> : (
-        <div className="rounded-card border border-aviso/40 bg-painel p-5 shadow-card sm:p-6">
-          <p className="font-semibold text-aviso">Explicação em revisão</p>
-          <p className="mt-2 text-sm leading-6 text-suave">
-            Esta versão ainda não tem uma explicação conferida. A resposta correta continua sendo a do gabarito oficial.
-          </p>
-        </div>
-      )}
-
       {ultima ? (
         <Link href="/app" className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-marca px-4 py-3 font-semibold text-white">
           Concluir e voltar ao plano
@@ -285,27 +276,6 @@ export function FeedbackDaResposta({
         </button>
       )}
     </article>
-  );
-}
-
-function Explicacao({ explicacao }: { explicacao: ExplicacaoPublica }) {
-  return (
-    <section className="space-y-5 rounded-card border border-linha bg-painel p-5 shadow-card sm:p-6">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.12em] text-evolucao">Explicação conferida</p>
-        <p className="mt-3 whitespace-pre-wrap text-base leading-8">{explicacao.texto}</p>
-      </div>
-      <div className="border-t border-linha pt-4">
-        <p className="text-sm font-semibold">Fontes citadas</p>
-        <ul className="mt-2 space-y-2 text-sm leading-6 text-suave">
-          {explicacao.fontesCitadas.map((fonte) => (
-            <li key={`${fonte.docId}-${fonte.trecho}`}>
-              <span className="font-utilitaria text-xs text-marca">{fonte.docId}</span>{" — "}{fonte.trecho}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
   );
 }
 

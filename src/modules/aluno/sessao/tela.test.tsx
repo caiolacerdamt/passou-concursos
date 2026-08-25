@@ -64,7 +64,7 @@ describe("tela da sessão", () => {
     expect(html).not.toContain("respostaCorreta");
   });
 
-  it("mostra explicação, fonte e saída na conclusão", () => {
+  it("mostra apenas gabarito e saída na conclusão, sem explicação", () => {
     const estado: Extract<EstadoDaResposta, { status: "respondida" }> = {
       status: "respondida",
       sessaoId: "sessao-1",
@@ -72,11 +72,6 @@ describe("tela da sessão", () => {
       correta: false,
       duplicada: false,
       respostaCorreta: "B",
-      explicacao: {
-        texto: "A alternativa B é apoiada pelo documento.",
-        alternativaCorreta: "B",
-        fontesCitadas: [{ docId: "base:1", trecho: "trecho oficial" }],
-      },
       sessaoConcluida: true,
     };
 
@@ -84,28 +79,8 @@ describe("tela da sessão", () => {
       <FeedbackDaResposta estado={estado} ultima aoAvancar={() => undefined} />,
     );
 
-    expect(html).toContain("A alternativa B é apoiada pelo documento.");
-    expect(html).toContain("base:1");
+    expect(html).toContain("Alternativa correta");
     expect(html).toContain("Concluir e voltar ao plano");
-  });
-
-  it("expõe o aviso em revisão quando a explicação da versão não existe", () => {
-    const estado: Extract<EstadoDaResposta, { status: "respondida" }> = {
-      status: "respondida",
-      sessaoId: "sessao-1",
-      itemId: "item-1",
-      correta: true,
-      duplicada: false,
-      respostaCorreta: "A",
-      explicacao: null,
-      sessaoConcluida: true,
-    };
-
-    const html = renderToStaticMarkup(
-      <FeedbackDaResposta estado={estado} ultima aoAvancar={() => undefined} />,
-    );
-
-    expect(html).toContain("Explicação em revisão");
-    expect(html).toContain("gabarito oficial");
+    expect(html).not.toContain("Explicação");
   });
 });

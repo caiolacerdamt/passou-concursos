@@ -69,23 +69,6 @@ function QuestaoDoResumo({ item }: { item: ItemDoResumo }) {
           <p className="mt-1 font-utilitaria text-2xl font-bold text-marca">{item.questao.respostaCorreta}</p>
         </div>
       </div>
-
-      {item.explicacao ? (
-        <section className="border-t border-linha pt-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-evolucao">Explicação conferida</p>
-          <p className="mt-3 whitespace-pre-wrap leading-7">{item.explicacao.texto}</p>
-          <ul className="mt-4 space-y-2 text-sm text-suave" aria-label="Fontes da explicação">
-            {item.explicacao.fontesCitadas.map((fonte) => (
-              <li key={`${fonte.docId}-${fonte.trecho}`}><span className="font-utilitaria text-xs text-marca">{fonte.docId}</span>{" — "}{fonte.trecho}</li>
-            ))}
-          </ul>
-        </section>
-      ) : (
-        <section className="border-t border-linha pt-5">
-          <p className="font-semibold text-aviso">Explicação em revisão</p>
-          <p className="mt-2 text-sm text-suave">O gabarito oficial permanece válido enquanto a explicação é conferida.</p>
-        </section>
-      )}
     </article>
   );
 }

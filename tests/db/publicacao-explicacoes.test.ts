@@ -310,25 +310,25 @@ descreveComBanco("SPEC 10 — schema da fila, base e explicacoes", () => {
     });
   });
 
-  it("exige explicacao aprovada antes de publicar real fora da fila", async () => {
+  // A feature de explicacao saiu do produto no Grupo 5: a porta de publicacao
+  // deixou de exigi-la. Proveniencia, gabarito e a revisao da QA continuam.
+  it("publica real fora da fila sem exigir explicacao", async () => {
     await comTransacaoRevertida(async (cliente) => {
       await configurarQa(cliente, 0, 0);
       const questao = await inserirQuestao(cliente, { confianca_ia: 0.99 });
 
-      await expect(
-        cliente.query(
-          "select public.publicar_questao($1, $2)",
-          [questao.id, questao.questao_versao],
-        ),
-      ).rejects.toThrow(/explicacao_nao_aprovada/);
+      const { rows } = await cliente.query<{ publicar_questao: boolean }>(
+        "select public.publicar_questao($1, $2)",
+        [questao.id, questao.questao_versao],
+      );
+      expect(rows[0].publicar_questao).toBe(true);
     });
   });
 
-  it("publica real depois que explicacao e as exigencias de QA passam", async () => {
+  it("publica real depois que as exigencias de QA passam", async () => {
     await comTransacaoRevertida(async (cliente) => {
       await configurarQa(cliente, 0, 0);
       const questao = await inserirQuestao(cliente, { confianca_ia: 0.99 });
-      await inserirExplicacaoAprovada(cliente, questao);
 
       const { rows } = await cliente.query<{ publicar_questao: boolean }>(
         "select public.publicar_questao($1, $2)",

@@ -30,11 +30,6 @@ const resumo: ResumoDaSessao = {
         },
         respostaCorreta: "D",
       },
-      explicacao: {
-        texto: "A multa e os juros levam à alternativa D.",
-        alternativaCorreta: "D",
-        fontesCitadas: [{ docId: "ref-1", trecho: "Juros simples" }],
-      },
     },
     {
       ordem: 2,
@@ -49,13 +44,12 @@ const resumo: ResumoDaSessao = {
         fonteCitacao: null,
         respostaCorreta: "C",
       },
-      explicacao: null,
     },
   ],
 };
 
 describe("ResumoTela", () => {
-  it("mostra placar e correção de cada questão sem esconder explicação ausente", () => {
+  it("mostra placar e correção de cada questão, sem explicação", () => {
     const html = renderToStaticMarkup(<ResumoTela resumo={resumo} />);
 
     expect(html).toContain("1 de 2 acertos");
@@ -66,7 +60,6 @@ describe("ResumoTela", () => {
     expect(html).toContain("Gabarito");
     expect(html).toContain(">D<");
     expect(html).toContain("Fundação Cesgranrio · 2021 · Banco do Brasil");
-    expect(html).toContain("A multa e os juros levam à alternativa D.");
-    expect(html).toContain("Explicação em revisão");
+    expect(html).not.toContain("Explicação");
   });
 });

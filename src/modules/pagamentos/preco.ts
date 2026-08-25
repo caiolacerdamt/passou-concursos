@@ -69,7 +69,16 @@ export async function obterPrecosPublicos(): Promise<PrecosPublicos> {
   });
 }
 
-function formatarBRL(centavos: number): string {
+/**
+ * Real em pt-BR a partir de centavos.
+ *
+ * Exportada porque a landing precisa mostrar **a economia** do pagamento à
+ * vista, que é uma subtração entre os dois totais deste mesmo DTO. Formatar
+ * aquilo com um `Intl` próprio na tela abriria um segundo jeito de escrever
+ * dinheiro no produto, e é assim que "R$ 19,70" e "R$19,7" acabam na mesma
+ * página.
+ */
+export function formatarBRL(centavos: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",

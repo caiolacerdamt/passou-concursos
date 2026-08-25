@@ -100,8 +100,14 @@ export function PlanoTela({
 
       {resultado ? <FeedbackDoPlano resultado={resultado} /> : null}
 
+      {/*
+        A frase do plano é texto, não caixa. Ela já é a única voz em primeira
+        pessoa da tela — não precisa de fundo, de borda nem de tab lateral para
+        se destacar, e "nem todo agrupamento é card" (DESIGN.md §Anti-slop).
+        O que a separa é escala e espaço.
+      */}
       {plano.frase ? (
-        <blockquote className="rounded-xl border-l-2 border-marca/40 bg-marca-suave/60 py-3 pl-5 pr-4 leading-7">
+        <blockquote className="max-w-[52ch] text-xl leading-relaxed tracking-[-0.01em] text-suave">
           {plano.frase}
         </blockquote>
       ) : null}

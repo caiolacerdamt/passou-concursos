@@ -203,6 +203,15 @@ describe("/app", () => {
         topicosTocados: 3,
         revisoesConcluidas: 2,
         tendencia: "subindo" as const,
+        porDia: [
+          { data: "2026-08-18", questoes: 0, acertos: 0 },
+          { data: "2026-08-19", questoes: 2, acertos: 2 },
+          { data: "2026-08-20", questoes: 3, acertos: 2 },
+          { data: "2026-08-21", questoes: 0, acertos: 0 },
+          { data: "2026-08-22", questoes: 4, acertos: 3 },
+          { data: "2026-08-23", questoes: 1, acertos: 0 },
+          { data: "2026-08-24", questoes: 2, acertos: 2 },
+        ],
       },
       recuperacao: [
         {
@@ -220,7 +229,7 @@ describe("/app", () => {
 
     expect(dependencias.painel).toHaveBeenCalledWith(expect.anything(), { dataProva: "2026-09-10" });
     expect(html).toContain("17 dias para a prova");
-    expect(html).toContain("Anel de hoje");
+    expect(html).toContain("Você está no meio do dia");
     expect(html).toContain("Sua semana até aqui");
     expect(html).toContain("Erros que merecem outra chance");
     expect(html).toContain("/app/sessao?refacao=1&amp;topico=topico-1&amp;causa=errei_a_conta");

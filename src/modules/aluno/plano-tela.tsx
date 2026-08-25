@@ -34,6 +34,13 @@ type Props = {
   resultado?: ResultadoDoPlano;
 };
 
+function emHoras(minutos: number): string {
+  if (minutos < 60) return `${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  const resto = minutos % 60;
+  return resto === 0 ? `${horas}h` : `${horas}h${String(resto).padStart(2, "0")}`;
+}
+
 export function PlanoTela({
   plano,
   rotulosDosTopicos = new Map(),
@@ -50,41 +57,51 @@ export function PlanoTela({
   const totalQuestoes = blocosDaMeta.reduce((total, bloco) => total + numero(bloco.nQuestoes), 0);
   const totalConcluidos = blocosDaMeta.filter((bloco) => bloco.conclusao !== null).length;
   const rotaDaTela = superficie === "plano" ? "/app/plano" : "/app";
+  const fracaoFeita = blocosDaMeta.length === 0 ? 0 : totalConcluidos / blocosDaMeta.length;
 
   return (
-    <div className="space-y-8">
-      <header className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">
-          {superficie === "plano" ? "Ciclo do edital" : "Seu estudo de hoje"}
-        </p>
-        <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
-          {superficie === "plano"
-            ? "Seu plano, na ordem que faz sentido para você."
-            : "Clareza para começar. Controle para continuar."}
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-suave">
-          Faça primeiro o essencial. Se houver tempo, avance até a meta cheia.
-        </p>
+    <div className="grid gap-5">
+      {/*
+        O resumo do plano vive nesta linha e não num grid de quatro cartões de
+        métrica: quatro números iguais em quatro caixas iguais não têm
+        hierarquia, e a régua do DESIGN.md proíbe exatamente isso. Aqui o
+        número que manda é a fração de blocos feitos, e ela é a única com
+        representação visual.
+      */}
+      <header className="flex flex-col gap-5 border-b border-linha pb-4.5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+            {superficie === "plano" ? "Ciclo do edital" : "Estudo de hoje"}
+          </p>
+          <h2 className="mt-3 max-w-[20ch] text-[2.125rem] font-semibold leading-[1.1] tracking-[-0.03em]">
+            {superficie === "plano"
+              ? "Seu plano, na ordem que faz sentido."
+              : proximoBloco
+                ? "Comece pelo essencial."
+                : "Você fechou o dia."}
+          </h2>
+        </div>
+
+        <div className="shrink-0 sm:min-w-[13rem] sm:text-right">
+          <p className="font-utilitaria text-[0.8125rem] text-suave">
+            {totalConcluidos} de {blocosDaMeta.length}{" "}
+            {blocosDaMeta.length === 1 ? "bloco" : "blocos"} · {emHoras(totalMinutos)} ·{" "}
+            {totalQuestoes} {totalQuestoes === 1 ? "questão" : "questões"}
+          </p>
+          <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-linha">
+            <div
+              style={{ width: `${Math.round(fracaoFeita * 100)}%` }}
+              className="h-full rounded-full bg-marca-viva"
+            />
+          </div>
+          <p className="mt-2 text-xs text-suave">{escopoDoResumo}</p>
+        </div>
       </header>
 
       {resultado ? <FeedbackDoPlano resultado={resultado} /> : null}
 
-      <section
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
-        aria-label="Resumo real do plano"
-      >
-        <ResumoDoPlano rotulo="Blocos" valor={blocosDaMeta.length} detalhe={escopoDoResumo} />
-        <ResumoDoPlano rotulo="Questões" valor={totalQuestoes} detalhe={`previstas ${escopoDoResumo}`} />
-        <ResumoDoPlano rotulo="Tempo" valor={totalMinutos} unidade="min" detalhe={`estimado ${escopoDoResumo}`} />
-        <ResumoDoPlano
-          rotulo="Concluídos"
-          valor={totalConcluidos}
-          detalhe={blocosDaMeta.length === 1 ? escopoDoResumo : `de ${blocosDaMeta.length} ${escopoDoResumo}`}
-        />
-      </section>
-
       {plano.frase ? (
-        <blockquote className="rounded-card border border-marca/20 bg-marca-suave px-5 py-4 text-lg leading-8 text-texto">
+        <blockquote className="rounded-xl border-l-2 border-marca/40 bg-marca-suave/60 py-3 pl-5 pr-4 leading-7">
           {plano.frase}
         </blockquote>
       ) : null}
@@ -96,7 +113,7 @@ export function PlanoTela({
       />
 
       <section
-        className="grid gap-5 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]"
+        className="grid gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]"
         aria-label="Níveis do plano"
       >
         <NivelDoPlano
@@ -109,6 +126,7 @@ export function PlanoTela({
           planoId={plano.id}
           rotulosDosTopicos={rotulosDosTopicos}
           origem={superficie}
+          idEmFoco={proximoBloco?.id ?? null}
         />
         <NivelDoPlano
           nivel="meta_cheia"
@@ -119,31 +137,9 @@ export function PlanoTela({
           planoId={plano.id}
           rotulosDosTopicos={rotulosDosTopicos}
           origem={superficie}
+          idEmFoco={proximoBloco?.id ?? null}
         />
       </section>
-    </div>
-  );
-}
-
-function ResumoDoPlano({
-  rotulo,
-  valor,
-  unidade,
-  detalhe,
-}: {
-  rotulo: string;
-  valor: number;
-  unidade?: string;
-  detalhe: string;
-}) {
-  return (
-    <div className="rounded-card border border-linha bg-painel px-4 py-4 shadow-card">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-suave">{rotulo}</p>
-      <p className="mt-2 font-utilitaria text-2xl font-semibold text-texto">
-        {valor}
-        {unidade ? <span className="ml-1 text-sm font-medium text-suave">{unidade}</span> : null}
-      </p>
-      <p className="mt-1 text-xs text-suave">{detalhe}</p>
     </div>
   );
 }
@@ -159,10 +155,10 @@ function FeedbackDoPlano({ resultado }: { resultado: Exclude<ResultadoDoPlano, n
   return (
     <p
       role={resultado === "erro" ? "alert" : "status"}
-      className={`rounded-lg border px-4 py-3 text-sm leading-6 ${
+      className={`rounded-xl border px-4 py-3 text-sm leading-6 ${
         resultado === "erro"
-          ? "border-erro/40 bg-erro/5 text-erro"
-          : "border-evolucao/40 bg-evolucao/5 text-texto"
+          ? "border-erro/40 bg-erro-fundo text-erro"
+          : "border-evolucao/40 bg-marca-suave text-texto"
       }`}
     >
       {mensagens[resultado]}
@@ -170,6 +166,17 @@ function FeedbackDoPlano({ resultado }: { resultado: Exclude<ResultadoDoPlano, n
   );
 }
 
+/**
+ * O próximo bloco é a única superfície de conteúdo escura da tela.
+ *
+ * O breu vem da landing, onde duas das sete seções o usam — e é o racionamento
+ * que faz ele valer. Aqui vale a mesma regra: um cartão, nunca dois. Se um dia
+ * outro bloco quiser este tratamento, ele disputa este lugar; não ganha um
+ * segundo.
+ *
+ * Sem bloco pendente ele troca de matéria em vez de sumir: verde tênue, porque
+ * fechar o dia é um fato bom, e um vazio escuro leria como erro.
+ */
 function ProximoBloco({
   bloco,
   rotulosDosTopicos,
@@ -179,37 +186,91 @@ function ProximoBloco({
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   rotaDaTela: string;
 }) {
-  return (
-    <section
-      className="rounded-card border border-marca/30 bg-marca-suave p-5 shadow-card sm:p-6"
-      aria-labelledby="proximo-bloco"
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  if (bloco === null) {
+    return (
+      <section
+        aria-labelledby="proximo-bloco"
+        className="grid gap-7 rounded-[1.25rem] border border-marca/30 bg-marca-suave px-8 py-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+      >
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-marca">Próximo bloco</p>
-          <h2 id="proximo-bloco" className="mt-2 text-2xl font-semibold text-texto">
-            {bloco ? nomeDoBloco(bloco, rotulosDosTopicos) : "Tudo concluído por hoje"}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-suave">
-            {bloco
-              ? `${TITULOS[bloco.tipo]} · ${numero(bloco.minutosEstimados)} min${bloco.motivo ? ` · ${bloco.motivo}` : ""}`
-              : "Você cumpriu os blocos disponíveis. Volte amanhã para continuar o ciclo."}
+          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca">
+            Próximo bloco
+          </p>
+          <h3 id="proximo-bloco" className="mt-3 max-w-[18ch] text-3xl font-semibold leading-[1.08] tracking-[-0.035em]">
+            Tudo concluído por hoje
+          </h3>
+          <p className="mt-3 max-w-[46ch] leading-relaxed text-suave">
+            Você cumpriu os blocos disponíveis. As revisões de hoje já estão marcadas para voltar no dia certo.
           </p>
         </div>
-        {bloco ? (
-          <Link
-            href={hrefDoBloco(bloco.id)}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-marca px-5 py-2 text-sm font-semibold text-white transition hover:bg-marca/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+        <Link
+          href={rotaDaTela}
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-marca/40 px-6 text-sm font-semibold text-marca transition-colors duration-150 hover:bg-painel"
+        >
+          Ver o plano
+        </Link>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      aria-labelledby="proximo-bloco"
+      className="grid gap-8 rounded-[1.25rem] bg-breu px-9 py-8 text-breu-tinta sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+    >
+      <div className="min-w-0">
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-breu-verde">
+          Próximo bloco · {TITULOS[bloco.tipo]}
+        </p>
+        <h3
+          id="proximo-bloco"
+          className="mt-3.5 max-w-[20ch] text-[2.25rem] font-semibold leading-[1.06] tracking-[-0.035em]"
+        >
+          {nomeDoBloco(bloco, rotulosDosTopicos)}
+        </h3>
+        <p className="mt-3.5 max-w-[52ch] leading-relaxed text-breu-suave">
+          {bloco.motivo ?? DESCRICOES[bloco.tipo]}
+        </p>
+        <p className="mt-5 font-utilitaria text-[0.8125rem] text-breu-suave">
+          {numero(bloco.minutosEstimados)} min
+          {numero(bloco.nQuestoes) > 0 ? ` · ${numero(bloco.nQuestoes)} questões` : ""}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 flex-col gap-2.5 sm:min-w-[13.5rem]">
+        <Link
+          href={hrefDoBloco(bloco.id)}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-breu-verde px-6 text-[0.9375rem] font-semibold text-breu transition-colors duration-150 hover:bg-breu-tinta"
+        >
+          Começar agora
+          <svg
+            viewBox="0 0 24 24"
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
           >
-            Começar agora
-          </Link>
+            <path d="M5 12h13m0 0-4.6-4.6M18 12l-4.6 4.6" />
+          </svg>
+        </Link>
+        {!versaoCurta(bloco) ? (
+          <form action={escolherVersaoCurta}>
+            <input type="hidden" name="blocoId" value={bloco.id} />
+            <input type="hidden" name="origem" value={rotaDaTela === "/app/plano" ? "plano" : "hoje"} />
+            <button
+              type="submit"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-breu-linha px-5 text-[0.8125rem] font-semibold text-breu-suave transition-colors duration-150 hover:border-breu-verde hover:text-breu-tinta"
+            >
+              Escolher versão curta
+            </button>
+          </form>
         ) : (
-          <Link
-            href={rotaDaTela}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full border border-marca px-5 py-2 text-sm font-semibold text-marca transition hover:bg-painel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
-          >
-            Ver o plano
-          </Link>
+          <span className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-breu-verde/40 px-5 text-[0.8125rem] font-semibold text-breu-verde">
+            Versão curta escolhida
+          </span>
         )}
       </div>
     </section>
@@ -226,6 +287,7 @@ function NivelDoPlano({
   planoId,
   rotulosDosTopicos,
   origem,
+  idEmFoco,
 }: {
   nivel: NivelDoPlano;
   titulo: string;
@@ -236,33 +298,35 @@ function NivelDoPlano({
   planoId: string;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   origem: SuperficieDoPlano;
+  idEmFoco: string | null;
 }) {
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
   const minutos = blocos.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
 
   return (
-    <div className="rounded-card border border-linha bg-painel p-5 shadow-card sm:p-6">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5">
+      <div className="flex items-baseline justify-between gap-3">
         <div>
           <p
-            className={`text-sm font-semibold uppercase tracking-[0.14em] ${
-              nivel === "piso" ? "text-evolucao" : "text-marca"
+            className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${
+              nivel === "piso" ? "text-evolucao" : "text-marca-apoio"
             }`}
           >
-            {subtitulo}
+            {titulo}
           </p>
-          <h2 className="mt-2 text-2xl font-semibold">{titulo}</h2>
+          <h3 className="mt-2 text-[1.1875rem] font-semibold">{subtitulo}</h3>
         </div>
-        <p className="shrink-0 text-right text-xs text-suave">
-          <span className="block font-utilitaria text-base font-semibold text-texto">{minutos} min</span>
-          {pendentes.length} pendente{pendentes.length === 1 ? "" : "s"}
+        <p className="shrink-0 text-right font-utilitaria text-[0.8125rem] text-suave">
+          {emHoras(minutos)}
+          {pendentes.length > 0 ? ` · ${pendentes.length} pendente${pendentes.length === 1 ? "" : "s"}` : ""}
         </p>
       </div>
       <p className="mt-2 text-sm leading-6 text-suave">{explicacao}</p>
+
       <div className="mt-5">
         {blocos.length > 0 ? (
           <ul
-            className={compacto ? "space-y-2" : "grid gap-3 sm:grid-cols-2"}
+            className={compacto ? "grid gap-2.5" : "grid gap-2.5 sm:grid-cols-2"}
             aria-label={`Blocos do ${titulo.toLowerCase()}`}
           >
             {blocos.map((bloco) => (
@@ -275,18 +339,31 @@ function NivelDoPlano({
                   pendentes={pendentes}
                   rotulosDosTopicos={rotulosDosTopicos}
                   origem={origem}
+                  emFoco={bloco.id === idEmFoco}
                 />
               </li>
             ))}
           </ul>
         ) : (
-          <p className="rounded-lg bg-fundo-suave px-3 py-3 text-sm text-suave">
+          <p className="rounded-xl bg-fundo-suave px-4 py-3 text-sm text-suave">
             {nivel === "piso" ? "Nenhuma revisão vencida hoje." : "O acervo ainda está preparando seu primeiro bloco."}
           </p>
         )}
       </div>
     </div>
   );
+}
+
+/**
+ * A matéria do cartão diz o estado antes de qualquer texto: papel é pendente,
+ * verde tênue é feito, e a borda verde dupla marca o bloco que está aberto no
+ * cartão de cima. São três estados, não quatro — "adiado" some da lista do dia
+ * por definição, então não tem cartão aqui.
+ */
+function materiaDoBloco(feito: boolean, emFoco: boolean): string {
+  if (feito) return "border-marca/30 bg-marca-suave";
+  if (emFoco) return "border-marca/40 ring-1 ring-inset ring-marca/20 bg-painel";
+  return "border-linha bg-painel";
 }
 
 function BlocoCard({
@@ -297,6 +374,7 @@ function BlocoCard({
   pendentes,
   rotulosDosTopicos,
   origem,
+  emFoco,
 }: {
   bloco: BlocoDoPlano;
   compacto?: boolean;
@@ -305,6 +383,7 @@ function BlocoCard({
   pendentes: BlocoDoPlano[];
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   origem: SuperficieDoPlano;
+  emFoco: boolean;
 }) {
   const conclusao = bloco.conclusao;
   const pendente = conclusao === null;
@@ -315,43 +394,72 @@ function BlocoCard({
 
   return (
     <div
-      className={`rounded-lg border ${
-        conclusao ? "border-evolucao/40 bg-evolucao/5" : "border-linha bg-fundo-suave"
-      } ${compacto ? "p-3" : "p-4"}`}
+      className={`h-full rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
+        compacto ? "px-4 py-3.5" : "p-4"
+      }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-marca">{TITULOS[bloco.tipo]}</p>
-            {conclusao ? (
-              <span className="rounded-full bg-evolucao/10 px-2 py-0.5 text-xs font-semibold text-evolucao">Concluído</span>
-            ) : null}
-          </div>
-          <h3 className="mt-1 truncate font-semibold">{nomeDoBloco(bloco, rotulosDosTopicos)}</h3>
-        </div>
-        <span className="shrink-0 font-utilitaria text-xs text-suave">{numero(bloco.minutosEstimados)} min</span>
+      <div className="flex items-baseline justify-between gap-3">
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[0.6875rem] font-semibold ${
+            conclusao
+              ? "bg-ok/15 text-ok"
+              : emFoco
+                ? "bg-marca-suave text-marca"
+                : "bg-fundo-suave text-suave"
+          }`}
+        >
+          {conclusao ? (
+            <svg
+              viewBox="0 0 24 24"
+              className="size-3"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m5 12.5 4.5 4.5L19 7" />
+            </svg>
+          ) : null}
+          {conclusao ? "Concluído" : emFoco ? `Em foco · ${TITULOS[bloco.tipo]}` : TITULOS[bloco.tipo]}
+        </span>
+        <span className="shrink-0 font-utilitaria text-xs text-suave">
+          {numero(bloco.minutosEstimados)} min
+        </span>
       </div>
-      <p className="mt-2 text-sm leading-6 text-suave">{bloco.motivo ?? DESCRICOES[bloco.tipo]}</p>
+
+      <h4 className="mt-2.5 font-semibold tracking-[-0.015em]">
+        {nomeDoBloco(bloco, rotulosDosTopicos)}
+      </h4>
+      <p className="mt-1.5 text-[0.8125rem] leading-6 text-suave">
+        {bloco.motivo ?? DESCRICOES[bloco.tipo]}
+      </p>
+
       {conclusao ? (
         <>
-          <p className="mt-3 text-sm font-semibold text-evolucao">
+          <p className="mt-2.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
             {conclusao.nQuestoes} questões · {conclusao.nAcertos} acertos
           </p>
           <Link
             href={`/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`}
-            className="mt-3 inline-flex min-h-10 items-center rounded-full border border-evolucao px-4 py-2 text-sm font-semibold text-evolucao transition hover:bg-evolucao hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-evolucao"
+            className="mt-3.5 inline-flex min-h-10 items-center rounded-full border border-marca/30 px-4 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel"
           >
             Ver resumo
           </Link>
         </>
       ) : (
         <>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-3.5 flex flex-wrap items-center gap-2">
             <Link
               href={hrefDoBloco(bloco.id)}
-              className="inline-flex min-h-10 items-center rounded-full border border-marca px-4 py-2 text-sm font-semibold text-marca transition hover:bg-marca hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+              className={`inline-flex min-h-10 items-center rounded-full px-4 text-[0.8125rem] font-semibold transition-colors duration-150 ${
+                emFoco
+                  ? "bg-marca text-painel hover:bg-marca-apoio"
+                  : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
+              }`}
             >
-              Começar bloco
+              {emFoco ? "Continuar" : "Começar bloco"}
             </Link>
             {!curta ? (
               <form action={escolherVersaoCurta}>
@@ -359,13 +467,13 @@ function BlocoCard({
                 <input type="hidden" name="origem" value={origem} />
                 <button
                   type="submit"
-                  className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 py-2 text-sm font-semibold text-suave transition hover:border-marca/50 hover:text-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+                  className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
                 >
-                  Escolher versão curta
+                  Versão curta
                 </button>
               </form>
             ) : (
-              <span className="inline-flex min-h-10 items-center rounded-full border border-evolucao/40 px-4 py-2 text-sm font-semibold text-evolucao">
+              <span className="inline-flex min-h-10 items-center rounded-full border border-evolucao/40 px-4 text-[0.8125rem] font-semibold text-evolucao">
                 Versão curta escolhida
               </span>
             )}
@@ -374,14 +482,17 @@ function BlocoCard({
               <input type="hidden" name="origem" value={origem} />
               <button
                 type="submit"
-                className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 py-2 text-sm font-semibold text-suave transition hover:border-marca/50 hover:text-marca focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+                className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
               >
                 Adiar para outro dia
               </button>
             </form>
           </div>
+
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linha/70 pt-3">
-            <span className="text-xs font-semibold uppercase tracking-[0.12em] text-suave">Ordem</span>
+            <span className="font-utilitaria text-[0.625rem] uppercase tracking-[0.14em] text-suave">
+              Ordem
+            </span>
             <form action={reordenarBlocosPendentes}>
               <input type="hidden" name="planoId" value={planoId} />
               <input type="hidden" name="nivel" value={nivel} />
@@ -393,7 +504,7 @@ function BlocoCard({
                 type="submit"
                 disabled={!podeSubir}
                 aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para cima`}
-                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40"
               >
                 ↑ Subir
               </button>
@@ -409,7 +520,7 @@ function BlocoCard({
                 type="submit"
                 disabled={!podeDescer}
                 aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para baixo`}
-                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
+                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40"
               >
                 ↓ Descer
               </button>

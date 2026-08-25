@@ -160,14 +160,24 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         estudo_meta: number;
         estudo_progresso: number;
         estudo_bruto: number;
+        estudo_piso_meta: number;
+        estudo_piso_progresso: number;
         questoes_meta: number;
         questoes_progresso: number;
         questoes_bruto: number;
+        questoes_piso_meta: number;
+        questoes_piso_progresso: number;
         revisao_meta: number;
         revisao_progresso: number;
+        revisao_piso_meta: number;
+        revisao_piso_progresso: number;
       }>(
         `select estudo_meta, estudo_progresso, estudo_bruto, questoes_meta,
-                questoes_progresso, questoes_bruto, revisao_meta, revisao_progresso
+                estudo_piso_meta, estudo_piso_progresso,
+                questoes_progresso, questoes_bruto,
+                questoes_piso_meta, questoes_piso_progresso,
+                revisao_meta, revisao_progresso,
+                revisao_piso_meta, revisao_piso_progresso
            from public.gamificacao_dia where user_id = $1 and data = $2`,
         [aluno, data],
       );
@@ -175,16 +185,22 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         estudo_meta: 1,
         estudo_progresso: 1,
         estudo_bruto: 2,
+        estudo_piso_meta: 1,
+        estudo_piso_progresso: 1,
         questoes_meta: 2,
-        questoes_progresso: 1,
+        questoes_progresso: 2,
         questoes_bruto: 2,
+        questoes_piso_meta: 2,
+        questoes_piso_progresso: 1,
         revisao_meta: 1,
         revisao_progresso: 0,
+        revisao_piso_meta: 1,
+        revisao_piso_progresso: 0,
       });
     });
   });
 
-  it("fecha cada dimensão pelo piso e não pelo bloco meta_cheia alheio", async () => {
+  it("mede a meta cheia e preserva o recorte do piso", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = await criarUsuario(cliente);
       const autor = await criarUsuario(cliente);
@@ -198,7 +214,7 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
       const plano = await criarPlanoComBlocos(cliente, aluno, data);
       const questao = await questaoParaResponder(cliente);
 
-      // Meta cheia concluída é volume auditável, mas não avança o anel.
+      // A meta cheia concluida avanca o anel inteiro.
       await fecharBlocoComTentativa(cliente, aluno, plano.meta, data, questao);
       await fecharBlocoComTentativa(cliente, aluno, plano.metaRevisao, data, questao);
       await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
@@ -210,29 +226,45 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         questoes_meta: number;
         questoes_progresso: number;
         questoes_bruto: number;
+        estudo_piso_meta: number;
+        estudo_piso_progresso: number;
+        questoes_piso_meta: number;
+        questoes_piso_progresso: number;
+        revisao_piso_meta: number;
+        revisao_piso_progresso: number;
         revisao_meta: number;
         revisao_progresso: number;
         revisao_bruto: number;
       }>(
         `select estudo_meta, estudo_progresso, estudo_bruto, questoes_meta,
-                questoes_progresso, questoes_bruto, revisao_meta,
-                revisao_progresso, revisao_bruto
+                questoes_progresso, questoes_bruto,
+                estudo_piso_meta, estudo_piso_progresso,
+                questoes_piso_meta, questoes_piso_progresso,
+                revisao_piso_meta, revisao_piso_progresso,
+                revisao_meta, revisao_progresso, revisao_bruto
            from public.gamificacao_dia where user_id = $1 and data = $2`,
         [aluno, data],
       );
       expect(antes.rows[0]).toMatchObject({
         estudo_meta: 1,
-        estudo_progresso: 0,
+        estudo_progresso: 1,
         estudo_bruto: 1,
+        estudo_piso_meta: 1,
+        estudo_piso_progresso: 0,
         questoes_meta: 2,
-        questoes_progresso: 0,
+        questoes_progresso: 2,
         questoes_bruto: 2,
+        questoes_piso_meta: 2,
+        questoes_piso_progresso: 0,
         revisao_meta: 1,
-        revisao_progresso: 0,
+        revisao_progresso: 1,
         revisao_bruto: 1,
+        revisao_piso_meta: 1,
+        revisao_piso_progresso: 0,
       });
 
-      // Só o piso correspondente fecha as três dimensões aplicáveis.
+      // O recorte do piso fecha as tres dimensoes, sem alterar o progresso da
+      // meta cheia que ja estava concluida.
       await fecharBlocoComTentativa(cliente, aluno, plano.piso, data, questao);
       await fecharBlocoComTentativa(cliente, aluno, plano.pisoRevisao, data, questao);
       await cliente.query("select public.materializar_gamificacao($1, $2::date)", [aluno, data]);
@@ -241,8 +273,13 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         estudo_progresso: number;
         questoes_progresso: number;
         revisao_progresso: number;
+        estudo_piso_progresso: number;
+        questoes_piso_progresso: number;
+        revisao_piso_progresso: number;
       }>(
-        `select estudo_progresso, questoes_progresso, revisao_progresso
+        `select estudo_progresso, questoes_progresso, revisao_progresso,
+                estudo_piso_progresso, questoes_piso_progresso,
+                revisao_piso_progresso
            from public.gamificacao_dia where user_id = $1 and data = $2`,
         [aluno, data],
       );

@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -113,7 +115,7 @@ describe("importar questoes JSON", () => {
 
     const codigo = await executar({}, ["--dry-run", "--json", "questoes.json", "--taxonomia", "taxonomia.json", "--mapa", "mapa.json"], {
       raiz: process.cwd(),
-      lerArquivo: (caminho) => arquivo.get(caminho.split("\\").pop() ?? caminho) ?? "",
+      lerArquivo: (caminho) => arquivo.get(path.basename(caminho)) ?? "",
       abrirConexao,
     });
 

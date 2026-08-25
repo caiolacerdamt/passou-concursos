@@ -271,6 +271,8 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         user_id: aluno,
         correta: false,
         resposta_dada: "A",
+        causa_erro: "nao_sei_dizer",
+        causa_origem: "aluno",
         respondida_em: `${data}T10:00:00-03:00`,
       });
       await inserirTentativa(cliente, questao, {
@@ -289,6 +291,8 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         user_id: aluno,
         correta: false,
         resposta_dada: "A",
+        causa_erro: "nao_sei_dizer",
+        causa_origem: "aluno",
         respondida_em: `${data}T10:03:00-03:00`,
       });
       await inserirTentativa(cliente, questao, {

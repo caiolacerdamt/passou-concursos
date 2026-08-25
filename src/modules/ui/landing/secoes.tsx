@@ -46,30 +46,28 @@ export function Heroi({ frequencia }: { frequencia: FrequenciaReal }) {
       <div className="faixa">
         <div className="heroi">
           <div className="heroi__texto">
-            <p className="rotulo" data-sc-in>
-              Banco do Brasil · {frequencia.totalProvas} provas oficiais lidas
-            </p>
             {/* Sem `<em>` aqui dentro: `data-sc-kinetic` reconstrói o elemento a
                 partir de `textContent`, então qualquer marcação interna some na
                 hidratação. Ênfase no herói é tamanho, não cor. */}
             <h1 id="t1" className="display" data-sc-in data-sc-kinetic="lines">
-              Estude o que cai. Não o edital inteiro.
+              No edital, tudo pesa igual. Na prova, não.
             </h1>
             <p className="lede" data-sc-in>
-              A gente leu as provas oficiais e contou quanto cada assunto apareceu. Essa
-              medida entra no peso do seu plano de hoje, no lugar do seu palpite.
+              A gente leu prova por prova do Banco do Brasil e contou, questão por
+              questão, o que a banca mais cobra. O plano do seu dia sai dessa contagem,
+              não do seu palpite.
             </p>
             <div className="heroi__acoes" data-sc-in>
               <a className="botao botao--grande" href="#oferta">
-                Ver a oferta
+                Começar meu método
               </a>
               <a className="botao botao--grande botao--vazado" href="#metodo">
                 Como funciona
               </a>
             </div>
             <p className="micro" data-sc-in>
-              Garantia de 7 dias · sem ranking entre alunos · questões com banca, ano e
-              número
+              {frequencia.totalProvas} provas oficiais lidas · garantia de 7 dias ·
+              questões com banca, ano e número
             </p>
           </div>
 
@@ -137,10 +135,12 @@ export function Heroi({ frequencia }: { frequencia: FrequenciaReal }) {
    A torre também anda: sobe e cresce com o mesmo `--sc-p`. Ela é grande de
    propósito — o contraste de escala entre a figura e a pilha é o argumento. */
 export function Problema({ frequencia }: { frequencia: FrequenciaReal }) {
-  /* Os dois extremos reais do acervo. "Um tópico vale trinta questões e outro
-     vale nenhuma" seria retórica: estes dois números são consulta. */
+  /* Os dois extremos reais do acervo. "Um tópico vale trinta vezes mais que
+     outro" seria retórica: este número é consulta, calculado dos dois
+     extremos, nunca escrito à mão (AD-108). */
   const maior = frequencia.topicos[0];
   const menor = frequencia.topicos[frequencia.topicos.length - 1];
+  const multiplicador = Math.round(maior.questoes / Math.max(1, menor.questoes));
 
   return (
     <section
@@ -176,31 +176,36 @@ export function Problema({ frequencia }: { frequencia: FrequenciaReal }) {
                   tela antes de o progresso sair de 0, então a primeira fala tem
                   que já estar lá. Sem isso o leitor encara palco vazio. */}
               <div className="fala" data-sc-cue="0 0.38 0">
-                <p className="rotulo rotulo--claro">O que o edital entrega</p>
                 <h2 id="t2" className="titulo titulo--claro">
-                  O edital mente por omissão.
+                  No edital, todo tópico pesa igual.
                 </h2>
                 <p className="lede lede--clara">
-                  Ele lista {frequencia.totalTopicos} tópicos com a mesma cara: mesmo
-                  tamanho, mesma fonte, mesma ordem. Como se caíssem igual.
+                  São {frequencia.totalTopicos} itens escritos do mesmo jeito: mesma
+                  fonte, mesmo tamanho, mesma ordem. Nada ali avisa qual pesa mais na
+                  hora da prova.
                 </p>
               </div>
               <div className="fala" data-sc-cue="0.36 0.74">
-                <p className="rotulo rotulo--claro">O que a prova fez com eles</p>
-                <p className="titulo titulo--claro">Não caem igual. Nunca caíram.</p>
+                <p className="titulo titulo--claro">
+                  Na prova, não pesam igual. Nunca pesaram.
+                </p>
                 <p className="lede lede--clara">
-                  <em>{maior.topico}</em> apareceu {maior.questoes} vezes nas provas
-                  lidas. <em>{menor.topico}</em> apareceu{" "}
-                  {menor.questoes === 1 ? "uma" : menor.questoes}. O edital não te conta
-                  qual é qual, e não é trabalho dele contar.
+                  Nas provas que a gente leu, <em>{maior.topico}</em> caiu{" "}
+                  {maior.questoes} vezes. <em>{menor.topico}</em>,{" "}
+                  {menor.questoes === 1 ? "uma" : menor.questoes}.{" "}
+                  {multiplicador > 1
+                    ? `Duas linhas do mesmo tamanho no edital, ${multiplicador}x de diferença na prova.`
+                    : "Duas linhas do mesmo tamanho no edital, pesos bem diferentes na prova."}
                 </p>
               </div>
               <div className="fala" data-sc-cue="0.72 1 0.12 0.02">
-                <p className="rotulo rotulo--claro">O que sobra para você</p>
-                <p className="titulo titulo--claro">Aí você estuda o que dá.</p>
+                <p className="titulo titulo--claro">
+                  Sem essa conta, você estuda tudo do mesmo jeito.
+                </p>
                 <p className="lede lede--clara">
-                  Na ordem que der, no fôlego que der. E descobre onde estava o peso no
-                  único dia em que não dá mais para corrigir.
+                  O mesmo tempo pro tópico que carrega a prova e pro que quase nunca
+                  aparece. A diferença só aparece na correção, no único dia em que já
+                  não dá mais para mudar o plano.
                 </p>
               </div>
             </div>
@@ -221,7 +226,7 @@ export function Medida({ frequencia }: { frequencia: FrequenciaReal }) {
         <div className="medida__grade">
           <div>
             <p className="rotulo" data-sc-in>
-              Então alguém sentou e contou
+              Não é estimativa. É contagem.
             </p>
             {/* O `padding-block` do `.medida` no CSS não é folga estética: o
                 `clip-path` do reveal corta a caixa, e a caixa de um numerão com
@@ -234,7 +239,7 @@ export function Medida({ frequencia }: { frequencia: FrequenciaReal }) {
                 </span>
               </p>
               <h2 id="t3" className="titulo titulo--gigante">
-                questões de prova real, contadas uma a uma.
+                questões tiradas de prova oficial, uma por uma.
               </h2>
             </div>
           </div>
@@ -256,13 +261,13 @@ export function Medida({ frequencia }: { frequencia: FrequenciaReal }) {
 
         <div className="medida__pe">
           <p className="lede" data-sc-in>
-            De {frequencia.totalProvas} provas oficiais do Banco do Brasil, entre{" "}
-            {frequencia.primeiroAno} e {frequencia.ultimoAno}. Cada uma com banca, ano,
-            órgão, cargo e número na etiqueta.
+            De {frequencia.totalProvas} provas do Banco do Brasil, entre{" "}
+            {frequencia.primeiroAno} e {frequencia.ultimoAno}. Cada questão carrega
+            banca, ano, órgão, cargo e número. Dá pra conferir, não só confiar.
           </p>
           <p className="lede lede--fraca" data-sc-in>
-            Questão inédita não entra nessa conta. É isso, e só isso, que faz o número
-            significar alguma coisa.
+            Questão inédita não entra nessa conta. Ela mediria o quanto a gente
+            escreveu, não o que a banca realmente cobra.
           </p>
         </div>
       </div>
@@ -278,19 +283,19 @@ const PILARES = [
     chave: "01",
     titulo: "A alternativa certa",
     texto:
-      "Vem do gabarito oficial da banca e é conferida por código. A IA não escolhe resposta.",
+      "Vem do gabarito oficial da banca e passa por conferência em código. Você nunca está testando a opinião de uma IA.",
   },
   {
     chave: "02",
     titulo: "A hora da revisão",
     texto:
-      "Errou, volta antes. Acertou com folga, volta depois. Escolher isso cansado é o que estraga o estudo.",
+      "Errou, a pergunta volta antes. Acertou com folga, ela volta depois. O sistema decide isso todo dia, sem você precisar lembrar.",
   },
   {
     chave: "03",
     titulo: "O plano do dia",
     texto:
-      "Sai do seu histórico rodando numa regra, com a frequência medida no peso. A IA só escreve a frase.",
+      "Sai do seu histórico e do peso real de cada tópico, medido nas provas oficiais. Você abre o app e já sabe o que estudar.",
   },
 ];
 
@@ -304,7 +309,7 @@ export function Metodo() {
     >
       <div className="faixa">
         <h2 id="t5" className="titulo titulo--gigante" data-sc-in>
-          Três coisas que a IA <em className="realce">não</em> decide aqui
+          O que garante que seu plano <em className="realce">não é chute</em>
         </h2>
 
         {/* `data-sc-stagger` sozinho não revela nada: o motor só observa
@@ -355,10 +360,10 @@ export function Metodo() {
                 Responder questão e revisar espaçado estão no topo da lista.
               </h3>
               <p className="lede">
-                <em>Donoghue e Hattie</em> compararam as técnicas de estudo que a
-                literatura já mediu de verdade. Essas duas ficaram entre as mais
-                eficazes que existem. São exatamente as duas que este produto
-                automatiza para você, todo dia, sem você precisar lembrar.
+                <em>Donoghue e Hattie</em> reuniram os estudos que realmente mediram o
+                efeito de cada técnica de estudo. Praticar com questões e revisar no
+                tempo certo ficaram entre as mais eficazes de todas. São as duas que
+                este produto automatiza para você, todo dia, sem você precisar lembrar.
               </p>
               <p className="evidencia__fonte">
                 <a
@@ -389,21 +394,17 @@ export function Metodo() {
 }
 
 /* ============================================================== SEÇÃO 6 ==
-   Hoje × ainda não. Dois cartões que entram de bordas opostas e se inclinam
-   sob o ponteiro. Ele lê o que NÃO existe antes de ver o preço, que é a ordem
-   honesta (AD-076).                                                        */
-const NO_AR = [
-  "Plano do dia, montado a partir do seu histórico",
+   O que vem com a conta. Um cartão só, com o que já está de pé — a rodada de
+   copy de 2026-08-25 (AD-110) tirou o cartão "ainda não" que existia aqui: o
+   dono decidiu que a página de vendas não lista mais o que falta entregar.
+   O grid de `.razonetes` é `auto-fit`, então um cartão só ocupa a largura
+   inteira sem precisar mexer no CSS. */
+const INCLUSO = [
+  "Plano do dia, montado a partir do seu histórico e do peso real de cada tópico",
   "Sessão de questões de prova real, com gabarito oficial conferido",
+  "Revisão espaçada: a pergunta certa volta na hora certa, sem você ter que lembrar",
   "Progresso e sequência de dias",
-  "Sua conta e seus dados, com exclusão a pedido",
-];
-
-const AINDA_NAO = [
-  "Tutor de dúvidas com IA",
-  "Tela própria do Raio-X — a medida já pesa no plano, mas ainda não tem tela",
-  "Diagnóstico adaptativo de entrada",
-  "Gamificação além da sequência de dias",
+  "Sua conta e seus dados, com exclusão sempre que você pedir",
 ];
 
 export function Hoje() {
@@ -418,11 +419,10 @@ export function Hoje() {
         <div className="hoje__cabeca">
           <div>
             <h2 id="t6" className="titulo titulo--gigante" data-sc-in>
-              O que existe hoje, e o que ainda não
+              O que você recebe quando assina
             </h2>
             <p className="lede" data-sc-in>
-              O produto está sendo construído inteiro, mas nem tudo nasce ligado. Você
-              compra o cartão da esquerda.
+              Tudo isso já está de pé, funcionando, desde o primeiro dia que você entra.
             </p>
           </div>
           {/* Ver a nota em `.figura`, no CSS: estas três artes deixaram de
@@ -446,20 +446,9 @@ export function Hoje() {
         <div className="razonetes">
           <div className="razonete" style={{ "--lado": -1 } as CSSProperties}>
             <div className="cartao cartao--alto cartao--dentro" data-sc-tilt="7">
-              <p className="rotulo">No ar nesta oferta</p>
+              <p className="rotulo">O que vem com a sua conta</p>
               <ul className="lista lista--dentro">
-                {NO_AR.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="razonete" style={{ "--lado": 1 } as CSSProperties}>
-            <div className="cartao cartao--alto cartao--fora" data-sc-tilt="7">
-              <p className="rotulo rotulo--cinza">Ainda não</p>
-              <ul className="lista lista--fora">
-                {AINDA_NAO.map((item) => (
+                {INCLUSO.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
@@ -468,9 +457,9 @@ export function Hoje() {
         </div>
 
         <p className="nota" data-sc-in>
-          <strong>Ranking entre alunos não está nessa lista de espera.</strong> Você
-          disputa vaga com quem estuda ao seu lado; expor quem está atrás não ajuda
-          ninguém a passar. A comparação aqui é sempre com você mesmo.
+          <strong>Ranking entre alunos não faz parte do produto.</strong> Você disputa
+          vaga com quem estuda ao seu lado; aqui a comparação que importa é só com você
+          mesmo, ontem.
         </p>
       </div>
     </section>
@@ -522,11 +511,12 @@ export function Oferta({ precos }: { precos: PrecosPublicos }) {
               data-sc-in
               data-sc-kinetic="lines"
             >
-              Esta página não promete aprovação.
+              O método é real. O resto é com você.
             </h2>
             <p className="lede" data-sc-in>
-              Promete método com evidência, acervo com proveniência e um plano que sai do
-              seu histórico. O resto é você, todo santo dia.
+              Acervo com proveniência, plano que sai do seu histórico e revisão no tempo
+              certo. Sem fórmula mágica, sem aprovação garantida. Só método, testado nas
+              provas reais que a gente leu.
             </p>
           </div>
           <figure className="fecho__arte figura" data-sc-parallax="0.35">

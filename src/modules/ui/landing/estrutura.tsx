@@ -30,12 +30,16 @@ export function Barra() {
 
       <nav className="barra__nav" aria-label="Seções da página">
         <a href="#metodo">Método</a>
-        <a href="#hoje">O que existe hoje</a>
+        <a href="#hoje">O que você recebe</a>
         <a href="#oferta">Preço</a>
       </nav>
 
+      <Link className="barra__entrar" href="/entrar">
+        Entrar
+      </Link>
+
       <a className="botao botao--pequeno" href="#oferta">
-        Ver a oferta
+        Começar
       </a>
 
       {/* Uma barra de progresso só, a nossa. A do motor fica desligada: duas

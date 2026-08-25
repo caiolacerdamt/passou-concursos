@@ -18,9 +18,9 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Passou Concursos — estude o que a banca cobra de verdade",
+  title: "Passou Concursos — o que a banca do Banco do Brasil cobra de verdade",
   description:
-    "Provas oficiais do Banco do Brasil lidas questão por questão. Doze tópicos carregam a maior fatia da prova. O seu plano do dia sai daí, não do seu palpite.",
+    "A gente leu prova por prova do Banco do Brasil e contou, questão por questão, o que a banca mais cobra. Seu plano do dia sai dessa contagem, não do seu palpite.",
 };
 
 /**
@@ -28,10 +28,11 @@ export const metadata: Metadata = {
  * inteiro atrás do paywall, então esta página é a única chance de convencer.
  *
  * O que ela SHALL conter está no AC de `m8 §P1` e é guardado por
- * `page.test.tsx` — método, evidências, os dois preços, garantia, links legais
- * antes do CTA e a declaração honesta do que existe hoje. O visual vem de
- * `DESIGN.md` e do porte do protótipo aprovado em `scrollcraft/builds/passou-lp`
- * (AD-106).
+ * `page.test.tsx` — método, evidências, os dois preços, garantia e links legais
+ * antes do CTA. A rodada de copy de 2026-08-25 (AD-110) tirou a declaração do
+ * que ainda não existe: decisão do dono, revoga a AC2 original só para esta
+ * página. O visual vem de `DESIGN.md` e do porte do protótipo aprovado em
+ * `scrollcraft/builds/passou-lp` (AD-106).
  *
  * **Sete seções, sete server components.** Nenhuma delas anima nada: elas só
  * produzem DOM com ganchos `data-sc-*`, e `MotorDaLanding` — o único client

@@ -51,13 +51,13 @@ describe("pagina de vendas", () => {
       html.indexOf("Conferir o checkout"),
     );
 
-    // AC2: declara o que ainda não existe em vez de prometer.
-    expect(html).toContain("Ainda não");
-    expect(html).toContain("Tutor de dúvidas");
-    expect(html).toContain("não promete aprovação");
+    // Rodada de copy de 2026-08-25 (AD-110): a página deixou de listar o que
+    // ainda não existe — decisão do dono, registrada em STATE.md, que revoga
+    // a AC2 original de PAG-08 só para esta página.
+    expect(html).toContain("O que você recebe quando assina");
 
     // Invariante 15: sem ranking entre alunos.
-    expect(html).toContain("Ranking entre alunos não está");
+    expect(html).toContain("Ranking entre alunos não faz parte");
 
     expect(html).not.toContain("data-nascimento");
   });

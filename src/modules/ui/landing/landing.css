@@ -109,6 +109,17 @@
 .lp .barra__nav a:hover {
   color: var(--color-tinta);
 }
+/* Fora do `.barra__nav` de propósito: o nav some no celular, e o link de
+   login precisa continuar alcançável lá. */
+.lp .barra__entrar {
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+.lp .barra__entrar:hover {
+  color: var(--color-tinta);
+}
 /* Uma barra de progresso só. A do motor fica desligada; esta é a nossa, e
    duas empilhadas foi defeito pego na verificação. */
 .lp .barra__progresso {

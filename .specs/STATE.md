@@ -465,28 +465,58 @@
 - **Date**: 2026-08-25
 - **Status**: active
 
+### AD-110
+- **Decision**: A copy da landing SHALL vender o método (o que o aluno recebe), não a ausência de
+  aprovação nem o roteiro do que falta construir. Concretamente: (a) o headline, a sub, o CTA do herói
+  e o CTA da barra mudam de tom informativo/defensivo para direto; (b) a seção "hoje × ainda não"
+  perde o cartão "ainda não" — fica só o que já está de pé, sob o título "O que você recebe quando
+  assina"; (c) o headline do fecho deixa de abrir com "Esta página não promete aprovação" e passa a
+  fechar em tom positivo, mantendo a mesma ressalva (sem fórmula mágica, sem aprovação garantida) como
+  frase de apoio, não como manchete. Isto **revoga**, só para esta página, a AC2 de `m8-negocio-
+  pagamentos/spec.md §P1` ("a página SHALL declarar honestamente o que existe hoje e o que não
+  existe") e o trecho equivalente da AD-076.
+- **Reason**: Pedido direto do dono depois de ler a página no ar: a copy inteira soava genérica,
+  defensiva e não deixava claro o que a plataforma entrega nem por que alguém pagaria. Ele foi
+  avisado, nesta conversa, de que a seção "ainda não" e o headline "não promete aprovação" vinham de
+  uma decisão registrada (AD-076) sobre nunca prometer o que não existe — e manteve a decisão de
+  tirar mesmo assim. O produto continua sem prometer nada que não entrega: só deixou de haver, na
+  página de vendas, uma seção dedicada a enumerar o que falta.
+- **Trade-off**: A landing não avisa mais o comprador, na própria página, sobre tutor de IA, tela do
+  Raio-X, diagnóstico adaptativo e gamificação além da sequência ainda não estarem ligados. Esse aviso
+  continua valendo como fato do produto (nada disso é vendido em nenhum outro texto da página); só
+  deixou de ser exibido como lista. Se isso gerar reclamação ou reembolso por expectativa não batida,
+  é o primeiro sinal de que a AD precisa ser revista.
+- **Scope**: Rota `/` — `secoes.tsx` (Heroi, Problema, Medida, Metodo, Hoje, Oferta), `estrutura.tsx`
+  (barra: CTA + link `/entrar` que faltava) e `landing.css` (regra nova só para o link de entrar).
+  `page.test.tsx` ajustado para guardar a AC nova. Nenhum outro módulo muda: a régua de honestidade do
+  invariante 14 (`AGENTS.md`) segue valendo para o produto e para qualquer outra superfície.
+- **Date**: 2026-08-25
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Rodada de design da landing pedida pelo dono depois do porte (AD-109). Ajuste de
-  superfície, fora da numeração de specs; o contrato de PAG-08 não mudou e `page.test.tsx` segue verde.
+- **Feature**: Rodada de copy da landing pedida pelo dono (AD-110), depois da rodada de design
+  (AD-109). Ajuste de superfície, fora da numeração de specs.
 - **Phase / Task**: concluído. Sem ritual de spec.
-- **Completed**: herói com ilustração única gerada (`public/arte/heroi-medida.png`, prompt em
-  `scrollcraft/builds/passou-lp/prompts/a1-heroi-medida.txt`), movimento em três camadas e fita de
-  tópicos reais; seção 2 com trilho de progresso lido de `--sc-p`, arte maior e visível no celular,
-  copy com os dois extremos reais do acervo, span 2.6 → 3.2; pico com cascata por posto, nome do
-  tópico escrito no papel (≥900px), eixo do gráfico e recuo da cauda; bloco de evidência redesenhado
-  como painel com o 242 em numerão; artes 5/6/7 e os dois cartões `hoje × ainda não` migrados de
-  `data-sc-reveal` para transform contínuo.
+- **Completed**: barra com link "Entrar" (`/entrar`) que faltava e CTA "Começar"; herói com headline,
+  sub e CTA novos, rótulo de prova removido do topo e a contagem de provas movida para a linha de
+  confiança sob o CTA; seção 2 com as três falas reescritas e os rótulos acima de cada uma removidos,
+  mais um multiplicador calculado (nunca escrito à mão, AD-108) entre o maior e o menor tópico; seção 3
+  com rótulo e título novos; seção 5 com título e os três cartões reescritos em tom positivo; seção 6
+  reduzida a um cartão só (tirou "ainda não", ver AD-110) sob o título "O que você recebe quando
+  assina"; fecho com headline e sub novos, tirando "Esta página não promete aprovação" como manchete.
 - **Gates**: `tsc --noEmit` limpo, `eslint src/modules/ui/landing src/app/(landing)` sem erro,
-  `vitest --project unit` 96/96 na rota. Captura de scroll em desktop, 390px e
-  `prefers-reduced-motion`: sem dead scroll, sem cue fraca, contraste de todas as cues acima de 4.5:1
-  (`lab/final-desk`, `lab/final-mob`, `lab/final-red`).
-- **External checks**: nenhuma migration nova. A geração da arte custou US$ 0,17 no OpenRouter.
-- **In-progress** (file:line): none.
+  `vitest --project unit` 837/837 (suíte inteira, não só a rota).
+- **External checks**: nenhuma migration, nenhuma geração de arte nova — as ilustrações da AD-106/109
+  não mudaram.
+- **In-progress** (file:line): captura de scroll (desktop/390px/`prefers-reduced-motion`) da copy nova
+  **não feita** nesta rodada — a rodada anterior (AD-109) já tinha validado o motor e o layout; esta
+  rodada só trocou texto e removeu um cartão do grid `auto-fit`, sem tocar `data-sc-*` nem CSS de
+  animação.
 - **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
 - **Blockers**: nenhum. O rótulo longo encostando no número no celular **foi corrigido** (teto de 20
-  caracteres abaixo de 900px). Continua **não feita** a verificação em aparelho real (iPhone) — Chrome
-  headless não reproduz decodificador, autoplay nem toque.
+  caracteres abaixo de 900px), herdado da AD-109. Continua **não feita** a verificação em aparelho real
+  (iPhone) — Chrome headless não reproduz decodificador, autoplay nem toque.
 - **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
   `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
 - **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,

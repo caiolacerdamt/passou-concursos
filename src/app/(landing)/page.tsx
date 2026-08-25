@@ -54,8 +54,8 @@ export default async function Home() {
       <Barra />
 
       <main id="topo">
-        <Heroi />
-        <Problema />
+        <Heroi frequencia={frequencia} />
+        <Problema frequencia={frequencia} />
         <Medida frequencia={frequencia} />
         <Pico frequencia={frequencia} />
         <Metodo />

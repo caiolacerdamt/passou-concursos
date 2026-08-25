@@ -441,28 +441,52 @@
 - **Date**: 2026-08-25
 - **Status**: active
 
+### AD-109
+- **Decision**: O movimento da landing SHALL ser contínuo e dirigido por `--sc-p`, nunca por
+  revelação de `clip-path` disparada uma vez. As artes das seções 5, 6 e 7 e os dois cartões
+  `hoje × ainda não` SHALL usar transform contínuo; `data-sc-reveal` fica apenas na seção 3, que o
+  dono aprovou. O herói SHALL ter **uma** ilustração (`/arte/heroi-medida.png`), não duas sobrepostas.
+  E os 86 chips do pico SHALL cair **em cascata por posto**, com o nome do tópico escrito no papel
+  desde o repouso em telas ≥ 900px.
+- **Reason**: Revisão de design pedida pelo dono depois de ver a página no ar. Três queixas, três
+  causas: (a) as duas artes do herói eram peças posicionadas em absoluto — só ficam juntas na largura
+  em que foram posicionadas, e no celular saíam cortadas por bordas diferentes; (b) o corte de
+  `clip-path` é um evento que dispara e termina, e três deles na mesma página viram tique — pior nos
+  cartões, onde o corte decepa texto no meio da palavra; (c) o pico movia os 86 papéis com uma curva
+  só e sem rótulo visível, então o leitor via um monte virar outro monte sem ver a regra sendo
+  aplicada. O nome no papel é o que transforma 86 retângulos em 86 tópicos do edital.
+- **Trade-off**: O rótulo na pilha custa uma leitura de `offsetWidth` por chip em cada `medir()` (para
+  a escala caber na folha) e fica **desligado abaixo de 900px** — lá a folha não comporta texto
+  legível e 86 escritas de estilo a mais por quadro não se pagam. No celular a leitura fica só com a
+  cascata e o eixo. A fita de tópicos do herói é `aria-hidden`: é a mesma informação que o pico
+  entrega em texto de verdade.
+- **Scope**: Rota `/` — `secoes.tsx`, `assinatura.ts`, `landing.css` e a arte nova. Motor
+  (`public/motor/scrollcraft.js`) intocado, como manda a skill.
+- **Date**: 2026-08-25
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Porte da landing aprovada (protótipo `scrollcraft/builds/passou-lp`) para os componentes
-  Next.js. Trabalho de porte fiel, fora da numeração de specs; o contrato de PAG-08 não mudou.
-- **Phase / Task**: concluído. Sem ritual de spec — não é feature nova, é substituição de superfície.
-- **Completed**: sete seções em `src/modules/ui/landing/` (`secoes.tsx`, `pico.tsx`, `estrutura.tsx`),
-  motor de scroll em `public/motor/scrollcraft.js` montado por `motor.tsx`, movimento assinatura em
-  `assinatura.ts`, folha própria em `landing.css`, tokens do lado escuro no `@theme`, e a frequência
-  real vinda do banco em `src/modules/acervo/frequencia.ts` com extrato de queda. `ciclo.tsx`,
-  `marca.tsx`, `props.tsx` e `movimento.tsx` (GSAP) foram removidos — a landing não usa mais GSAP.
-- **Gates**: 837 testes unitários verdes (`npm run test:unit`), `tsc --noEmit` limpo, `eslint src` sem
-  erro, `next build` verde. Captura de scroll em desktop, 390px e `prefers-reduced-motion`, comparada
-  quadro a quadro com o protótipo: sem dead scroll, sem contraste reprovado, altura de página idêntica
-  (13,8 vh no desktop).
-- **External checks**: nenhuma migration nova. A leitura usa a view `inventario_acervo`, que já existe
-  desde `20260824101000_recursos_estudo.sql`.
+- **Feature**: Rodada de design da landing pedida pelo dono depois do porte (AD-109). Ajuste de
+  superfície, fora da numeração de specs; o contrato de PAG-08 não mudou e `page.test.tsx` segue verde.
+- **Phase / Task**: concluído. Sem ritual de spec.
+- **Completed**: herói com ilustração única gerada (`public/arte/heroi-medida.png`, prompt em
+  `scrollcraft/builds/passou-lp/prompts/a1-heroi-medida.txt`), movimento em três camadas e fita de
+  tópicos reais; seção 2 com trilho de progresso lido de `--sc-p`, arte maior e visível no celular,
+  copy com os dois extremos reais do acervo, span 2.6 → 3.2; pico com cascata por posto, nome do
+  tópico escrito no papel (≥900px), eixo do gráfico e recuo da cauda; bloco de evidência redesenhado
+  como painel com o 242 em numerão; artes 5/6/7 e os dois cartões `hoje × ainda não` migrados de
+  `data-sc-reveal` para transform contínuo.
+- **Gates**: `tsc --noEmit` limpo, `eslint src/modules/ui/landing src/app/(landing)` sem erro,
+  `vitest --project unit` 96/96 na rota. Captura de scroll em desktop, 390px e
+  `prefers-reduced-motion`: sem dead scroll, sem cue fraca, contraste de todas as cues acima de 4.5:1
+  (`lab/final-desk`, `lab/final-mob`, `lab/final-red`).
+- **External checks**: nenhuma migration nova. A geração da arte custou US$ 0,17 no OpenRouter.
 - **In-progress** (file:line): none.
-- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16. O porte não abre task pendente.
-- **Blockers**: nenhum. Dois pontos abertos, ambos conhecidos e não regressões: no celular o rótulo
-  longo do gráfico encosta no número (defeito idêntico no protótipo aprovado, some encurtando o rótulo
-  abaixo de 900px); e a verificação em aparelho real (iPhone) continua **não feita** — Chrome headless
-  não reproduz decodificador, autoplay nem toque.
+- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Blockers**: nenhum. O rótulo longo encostando no número no celular **foi corrigido** (teto de 20
+  caracteres abaixo de 900px). Continua **não feita** a verificação em aparelho real (iPhone) — Chrome
+  headless não reproduz decodificador, autoplay nem toque.
 - **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
   `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
 - **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,

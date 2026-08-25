@@ -32,8 +32,8 @@ function semente(i: number): number {
   return x - Math.floor(x);
 }
 
-function encurtar(nome: string): string {
-  return nome.length > 30 ? `${nome.slice(0, 29)}…` : nome;
+function encurtar(nome: string, teto: number): string {
+  return nome.length > teto ? `${nome.slice(0, teto - 1)}…` : nome;
 }
 
 /*
@@ -69,6 +69,12 @@ type Chip = {
   numero: HTMLElement;
   valor: number;
   destaque: boolean;
+  /** Fatia da janela que este chip espera antes de começar a própria viagem. */
+  atraso: number;
+  /** Último passo de cor escrito. Evita 86 escritas de cor por quadro. */
+  passoDaCor: number;
+  /** Escala do nome enquanto ele está escrito no papel: cabe ou não cabe. */
+  escalaNoPapel: number;
   /* pilha */
   px: number;
   py: number;
@@ -88,7 +94,28 @@ type Chip = {
 type Layout = {
   sedimentoFimY: number;
   rotuloX: number;
+  /** Altura do eixo: as doze linhas do gráfico, e só elas. */
+  eixoH: number;
+  /** Tela estreita: a pilha não comporta rótulo legível. */
+  estreito: boolean;
 };
+
+/* ---------------------------------------------------------------- CASCATA --
+   A viagem inteira acontecia com um `q` só: os 86 papéis saíam juntos e
+   chegavam juntos. Visto de fora isso não é ordenação, é teletransporte — o
+   leitor vê um monte virar outro monte e não vê o que aconteceu no meio.
+
+   Agora cada chip carrega um `atraso` dentro da mesma janela de rolagem. Os
+   doze maiores caem em ordem de tamanho, um depois do outro, e a cauda desaba
+   por último. É a mesma quantidade de rolagem; o que mudou é que agora dá para
+   ver a regra sendo aplicada, que é a única coisa que a seção precisa mostrar.
+   -------------------------------------------------------------------------- */
+
+/** Onde a viagem começa e quanto de `p` ela ocupa. */
+const INICIO = 0.1;
+const JANELA = 0.62;
+/** Maior atraso possível. O que sobra (1 - ATRASO_MAX) é a viagem de um chip. */
+const ATRASO_MAX = 0.62;
 
 /**
  * Liga o comportamento e devolve como desligar.
@@ -107,6 +134,7 @@ export function ligarComportamento(
   const campo = document.getElementById("raiox");
 
   let chips: Chip[] = [];
+  let eixo: HTMLElement | null = null;
   let nota: HTMLElement | null = null;
   let layout: Layout | null = null;
   let vivo = true;
@@ -145,7 +173,7 @@ export function ligarComportamento(
 
       const rotulo = document.createElement("span");
       rotulo.className = "chip__l";
-      rotulo.textContent = encurtar(topico.topico);
+      rotulo.textContent = encurtar(topico.topico, 30);
 
       const numero = document.createElement("span");
       numero.className = "chip__n";
@@ -161,6 +189,12 @@ export function ligarComportamento(
         numero,
         valor: topico.questoes,
         destaque: i < TOPO,
+        /* Os doze caem em ordem de tamanho; a cauda desaba depois, com uma
+           dispersão pequena para não parecer uma cortina única descendo. */
+        atraso:
+          i < TOPO ? (i / TOPO) * 0.4 : 0.36 + semente(i + 77) * 0.26,
+        passoDaCor: -1,
+        escalaNoPapel: 0.5,
         px: 0,
         py: 0,
         prot: 0,
@@ -175,6 +209,14 @@ export function ligarComportamento(
         numX: 0,
       };
     });
+
+    /* O eixo. Sem ele os doze retângulos verdes flutuam no breu e não leem
+       como gráfico; com ele o olho ganha a linha de onde tudo parte. Ele se
+       desenha conforme os doze chegam, então também é o sinal de que a
+       ordenação terminou. */
+    eixo = document.createElement("span");
+    eixo.className = "raiox__eixo";
+    campo.append(eixo);
 
     nota = document.createElement("p");
     nota.className = "raiox__nota";
@@ -214,6 +256,12 @@ export function ligarComportamento(
     let cy = 0;
 
     chips.forEach((c, i) => {
+      /* No estreito o número fica colado na borda direita, e um rótulo de 30
+         caracteres esbarra nele: "Proporções, regra de três e p…" encostava no
+         "30". O teto do nome é medida de layout, então mora aqui e é refeito a
+         cada resize, não escrito uma vez na construção. */
+      c.rotulo.textContent = encurtar(topicos[i].topico, estreito ? 20 : 30);
+
       // ---- estado inicial: a pilha, espalhada na largura toda
       const s1 = semente(i);
       const s2 = semente(i + 500);
@@ -227,6 +275,15 @@ export function ligarComportamento(
       c.prot = (s3 - 0.5) * 36;
       c.psx = pw / BASE_W;
       c.psy = ph / BASE_H;
+      /* O nome tem que caber NO PAPEL. `offsetWidth` ignora transform, então
+         esta é a largura do texto em escala 1; a divisão dá a escala em que
+         ele para dentro da folha. Uma leitura de layout por chip, aqui e não
+         por quadro — `medir()` só roda em resize. */
+      const larguraDoNome = c.rotulo.offsetWidth || 1;
+      c.escalaNoPapel = Math.min(
+        0.62,
+        Math.max(0.3, (pw - 14) / larguraDoNome),
+      );
 
       // ---- estado final
       if (c.destaque) {
@@ -254,7 +311,11 @@ export function ligarComportamento(
     layout = {
       sedimentoFimY: sedimentoY0 + cy + sedimentoH + 18,
       rotuloX,
+      eixoH: linhaH * TOPO,
+      estreito,
     };
+
+    if (eixo) eixo.style.height = `${layout.eixoH.toFixed(1)}px`;
 
     if (nota) {
       nota.textContent = `Outros ${cauda.length} tópicos · ${somaCauda} questões`;
@@ -269,22 +330,46 @@ export function ligarComportamento(
   const PAPEL = corDoToken(estilo, "--color-pilha-papel", [231, 226, 211]);
   const VERDE = corDoToken(estilo, "--color-verde-vivo", [79, 139, 114]);
   const SEDIMENTO = corDoToken(estilo, "--color-pilha-sedimento", [74, 78, 66]);
+  /* Duas cores para o MESMO rótulo: escuro enquanto ele está escrito sobre o
+     papel creme, claro depois que ele sai para a coluna sobre o breu. Sem a
+     troca, metade da viagem o nome do tópico fica ilegível — e o nome é a
+     única coisa que explica o que são os 86 retângulos. */
+  const TINTA_NO_PAPEL = corDoToken(estilo, "--color-breu", [25, 26, 21]);
+  const TINTA_NO_BREU = corDoToken(estilo, "--color-breu-tinta", [243, 238, 226]);
+
+  /** Onde o nome do tópico fica enquanto ainda é papel, em px da borda. */
+  const RECUO_NO_PAPEL = 7;
 
   function desenharPico() {
     if (chips.length === 0 || !layout) return;
     const p = reduz ? 1 : progressoDe(secaoPico);
 
-    /* Viagem: uma curva só, da pilha até o posto, com uma barriga para baixo
-       no meio — é o "desabar". Separar em dois movimentos deixaria um degrau
-       perceptível bem no quadro que precisa ser fluido. */
-    const bruto = clamp01((p - 0.12) / 0.56);
-    const q = easeInOut(bruto);
-    const barriga = Math.sin(Math.PI * bruto) * 64;
-    // A virada de barra é tarde de propósito: primeiro chega, depois vira dado.
-    const t = easeOut(clamp01((p - 0.62) / 0.3));
-    const opacidadeRotulo = clamp01((p - 0.7) / 0.16);
+    const bruto = clamp01((p - INICIO) / JANELA);
+    const viagem = 1 - ATRASO_MAX;
+    /* Quanto do gráfico já existe. Serve para dois fins: desenhar o eixo e
+       recuar a cauda enquanto os doze pousam — sem isso o papel que ainda não
+       caiu passa POR CIMA das barras recém-formadas e some com os rótulos
+       delas bem no quadro em que a ordenação fica visível. */
+    const dozeProntos = clamp01((bruto - 0.28) / 0.44);
 
     for (const c of chips) {
+      /* Viagem de UM chip: uma curva só, da pilha até o posto, com uma barriga
+         para baixo no meio — é o "desabar". Separar em dois movimentos deixaria
+         um degrau perceptível bem no quadro que precisa ser fluido. */
+      const bl = clamp01((bruto - c.atraso) / viagem);
+      const q = easeInOut(bl);
+      const barriga = Math.sin(Math.PI * bl) * 64;
+      /* A virada de barra é tarde DENTRO da viagem do próprio chip: ele chega,
+         assenta e só então vira dado. Global, essa espera fazia os 86 virarem
+         verde no mesmo quadro, o que embaralha as duas leituras. */
+      const t = easeOut(clamp01((bl - 0.55) / 0.45));
+
+      if (!c.destaque) {
+        /* Recua, não some: a massa dos 74 continua sendo o argumento da
+           seção. Ela volta ao cheio quando vira sedimento. */
+        c.el.style.opacity = (1 - 0.5 * dozeProntos * (1 - t)).toFixed(3);
+      }
+
       const x = lerp(c.px, c.fx, q);
       const y = lerp(c.py, c.fy, q) + barriga;
       const rot = lerp(c.prot, 0, q);
@@ -295,22 +380,78 @@ export function ligarComportamento(
       c.barra.style.transform = `scale(${lerp(c.psx, c.fsx, t).toFixed(
         4,
       )},${lerp(c.psy, c.fsy, t).toFixed(4)})`;
-      c.barra.style.backgroundColor = misturar(
-        PAPEL,
-        c.destaque ? VERDE : SEDIMENTO,
-        t,
-      );
+
+      /* Cor em 16 degraus e só quando o degrau muda. A olho nu é a mesma
+         rampa; em escritas de estilo é uma ordem de grandeza a menos. */
+      const passo = Math.round(t * 16);
+      if (passo !== c.passoDaCor) {
+        c.passoDaCor = passo;
+        const tc = passo / 16;
+        c.barra.style.backgroundColor = misturar(
+          PAPEL,
+          c.destaque ? VERDE : SEDIMENTO,
+          tc,
+        );
+        if (!layout.estreito) {
+          c.rotulo.style.color = misturar(
+            TINTA_NO_PAPEL,
+            TINTA_NO_BREU,
+            clamp01((tc - 0.55) / 0.25),
+          );
+        }
+      }
+
+      /* O rótulo nasce ESCRITO NO PAPEL. Era isto que faltava: sem nome, os 86
+         retângulos são confete e a ordenação não tem sujeito. Com nome, o
+         leitor vê 86 tópicos do edital caírem e se ordenarem — que é a frase
+         da seção, encenada. Em tela estreita o papel não comporta texto
+         legível, então lá o rótulo só existe depois que vira linha do gráfico. */
+      if (layout.estreito) {
+        if (!c.destaque) continue;
+        const op = clamp01((t - 0.5) / 0.4);
+        c.rotulo.style.opacity = String(op);
+        c.numero.style.opacity = String(op);
+        c.rotulo.style.transform = `translate3d(${layout.rotuloX.toFixed(
+          1,
+        )}px,-50%,0)`;
+        c.numero.style.transform = `translate3d(${c.numX.toFixed(1)}px,-50%,0)`;
+        continue;
+      }
+
+      /* A saída para a coluna acontece na SEGUNDA metade de `t`, depois de a
+         barra já ter virado verde. Assim o nome atravessa a barra ainda
+         escuro — escuro sobre verde lê — e só troca de cor quando já está no
+         breu. Mover e trocar de cor juntos deixa um trecho de cinza no meio,
+         ilegível contra os dois fundos. */
+      const tp = clamp01((t - 0.5) / 0.5);
+      const escala = lerp(c.escalaNoPapel, 1, tp);
+      const alvoX = c.destaque ? layout.rotuloX : RECUO_NO_PAPEL;
+      c.rotulo.style.transform = `translate3d(${lerp(
+        RECUO_NO_PAPEL,
+        alvoX,
+        tp,
+      ).toFixed(1)}px,-50%,0) scale(${escala.toFixed(3)})`;
+      /* Visível desde o repouso: é o nome no papel que transforma 86
+         retângulos em 86 tópicos do edital. Escondê-lo até a viagem começar
+         devolvia a pilha de confete que a seção existe para não ser.
+         A cauda perde o nome ao virar sedimento: 74 rótulos empilhados em três
+         linhas de 6px seriam uma mancha, não uma informação. */
+      const visivel = clamp01(p / 0.05) * (c.destaque ? 1 : 1 - t);
+      c.rotulo.style.opacity = (visivel * lerp(0.78, 1, tp)).toFixed(3);
 
       if (c.destaque) {
-        c.rotulo.style.opacity = String(opacidadeRotulo);
-        c.numero.style.opacity = String(opacidadeRotulo);
-        c.rotulo.style.transform = `translate3d(${lerp(
-          c.fw,
-          layout.rotuloX,
-          t,
-        ).toFixed(1)}px,-50%,0)`;
+        c.numero.style.opacity = String(clamp01((t - 0.45) / 0.4));
         c.numero.style.transform = `translate3d(${c.numX.toFixed(1)}px,-50%,0)`;
       }
+    }
+
+    /* O eixo cresce com os doze: `bruto` menos o maior atraso da faixa de
+       destaque, normalizado. Chega ao fim junto com a décima segunda barra. */
+    if (eixo) {
+      eixo.style.transform = `scaleY(${easeOut(dozeProntos).toFixed(3)})`;
+      /* Só depois que a primeira barra pousou. Antes disso ele é um risco
+         solto no breu, longe dos papéis, e lê como sujeira. */
+      eixo.style.opacity = String(clamp01((bruto - 0.28) * 8));
     }
 
     if (nota) {
@@ -427,6 +568,7 @@ export function ligarComportamento(
     observadorDoCampo?.disconnect();
     if (campo) campo.textContent = "";
     chips = [];
+    eixo = null;
     nota = null;
     layout = null;
   };

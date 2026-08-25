@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { type FrequenciaReal, inteiroEmPtBr } from "@/modules/acervo";
 import { type PrecosPublicos, formatarBRL } from "@/modules/pagamentos/preco";
@@ -14,22 +15,43 @@ import { type PrecosPublicos, formatarBRL } from "@/modules/pagamentos/preco";
    ========================================================================== */
 
 /* ============================================================== SEÇÃO 1 ==
-   Herói. `flow` com título cinético e paralaxe na arte. Sem fixação: a
-   primeira tela não deve segurar ninguém, deve deixar passar.
+   Herói. `flow` com título cinético e a cena em movimento contínuo. Sem
+   fixação: a primeira tela não deve segurar ninguém, deve deixar passar.
 
-   A arte tem peso igual ao do texto — é metade da composição, não um enfeite
-   ao lado dela. As duas imagens do herói entram com `priority`: são o que a
-   primeira tela mostra, e carregar preguiçoso o que já está em vista é o
-   caminho mais curto para um salto de layout.                             */
-export function Heroi() {
+   **Uma imagem só, não duas.** A rodada anterior compunha o herói com dois
+   recortes sobrepostos (`leo-pilha` + `bia-medido`) posicionados em absoluto.
+   Funcionava no desktop e desmontava no celular: os dois recortes brigavam
+   pela mesma faixa estreita e cada um saía cortado por uma borda diferente.
+   `heroi-medida.png` é a mesma cena desenhada de uma vez — papel solto à
+   esquerda, folhas de pé no meio, barras verdes à direita — então ela não tem
+   como desalinhar, porque não há duas peças para alinhar.
+
+   O movimento é de três origens somadas, e nenhuma delas depende da outra:
+     · `--sc-p` da seção  → a cena sobe e cresce enquanto a página desce;
+     · relógio do CSS     → flutuação lenta e a varredura que atravessa a cena;
+     · ponteiro           → `data-sc-tilt`, que só existe em mouse.
+   Assim há movimento no primeiro quadro, antes de qualquer rolagem — que é o
+   que faz a página parecer viva na entrada.
+
+   A cena entra com `priority`: é o que a primeira tela mostra, e carregar
+   preguiçoso o que já está em vista é o caminho mais curto para um salto de
+   layout.                                                                 */
+export function Heroi({ frequencia }: { frequencia: FrequenciaReal }) {
+  /* A fita é dado, não enfeite: nome de tópico e contagem reais do acervo. Uma
+     lista fixa escrita na copy congelaria na próxima prova ingerida. */
+  const fita = frequencia.topicos.slice(0, 14);
+
   return (
     <section className="secao secao--heroi" data-sc-act="flow" aria-labelledby="t1">
       <div className="faixa">
         <div className="heroi">
           <div className="heroi__texto">
             <p className="rotulo" data-sc-in>
-              Banco do Brasil · 28 provas oficiais lidas
+              Banco do Brasil · {frequencia.totalProvas} provas oficiais lidas
             </p>
+            {/* Sem `<em>` aqui dentro: `data-sc-kinetic` reconstrói o elemento a
+                partir de `textContent`, então qualquer marcação interna some na
+                hidratação. Ênfase no herói é tamanho, não cor. */}
             <h1 id="t1" className="display" data-sc-in data-sc-kinetic="lines">
               Estude o que cai. Não o edital inteiro.
             </h1>
@@ -52,27 +74,44 @@ export function Heroi() {
           </div>
 
           <div className="heroi__arte">
-            <Image
-              className="arte arte--tras"
-              src="/arte/leo-pilha.png"
-              alt=""
-              width={1024}
-              height={1024}
-              priority
-              sizes="(max-width: 899px) 60vw, 30vw"
-              data-sc-parallax="0.7"
-            />
-            <Image
-              className="arte arte--frente"
-              src="/arte/bia-medido.png"
-              alt=""
-              width={1024}
-              height={1024}
-              priority
-              sizes="(max-width: 899px) 70vw, 38vw"
-              data-sc-parallax="1.3"
-            />
+            <div className="heroi__palco" data-sc-tilt="4">
+              <Image
+                className="heroi__cena"
+                src="/arte/heroi-medida.png"
+                alt=""
+                width={1536}
+                height={948}
+                priority
+                sizes="(max-width: 899px) 100vw, 52vw"
+              />
+              {/* A varredura é a medição acontecendo: uma faixa clara que
+                  atravessa a cena da pilha até as barras. Desligada em
+                  movimento reduzido. */}
+              <span className="heroi__varredura" aria-hidden="true" />
+            </div>
+            <span className="heroi__chao" aria-hidden="true" />
           </div>
+        </div>
+      </div>
+
+      {/*
+        A fita é `aria-hidden` porque é a mesma informação que o pico entrega
+        em texto de verdade, com rótulo e número: repetir isso no leitor de
+        tela seria ruído, não acesso. A lista é duplicada para o laço fechar
+        sem salto — a segunda cópia entra em `aria-hidden` de qualquer forma.
+      */}
+      <div className="fita" aria-hidden="true">
+        <div className="fita__trilho">
+          {[0, 1].map((copia) => (
+            <ul className="fita__lista" key={copia}>
+              {fita.map((topico) => (
+                <li className="fita__item" key={topico.topico}>
+                  <span className="fita__n">{topico.questoes}</span>
+                  {topico.topico}
+                </li>
+              ))}
+            </ul>
+          ))}
         </div>
       </div>
     </section>
@@ -85,13 +124,29 @@ export function Heroi() {
    Cada fala é um BLOCO empilhado na mesma célula do grid, não um parágrafo
    solto com margem. Parágrafo solto colide assim que um título quebra numa
    linha a mais — foi um defeito real, e é esta estrutura que o impede de
-   voltar.                                                                 */
-export function Problema() {
+   voltar.
+
+   **A linha que percorre.** O trilho à esquerda das falas é o movimento da
+   seção: uma haste que se preenche, um ponto que desce por ela e três nós que
+   acendem quando o ponto passa. Tudo isso é CSS lendo `--sc-p` — o motor já
+   publica o progresso do ato no elemento da seção, e propriedade customizada
+   herda, então nenhum JavaScript novo entra na página por causa disto. O
+   trilho não é enfeite: ele é a régua que diz ao leitor quanto falta e em qual
+   dos três momentos ele está, que era exatamente o que a seção não dizia.
+
+   A torre também anda: sobe e cresce com o mesmo `--sc-p`. Ela é grande de
+   propósito — o contraste de escala entre a figura e a pilha é o argumento. */
+export function Problema({ frequencia }: { frequencia: FrequenciaReal }) {
+  /* Os dois extremos reais do acervo. "Um tópico vale trinta questões e outro
+     vale nenhuma" seria retórica: estes dois números são consulta. */
+  const maior = frequencia.topicos[0];
+  const menor = frequencia.topicos[frequencia.topicos.length - 1];
+
   return (
     <section
       className="secao secao--problema"
       data-sc-act="pin"
-      data-sc-span="2.6"
+      data-sc-span="3.2"
       aria-labelledby="t2"
     >
       <div data-sc-stage className="palco">
@@ -102,35 +157,52 @@ export function Problema() {
               width={1024}
               height={1024}
               loading="lazy"
-              sizes="(max-width: 899px) 80vw, 45vw"
+              sizes="(max-width: 899px) 62vw, 46vw"
               alt="Um homem sentado no chão ao pé de uma torre gigante de provas e livros que se curva sobre ele"
             />
           </figure>
 
-          <div className="falas">
-            {/* Terceiro valor 0 = saudação: o palco fica visível cerca de uma
-                tela antes de o progresso sair de 0, então a primeira fala tem
-                que já estar lá. Sem isso o leitor encara palco vazio. */}
-            <div className="fala" data-sc-cue="0 0.36 0">
-              <h2 id="t2" className="titulo titulo--claro">
-                O edital mente por omissão.
-              </h2>
-              <p className="lede lede--clara">
-                Ele lista tudo com a mesma cara. Cada tópico do mesmo tamanho, na mesma
-                fonte, na mesma ordem.
-              </p>
+          <div className="palco__coluna">
+            <div className="trilho" aria-hidden="true">
+              <span className="trilho__haste" />
+              <span className="trilho__ponto" />
+              <span className="trilho__no" style={{ "--em": 0.04 } as CSSProperties} />
+              <span className="trilho__no" style={{ "--em": 0.42 } as CSSProperties} />
+              <span className="trilho__no" style={{ "--em": 0.78 } as CSSProperties} />
             </div>
-            <div className="fala" data-sc-cue="0.32 0.68">
-              <p className="titulo titulo--claro">Como se caíssem igual.</p>
-              <p className="lede lede--clara">
-                Não caem. Nunca caíram. E não é trabalho do edital te contar qual é qual.
-              </p>
-            </div>
-            <div className="fala" data-sc-cue="0.64 1 0.12 0.02">
-              <p className="titulo titulo--claro">Aí você estuda o que dá.</p>
-              <p className="lede lede--clara">
-                Na ordem que der. E no dia da prova descobre onde estava o peso.
-              </p>
+
+            <div className="falas">
+              {/* Terceiro valor 0 = saudação: o palco fica visível cerca de uma
+                  tela antes de o progresso sair de 0, então a primeira fala tem
+                  que já estar lá. Sem isso o leitor encara palco vazio. */}
+              <div className="fala" data-sc-cue="0 0.38 0">
+                <p className="rotulo rotulo--claro">O que o edital entrega</p>
+                <h2 id="t2" className="titulo titulo--claro">
+                  O edital mente por omissão.
+                </h2>
+                <p className="lede lede--clara">
+                  Ele lista {frequencia.totalTopicos} tópicos com a mesma cara: mesmo
+                  tamanho, mesma fonte, mesma ordem. Como se caíssem igual.
+                </p>
+              </div>
+              <div className="fala" data-sc-cue="0.36 0.74">
+                <p className="rotulo rotulo--claro">O que a prova fez com eles</p>
+                <p className="titulo titulo--claro">Não caem igual. Nunca caíram.</p>
+                <p className="lede lede--clara">
+                  <em>{maior.topico}</em> apareceu {maior.questoes} vezes nas provas
+                  lidas. <em>{menor.topico}</em> apareceu{" "}
+                  {menor.questoes === 1 ? "uma" : menor.questoes}. O edital não te conta
+                  qual é qual, e não é trabalho dele contar.
+                </p>
+              </div>
+              <div className="fala" data-sc-cue="0.72 1 0.12 0.02">
+                <p className="rotulo rotulo--claro">O que sobra para você</p>
+                <p className="titulo titulo--claro">Aí você estuda o que dá.</p>
+                <p className="lede lede--clara">
+                  Na ordem que der, no fôlego que der. E descobre onde estava o peso no
+                  único dia em que não dá mais para corrigir.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -248,46 +320,69 @@ export function Metodo() {
           ))}
         </div>
 
-        <div className="evidencia">
-          <div className="evidencia__texto" data-sc-in>
-            <h3 className="titulo">Isto não é opinião nossa.</h3>
-            <p className="lede">
-              A meta-análise de <em>Donoghue e Hattie</em> reúne{" "}
-              <span
-                className="sc-nums"
-                data-sc-count="0 242"
-                data-sc-count-at="0.2 0.6"
-              >
-                242
-              </span>{" "}
-              estudos e coloca responder questão e revisar espaçado entre as técnicas
-              mais eficazes que existem.
-            </p>
-            <p>
-              <a
-                className="elo"
-                href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7889502/"
-                rel="noreferrer"
-              >
-                Consultar a fonte sobre prática de recuperação
-              </a>
-            </p>
+        {/*
+          A evidência era título, parágrafo e link soltos no chão da seção — a
+          afirmação mais forte da página entregue com o menor peso visual dela.
+          Agora é um bloco: painel elevado, o número grande de um lado, a frase
+          e a fonte do outro, e a arte encostando na quina em vez de flutuar
+          sozinha num vazio.
+
+          O número é o argumento, então ele ganha o corpo de um numerão e conta
+          na entrada. `242` é dado citado da meta-análise, não estimativa nossa:
+          por isso pode virar contador — a proibição é inventar número, não
+          animar número real.
+        */}
+        <aside className="evidencia">
+          <div className="evidencia__painel" data-sc-in data-sc-stagger="80">
+            <div className="evidencia__medida">
+              <p className="rotulo">Isto não é opinião nossa</p>
+              <p className="evidencia__n">
+                <span
+                  className="sc-nums"
+                  data-sc-count="0 242"
+                  data-sc-count-at="0.42 0.72"
+                >
+                  242
+                </span>
+              </p>
+              <p className="evidencia__legenda">
+                estudos reunidos numa meta-análise só
+              </p>
+            </div>
+
+            <div className="evidencia__texto">
+              <h3 className="titulo">
+                Responder questão e revisar espaçado estão no topo da lista.
+              </h3>
+              <p className="lede">
+                <em>Donoghue e Hattie</em> compararam as técnicas de estudo que a
+                literatura já mediu de verdade. Essas duas ficaram entre as mais
+                eficazes que existem. São exatamente as duas que este produto
+                automatiza para você, todo dia, sem você precisar lembrar.
+              </p>
+              <p className="evidencia__fonte">
+                <a
+                  className="elo"
+                  href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7889502/"
+                  rel="noreferrer"
+                >
+                  Consultar a fonte sobre prática de recuperação
+                </a>
+              </p>
+            </div>
           </div>
-          <figure
-            className="evidencia__arte"
-            data-sc-reveal="left"
-            data-sc-reveal-at="0.3 0.68"
-          >
+
+          <figure className="evidencia__arte figura" data-sc-parallax="0.45">
             <Image
               src="/arte/a5-marcos-carimbo.png"
               width={1024}
               height={1024}
               loading="lazy"
-              sizes="(max-width: 899px) 90vw, 38vw"
+              sizes="(max-width: 899px) 70vw, 32vw"
               alt="Um homem carimbando uma folha de gabarito atrás de um balcão"
             />
           </figure>
-        </div>
+        </aside>
       </div>
     </section>
   );
@@ -330,11 +425,10 @@ export function Hoje() {
               compra o cartão da esquerda.
             </p>
           </div>
-          <figure
-            className="hoje__arte"
-            data-sc-reveal="up"
-            data-sc-reveal-at="0.06 0.4"
-          >
+          {/* Ver a nota em `.figura`, no CSS: estas três artes deixaram de
+              "aparecer" por corte de `clip-path` e passaram a andar junto com a
+              seção. Aparição é evento; movimento contínuo é presença. */}
+          <figure className="hoje__arte figura" data-sc-parallax="0.4">
             <Image
               src="/arte/a6-rafa-listas.png"
               width={1024}
@@ -350,7 +444,7 @@ export function Hoje() {
             cor do texto contra o pixel mais escuro do bloco, e um invólucro que
             contém o preenchimento do botão reprova no celular. */}
         <div className="razonetes">
-          <div className="razonete" data-sc-reveal="right" data-sc-reveal-at="0.12 0.5">
+          <div className="razonete" style={{ "--lado": -1 } as CSSProperties}>
             <div className="cartao cartao--alto cartao--dentro" data-sc-tilt="7">
               <p className="rotulo">No ar nesta oferta</p>
               <ul className="lista lista--dentro">
@@ -361,7 +455,7 @@ export function Hoje() {
             </div>
           </div>
 
-          <div className="razonete" data-sc-reveal="left" data-sc-reveal-at="0.12 0.5">
+          <div className="razonete" style={{ "--lado": 1 } as CSSProperties}>
             <div className="cartao cartao--alto cartao--fora" data-sc-tilt="7">
               <p className="rotulo rotulo--cinza">Ainda não</p>
               <ul className="lista lista--fora">
@@ -435,11 +529,7 @@ export function Oferta({ precos }: { precos: PrecosPublicos }) {
               seu histórico. O resto é você, todo santo dia.
             </p>
           </div>
-          <figure
-            className="fecho__arte"
-            data-sc-reveal="left"
-            data-sc-reveal-at="0.08 0.4"
-          >
+          <figure className="fecho__arte figura" data-sc-parallax="0.35">
             <Image
               src="/arte/a7-bia-degrau.png"
               width={1024}

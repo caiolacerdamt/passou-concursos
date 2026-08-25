@@ -13,20 +13,6 @@ async function operadorAtivo(cliente: Parameters<typeof inserirQuestao>[0]) {
   return id;
 }
 
-async function explicacaoAprovada(
-  cliente: Parameters<typeof inserirQuestao>[0],
-  questao: Questao,
-) {
-  await cliente.query(
-    `insert into public.explicacoes
-       (questao_id, questao_versao, status, texto, alternativa_correta,
-        fontes_citadas, chave_dedup)
-     values ($1, $2, 'aprovada', 'explicacao conferida', 'C',
-             '[{"doc_id":"teste","trecho":"fonte"}]'::jsonb, $3)`,
-    [questao.id, questao.questao_versao, `spec15:${questao.id}:${questao.questao_versao}`],
-  );
-}
-
 async function revisaoPendente(
   cliente: Parameters<typeof inserirQuestao>[0],
   questao: Questao,
@@ -49,7 +35,6 @@ descreveComBanco("SPEC 15 — operação da fila", () => {
     await comTransacaoRevertida(async (cliente) => {
       const operador = await operadorAtivo(cliente);
       const questoes = [await questaoParaFila(cliente), await questaoParaFila(cliente)];
-      for (const questao of questoes) await explicacaoAprovada(cliente, questao);
       const revisoes = [];
       for (const questao of questoes) revisoes.push(await revisaoPendente(cliente, questao));
 
@@ -83,7 +68,12 @@ descreveComBanco("SPEC 15 — operação da fila", () => {
       const operador = await operadorAtivo(cliente);
       const primeira = await questaoParaFila(cliente);
       const segunda = await questaoParaFila(cliente);
-      await explicacaoAprovada(cliente, primeira);
+      // A segunda nao pode publicar: sem gabarito a trava do banco recusa.
+      // O lote inteiro precisa cair junto com ela.
+      await cliente.query(
+        "update public.questoes set resposta_correta = null where id = $1 and questao_versao = $2",
+        [segunda.id, segunda.questao_versao],
+      );
       const revisoes = [
         await revisaoPendente(cliente, primeira),
         await revisaoPendente(cliente, segunda),
@@ -95,7 +85,7 @@ descreveComBanco("SPEC 15 — operação da fila", () => {
           `select public.decidir_revisoes_em_lote($1::bigint[], 'aprovada', $2, 'lote atomico')`,
           [revisoes, operador],
         ),
-      ).rejects.toThrow(/explicacao_nao_aprovada/);
+      ).rejects.toThrow(/publicada_tem_gabarito/);
       await cliente.query("rollback to savepoint lote");
 
       const { rows } = await cliente.query<{

@@ -4,7 +4,6 @@ import type {
   DadosGamificacao,
   DimensaoDoAnel,
   MissaoDoDia,
-  SequenciaVigente,
 } from "./gamificacao";
 import type { ContagemDaProva, PainelDoDia } from "./painel-do-dia";
 import {
@@ -22,7 +21,7 @@ const TENDENCIA_EM_TEXTO = {
 } as const;
 
 const MISSAO_EM_TEXTO: Record<MissaoDoDia["tipo"], string> = {
-  concluir_piso: "Concluir o essencial de hoje",
+  concluir_piso: "Concluir o mínimo de hoje",
   responder_questoes: "Responder questões hoje",
   sem_plano: "Sem plano hoje; a missão volta no próximo dia da sua agenda",
 };
@@ -32,14 +31,6 @@ const ESTADO_DA_MISSAO_EM_TEXTO: Record<MissaoDoDia["estado"], string> = {
   em_andamento: "Em andamento",
   concluida: "Concluída",
   indisponivel: "Indisponível",
-};
-
-const ESTADO_DA_SEQUENCIA_EM_TEXTO: Record<SequenciaVigente["estado"], string> = {
-  cumprido: "Dia cumprido",
-  piso_pendente: "Essencial de hoje pendente",
-  fora_agenda: "Hoje está fora da sua agenda",
-  folga: "Folga declarada",
-  plano_indisponivel: "Plano em preparação",
 };
 
 /**
@@ -114,6 +105,14 @@ const MATERIA_DO_CARTAO: Record<
 function Anel({ nome, dimensao }: { nome: string; dimensao: DimensaoDoAnel }) {
   const fracao = Math.max(0, Math.min(1, dimensao.percentual));
   const resto = PERIMETRO_DO_ANEL - fracao * PERIMETRO_DO_ANEL;
+  const pisoFracao = dimensao.meta === 0 ? 0 : Math.max(0, Math.min(1, dimensao.pisoMeta / dimensao.meta));
+  const deslocamentoDoPiso = pisoFracao * PERIMETRO_DO_ANEL;
+  const anguloDoPiso = (deslocamentoDoPiso / PERIMETRO_DO_ANEL) * 2 * Math.PI - Math.PI / 2;
+  const xInterno = 22 + Math.cos(anguloDoPiso) * 14.5;
+  const yInterno = 22 + Math.sin(anguloDoPiso) * 14.5;
+  const xExterno = 22 + Math.cos(anguloDoPiso) * 20.5;
+  const yExterno = 22 + Math.sin(anguloDoPiso) * 20.5;
+  const mostraMarcacao = dimensao.pisoMeta > 0 && dimensao.pisoMeta < dimensao.meta;
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -132,6 +131,19 @@ function Anel({ nome, dimensao }: { nome: string; dimensao: DimensaoDoAnel }) {
           transform="rotate(-90 22 22)"
           className={dimensao.concluido ? "text-ok" : "text-marca"}
         />
+        {mostraMarcacao ? (
+          <line
+            data-piso-marcacao="true"
+            x1={xInterno}
+            y1={yInterno}
+            x2={xExterno}
+            y2={yExterno}
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            className="text-suave"
+          />
+        ) : null}
       </svg>
       <span className="text-xs text-suave">{nome}</span>
       <span className="-mt-1 font-utilitaria text-[0.8125rem] font-semibold">
@@ -143,8 +155,8 @@ function Anel({ nome, dimensao }: { nome: string; dimensao: DimensaoDoAnel }) {
 
 /**
  * A leitura de estado do dia, no alto da tela — onde antes ficava o bloco
- * "Estado atual". Estudo, questões e revisão contam separado; o anel fecha com
- * o essencial do plano, não com volume.
+ * "Estado atual". Blocos, questões e revisão contam separado; o anel fecha com
+ * o mínimo do plano, não com volume.
  */
 export function CartaoDoDia({ dados }: { dados: DadosGamificacao }) {
   const estado = estadoDoCartao(dados);
@@ -155,23 +167,16 @@ export function CartaoDoDia({ dados }: { dados: DadosGamificacao }) {
       aria-labelledby="titulo-seu-dia"
       className={`rounded-2xl border px-6 pb-6 pt-5 ${materia.caixa}`}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <p className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${materia.rotulo}`}>
-          Seu dia
-        </p>
-        <span className="font-utilitaria text-xs text-suave">
-          {dados.sequencia
-            ? `${dados.sequencia.sequencia} ${dados.sequencia.sequencia === 1 ? "dia" : "dias"} de sequência`
-            : "Sequência começa no 1º dia cumprido"}
-        </span>
-      </div>
+      <p className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${materia.rotulo}`}>
+        Seu dia
+      </p>
 
       <h2 id="titulo-seu-dia" className="mt-2 text-xl font-semibold">
         {materia.titulo}
       </h2>
 
       <div className="mt-5 grid grid-cols-3 gap-2">
-        <Anel nome="Estudo" dimensao={dados.anel.estudo} />
+        <Anel nome="Blocos" dimensao={dados.anel.estudo} />
         <Anel nome="Questões" dimensao={dados.anel.questoes} />
         <Anel nome="Revisão" dimensao={dados.anel.revisao} />
       </div>
@@ -193,10 +198,20 @@ export function CartaoDoDia({ dados }: { dados: DadosGamificacao }) {
                 {ESTADO_DA_MISSAO_EM_TEXTO[dados.missao.estado]}
               </span>
             </div>
-            <p className="mt-1.5 leading-6">{MISSAO_EM_TEXTO[dados.missao.tipo]}</p>
+            <p className="mt-1.5 leading-6">
+              {dados.missao.tipo === "concluir_piso" ? (
+                <Link
+                  href="#nivel-minimo"
+                  className="font-semibold text-marca underline underline-offset-4"
+                >
+                  {MISSAO_EM_TEXTO[dados.missao.tipo]}
+                </Link>
+              ) : (
+                MISSAO_EM_TEXTO[dados.missao.tipo]
+              )}
+            </p>
             <p className="mt-1 font-utilitaria text-xs text-suave">
               {dados.missao.progresso} de {dados.missao.meta}
-              {dados.sequencia ? ` · ${ESTADO_DA_SEQUENCIA_EM_TEXTO[dados.sequencia.estado]}` : ""}
             </p>
           </>
         ) : (
@@ -231,7 +246,7 @@ function ContagemDaProvaCartao({ contagem }: { contagem: ContagemDaProva }) {
       className="flex flex-col rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
     >
       <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
-        Contagem da prova
+        Data da prova
       </p>
 
       {contando ? (
@@ -259,6 +274,8 @@ function ContagemDaProvaCartao({ contagem }: { contagem: ContagemDaProva }) {
           : `Prova em ${dataCurta(contagem.dataProva)}.`}
       </p>
 
+      {contagem.dataProva === null ? <CalendarioSemData /> : null}
+
       <Link
         href="/app/raio-x"
         className="mt-auto pt-6 text-sm font-semibold text-marca underline underline-offset-4"
@@ -266,6 +283,60 @@ function ContagemDaProvaCartao({ contagem }: { contagem: ContagemDaProva }) {
         Ver o Raio-X do que mais cai
       </Link>
     </section>
+  );
+}
+
+function CalendarioSemData() {
+  return (
+    <div
+      aria-hidden="true"
+      className="flex min-h-24 flex-1 items-center justify-center py-4"
+    >
+      <style>{`
+        @keyframes painel-calendario-flutua {
+          0%, 100% {
+            opacity: 0.55;
+            transform: translate(0, 0);
+          }
+          25% {
+            opacity: 0.85;
+            transform: translate(18px, 0);
+          }
+          50% {
+            opacity: 0.7;
+            transform: translate(30px, 12px);
+          }
+          75% {
+            opacity: 0.9;
+            transform: translate(15px, 12px);
+          }
+        }
+
+        .painel-calendario-flutua {
+          animation: painel-calendario-flutua 5s ease-in-out infinite;
+          transform-box: fill-box;
+          transform-origin: center;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .painel-calendario-flutua {
+            animation: none;
+          }
+        }
+      `}</style>
+      <svg viewBox="0 0 112 64" className="h-16 w-40 text-linha" fill="none">
+        <rect x="12" y="8" width="88" height="48" rx="7" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M12 22h88M28 4v8M84 4v8"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <g className="painel-calendario-flutua">
+          <rect x="38" y="28" width="12" height="10" rx="2" fill="currentColor" className="text-suave" />
+        </g>
+      </svg>
+    </div>
   );
 }
 
@@ -304,16 +375,15 @@ function ResumoDaSemana({ relatorio }: { relatorio: RelatorioSemanal }) {
     >
       <div className="flex items-baseline justify-between gap-4">
         <div>
-          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
-            Últimos 7 dias
-          </p>
-          <h2 id="titulo-resumo-da-semana" className="mt-2.5 text-[1.375rem] font-semibold">
+          <h2 id="titulo-resumo-da-semana" className="text-[1.375rem] font-semibold">
             Sua semana até aqui
           </h2>
         </div>
-        <span className="shrink-0 rounded-lg bg-marca-suave px-2.5 py-1.5 text-xs font-semibold text-marca">
-          Tendência: {TENDENCIA_EM_TEXTO[relatorio.tendencia]}
-        </span>
+        {relatorio.tendencia !== "sem_base" ? (
+          <span className="shrink-0 rounded-lg bg-marca-suave px-2.5 py-1.5 text-xs font-semibold text-marca">
+            Tendência: {TENDENCIA_EM_TEXTO[relatorio.tendencia]}
+          </span>
+        ) : null}
       </div>
 
       {relatorio.porDia.length > 0 ? (

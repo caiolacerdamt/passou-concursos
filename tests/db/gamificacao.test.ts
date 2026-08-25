@@ -375,8 +375,9 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         [piso, meta, data],
       );
       expect(sequencias.rows).toEqual([
-        { user_id: piso, estado: "cumprido" },
-        { user_id: meta, estado: "cumprido" },
+        ...[piso, meta]
+          .sort()
+          .map((user_id) => ({ user_id, estado: "cumprido" })),
       ]);
     });
   });
@@ -571,6 +572,105 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
         [b],
       );
       expect(vizinho.rows[0].n).toBe("1");
+    });
+  });
+
+  it("mantem o recorte do piso completo nos fallbacks e sem plano", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      type Dimensao = {
+        progresso: number;
+        meta: number;
+        bruto: number;
+        piso_meta: number;
+        piso_progresso: number;
+      };
+      type Resposta = {
+        habilitada: boolean;
+        estado: string;
+        anel: {
+          estudo: Dimensao;
+          questoes: Dimensao;
+          revisao: Dimensao;
+        };
+      };
+      const zeros = {
+        progresso: 0,
+        meta: 0,
+        bruto: 0,
+        piso_meta: 0,
+        piso_progresso: 0,
+      };
+
+      const semSessao = await cliente.query<{ dados: Resposta }>(
+        "select public.consultar_gamificacao_do_dia() as dados",
+      );
+      expect(semSessao.rows[0].dados).toMatchObject({
+        habilitada: false,
+        estado: "desligada",
+        anel: { estudo: zeros, questoes: zeros, revisao: zeros },
+      });
+
+      const alunoSemPlano = await criarUsuario(cliente);
+      const alunoDesligado = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const data = dataDeHojeEmSaoPaulo();
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste fallback anel W4-B')`,
+        [autor],
+      );
+      for (const aluno of [alunoSemPlano, alunoDesligado]) {
+        await cliente.query(
+          `insert into public.perfil_estudo
+             (user_id, minutos_por_dia, dias_estudo, onboarding_concluido)
+           values ($1, 60, array[0,1,2,3,4,5,6]::smallint[], true)`,
+          [aluno],
+        );
+      }
+
+      await comoAluno(cliente, alunoSemPlano, async () => {
+        const { rows } = await cliente.query<{ dados: Resposta }>(
+          "select public.consultar_gamificacao_do_dia() as dados",
+        );
+        expect(rows[0].dados).toMatchObject({
+          habilitada: true,
+          estado: "ok",
+          anel: { estudo: zeros, questoes: zeros, revisao: zeros },
+        });
+      });
+
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'false'::jsonb, 'm6', $1, 'teste fallback desligado W4-B')`,
+        [autor],
+      );
+      await comoAluno(cliente, alunoDesligado, async () => {
+        const { rows } = await cliente.query<{ dados: Resposta }>(
+          "select public.consultar_gamificacao_do_dia() as dados",
+        );
+        expect(rows[0].dados).toMatchObject({
+          habilitada: false,
+          estado: "desligada",
+          anel: { estudo: zeros, questoes: zeros, revisao: zeros },
+        });
+      });
+
+      const materializada = await cliente.query<{
+        estudo_piso_meta: number;
+        questoes_piso_meta: number;
+        revisao_piso_meta: number;
+      }>(
+        `select estudo_piso_meta, questoes_piso_meta, revisao_piso_meta
+           from public.gamificacao_dia where user_id = $1 and data = $2`,
+        [alunoSemPlano, data],
+      );
+      expect(materializada.rows[0]).toEqual({
+        estudo_piso_meta: 0,
+        questoes_piso_meta: 0,
+        revisao_piso_meta: 0,
+      });
     });
   });
 });

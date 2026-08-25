@@ -119,7 +119,7 @@ export function PlanoTela({
       />
 
       <section
-        className="grid gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]"
+        className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]"
         aria-label="Níveis do plano"
       >
         <NivelDoPlano
@@ -456,7 +456,16 @@ function BlocoCard({
         </>
       ) : (
         <>
-          <div className="mt-3.5 flex flex-wrap items-center gap-2">
+          {/*
+            Uma linha de ação, não uma pilha.
+            Três pílulas do mesmo peso empilhadas dobravam a altura do cartão e
+            davam a "adiar" a mesma voz que a "começar", que é a única coisa que
+            o aluno vem fazer aqui. Agora: primário em pílula, secundários em
+            texto, e a reordenação como duas setas no fim da linha — sem faixa
+            "ORDEM" com borda própria, que era uma segunda régua dentro de um
+            cartão que já tem uma.
+          */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
             <Link
               href={hrefDoBloco(bloco.id)}
               className={`inline-flex min-h-10 items-center rounded-full px-4 text-[0.8125rem] font-semibold transition-colors duration-150 ${
@@ -465,72 +474,97 @@ function BlocoCard({
                   : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
               }`}
             >
-              {emFoco ? "Continuar" : "Começar bloco"}
+              {emFoco ? "Continuar" : "Começar"}
             </Link>
+
             {!curta ? (
               <form action={escolherVersaoCurta}>
                 <input type="hidden" name="blocoId" value={bloco.id} />
                 <input type="hidden" name="origem" value={origem} />
                 <button
                   type="submit"
-                  className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
+                  aria-label={`Escolher versão curta de ${nomeDoBloco(bloco, rotulosDosTopicos)}`}
+                  className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-suave underline-offset-4 transition-colors duration-150 hover:text-marca hover:underline"
                 >
                   Versão curta
                 </button>
               </form>
             ) : (
-              <span className="inline-flex min-h-10 items-center rounded-full border border-evolucao/40 px-4 text-[0.8125rem] font-semibold text-evolucao">
-                Versão curta escolhida
+              <span className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-evolucao">
+                Versão curta ativa
               </span>
             )}
+
             <form action={adiarBloco}>
               <input type="hidden" name="blocoId" value={bloco.id} />
               <input type="hidden" name="origem" value={origem} />
               <button
                 type="submit"
-                className="inline-flex min-h-10 items-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
+                aria-label={`Adiar ${nomeDoBloco(bloco, rotulosDosTopicos)} para outro dia`}
+                className="inline-flex min-h-9 items-center text-[0.8125rem] font-medium text-suave underline-offset-4 transition-colors duration-150 hover:text-marca hover:underline"
               >
-                Adiar para outro dia
+                Adiar
               </button>
             </form>
-          </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-linha/70 pt-3">
-            <span className="font-utilitaria text-[0.625rem] uppercase tracking-[0.14em] text-suave">
-              Ordem
-            </span>
-            <form action={reordenarBlocosPendentes}>
-              <input type="hidden" name="planoId" value={planoId} />
-              <input type="hidden" name="nivel" value={nivel} />
-              <input type="hidden" name="origem" value={origem} />
-              {ordemPendenteIds(pendentes, bloco, "cima").map((id) => (
-                <input key={id} type="hidden" name="blocoIds" value={id} />
-              ))}
-              <button
-                type="submit"
-                disabled={!podeSubir}
-                aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para cima`}
-                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                ↑ Subir
-              </button>
-            </form>
-            <form action={reordenarBlocosPendentes}>
-              <input type="hidden" name="planoId" value={planoId} />
-              <input type="hidden" name="nivel" value={nivel} />
-              <input type="hidden" name="origem" value={origem} />
-              {ordemPendenteIds(pendentes, bloco, "baixo").map((id) => (
-                <input key={id} type="hidden" name="blocoIds" value={id} />
-              ))}
-              <button
-                type="submit"
-                disabled={!podeDescer}
-                aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para baixo`}
-                className="inline-flex min-h-9 items-center rounded-md border border-linha px-2.5 text-sm text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                ↓ Descer
-              </button>
-            </form>
+            {podeSubir || podeDescer ? (
+              <span className="ml-auto flex items-center gap-1">
+                <form action={reordenarBlocosPendentes}>
+                  <input type="hidden" name="planoId" value={planoId} />
+                  <input type="hidden" name="nivel" value={nivel} />
+                  <input type="hidden" name="origem" value={origem} />
+                  {ordemPendenteIds(pendentes, bloco, "cima").map((id) => (
+                    <input key={id} type="hidden" name="blocoIds" value={id} />
+                  ))}
+                  <button
+                    type="submit"
+                    disabled={!podeSubir}
+                    aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para cima`}
+                    className="grid size-9 place-items-center rounded-lg text-suave transition-colors duration-150 hover:bg-fundo-suave hover:text-marca disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 19V5m0 0-5 5m5-5 5 5" />
+                    </svg>
+                  </button>
+                </form>
+                <form action={reordenarBlocosPendentes}>
+                  <input type="hidden" name="planoId" value={planoId} />
+                  <input type="hidden" name="nivel" value={nivel} />
+                  <input type="hidden" name="origem" value={origem} />
+                  {ordemPendenteIds(pendentes, bloco, "baixo").map((id) => (
+                    <input key={id} type="hidden" name="blocoIds" value={id} />
+                  ))}
+                  <button
+                    type="submit"
+                    disabled={!podeDescer}
+                    aria-label={`Mover ${nomeDoBloco(bloco, rotulosDosTopicos)} para baixo`}
+                    className="grid size-9 place-items-center rounded-lg text-suave transition-colors duration-150 hover:bg-fundo-suave hover:text-marca disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="size-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.9"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 5v14m0 0 5-5m-5 5-5-5" />
+                    </svg>
+                  </button>
+                </form>
+              </span>
+            ) : null}
           </div>
         </>
       )}

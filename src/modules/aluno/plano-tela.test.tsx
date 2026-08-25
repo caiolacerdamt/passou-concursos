@@ -87,9 +87,35 @@ describe("PlanoTela", () => {
     expect(html).toContain("Piso");
     expect(html).toContain("Meta cheia");
     expect(html).toContain("Ver resumo");
-    expect(html).toContain("Escolher versão curta");
-    expect(html).toContain("Adiar para outro dia");
+    // O cartão mostra rótulo curto e carrega o sentido inteiro no aria-label:
+    // "Adiar" sozinho não diz para quando, e o leitor de tela precisa disso.
+    // O cartão mostra rótulo curto e carrega o sentido inteiro no aria-label:
+    // "Adiar" sozinho não diz para quando, e o leitor de tela precisa disso.
+    expect(html).toContain("Versão curta");
+    expect(html).toContain("Adiar");
+    expect(html).toContain("para outro dia");
     expect(html).not.toContain("/app/estudo?bloco=bloco-piso");
+  });
+
+  it("só desenha as setas de ordem quando há para onde mover", () => {
+    const umPendente = renderToStaticMarkup(<PlanoTela plano={planoBase} />);
+
+    // Um pendente só: duas setas desabilitadas seriam ruído, não controle.
+    expect(umPendente).not.toContain("para cima");
+    expect(umPendente).not.toContain("para baixo");
+
+    const doisPendentes = renderToStaticMarkup(
+      <PlanoTela
+        plano={{
+          ...planoBase,
+          piso: [],
+          metaCheia: [{ ...blocoBase }, { ...blocoBase, id: "bloco-2", ordem: 2 }],
+        }}
+      />,
+    );
+
+    expect(doisPendentes).toContain("para cima");
+    expect(doisPendentes).toContain("para baixo");
   });
 
   it("não oferece nova redução depois da versão curta", () => {
@@ -103,8 +129,8 @@ describe("PlanoTela", () => {
       />,
     );
 
-    expect(html).toContain("Versão curta escolhida");
-    expect(html).not.toContain("Escolher versão curta");
+    expect(html).toContain("Versão curta ativa");
+    expect(html).not.toContain("Escolher versão curta de");
   });
 
   it("exibe apenas a matéria quando o tópico é Geral", () => {

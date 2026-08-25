@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clienteDeServico } from "@/lib/db/servidor";
 import { faixaDeDominio, type FaixaDominio } from "@/modules/raiox";
 
+import { dataHojeDoProduto } from "./plano";
 import { CONTEXTOS, type Contexto } from "./tentativas";
 
 export const CAUSAS_DO_CADERNO = [
@@ -79,6 +80,22 @@ export type DadosProgresso = {
   estadoInicial: boolean;
 };
 
+/**
+ * Um dia da janela de sete, no calendário do produto (America/Sao_Paulo) — o
+ * mesmo fuso que decide qual é o dia do plano.
+ *
+ * Existe porque a leitura semanal do painel mostra os sete dias lado a lado, e
+ * um total agregado não sustenta essa coluna. Sai da MESMA lista de tentativas
+ * que já alimenta o total: nenhuma consulta nova, nenhum número estimado. Dia
+ * sem tentativa é `0` de verdade, não buraco.
+ */
+export type DiaDaSemanaDoProgresso = {
+  /** `YYYY-MM-DD` no calendário do produto. */
+  data: string;
+  questoes: number;
+  acertos: number;
+};
+
 export type RelatorioSemanal = {
   inicio: string;
   fim: string;
@@ -88,6 +105,8 @@ export type RelatorioSemanal = {
   topicosTocados: number;
   revisoesConcluidas: number;
   tendencia: TendenciaProgresso;
+  /** Sete posições, do mais antigo ao dia de hoje. */
+  porDia: readonly DiaDaSemanaDoProgresso[];
 };
 
 export type ResultadoDaFinalizacao = {
@@ -309,7 +328,39 @@ function criarRelatorioSemanal(
     topicosTocados: new Set(atual.map((linha) => linha.topico_id)).size,
     revisoesConcluidas: revisoesAtuais.length,
     tendencia: calcularTendencia(atual, anterior),
+    porDia: serieDiaria(atual, fim),
   };
+}
+
+/**
+ * Distribui as tentativas da janela nos sete dias do calendário do produto.
+ *
+ * As chaves saem de `dataHojeDoProduto`, a mesma função que nomeia o dia do
+ * plano: sem isso, uma tentativa das 22h de Brasília cairia no dia seguinte em
+ * UTC e a coluna de hoje apareceria vazia com o aluno tendo estudado.
+ */
+export function serieDiaria(
+  tentativas: readonly TentativaDoProgressoBanco[],
+  fim: Date,
+): DiaDaSemanaDoProgresso[] {
+  const porData = new Map<string, { questoes: number; acertos: number }>();
+  for (const linha of tentativas) {
+    const chave = dataHojeDoProduto(
+      instante(linha.respondida_em, "tentativas.respondida_em"),
+    );
+    const acumulado = porData.get(chave) ?? { questoes: 0, acertos: 0 };
+    acumulado.questoes += 1;
+    if (linha.correta) acumulado.acertos += 1;
+    porData.set(chave, acumulado);
+  }
+
+  const dias: DiaDaSemanaDoProgresso[] = [];
+  for (let atras = 6; atras >= 0; atras -= 1) {
+    const data = dataHojeDoProduto(new Date(fim.getTime() - atras * 86_400_000));
+    const acumulado = porData.get(data) ?? { questoes: 0, acertos: 0 };
+    dias.push({ data, questoes: acumulado.questoes, acertos: acumulado.acertos });
+  }
+  return dias;
 }
 
 /**

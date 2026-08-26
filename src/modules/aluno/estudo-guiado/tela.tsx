@@ -221,10 +221,15 @@ function ResumoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
       </dl>
 
       {bloco.motivo ? (
-        <p className="mt-4.5 border-t border-linha pt-3.5 text-[0.8125rem] leading-6 text-suave">
-          <span className="font-semibold text-texto">Por que agora: </span>
-          {bloco.motivo}
-        </p>
+        <aside
+          className="mt-4.5 rounded-xl border border-aviso/30 bg-conquista-fundo px-4 py-3.5 text-[0.8125rem] leading-6 text-suave"
+          aria-label="Por que agora"
+        >
+          <p>
+            <span className="font-semibold text-aviso">Por que agora: </span>
+            {bloco.motivo}
+          </p>
+        </aside>
       ) : null}
       {bloco.adiadoDe ? (
         <p className="mt-2 text-xs text-suave">Este bloco foi trazido de {formatarData(bloco.adiadoDe)}.</p>

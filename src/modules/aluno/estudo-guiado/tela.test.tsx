@@ -63,6 +63,9 @@ describe("mesa de estudo guiado", () => {
     expect(html).toContain("Conhecimentos Bancários · Mercado de crédito");
     expect(html).toContain("35 minutos");
     expect(html).toContain("Este tema fecha uma lacuna importante do ciclo.");
+    expect(html).toContain("border-aviso/30");
+    expect(html).toContain("bg-conquista-fundo");
+    expect(html).toContain("text-aviso");
     expect(html).toContain("Recurso principal");
     expect(html).toContain("Aula sobre crédito");
     expect(html).toContain("Outras fontes curadas");

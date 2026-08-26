@@ -30,6 +30,16 @@ type LinhaDoTopico = {
 
 type LinhaDaMateria = { id: string; nome: string };
 
+type LinhaDaSessaoDoBloco = {
+  id: string;
+  encerrada_em: string | null;
+};
+
+type LinhaDoItemDaSessao = {
+  id: string;
+  respondido_em: string | null;
+};
+
 export type SnapshotDoBlocoDeEstudo = {
   id: string;
   tipo: TipoDeBloco;
@@ -50,6 +60,12 @@ export type DadosDoEstudoGuiado = {
   materia: string | null;
   topico: string | null;
   recursos: readonly RecursoDeEstudoComVisto[];
+  andamento: AndamentoDoBloco | null;
+};
+
+export type AndamentoDoBloco = {
+  respondidas: number;
+  total: number;
 };
 
 export class EstudoGuiadoRecusado extends Error {
@@ -95,24 +111,24 @@ export async function consultarEstudoGuiado(
     );
   }
 
-  const sessaoConcluida = await lerUma<{ id: string }>(
+  const sessoesDoBloco = await lerLista<LinhaDaSessaoDoBloco>(
     cliente
       .from("sessoes")
-      .select("id")
+      .select("id, encerrada_em")
       .eq("plano_bloco_id", bloco.id)
-      .not("encerrada_em", "is", null)
-      .limit(1)
-      .maybeSingle(),
-    "conclusão do bloco",
+      .order("iniciada_em", { ascending: false }),
+    "sessões do bloco",
   );
 
-  if (sessaoConcluida !== null) {
+  if (sessoesDoBloco.some((sessao) => sessao.encerrada_em !== null)) {
     throw new EstudoGuiadoRecusado(
       "bloco_concluido",
       "Este bloco já foi concluído.",
     );
   }
 
+  const sessaoAberta = sessoesDoBloco.find((sessao) => sessao.encerrada_em === null) ?? null;
+  const andamento = sessaoAberta === null ? null : await lerAndamento(cliente, sessaoAberta.id);
   const snapshot = mapearSnapshot(bloco);
   if (bloco.topico_id === null) {
     return {
@@ -120,6 +136,7 @@ export async function consultarEstudoGuiado(
       materia: null,
       topico: null,
       recursos: [],
+      andamento,
     };
   }
 
@@ -151,6 +168,7 @@ export async function consultarEstudoGuiado(
     materia: materia?.nome ?? null,
     topico: topico?.nome ?? null,
     recursos,
+    andamento,
   };
 }
 
@@ -205,4 +223,35 @@ async function lerUma<T>(
     );
   }
   return data;
+}
+
+async function lerLista<T>(
+  consulta: PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  nome: string,
+): Promise<T[]> {
+  const { data, error } = await consulta;
+  if (error) {
+    throw new EstudoGuiadoRecusado(
+      "falha_leitura",
+      `Falha ao ler ${nome}: ${error.message}`,
+    );
+  }
+  return data ?? [];
+}
+
+async function lerAndamento(
+  cliente: SupabaseClient,
+  sessaoId: string,
+): Promise<AndamentoDoBloco> {
+  const itens = await lerLista<LinhaDoItemDaSessao>(
+    cliente
+      .from("sessao_itens")
+      .select("id, respondido_em")
+      .eq("sessao_id", sessaoId),
+    "andamento da sessão",
+  );
+  return {
+    respondidas: itens.filter((item) => item.respondido_em !== null).length,
+    total: itens.length,
+  };
 }

@@ -41,6 +41,7 @@ describe("/app/estudo", () => {
       materia: "Conhecimentos Bancários",
       topico: "Mercado de crédito",
       recursos: [],
+      andamento: null,
     });
   });
 

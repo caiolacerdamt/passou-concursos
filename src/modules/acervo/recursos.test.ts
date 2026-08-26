@@ -136,9 +136,11 @@ describe("recursos de estudo curados", () => {
       then: (resolve: (valor: unknown) => unknown, reject: (erro: unknown) => unknown) =>
         Promise.resolve({ data: [{ recurso_id: "recurso-1" }], error: null }).then(resolve, reject),
     };
-    const cliente = { from: vi.fn(() => cadeia) } as never;
+    const cliente = { from: vi.fn(() => cadeia) };
 
-    await expect(consultarRecursosVistos(cliente, ["recurso-1", "recurso-2"])).resolves.toEqual(
+    await expect(
+      consultarRecursosVistos(cliente as never, ["recurso-1", "recurso-2"]),
+    ).resolves.toEqual(
       new Set(["recurso-1"]),
     );
     expect(cliente.from).toHaveBeenCalledWith("recurso_visto");

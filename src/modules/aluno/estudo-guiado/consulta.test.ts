@@ -42,7 +42,25 @@ describe("leitor do estudo guiado", () => {
   it("preserva o snapshot, enriquece taxonomia e lê recurso/marcas pela RLS", async () => {
     const { cliente, chamadas } = clienteCom({
       plano_bloco: { data: bloco, error: null },
-      sessoes: { data: null, error: null },
+      sessoes: {
+        data: [{ id: "sessao-aberta", encerrada_em: null }],
+        error: null,
+      },
+      sessao_itens: {
+        data: [
+          { id: "item-1", respondido_em: "2026-08-25T12:00:00Z" },
+          { id: "item-2", respondido_em: "2026-08-25T12:01:00Z" },
+          { id: "item-3", respondido_em: "2026-08-25T12:02:00Z" },
+          { id: "item-4", respondido_em: "2026-08-25T12:03:00Z" },
+          { id: "item-5", respondido_em: null },
+          { id: "item-6", respondido_em: null },
+          { id: "item-7", respondido_em: null },
+          { id: "item-8", respondido_em: null },
+          { id: "item-9", respondido_em: null },
+          { id: "item-10", respondido_em: null },
+        ],
+        error: null,
+      },
       topicos: {
         data: {
           id: bloco.topico_id,
@@ -85,11 +103,13 @@ describe("leitor do estudo guiado", () => {
       },
       materia: "Conhecimentos Bancários",
       topico: "Mercado de crédito",
+      andamento: { respondidas: 4, total: 10 },
       recursos: [{ titulo: "Aula sobre crédito", ordem: 1, visto: true }],
     });
     expect(chamadas).toEqual([
       "plano_bloco",
       "sessoes",
+      "sessao_itens",
       "topicos",
       "recursos_estudo",
       "recurso_visto",
@@ -106,7 +126,7 @@ describe("leitor do estudo guiado", () => {
 
     const concluido = clienteCom({
       plano_bloco: { data: bloco, error: null },
-      sessoes: { data: { id: "sessao-concluida" }, error: null },
+      sessoes: { data: [{ id: "sessao-concluida", encerrada_em: "2026-08-25T12:00:00Z" }], error: null },
     });
     await expect(consultarEstudoGuiado(concluido.cliente, bloco.id)).rejects.toBeInstanceOf(
       EstudoGuiadoRecusado,
@@ -114,16 +134,17 @@ describe("leitor do estudo guiado", () => {
     expect(concluido.chamadas).toEqual(["plano_bloco", "sessoes"]);
   });
 
-  it("mantém bloco sem tópico utilizável e não cria revisão", async () => {
+  it("mantém bloco sem tópico utilizável sem consultar conteúdo", async () => {
     const semTopico = clienteCom({
       plano_bloco: { data: { ...bloco, topico_id: null }, error: null },
-      sessoes: { data: null, error: null },
+      sessoes: { data: [], error: null },
     });
 
     await expect(consultarEstudoGuiado(semTopico.cliente, bloco.id)).resolves.toMatchObject({
       materia: null,
       topico: null,
       recursos: [],
+      andamento: null,
     });
     expect(semTopico.chamadas).toEqual(["plano_bloco", "sessoes"]);
   });

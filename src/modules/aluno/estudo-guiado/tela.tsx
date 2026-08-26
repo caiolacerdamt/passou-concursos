@@ -42,6 +42,13 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
   const recursos = estudo.recursos.filter(recursoSeguro);
   const bloco = estudo.bloco;
   const titulo = nomeDoRotuloDoTopico({ materia: estudo.materia, topico: estudo.topico }) ?? "Estudo do bloco";
+  const andamento = estudo.andamento;
+  const andamentoComRespostas =
+    andamento !== null && andamento.respondidas > 0 ? andamento : null;
+  const questoesRestantes =
+    andamentoComRespostas === null
+      ? 0
+      : Math.max(andamentoComRespostas.total - andamentoComRespostas.respondidas, 0);
 
   return (
     <div className="space-y-6">
@@ -129,7 +136,9 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
               Leve o assunto para as questões
             </h2>
             <p className="mt-2 text-sm leading-6 text-suave">
-              {bloco.nQuestoes > 0
+              {andamentoComRespostas
+                ? `${andamentoComRespostas.respondidas} de ${andamentoComRespostas.total} questões deste bloco já respondidas.`
+                : bloco.nQuestoes > 0
                 ? `${bloco.nQuestoes} ${bloco.nQuestoes === 1 ? "questão" : "questões"} deste bloco, com as respostas registradas no seu histórico.`
                 : "As questões deste bloco são definidas ao abrir a sessão, e as respostas ficam registradas no seu histórico."}
             </p>
@@ -137,7 +146,9 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
               href={`/app/sessao?bloco=${encodeURIComponent(bloco.id)}`}
               className="mt-4.5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-marca px-5 font-semibold text-painel transition-colors duration-150 hover:bg-marca-apoio"
             >
-              Ir para as questões
+              {andamentoComRespostas
+                ? `Continuar — faltam ${questoesRestantes} de ${andamentoComRespostas.total}`
+                : "Ir para as questões"}
               <svg
                 viewBox="0 0 24 24"
                 className="size-4"

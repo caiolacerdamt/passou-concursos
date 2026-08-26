@@ -21,6 +21,7 @@ const estudo: DadosDoEstudoGuiado = {
   },
   materia: "Conhecimentos Bancários",
   topico: "Mercado de crédito",
+  andamento: { respondidas: 4, total: 10 },
   recursos: [
     {
       id: "7d86194a-f1cf-4e65-bc2e-69d67766366a",
@@ -74,6 +75,9 @@ describe("mesa de estudo guiado", () => {
     expect(html).toContain("Resumo em PDF");
     expect(html).toContain("Já vi");
     expect(html).toContain("Marcar Aula sobre crédito como visto");
+    expect(html).toContain("4 de 10 questões deste bloco já respondidas.");
+    expect(html).toContain("Continuar — faltam 6 de 10");
+    expect(html).not.toContain("Ir para as questões");
     expect(html).not.toContain("Link inseguro");
     expect(html).toContain("Resumo");
     expect(html).toContain('aria-labelledby="titulo-estudo-guiado"');
@@ -95,6 +99,7 @@ describe("mesa de estudo guiado", () => {
           materia: null,
           topico: null,
           recursos: [],
+          andamento: null,
         }}
       />,
     );

@@ -73,20 +73,26 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
         A mesma composição do painel: título à esquerda, cartão de fatos à
         direita, no lugar onde o aluno acabou de ver o cartão do dia.
       */}
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-end">
-        <div className="min-w-0">
-          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-stretch">
+        <section
+          className="min-w-0 rounded-2xl border border-linha bg-painel px-6 pb-8 pt-6 sm:px-7 lg:px-8"
+          aria-labelledby="titulo-estudo-guiado"
+        >
+          <p className="font-utilitaria text-xs font-semibold uppercase tracking-[0.16em] text-marca">
             Estudo guiado · {NOMES_DOS_TIPOS[bloco.tipo]}
           </p>
-          <h1 className="mt-3.5 max-w-[18ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]">
+          <h1
+            id="titulo-estudo-guiado"
+            className="mt-3.5 max-w-[18ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]"
+          >
             {titulo}
           </h1>
           <p className="mt-3.5 max-w-[46ch] text-[1.0625rem] leading-relaxed text-suave">
             {DESCRICOES[bloco.tipo]}
           </p>
-        </div>
+        </section>
 
-        <RetratoDoPlano bloco={bloco} />
+        <ResumoDoPlano bloco={bloco} />
       </section>
 
       {/*
@@ -164,15 +170,15 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
  * do canto — mesmo lugar, mesma matéria e mesmo raio do cartão do dia em
  * `/app`. Os três números vêm do bloco; nada aqui é estimado na tela.
  */
-function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
+function ResumoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
   return (
     <section
-      className="rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
-      aria-labelledby="titulo-snapshot"
+      className="h-full rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
+      aria-labelledby="titulo-resumo"
     >
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
-          Retrato do plano
+          Resumo
         </p>
         {bloco.ajusteUsuario ? (
           <span className="rounded-lg bg-fundo-suave px-2.5 py-1 text-[0.6875rem] font-semibold text-marca">
@@ -181,7 +187,7 @@ function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
         ) : null}
       </div>
 
-      <h2 id="titulo-snapshot" className="mt-2.5 text-xl font-semibold">
+      <h2 id="titulo-resumo" className="mt-2.5 text-xl font-semibold">
         {NOMES_DOS_NIVEIS[bloco.nivel]} · etapa {bloco.ordem}
       </h2>
 

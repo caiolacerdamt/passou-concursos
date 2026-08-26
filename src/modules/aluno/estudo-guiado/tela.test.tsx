@@ -68,7 +68,10 @@ describe("mesa de estudo guiado", () => {
     expect(html).toContain("Outras fontes curadas");
     expect(html).toContain("Resumo em PDF");
     expect(html).not.toContain("Link inseguro");
-    expect(html).toContain("Próxima revisão registrada");
+    expect(html).toContain("Resumo");
+    expect(html).toContain('aria-labelledby="titulo-estudo-guiado"');
+    expect(html).toContain('aria-labelledby="titulo-resumo"');
+    expect(html).toContain("lg:items-stretch");
     expect(html).toContain("Foco contínuo");
     expect(html).toContain("25 minutos de foco");
     expect(html).toContain("/app/sessao?bloco=4c2d8f62-bf58-4db2-8f55-8ef7a9799b1f");

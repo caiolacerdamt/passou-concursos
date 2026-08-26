@@ -780,4 +780,3 @@ update public.plano_bloco
     or motivo like '%janela maxima sem tocar materia relevante%'
     or motivo like '%rotacao do edital%'
     or motivo like '%pratica distribuida no ciclo%';
-

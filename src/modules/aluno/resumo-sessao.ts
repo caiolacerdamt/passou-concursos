@@ -28,6 +28,7 @@ export type ResumoDaSessao = {
   id: string;
   blocoId: string | null;
   encerradaEm: string;
+  proximaRevisao: string | null;
   nQuestoes: number;
   nAcertos: number;
   itens: readonly ItemDoResumo[];
@@ -37,10 +38,12 @@ type SessaoBanco = {
   id: string;
   plano_bloco_id: string | null;
   encerrada_em: string;
+  contexto: string;
 };
 type TentativaBanco = {
   questao_id: string;
   questao_versao: number;
+  topico_id: string;
   ordem_na_sessao: number;
   resposta_dada: string;
   correta: boolean;
@@ -54,6 +57,7 @@ type QuestaoBanco = {
   fonte_citacao: unknown;
   resposta_correta: string | null;
 };
+type RevisaoBanco = { topico_id: string; due: string | null };
 
 function falhaAoLer(recurso: string, mensagem: string): Error {
   return new Error(`falha ao ler ${recurso}: ${mensagem}`);
@@ -72,7 +76,7 @@ export async function consultarResumoDaSessao(
 ): Promise<ResumoDaSessao | null> {
   const sessaoConsulta = await cliente
     .from("sessoes")
-    .select("id, plano_bloco_id, encerrada_em")
+    .select("id, plano_bloco_id, contexto, encerrada_em")
     .eq("id", sessaoId)
     .not("encerrada_em", "is", null)
     .maybeSingle();
@@ -94,6 +98,27 @@ export async function consultarResumoDaSessao(
   }
   const tentativas = (tentativasConsulta.data ?? []) as TentativaBanco[];
   if (tentativas.length === 0) throw new Error("sessão encerrada não possui tentativas");
+
+  let proximaRevisao: string | null = null;
+  const agendaRelevante = sessao.contexto === "plano" || sessao.contexto === "treino" || sessao.contexto === "revisao";
+  const topicos = [...new Set(tentativas.map((tentativa) => tentativa.topico_id))];
+  if (agendaRelevante && topicos.length > 0) {
+    const agendaConsulta = await cliente
+      .from("revisao_agenda")
+      .select("topico_id, due")
+      .in("topico_id", topicos)
+      .order("due", { ascending: true });
+
+    if (agendaConsulta.error) {
+      throw falhaAoLer("revisão da sessão", agendaConsulta.error.message);
+    }
+
+    // Refação pode tocar mais de um tópico; "próxima" é a menor data entre
+    // as agendas que pertencem às respostas desta sessão.
+    proximaRevisao = ((agendaConsulta.data ?? []) as RevisaoBanco[]).find(
+      (linha) => typeof linha.due === "string" && linha.due.length > 0,
+    )?.due ?? null;
+  }
 
   const questoesConsulta = await cliente
     .from("questoes")
@@ -138,6 +163,7 @@ export async function consultarResumoDaSessao(
     id: sessao.id,
     blocoId: sessao.plano_bloco_id,
     encerradaEm: sessao.encerrada_em,
+    proximaRevisao,
     nQuestoes: itens.length,
     nAcertos: itens.filter((item) => item.correta).length,
     itens,

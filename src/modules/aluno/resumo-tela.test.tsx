@@ -8,6 +8,7 @@ const resumo: ResumoDaSessao = {
   id: "sessao-1",
   blocoId: "bloco-1",
   encerradaEm: "2026-08-23T21:00:00.000Z",
+  proximaRevisao: "2026-08-30",
   nQuestoes: 2,
   nAcertos: 1,
   itens: [
@@ -54,6 +55,7 @@ describe("ResumoTela", () => {
 
     expect(html).toContain("1 de 2 acertos");
     expect(html).toContain("50% de aproveitamento");
+    expect(html).toContain("Próxima revisão: 30 de agosto de 2026");
     expect(html).toContain("Quanto deverá pagar?");
     expect(html).toContain("Sua resposta");
     expect(html).toContain(">B<");
@@ -61,5 +63,14 @@ describe("ResumoTela", () => {
     expect(html).toContain(">D<");
     expect(html).toContain("Fundação Cesgranrio · 2021 · Banco do Brasil");
     expect(html).not.toContain("Explicação");
+  });
+
+  it("não inventa uma data quando a sessão não agendou revisão", () => {
+    const html = renderToStaticMarkup(
+      <ResumoTela resumo={{ ...resumo, proximaRevisao: null }} />,
+    );
+
+    expect(html).not.toContain("Próxima revisão");
+    expect(html).not.toContain("—");
   });
 });

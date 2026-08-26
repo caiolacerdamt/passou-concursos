@@ -21,6 +21,7 @@ const estudo: DadosDoEstudoGuiado = {
   },
   materia: "Conhecimentos Bancários",
   topico: "Mercado de crédito",
+  andamento: { respondidas: 4, total: 10 },
   recursos: [
     {
       id: "7d86194a-f1cf-4e65-bc2e-69d67766366a",
@@ -31,6 +32,7 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 20,
       ordem: 1,
       ativo: true,
+      visto: true,
     },
     {
       id: "5a81dd4a-7153-4a8c-905c-43f416b00bc8",
@@ -41,6 +43,7 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 12,
       ordem: 2,
       ativo: true,
+      visto: false,
     },
     {
       id: "falso-recurso",
@@ -51,24 +54,35 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 5,
       ordem: 3,
       ativo: true,
+      visto: false,
     },
   ],
-  proximaRevisao: "2026-08-30",
 };
 
 describe("mesa de estudo guiado", () => {
-  it("mostra assunto real, snapshot, curadoria ordenada e próxima revisão", () => {
+  it("mostra assunto real, snapshot, curadoria ordenada e checklist", () => {
     const html = renderToStaticMarkup(<EstudoGuiadoTela estudo={estudo} />);
 
     expect(html).toContain("Conhecimentos Bancários · Mercado de crédito");
     expect(html).toContain("35 minutos");
     expect(html).toContain("Este tema fecha uma lacuna importante do ciclo.");
+    expect(html).toContain("border-aviso/30");
+    expect(html).toContain("bg-conquista-fundo");
+    expect(html).toContain("text-aviso");
     expect(html).toContain("Recurso principal");
     expect(html).toContain("Aula sobre crédito");
     expect(html).toContain("Outras fontes curadas");
     expect(html).toContain("Resumo em PDF");
+    expect(html).toContain("Já vi");
+    expect(html).toContain("Marcar Aula sobre crédito como visto");
+    expect(html).toContain("4 de 10 questões deste bloco já respondidas.");
+    expect(html).toContain("Continuar — faltam 6 de 10");
+    expect(html).not.toContain("Ir para as questões");
     expect(html).not.toContain("Link inseguro");
-    expect(html).toContain("Próxima revisão registrada");
+    expect(html).toContain("Resumo");
+    expect(html).toContain('aria-labelledby="titulo-estudo-guiado"');
+    expect(html).toContain('aria-labelledby="titulo-resumo"');
+    expect(html).toContain("lg:items-stretch");
     expect(html).toContain("Foco contínuo");
     expect(html).toContain("25 minutos de foco");
     expect(html).toContain("/app/sessao?bloco=4c2d8f62-bf58-4db2-8f55-8ef7a9799b1f");
@@ -85,7 +99,7 @@ describe("mesa de estudo guiado", () => {
           materia: null,
           topico: null,
           recursos: [],
-          proximaRevisao: null,
+          andamento: null,
         }}
       />,
     );

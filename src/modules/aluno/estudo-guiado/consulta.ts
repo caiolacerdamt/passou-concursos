@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   consultarRecursosDoTopico,
-  type RecursoDeEstudo,
+  consultarRecursosVistos,
+  type RecursoDeEstudoComVisto,
 } from "@/modules/acervo/recursos";
 import type { NivelDoPlano, TipoDeBloco } from "@/modules/aluno/plano";
 
@@ -29,6 +30,16 @@ type LinhaDoTopico = {
 
 type LinhaDaMateria = { id: string; nome: string };
 
+type LinhaDaSessaoDoBloco = {
+  id: string;
+  encerrada_em: string | null;
+};
+
+type LinhaDoItemDaSessao = {
+  id: string;
+  respondido_em: string | null;
+};
+
 export type SnapshotDoBlocoDeEstudo = {
   id: string;
   tipo: TipoDeBloco;
@@ -48,8 +59,13 @@ export type DadosDoEstudoGuiado = {
   bloco: SnapshotDoBlocoDeEstudo;
   materia: string | null;
   topico: string | null;
-  recursos: readonly RecursoDeEstudo[];
-  proximaRevisao: string | null;
+  recursos: readonly RecursoDeEstudoComVisto[];
+  andamento: AndamentoDoBloco | null;
+};
+
+export type AndamentoDoBloco = {
+  respondidas: number;
+  total: number;
 };
 
 export class EstudoGuiadoRecusado extends Error {
@@ -70,7 +86,7 @@ export class EstudoGuiadoRecusado extends Error {
 
 /**
  * Lê a mesa de estudo com o cliente autenticado. A RLS é a fronteira de
- * propriedade do bloco, tópicos, recursos e agenda; nenhuma consulta usa a
+ * propriedade do bloco, tópicos e recursos; nenhuma consulta usa a
  * chave de serviço ou tenta descobrir conteúdo fora do banco.
  */
 export async function consultarEstudoGuiado(
@@ -95,24 +111,24 @@ export async function consultarEstudoGuiado(
     );
   }
 
-  const sessaoConcluida = await lerUma<{ id: string }>(
+  const sessoesDoBloco = await lerLista<LinhaDaSessaoDoBloco>(
     cliente
       .from("sessoes")
-      .select("id")
+      .select("id, encerrada_em")
       .eq("plano_bloco_id", bloco.id)
-      .not("encerrada_em", "is", null)
-      .limit(1)
-      .maybeSingle(),
-    "conclusão do bloco",
+      .order("iniciada_em", { ascending: false }),
+    "sessões do bloco",
   );
 
-  if (sessaoConcluida !== null) {
+  if (sessoesDoBloco.some((sessao) => sessao.encerrada_em !== null)) {
     throw new EstudoGuiadoRecusado(
       "bloco_concluido",
       "Este bloco já foi concluído.",
     );
   }
 
+  const sessaoAberta = sessoesDoBloco.find((sessao) => sessao.encerrada_em === null) ?? null;
+  const andamento = sessaoAberta === null ? null : await lerAndamento(cliente, sessaoAberta.id);
   const snapshot = mapearSnapshot(bloco);
   if (bloco.topico_id === null) {
     return {
@@ -120,7 +136,7 @@ export async function consultarEstudoGuiado(
       materia: null,
       topico: null,
       recursos: [],
-      proximaRevisao: null,
+      andamento,
     };
   }
 
@@ -133,17 +149,7 @@ export async function consultarEstudoGuiado(
     "tópico do bloco",
   );
 
-  const [recursos, revisao] = await Promise.all([
-    lerRecursos(cliente, bloco.topico_id),
-    lerUma<{ due: string }>(
-      cliente
-        .from("revisao_agenda")
-        .select("due")
-        .eq("topico_id", bloco.topico_id)
-        .maybeSingle(),
-      "próxima revisão",
-    ),
-  ]);
+  const recursos = await lerRecursos(cliente, bloco.topico_id);
 
   let materia: LinhaDaMateria | null = null;
   if (topico !== null) {
@@ -162,7 +168,7 @@ export async function consultarEstudoGuiado(
     materia: materia?.nome ?? null,
     topico: topico?.nome ?? null,
     recursos,
-    proximaRevisao: revisao?.due ?? null,
+    andamento,
   };
 }
 
@@ -188,9 +194,14 @@ function mapearSnapshot(bloco: LinhaDoBloco): SnapshotDoBlocoDeEstudo {
 async function lerRecursos(
   cliente: SupabaseClient,
   topicoId: string,
-): Promise<readonly RecursoDeEstudo[]> {
+): Promise<readonly RecursoDeEstudoComVisto[]> {
   try {
-    return await consultarRecursosDoTopico(cliente, topicoId);
+    const recursos = await consultarRecursosDoTopico(cliente, topicoId);
+    const vistos = await consultarRecursosVistos(
+      cliente,
+      recursos.map((recurso) => recurso.id),
+    );
+    return recursos.map((recurso) => ({ ...recurso, visto: vistos.has(recurso.id) }));
   } catch (erro) {
     const mensagem = erro instanceof Error ? erro.message : "resposta inválida";
     throw new EstudoGuiadoRecusado(
@@ -212,4 +223,35 @@ async function lerUma<T>(
     );
   }
   return data;
+}
+
+async function lerLista<T>(
+  consulta: PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  nome: string,
+): Promise<T[]> {
+  const { data, error } = await consulta;
+  if (error) {
+    throw new EstudoGuiadoRecusado(
+      "falha_leitura",
+      `Falha ao ler ${nome}: ${error.message}`,
+    );
+  }
+  return data ?? [];
+}
+
+async function lerAndamento(
+  cliente: SupabaseClient,
+  sessaoId: string,
+): Promise<AndamentoDoBloco> {
+  const itens = await lerLista<LinhaDoItemDaSessao>(
+    cliente
+      .from("sessao_itens")
+      .select("id, respondido_em")
+      .eq("sessao_id", sessaoId),
+    "andamento da sessão",
+  );
+  return {
+    respondidas: itens.filter((item) => item.respondido_em !== null).length,
+    total: itens.length,
+  };
 }

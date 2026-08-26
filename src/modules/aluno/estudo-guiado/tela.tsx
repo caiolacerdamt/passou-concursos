@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import type { RecursoDeEstudo } from "@/modules/acervo/recursos";
+import { RecursosChecklist } from "@/app/app/estudo/recursos-checklist";
+import type { RecursoDeEstudo, RecursoDeEstudoComVisto } from "@/modules/acervo/recursos";
 
 import { CronometroDeEstudo } from "./cronometro-tela";
 import type { DadosDoEstudoGuiado, SnapshotDoBlocoDeEstudo } from "./consulta";
@@ -29,12 +30,6 @@ const NOMES_DOS_NIVEIS: Record<SnapshotDoBlocoDeEstudo["nivel"], string> = {
   meta_cheia: "Meta cheia",
 };
 
-const NOMES_DOS_RECURSOS: Record<RecursoDeEstudo["tipo"], string> = {
-  video: "Vídeo",
-  artigo: "Artigo",
-  pdf: "PDF",
-};
-
 /** Cor do rótulo do tipo, na mesma chave que o cartão do plano usa. */
 const COR_DO_TIPO: Record<SnapshotDoBlocoDeEstudo["tipo"], string> = {
   revisar: "text-conquista",
@@ -47,6 +42,13 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
   const recursos = estudo.recursos.filter(recursoSeguro);
   const bloco = estudo.bloco;
   const titulo = nomeDoRotuloDoTopico({ materia: estudo.materia, topico: estudo.topico }) ?? "Estudo do bloco";
+  const andamento = estudo.andamento;
+  const andamentoComRespostas =
+    andamento !== null && andamento.respondidas > 0 ? andamento : null;
+  const questoesRestantes =
+    andamentoComRespostas === null
+      ? 0
+      : Math.max(andamentoComRespostas.total - andamentoComRespostas.respondidas, 0);
 
   return (
     <div className="space-y-6">
@@ -73,20 +75,26 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
         A mesma composição do painel: título à esquerda, cartão de fatos à
         direita, no lugar onde o aluno acabou de ver o cartão do dia.
       */}
-      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-end">
-        <div className="min-w-0">
-          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+      <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-stretch">
+        <section
+          className="min-w-0 rounded-2xl border border-linha bg-painel px-6 pb-8 pt-6 sm:px-7 lg:px-8"
+          aria-labelledby="titulo-estudo-guiado"
+        >
+          <p className="font-utilitaria text-xs font-semibold uppercase tracking-[0.16em] text-marca">
             Estudo guiado · {NOMES_DOS_TIPOS[bloco.tipo]}
           </p>
-          <h1 className="mt-3.5 max-w-[18ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]">
+          <h1
+            id="titulo-estudo-guiado"
+            className="mt-3.5 max-w-[18ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]"
+          >
             {titulo}
           </h1>
           <p className="mt-3.5 max-w-[46ch] text-[1.0625rem] leading-relaxed text-suave">
             {DESCRICOES[bloco.tipo]}
           </p>
-        </div>
+        </section>
 
-        <RetratoDoPlano bloco={bloco} />
+        <ResumoDoPlano bloco={bloco} />
       </section>
 
       {/*
@@ -128,7 +136,9 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
               Leve o assunto para as questões
             </h2>
             <p className="mt-2 text-sm leading-6 text-suave">
-              {bloco.nQuestoes > 0
+              {andamentoComRespostas
+                ? `${andamentoComRespostas.respondidas} de ${andamentoComRespostas.total} questões deste bloco já respondidas.`
+                : bloco.nQuestoes > 0
                 ? `${bloco.nQuestoes} ${bloco.nQuestoes === 1 ? "questão" : "questões"} deste bloco, com as respostas registradas no seu histórico.`
                 : "As questões deste bloco são definidas ao abrir a sessão, e as respostas ficam registradas no seu histórico."}
             </p>
@@ -136,7 +146,9 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
               href={`/app/sessao?bloco=${encodeURIComponent(bloco.id)}`}
               className="mt-4.5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-marca px-5 font-semibold text-painel transition-colors duration-150 hover:bg-marca-apoio"
             >
-              Ir para as questões
+              {andamentoComRespostas
+                ? `Continuar — faltam ${questoesRestantes} de ${andamentoComRespostas.total}`
+                : "Ir para as questões"}
               <svg
                 viewBox="0 0 24 24"
                 className="size-4"
@@ -152,7 +164,6 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
             </Link>
           </section>
 
-          {estudo.proximaRevisao ? <AvisoDeRevisao data={estudo.proximaRevisao} /> : null}
         </div>
       </section>
     </div>
@@ -160,19 +171,19 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
 }
 
 /**
- * O retrato do plano deixa de ser uma faixa entre duas linhas e vira o cartão
+ * O resumo do plano deixa de ser uma faixa entre duas linhas e vira o cartão
  * do canto — mesmo lugar, mesma matéria e mesmo raio do cartão do dia em
  * `/app`. Os três números vêm do bloco; nada aqui é estimado na tela.
  */
-function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
+function ResumoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
   return (
     <section
-      className="rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
-      aria-labelledby="titulo-snapshot"
+      className="h-full rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
+      aria-labelledby="titulo-resumo"
     >
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
-          Retrato do plano
+          Resumo
         </p>
         {bloco.ajusteUsuario ? (
           <span className="rounded-lg bg-fundo-suave px-2.5 py-1 text-[0.6875rem] font-semibold text-marca">
@@ -181,7 +192,7 @@ function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
         ) : null}
       </div>
 
-      <h2 id="titulo-snapshot" className="mt-2.5 text-xl font-semibold">
+      <h2 id="titulo-resumo" className="mt-2.5 text-xl font-semibold">
         {NOMES_DOS_NIVEIS[bloco.nivel]} · etapa {bloco.ordem}
       </h2>
 
@@ -215,10 +226,15 @@ function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
       </dl>
 
       {bloco.motivo ? (
-        <p className="mt-4.5 border-t border-linha pt-3.5 text-[0.8125rem] leading-6 text-suave">
-          <span className="font-semibold text-texto">Por que agora: </span>
-          {bloco.motivo}
-        </p>
+        <aside
+          className="mt-4.5 rounded-xl border border-aviso/30 bg-conquista-fundo px-4 py-3.5 text-[0.8125rem] leading-6 text-suave"
+          aria-label="Por que agora"
+        >
+          <p>
+            <span className="font-semibold text-aviso">Por que agora: </span>
+            {bloco.motivo}
+          </p>
+        </aside>
       ) : null}
       {bloco.adiadoDe ? (
         <p className="mt-2 text-xs text-suave">Este bloco foi trazido de {formatarData(bloco.adiadoDe)}.</p>
@@ -227,7 +243,7 @@ function RetratoDoPlano({ bloco }: { bloco: SnapshotDoBlocoDeEstudo }) {
   );
 }
 
-function RecursosDeEstudo({ recursos }: { recursos: readonly RecursoDeEstudo[] }) {
+function RecursosDeEstudo({ recursos }: { recursos: readonly RecursoDeEstudoComVisto[] }) {
   if (recursos.length === 0) {
     return (
       <div className="mt-5 rounded-xl border border-aviso/30 bg-conquista-fundo px-5 py-4">
@@ -239,93 +255,7 @@ function RecursosDeEstudo({ recursos }: { recursos: readonly RecursoDeEstudo[] }
     );
   }
 
-  const [principal, ...alternativas] = recursos;
-  return (
-    <div className="mt-5.5">
-      <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
-        Recurso principal
-      </p>
-      <RecursoLink recurso={principal} principal />
-
-      {alternativas.length > 0 ? (
-        <>
-          <p className="mt-5.5 font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
-            Outras fontes curadas
-          </p>
-          <ul className="mt-2.5 grid gap-2">
-            {alternativas.map((recurso) => (
-              <li key={recurso.id}>
-                <RecursoLink recurso={recurso} />
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-    </div>
-  );
-}
-
-function RecursoLink({ recurso, principal = false }: { recurso: RecursoDeEstudo; principal?: boolean }) {
-  return (
-    <a
-      href={recurso.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      referrerPolicy="no-referrer"
-      className={`flex items-center justify-between gap-4 rounded-xl border px-5 no-underline motion-safe:transition-colors motion-reduce:transition-none hover:border-marca ${
-        principal
-          ? "mt-2.5 min-h-19 border-marca/40 bg-marca-suave py-4"
-          : "min-h-16 border-linha bg-painel py-3 hover:bg-marca-suave"
-      }`}
-    >
-      <span className="min-w-0">
-        <span className={`block font-semibold text-texto ${principal ? "text-base" : "text-[0.9375rem]"}`}>
-          {recurso.titulo}
-        </span>
-        <span className="mt-1 block font-utilitaria text-[0.8125rem] text-suave">
-          {NOMES_DOS_RECURSOS[recurso.tipo]} · {recurso.duracaoMinutos} min · {dominio(recurso.url)}
-        </span>
-      </span>
-      <span
-        aria-hidden="true"
-        className={
-          principal
-            ? "grid size-9 shrink-0 place-items-center rounded-full bg-marca text-painel"
-            : "shrink-0 text-marca"
-        }
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className={principal ? "size-4" : "size-4"}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={principal ? "2" : "1.8"}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M7 17 17 7m0 0h-7m7 0v7" />
-        </svg>
-      </span>
-    </a>
-  );
-}
-
-function AvisoDeRevisao({ data }: { data: string }) {
-  const formatada = formatarData(data);
-  return (
-    <aside
-      className="rounded-2xl border border-marca/30 bg-marca-suave px-6 pb-5 pt-5"
-      aria-label="Próxima revisão"
-    >
-      <p className="text-sm font-semibold text-marca">Próxima revisão registrada</p>
-      {formatada ? (
-        <p className="mt-1.5 font-utilitaria text-[0.9375rem] font-medium">{formatada}</p>
-      ) : null}
-      <p className="mt-2 text-[0.8125rem] leading-6 text-suave">
-        A agenda não muda nesta tela — ela é recalculada quando você responde.
-      </p>
-    </aside>
-  );
+  return <RecursosChecklist recursos={recursos} />;
 }
 
 function recursoSeguro(recurso: RecursoDeEstudo): boolean {
@@ -334,15 +264,6 @@ function recursoSeguro(recurso: RecursoDeEstudo): boolean {
     return new URL(recurso.url).protocol === "https:";
   } catch {
     return false;
-  }
-}
-
-/** O domínio diz de onde a fonte vem antes do clique. URL quebrada some. */
-function dominio(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
   }
 }
 

@@ -41,6 +41,7 @@ export type EstadoDaResposta =
       sessaoId: string;
       itemId: string;
       mensagem: string;
+      codigo?: string;
     };
 
 /**
@@ -183,11 +184,13 @@ export async function responderQuestao(
     }
 
     reportarErro(erro, { modulo: "aluno", operacao: "responder_questao" });
+    const codigo = codigoDoErro(erro);
     return {
       status: "erro",
       sessaoId,
       itemId,
       mensagem: "Não conseguimos registrar esta resposta. Tente novamente.",
+      ...(codigo === undefined ? {} : { codigo }),
     };
   }
 }
@@ -237,6 +240,21 @@ function ehRedirecionamentoDoNext(erro: unknown): boolean {
   if (erro.message.startsWith("NEXT_REDIRECT:")) return true;
   const digest = (erro as Error & { digest?: unknown }).digest;
   return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
+function codigoDoErro(erro: unknown): string | undefined {
+  if (erro === null || typeof erro !== "object") return undefined;
+
+  const possivelErro = erro as { code?: unknown; cause?: unknown };
+  if (typeof possivelErro.code === "string") return possivelErro.code;
+
+  const causa = possivelErro.cause;
+  if (causa !== null && typeof causa === "object") {
+    const possivelCausa = causa as { code?: unknown };
+    if (typeof possivelCausa.code === "string") return possivelCausa.code;
+  }
+
+  return undefined;
 }
 
 async function encerrarSeNaoHouverPendencias(

@@ -355,6 +355,32 @@ describe("responderQuestao", () => {
     expect(dependencias.registrar).toHaveBeenCalledTimes(1);
   });
 
+  it("devolve o código do Postgres no estado de erro sem mudar a mensagem visível", async () => {
+    const { cliente } = clienteDaResposta();
+    dependencias.cliente.mockResolvedValue(cliente);
+    const rpcError = {
+      code: "23502",
+      message: "null value in column dificuldade",
+      details: "Failing row contains (questao-1)",
+      hint: null,
+    };
+    dependencias.registrar.mockRejectedValue(
+      new Error(`registrar_tentativa falhou: ${JSON.stringify(rpcError)}`, {
+        cause: rpcError,
+      }),
+    );
+
+    const estado = await responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario());
+
+    expect(estado).toEqual({
+      status: "erro",
+      sessaoId: "sessao-1",
+      itemId: "item-1",
+      mensagem: "Não conseguimos registrar esta resposta. Tente novamente.",
+      codigo: "23502",
+    });
+  });
+
   it("deixa o redirect do paywall atravessar a action", async () => {
     dependencias.matricula.mockRejectedValue(new Error("NEXT_REDIRECT:/assinar"));
 

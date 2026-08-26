@@ -17,6 +17,16 @@ export type DestinoDeErro = (erro: unknown, contexto: ContextoDeErro) => void;
 /** Texto curto do erro, para log. Preserva o nome da classe do erro. */
 export function descreverErro(erro: unknown): string {
   if (erro instanceof Error) return `${erro.name}: ${erro.message}`;
+  if (erro !== null && typeof erro === "object") {
+    try {
+      // JSON compacto mantem a mensagem em uma linha e evita perder os campos
+      // uteis quando um cliente devolve um objeto puro (como o PostgrestError).
+      return JSON.stringify(erro) ?? String(erro);
+    } catch {
+      // Referencias circulares nao podem impedir o reporte do erro original.
+      return String(erro);
+    }
+  }
   return String(erro);
 }
 

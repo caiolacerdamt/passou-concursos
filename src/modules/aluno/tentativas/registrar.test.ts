@@ -275,4 +275,26 @@ describe("registrarTentativa — o que sai e o que entra", () => {
       expect((erro as TentativaRecusada).motivo).toBe("item_inexistente");
     }
   });
+
+  it("envolve erro de RPC nao nomeado em Error e preserva os detalhes no cause", async () => {
+    const rpcError = {
+      code: "23502",
+      message: "null value in column dificuldade",
+      details: "Failing row contains (questao-1)",
+      hint: "Check the schema",
+    };
+    const rpc = vi.fn().mockResolvedValue({ data: null, error: rpcError });
+
+    try {
+      await registrarTentativa(entrada({ contexto: "plano" }), { rpc } as never);
+      expect.unreachable("deveria ter propagado o erro da RPC");
+    } catch (erro) {
+      expect(erro).toBeInstanceOf(Error);
+      expect((erro as Error).message).toContain('"code":"23502"');
+      expect((erro as Error).message).toContain('"message":"null value in column dificuldade"');
+      expect((erro as Error).message).toContain('"details":"Failing row contains (questao-1)"');
+      expect((erro as Error).message).toContain('"hint":"Check the schema"');
+      expect((erro as Error & { cause: unknown }).cause).toBe(rpcError);
+    }
+  });
 });

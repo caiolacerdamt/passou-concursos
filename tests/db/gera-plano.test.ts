@@ -183,7 +183,7 @@ descreveComBanco("gera_plano_do_dia — os dois niveis (ALUNO-11)", () => {
       const revisar = (await blocosDe(cliente, aluno)).find(
         (b) => b.tipo === "revisar",
       );
-      expect(revisar?.motivo).toMatch(/nao perder o que voce ja conquistou/);
+      expect(revisar?.motivo).toMatch(/não perder o que você já conquistou/);
     });
   });
 });

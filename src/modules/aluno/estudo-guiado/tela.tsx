@@ -158,7 +158,6 @@ export function EstudoGuiadoTela({ estudo }: { estudo: DadosDoEstudoGuiado }) {
             </Link>
           </section>
 
-          {estudo.proximaRevisao ? <AvisoDeRevisao data={estudo.proximaRevisao} /> : null}
         </div>
       </section>
     </div>
@@ -318,24 +317,6 @@ function RecursoLink({ recurso, principal = false }: { recurso: RecursoDeEstudo;
         </svg>
       </span>
     </a>
-  );
-}
-
-function AvisoDeRevisao({ data }: { data: string }) {
-  const formatada = formatarData(data);
-  return (
-    <aside
-      className="rounded-2xl border border-marca/30 bg-marca-suave px-6 pb-5 pt-5"
-      aria-label="Próxima revisão"
-    >
-      <p className="text-sm font-semibold text-marca">Próxima revisão registrada</p>
-      {formatada ? (
-        <p className="mt-1.5 font-utilitaria text-[0.9375rem] font-medium">{formatada}</p>
-      ) : null}
-      <p className="mt-2 text-[0.8125rem] leading-6 text-suave">
-        A agenda não muda nesta tela — ela é recalculada quando você responde.
-      </p>
-    </aside>
   );
 }
 

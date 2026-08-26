@@ -50,7 +50,6 @@ describe("leitor do estudo guiado", () => {
         },
         error: null,
       },
-      revisao_agenda: { data: { due: "2026-08-30" }, error: null },
       materias: { data: { id: "f3ba4a98-57df-4803-a56c-7d69de94a5bf", nome: "Conhecimentos Bancários" }, error: null },
       recursos_estudo: {
         data: [
@@ -81,7 +80,6 @@ describe("leitor do estudo guiado", () => {
       },
       materia: "Conhecimentos Bancários",
       topico: "Mercado de crédito",
-      proximaRevisao: "2026-08-30",
       recursos: [{ titulo: "Aula sobre crédito", ordem: 1 }],
     });
     expect(chamadas).toEqual([
@@ -89,7 +87,6 @@ describe("leitor do estudo guiado", () => {
       "sessoes",
       "topicos",
       "recursos_estudo",
-      "revisao_agenda",
       "materias",
     ]);
   });
@@ -121,7 +118,6 @@ describe("leitor do estudo guiado", () => {
       materia: null,
       topico: null,
       recursos: [],
-      proximaRevisao: null,
     });
     expect(semTopico.chamadas).toEqual(["plano_bloco", "sessoes"]);
   });

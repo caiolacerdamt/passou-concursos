@@ -49,7 +49,6 @@ export type DadosDoEstudoGuiado = {
   materia: string | null;
   topico: string | null;
   recursos: readonly RecursoDeEstudo[];
-  proximaRevisao: string | null;
 };
 
 export class EstudoGuiadoRecusado extends Error {
@@ -70,7 +69,7 @@ export class EstudoGuiadoRecusado extends Error {
 
 /**
  * Lê a mesa de estudo com o cliente autenticado. A RLS é a fronteira de
- * propriedade do bloco, tópicos, recursos e agenda; nenhuma consulta usa a
+ * propriedade do bloco, tópicos e recursos; nenhuma consulta usa a
  * chave de serviço ou tenta descobrir conteúdo fora do banco.
  */
 export async function consultarEstudoGuiado(
@@ -120,7 +119,6 @@ export async function consultarEstudoGuiado(
       materia: null,
       topico: null,
       recursos: [],
-      proximaRevisao: null,
     };
   }
 
@@ -133,17 +131,7 @@ export async function consultarEstudoGuiado(
     "tópico do bloco",
   );
 
-  const [recursos, revisao] = await Promise.all([
-    lerRecursos(cliente, bloco.topico_id),
-    lerUma<{ due: string }>(
-      cliente
-        .from("revisao_agenda")
-        .select("due")
-        .eq("topico_id", bloco.topico_id)
-        .maybeSingle(),
-      "próxima revisão",
-    ),
-  ]);
+  const recursos = await lerRecursos(cliente, bloco.topico_id);
 
   let materia: LinhaDaMateria | null = null;
   if (topico !== null) {
@@ -162,7 +150,6 @@ export async function consultarEstudoGuiado(
     materia: materia?.nome ?? null,
     topico: topico?.nome ?? null,
     recursos,
-    proximaRevisao: revisao?.due ?? null,
   };
 }
 

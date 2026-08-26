@@ -53,11 +53,10 @@ const estudo: DadosDoEstudoGuiado = {
       ativo: true,
     },
   ],
-  proximaRevisao: "2026-08-30",
 };
 
 describe("mesa de estudo guiado", () => {
-  it("mostra assunto real, snapshot, curadoria ordenada e próxima revisão", () => {
+    it("mostra assunto real, snapshot e curadoria ordenada", () => {
     const html = renderToStaticMarkup(<EstudoGuiadoTela estudo={estudo} />);
 
     expect(html).toContain("Conhecimentos Bancários · Mercado de crédito");
@@ -91,7 +90,6 @@ describe("mesa de estudo guiado", () => {
           materia: null,
           topico: null,
           recursos: [],
-          proximaRevisao: null,
         }}
       />,
     );

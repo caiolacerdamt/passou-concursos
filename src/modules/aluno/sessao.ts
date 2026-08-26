@@ -68,21 +68,35 @@ export type QuestaoParaResposta = QuestaoDaSessao & {
   gabaritoVersao: string;
 };
 
-export type ItemDaSessao = {
+type ItemDaSessaoBase = {
   id: string;
   questaoId: string;
   questaoVersao: number;
   ordem: number;
-  respondidoEm: string | null;
-  questao: QuestaoDaSessao;
 };
+
+export type ItemDaSessao =
+  | (ItemDaSessaoBase & {
+      somenteLeitura: false;
+      respondidoEm: null;
+      questao: QuestaoDaSessao;
+    })
+  | (ItemDaSessaoBase & {
+      somenteLeitura: true;
+      respondidoEm: string;
+      respostaDada: string;
+      correta: boolean;
+      questao: QuestaoDaSessao & { respostaCorreta: string };
+    });
 
 export type SessaoDaTela = {
   id: string;
   blocoId: string | null;
   contexto: Contexto;
   encerradaEm: string | null;
-  /** Só itens ainda pendentes chegam à tela; respostas já gravadas ficam no log. */
+  /** Todos os itens chegam ordenados; os já respondidos são somente leitura. */
+  totalItens: number;
+  itensRespondidos: number;
   itens: readonly ItemDaSessao[];
 };
 
@@ -169,6 +183,14 @@ type ItemDaConsulta = {
   questao_versao: number;
   ordem: number;
   respondido_em: string | null;
+};
+
+type TentativaDaConsulta = {
+  questao_id: string;
+  questao_versao: number;
+  ordem_na_sessao: number;
+  resposta_dada: string;
+  correta: boolean;
 };
 
 type AssinadorDeImagem = (storagePath: string) => Promise<string>;
@@ -555,7 +577,7 @@ export async function prepararSessaoDeRefacao(
   return criada;
 }
 
-/** Lê apenas os itens ainda pendentes e assina imagens no servidor. */
+/** Lê a sessão completa; itens respondidos chegam à tela somente para leitura. */
 export async function consultarSessao(
   cliente: SupabaseClient,
   sessaoId: string,
@@ -576,36 +598,70 @@ export async function consultarSessao(
       .from("sessao_itens")
       .select("id, sessao_id, questao_id, questao_versao, ordem, respondido_em")
       .eq("sessao_id", sessaoId)
-      .is("respondido_em", null)
       .order("ordem", { ascending: true }),
-    "itens pendentes",
+    "itens da sessão",
   );
 
-  if (itens.length === 0) {
-    return {
-      id: sessao.id,
-      blocoId: sessao.plano_bloco_id,
-      contexto: sessao.contexto,
-      encerradaEm: sessao.encerrada_em,
-      itens: [],
-    };
+  const itensRespondidos = itens.filter((item) => item.respondido_em !== null);
+  const idsPendentes = [
+    ...new Set(
+      itens
+        .filter((item) => item.respondido_em === null)
+        .map((item) => item.questao_id),
+    ),
+  ];
+  const idsRespondidos = [...new Set(itensRespondidos.map((item) => item.questao_id))];
+
+  const tentativas =
+    idsRespondidos.length === 0
+      ? []
+      : await lerLista<TentativaDaConsulta>(
+          cliente
+            .from("tentativas")
+            .select("questao_id, questao_versao, ordem_na_sessao, resposta_dada, correta")
+            .eq("sessao_id", sessaoId)
+            .order("respondida_em", { ascending: false }),
+          "respostas da sessão",
+        );
+
+  const tentativasPorQuestao = new Map<string, TentativaDaConsulta>();
+  for (const tentativa of tentativas) {
+    const chave = `${tentativa.questao_id}:${tentativa.questao_versao}`;
+    // A RPC de resposta garante uma tentativa por item. Se um dado legado
+    // aparecer duplicado, a ordenação mantém a resposta mais recente visível.
+    if (!tentativasPorQuestao.has(chave)) tentativasPorQuestao.set(chave, tentativa);
   }
 
-  const ids = [...new Set(itens.map((item) => item.questao_id))];
-  let questoesConsulta = cliente
-    .from("questoes")
-    .select(QUESTAO_PUBLICA_SELECT)
-    .in("id", ids);
-  if (sessao.refacao_chave) {
-    questoesConsulta = questoesConsulta
-      .eq("status", "publicada")
-      .eq("vigente", true)
-      .eq("anulada", false);
-  }
-  const linhas = await lerLista<LinhaDeQuestao>(
-    questoesConsulta,
-    "questões da sessão",
-  );
+  // O gabarito só atravessa a fronteira para itens que já têm resposta gravada.
+  // Itens pendentes usam o select público, que não contém `resposta_correta`;
+  // não há caminho aqui em que uma questão pendente receba o gabarito.
+  const consultarQuestoes = async (
+    ids: readonly string[],
+    select: string,
+    nome: string,
+  ): Promise<LinhaDeQuestao[]> => {
+    if (ids.length === 0) return [];
+    let consulta = cliente.from("questoes").select(select).in("id", ids);
+    if (sessao.refacao_chave) {
+      consulta = consulta
+        .eq("status", "publicada")
+        .eq("vigente", true)
+        .eq("anulada", false);
+    }
+    return lerLista<LinhaDeQuestao>(
+      consulta as unknown as PromiseLike<{
+        data: LinhaDeQuestao[] | null;
+        error: ErroPostgrest;
+      }>,
+      nome,
+    );
+  };
+
+  const [linhasPendentes, linhasRespondidas] = await Promise.all([
+    consultarQuestoes(idsPendentes, QUESTAO_PUBLICA_SELECT, "questões pendentes da sessão"),
+    consultarQuestoes(idsRespondidos, QUESTAO_RESPOSTA_SELECT, "questões respondidas da sessão"),
+  ]);
+  const linhas = [...linhasPendentes, ...linhasRespondidas];
   const porVersao = new Map(
     linhas.map((linha) => [`${linha.id}:${linha.questao_versao}`, linha]),
   );
@@ -627,13 +683,42 @@ export async function consultarSessao(
         );
       }
 
-      return {
+      const itemBase = {
         id: item.id,
         questaoId: item.questao_id,
         questaoVersao: item.questao_versao,
         ordem: item.ordem,
+      };
+      const questao = await mapearQuestaoParaTela(linha, assinar);
+      if (item.respondido_em === null) {
+        return {
+          ...itemBase,
+          somenteLeitura: false as const,
+          respondidoEm: null,
+          questao,
+        };
+      }
+
+      const tentativa = tentativasPorQuestao.get(`${item.questao_id}:${item.questao_versao}`);
+      if (
+        tentativa === undefined ||
+        typeof tentativa.resposta_dada !== "string" ||
+        typeof tentativa.correta !== "boolean" ||
+        typeof linha.resposta_correta !== "string"
+      ) {
+        throw new SessaoRecusada(
+          "acervo_inconsistente",
+          "A resposta gravada da sessão não está disponível para revisão.",
+        );
+      }
+
+      return {
+        ...itemBase,
+        somenteLeitura: true as const,
         respondidoEm: item.respondido_em,
-        questao: await mapearQuestaoParaTela(linha, assinar),
+        respostaDada: tentativa.resposta_dada,
+        correta: tentativa.correta,
+        questao: { ...questao, respostaCorreta: linha.resposta_correta },
       };
     }),
   );
@@ -643,6 +728,8 @@ export async function consultarSessao(
     blocoId: sessao.plano_bloco_id,
     contexto: sessao.contexto,
     encerradaEm: sessao.encerrada_em,
+    totalItens: itens.length,
+    itensRespondidos: itensRespondidos.length,
     itens: itensDaTela,
   };
 }

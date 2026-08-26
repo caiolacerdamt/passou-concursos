@@ -49,16 +49,18 @@ describe("consultarResumoDaSessao", () => {
       tentativas: {
         data: [
           {
-            questao_id: "questao-1",
-            questao_versao: 2,
-            ordem_na_sessao: 1,
+          questao_id: "questao-1",
+          questao_versao: 2,
+          topico_id: "topico-1",
+          ordem_na_sessao: 1,
             resposta_dada: "B",
             correta: false,
           },
           {
-            questao_id: "questao-2",
-            questao_versao: 1,
-            ordem_na_sessao: 2,
+          questao_id: "questao-2",
+          questao_versao: 1,
+          topico_id: "topico-1",
+          ordem_na_sessao: 2,
             resposta_dada: "C",
             correta: true,
           },
@@ -88,6 +90,10 @@ describe("consultarResumoDaSessao", () => {
         ],
         error: null,
       },
+      revisao_agenda: {
+        data: [{ topico_id: "topico-1", due: "2026-08-30" }],
+        error: null,
+      },
     });
 
     const { rpc } = { rpc: (cliente as { rpc: ReturnType<typeof vi.fn> }).rpc };
@@ -96,6 +102,7 @@ describe("consultarResumoDaSessao", () => {
       id: "sessao-1",
       blocoId: "bloco-1",
       encerradaEm: "2026-08-23T21:00:00.000Z",
+      proximaRevisao: "2026-08-30",
       nQuestoes: 2,
       nAcertos: 1,
       itens: [
@@ -141,5 +148,51 @@ describe("consultarResumoDaSessao", () => {
     expect(from).toHaveBeenCalledTimes(1);
     expect(from).toHaveBeenCalledWith("sessoes");
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("não mostra revisão para contexto que não agenda revisão", async () => {
+    const { cliente, from } = clienteCom({
+      sessoes: {
+        data: {
+          id: "sessao-simulado",
+          plano_bloco_id: null,
+          contexto: "simulado",
+          encerrada_em: "2026-08-23T21:00:00.000Z",
+        },
+        error: null,
+      },
+      tentativas: {
+        data: [
+          {
+            questao_id: "questao-1",
+            questao_versao: 1,
+            topico_id: "topico-1",
+            ordem_na_sessao: 1,
+            resposta_dada: "A",
+            correta: true,
+          },
+        ],
+        error: null,
+      },
+      questoes: {
+        data: [
+          {
+            id: "questao-1",
+            questao_versao: 1,
+            origem: "real",
+            tipo_questao: "certo_errado",
+            enunciado: "A afirmação está correta.",
+            fonte_citacao: FONTE,
+            resposta_correta: "A",
+          },
+        ],
+        error: null,
+      },
+    });
+
+    await expect(consultarResumoDaSessao(cliente as never, "sessao-simulado")).resolves.toMatchObject({
+      proximaRevisao: null,
+    });
+    expect(from).not.toHaveBeenCalledWith("revisao_agenda");
   });
 });

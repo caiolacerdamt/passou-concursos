@@ -15,7 +15,18 @@ function proveniencia(item: ItemDoResumo): string {
   return item.questao.origem === "gerada_ia" ? "Questão inédita do acervo" : "Fonte em revisão";
 }
 
+function formatarData(data: string): string | null {
+  const valor = new Date(`${data}T12:00:00`);
+  if (Number.isNaN(valor.getTime())) return null;
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "long",
+    timeZone: "America/Sao_Paulo",
+  }).format(valor);
+}
+
 export function ResumoTela({ resumo }: { resumo: ResumoDaSessao }) {
+  const proximaRevisao = resumo.proximaRevisao ? formatarData(resumo.proximaRevisao) : null;
+
   return (
     <div className="space-y-8">
       <header className="space-y-4 border-b border-linha pb-7">
@@ -26,6 +37,11 @@ export function ResumoTela({ resumo }: { resumo: ResumoDaSessao }) {
               {resumo.nAcertos} de {resumo.nQuestoes} acertos
             </h1>
             <p className="mt-2 text-lg text-suave">{percentual(resumo)}% de aproveitamento</p>
+            {proximaRevisao ? (
+              <p className="mt-3 text-sm font-semibold text-marca">
+                Próxima revisão: {proximaRevisao}
+              </p>
+            ) : null}
           </div>
           <Link href="/app" className="inline-flex min-h-11 items-center rounded-full border border-marca px-5 py-3 font-semibold text-marca transition hover:bg-marca hover:text-white">
             Voltar ao plano

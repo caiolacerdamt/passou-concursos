@@ -54,12 +54,15 @@ const sessao = {
   blocoId: "bloco-1",
   contexto: "treino" as const,
   encerradaEm: null,
+  totalItens: 1,
+  itensRespondidos: 0,
   itens: [
     {
       id: "item-1",
       questaoId: "questao-1",
       questaoVersao: 1,
       ordem: 1,
+      somenteLeitura: false,
       respondidoEm: null,
       questao: {} as never,
     },

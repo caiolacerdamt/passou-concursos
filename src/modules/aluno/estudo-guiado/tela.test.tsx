@@ -31,6 +31,7 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 20,
       ordem: 1,
       ativo: true,
+      visto: true,
     },
     {
       id: "5a81dd4a-7153-4a8c-905c-43f416b00bc8",
@@ -41,6 +42,7 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 12,
       ordem: 2,
       ativo: true,
+      visto: false,
     },
     {
       id: "falso-recurso",
@@ -51,12 +53,13 @@ const estudo: DadosDoEstudoGuiado = {
       duracaoMinutos: 5,
       ordem: 3,
       ativo: true,
+      visto: false,
     },
   ],
 };
 
 describe("mesa de estudo guiado", () => {
-    it("mostra assunto real, snapshot e curadoria ordenada", () => {
+  it("mostra assunto real, snapshot, curadoria ordenada e checklist", () => {
     const html = renderToStaticMarkup(<EstudoGuiadoTela estudo={estudo} />);
 
     expect(html).toContain("Conhecimentos Bancários · Mercado de crédito");
@@ -69,6 +72,8 @@ describe("mesa de estudo guiado", () => {
     expect(html).toContain("Aula sobre crédito");
     expect(html).toContain("Outras fontes curadas");
     expect(html).toContain("Resumo em PDF");
+    expect(html).toContain("Já vi");
+    expect(html).toContain("Marcar Aula sobre crédito como visto");
     expect(html).not.toContain("Link inseguro");
     expect(html).toContain("Resumo");
     expect(html).toContain('aria-labelledby="titulo-estudo-guiado"');

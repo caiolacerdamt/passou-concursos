@@ -10,6 +10,7 @@ function clienteCom(respostas: Record<string, { data: unknown; error: null | { m
     const cadeia = {
       select: vi.fn(() => cadeia),
       eq: vi.fn(() => cadeia),
+      in: vi.fn(() => cadeia),
       not: vi.fn(() => cadeia),
       limit: vi.fn(() => cadeia),
       order: vi.fn(() => cadeia),
@@ -38,7 +39,7 @@ const bloco = {
 };
 
 describe("leitor do estudo guiado", () => {
-  it("preserva o snapshot, enriquece taxonomia e lê recurso/agenda pela RLS", async () => {
+  it("preserva o snapshot, enriquece taxonomia e lê recurso/marcas pela RLS", async () => {
     const { cliente, chamadas } = clienteCom({
       plano_bloco: { data: bloco, error: null },
       sessoes: { data: null, error: null },
@@ -66,6 +67,10 @@ describe("leitor do estudo guiado", () => {
         ],
         error: null,
       },
+      recurso_visto: {
+        data: [{ recurso_id: "7d86194a-f1cf-4e65-bc2e-69d67766366a" }],
+        error: null,
+      },
     });
 
     await expect(consultarEstudoGuiado(cliente, bloco.id)).resolves.toMatchObject({
@@ -80,13 +85,14 @@ describe("leitor do estudo guiado", () => {
       },
       materia: "Conhecimentos Bancários",
       topico: "Mercado de crédito",
-      recursos: [{ titulo: "Aula sobre crédito", ordem: 1 }],
+      recursos: [{ titulo: "Aula sobre crédito", ordem: 1, visto: true }],
     });
     expect(chamadas).toEqual([
       "plano_bloco",
       "sessoes",
       "topicos",
       "recursos_estudo",
+      "recurso_visto",
       "materias",
     ]);
   });

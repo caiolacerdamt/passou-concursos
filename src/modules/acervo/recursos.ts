@@ -28,6 +28,10 @@ export type RecursoDeEstudo = {
   ativo: boolean;
 };
 
+export type RecursoDeEstudoComVisto = RecursoDeEstudo & {
+  visto: boolean;
+};
+
 const entradaSchema = z.object({
   id: z.string().uuid().optional(),
   materia: z.string().trim().min(1),
@@ -253,6 +257,10 @@ type LinhaDeRecurso = {
   ativo: boolean;
 };
 
+type LinhaDeRecursoVisto = {
+  recurso_id: string;
+};
+
 function mapearRecurso(linha: LinhaDeRecurso): RecursoDeEstudo {
   if (!(TIPOS_RECURSO_ESTUDO as readonly string[]).includes(linha.tipo)) {
     throw new Error("tipo_de_recurso_invalido_no_banco");
@@ -287,6 +295,24 @@ export async function consultarRecursosDoTopico(
     .order("titulo", { ascending: true });
   if (error) throw new Error(`falha ao ler recursos de estudo: ${error.message}`);
   return ((data ?? []) as LinhaDeRecurso[]).map(mapearRecurso);
+}
+
+/** Lê somente as marcas do titular para os recursos já carregados na tela. */
+export async function consultarRecursosVistos(
+  cliente: SupabaseClient,
+  recursoIds: readonly string[],
+): Promise<ReadonlySet<string>> {
+  if (recursoIds.length === 0) return new Set();
+
+  const { data, error } = await cliente
+    .from("recurso_visto")
+    .select("recurso_id")
+    .in("recurso_id", [...recursoIds]);
+  if (error) throw new Error(`falha ao ler marcas dos recursos: ${error.message}`);
+
+  return new Set(
+    ((data ?? []) as LinhaDeRecursoVisto[]).map((linha) => String(linha.recurso_id)),
+  );
 }
 
 export async function consultarRecursosAtivos(

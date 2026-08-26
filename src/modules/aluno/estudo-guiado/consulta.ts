@@ -2,7 +2,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   consultarRecursosDoTopico,
-  type RecursoDeEstudo,
+  consultarRecursosVistos,
+  type RecursoDeEstudoComVisto,
 } from "@/modules/acervo/recursos";
 import type { NivelDoPlano, TipoDeBloco } from "@/modules/aluno/plano";
 
@@ -48,7 +49,7 @@ export type DadosDoEstudoGuiado = {
   bloco: SnapshotDoBlocoDeEstudo;
   materia: string | null;
   topico: string | null;
-  recursos: readonly RecursoDeEstudo[];
+  recursos: readonly RecursoDeEstudoComVisto[];
 };
 
 export class EstudoGuiadoRecusado extends Error {
@@ -175,9 +176,14 @@ function mapearSnapshot(bloco: LinhaDoBloco): SnapshotDoBlocoDeEstudo {
 async function lerRecursos(
   cliente: SupabaseClient,
   topicoId: string,
-): Promise<readonly RecursoDeEstudo[]> {
+): Promise<readonly RecursoDeEstudoComVisto[]> {
   try {
-    return await consultarRecursosDoTopico(cliente, topicoId);
+    const recursos = await consultarRecursosDoTopico(cliente, topicoId);
+    const vistos = await consultarRecursosVistos(
+      cliente,
+      recursos.map((recurso) => recurso.id),
+    );
+    return recursos.map((recurso) => ({ ...recurso, visto: vistos.has(recurso.id) }));
   } catch (erro) {
     const mensagem = erro instanceof Error ? erro.message : "resposta inválida";
     throw new EstudoGuiadoRecusado(

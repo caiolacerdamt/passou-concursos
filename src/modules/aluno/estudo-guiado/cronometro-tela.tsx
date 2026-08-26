@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import {
   alternarCronometro,
-  avancarCronometro,
   criarEstadoDoCronometro,
   DURACOES_DE_FOCO,
+  DURACAO_POMODORO_FOCO_SEGUNDOS,
+  DURACAO_POMODORO_PAUSA_SEGUNDOS,
   formatarTempoCronometro,
   reiniciarCronometro,
+  sincronizarCronometro,
+  trocarConfiguracaoDoCronometro,
   type ConfiguracaoDoCronometro,
   type DuracaoDeFoco,
   type EstadoDoCronometro,
@@ -26,6 +30,18 @@ const ROTULOS_DO_MODO: Record<ModoDeEstudo, string> = {
   foco: "Foco contínuo",
 };
 
+const CHAVE_DO_CRONOMETRO = "passou:cronometro:";
+
+type EstadoPersistidoDoCronometro = {
+  modo: ModoDeEstudo;
+  duracaoMinutos: DuracaoDeFoco;
+  estado: EstadoDoCronometro;
+};
+
+function instanteAtualEmMs(): number {
+  return Date.now();
+}
+
 /**
  * O relógio do bloco, no cartão escuro que a tela tem direito de usar uma vez
  * (AD-111). O breu é o mesmo da barra de navegação e do cartão do próximo
@@ -36,39 +52,98 @@ const ROTULOS_DO_MODO: Record<ModoDeEstudo, string> = {
  * atrás de um clique.
  */
 export function CronometroDeEstudo() {
+  return (
+    <Suspense fallback={<CronometroComPersistencia blocoId={null} />}>
+      <CronometroComBloco />
+    </Suspense>
+  );
+}
+
+function CronometroComBloco() {
+  const parametros = useSearchParams();
+
+  return <CronometroComPersistencia blocoId={parametros.get("bloco")} />;
+}
+
+function CronometroComPersistencia({ blocoId }: { blocoId: string | null }) {
   const [modo, setModo] = useState<ModoDeEstudo>("pomodoro");
   const [duracao, setDuracao] = useState<DuracaoDeFoco>(30);
   const [estado, setEstado] = useState<EstadoDoCronometro>(() =>
     criarEstadoDoCronometro({ modo: "pomodoro" }),
   );
+  const [carregadoParaBloco, setCarregadoParaBloco] = useState<
+    string | null | undefined
+  >();
+
+  const chave = blocoId === null ? null : chaveDoCronometro(blocoId);
 
   useEffect(() => {
-    if (!estado.executando) return undefined;
+    const id = window.setTimeout(() => {
+      const persistido = chave === null ? null : lerEstadoPersistido(chave);
+
+      if (persistido === null) {
+        setModo("pomodoro");
+        setDuracao(30);
+        setEstado(criarEstadoDoCronometro({ modo: "pomodoro" }));
+      } else {
+        setModo(persistido.modo);
+        setDuracao(persistido.duracaoMinutos);
+        setEstado(sincronizarCronometro(persistido.estado, instanteAtualEmMs()));
+      }
+
+      setCarregadoParaBloco(blocoId);
+    }, 0);
+
+    return () => window.clearTimeout(id);
+  }, [blocoId, chave]);
+
+  const prontoParaPersistir =
+    chave !== null && carregadoParaBloco === blocoId;
+
+  useEffect(() => {
+    if (!prontoParaPersistir || chave === null) return undefined;
+
+    salvarEstadoPersistido(chave, { modo, duracaoMinutos: duracao, estado });
+    return undefined;
+  }, [chave, duracao, estado, modo, prontoParaPersistir]);
+
+  useEffect(() => {
+    if (!prontoParaPersistir || !estado.executando) return undefined;
 
     const relogio = window.setInterval(() => {
-      setEstado((atual) => avancarCronometro(atual, 1));
+      setEstado((atual) => sincronizarCronometro(atual, instanteAtualEmMs()));
     }, 1_000);
 
     return () => window.clearInterval(relogio);
-  }, [estado.executando]);
+  }, [estado.executando, prontoParaPersistir]);
 
   const configuracaoAtual: ConfiguracaoDoCronometro =
     modo === "pomodoro" ? { modo } : { modo, duracaoMinutos: duracao };
 
   function selecionarModo(novoModo: ModoDeEstudo) {
+    const agoraEmMs = instanteAtualEmMs();
+    const novaConfiguracao: ConfiguracaoDoCronometro =
+      novoModo === "pomodoro"
+        ? { modo: novoModo }
+        : { modo: novoModo, duracaoMinutos: duracao };
+
     setModo(novoModo);
-    setEstado(
-      criarEstadoDoCronometro(
-        novoModo === "pomodoro"
-          ? { modo: novoModo }
-          : { modo: novoModo, duracaoMinutos: duracao },
-      ),
+    setEstado((atual) =>
+      trocarConfiguracaoDoCronometro(atual, novaConfiguracao, agoraEmMs),
     );
   }
 
   function selecionarDuracao(novaDuracao: DuracaoDeFoco) {
+    const agoraEmMs = instanteAtualEmMs();
+
     setDuracao(novaDuracao);
-    setEstado(reiniciarCronometro({ modo: "foco", duracaoMinutos: novaDuracao }));
+    setEstado((atual) =>
+      trocarConfiguracaoDoCronometro(
+        atual,
+        { modo: "foco", duracaoMinutos: novaDuracao },
+        agoraEmMs,
+      ),
+    );
   }
 
   const botaoPrincipal =
@@ -85,7 +160,8 @@ export function CronometroDeEstudo() {
       setEstado(reiniciarCronometro(configuracaoAtual));
       return;
     }
-    setEstado(alternarCronometro(estado));
+    const agoraEmMs = instanteAtualEmMs();
+    setEstado((atual) => alternarCronometro(atual, agoraEmMs));
   }
 
   return (
@@ -184,6 +260,120 @@ export function CronometroDeEstudo() {
       </div>
     </section>
   );
+}
+
+function chaveDoCronometro(blocoId: string): string {
+  return `${CHAVE_DO_CRONOMETRO}${encodeURIComponent(blocoId)}`;
+}
+
+function lerEstadoPersistido(
+  chave: string,
+): EstadoPersistidoDoCronometro | null {
+  try {
+    const bruto = window.localStorage.getItem(chave);
+    return bruto === null ? null : interpretarEstadoPersistido(JSON.parse(bruto));
+  } catch {
+    // localStorage pode falhar em modo privado ou com cookies bloqueados.
+    return null;
+  }
+}
+
+function salvarEstadoPersistido(
+  chave: string,
+  persistido: EstadoPersistidoDoCronometro,
+): void {
+  try {
+    window.localStorage.setItem(chave, JSON.stringify(persistido));
+  } catch {
+    // O relógio continua funcional mesmo quando o navegador nega a escrita.
+  }
+}
+
+function interpretarEstadoPersistido(
+  valor: unknown,
+): EstadoPersistidoDoCronometro | null {
+  if (!ehRegistro(valor)) return null;
+
+  const modo = valor.modo;
+  const duracaoMinutos = valor.duracaoMinutos;
+  const estadoBruto = valor.estado;
+
+  if (!ehModo(modo) || !ehDuracao(duracaoMinutos) || !ehRegistro(estadoBruto)) {
+    return null;
+  }
+
+  const fase = estadoBruto.fase;
+  const duracaoFocoMinutos = estadoBruto.duracaoFocoMinutos;
+  const restanteSegundos = estadoBruto.restanteSegundos;
+  const executando = estadoBruto.executando;
+  const ciclosCompletos = estadoBruto.ciclosCompletos;
+  const iniciadoEm = estadoBruto.iniciadoEm;
+
+  if (
+    !ehFase(fase) ||
+    typeof duracaoFocoMinutos !== "number" ||
+    !Number.isFinite(duracaoFocoMinutos) ||
+    typeof restanteSegundos !== "number" ||
+    !Number.isInteger(restanteSegundos) ||
+    restanteSegundos < 0 ||
+    typeof executando !== "boolean" ||
+    typeof ciclosCompletos !== "number" ||
+    !Number.isInteger(ciclosCompletos) ||
+    ciclosCompletos < 0 ||
+    (iniciadoEm !== null &&
+      (typeof iniciadoEm !== "number" || !Number.isFinite(iniciadoEm))) ||
+    estadoBruto.modo !== modo ||
+    duracaoFocoMinutos !== (modo === "foco" ? duracaoMinutos : 25) ||
+    (executando && iniciadoEm === null) ||
+    (!executando && iniciadoEm !== null) ||
+    (modo === "foco" && fase === "pausa") ||
+    (fase === "concluido" && executando)
+  ) {
+    return null;
+  }
+
+  const limiteDaFase =
+    fase === "concluido"
+      ? 0
+      : modo === "foco"
+        ? duracaoMinutos * 60
+        : fase === "pausa"
+          ? DURACAO_POMODORO_PAUSA_SEGUNDOS
+          : DURACAO_POMODORO_FOCO_SEGUNDOS;
+
+  if (restanteSegundos > limiteDaFase) return null;
+
+  return {
+    modo,
+    duracaoMinutos,
+    estado: {
+      modo,
+      duracaoFocoMinutos,
+      fase,
+      restanteSegundos,
+      executando,
+      ciclosCompletos,
+      iniciadoEm,
+    },
+  };
+}
+
+function ehRegistro(valor: unknown): valor is Record<string, unknown> {
+  return typeof valor === "object" && valor !== null;
+}
+
+function ehModo(valor: unknown): valor is ModoDeEstudo {
+  return valor === "pomodoro" || valor === "foco";
+}
+
+function ehDuracao(valor: unknown): valor is DuracaoDeFoco {
+  return DURACOES_DE_FOCO.some((duracao) => duracao === valor);
+}
+
+function ehFase(
+  valor: unknown,
+): valor is EstadoDoCronometro["fase"] {
+  return valor === "foco" || valor === "pausa" || valor === "concluido";
 }
 
 function mensagemDoCronometro(estado: EstadoDoCronometro): string {

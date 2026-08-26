@@ -160,7 +160,7 @@ export function sincronizarCronometro(
 
   if (
     decorrido >
-    estado.restanteSegundos + LIMITE_DE_ATRASO_APOS_FIM_SEGUNDOS
+    duracaoDaFaseEmSegundos(estado) + LIMITE_DE_ATRASO_APOS_FIM_SEGUNDOS
   ) {
     return {
       ...estado,
@@ -171,10 +171,16 @@ export function sincronizarCronometro(
     };
   }
 
-  const avancado = avancarCronometro(estado, decorrido);
+  const avancado = avancarCronometro(
+    {
+      ...estado,
+      restanteSegundos: duracaoDaFaseEmSegundos(estado),
+    },
+    decorrido,
+  );
 
   return avancado.executando
-    ? { ...avancado, iniciadoEm: agoraEmMs }
+    ? { ...avancado, iniciadoEm: estado.iniciadoEm }
     : { ...avancado, iniciadoEm: null };
 }
 

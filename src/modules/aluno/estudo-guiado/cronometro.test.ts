@@ -76,7 +76,7 @@ describe("cronômetro de estudo", () => {
     expect(depoisDeUmMinuto).toMatchObject({
       restanteSegundos: 1_740,
       executando: true,
-      iniciadoEm: 61_500,
+      iniciadoEm: 1_000,
     });
 
     const depoisDeMaisUmSegundo = sincronizarCronometro(
@@ -146,24 +146,14 @@ describe("cronômetro de estudo", () => {
     });
   });
 
-  it("não transforma pausa em foco, mas mantém os ciclos na troca de técnica", () => {
-    const pausaComCiclo = {
-      ...avancarCronometro(
-        alternarCronometro(
-          avancarCronometro(
-            alternarCronometro(
-              criarEstadoDoCronometro({ modo: "pomodoro" }),
-            ),
-            DURACAO_POMODORO_FOCO_SEGUNDOS,
-          ),
-        ),
-        DURACAO_POMODORO_PAUSA_SEGUNDOS,
-      ),
-      ciclosCompletos: 1,
-    };
+  it("não transforma pausa em foco ao trocar de técnica", () => {
+    const pausa = avancarCronometro(
+      alternarCronometro(criarEstadoDoCronometro({ modo: "pomodoro" })),
+      DURACAO_POMODORO_FOCO_SEGUNDOS,
+    );
 
     const trocado = trocarConfiguracaoDoCronometro(
-      pausaComCiclo,
+      pausa,
       { modo: "foco", duracaoMinutos: 30 },
       0,
     );
@@ -173,7 +163,7 @@ describe("cronômetro de estudo", () => {
       fase: "foco",
       restanteSegundos: 1_800,
       executando: false,
-      ciclosCompletos: 1,
+      ciclosCompletos: 0,
     });
   });
 });

@@ -38,9 +38,11 @@ const ESTADO_INICIAL: EstadoDaResposta = { status: "inicial" };
 type PlacarLocal = { respondidas: number; acertos: number; erros: readonly number[] };
 
 export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
-  const [indice, setIndice] = useState(0);
+  const [indice, setIndice] = useState(() => primeiroIndicePendente(sessao.itens));
   const [placar, setPlacar] = useState<PlacarLocal>({ respondidas: 0, acertos: 0, erros: [] });
   const item = sessao.itens[indice];
+  const hrefDoResumo = `/app/sessao/${sessao.id}/resumo`;
+  const hrefDeRetorno = retornoDaSessao(sessao.blocoId);
 
   function registrarNoPlacar(correta: boolean) {
     setPlacar((atual) => ({
@@ -48,6 +50,11 @@ export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
       acertos: atual.acertos + (correta ? 1 : 0),
       erros: correta ? atual.erros : [...atual.erros, indice],
     }));
+  }
+
+  function avancarParaProximaPendente() {
+    const proxima = indiceSeguintePendente(sessao.itens, indice);
+    setIndice(proxima ?? sessao.itens.length);
   }
 
   if (item === undefined) {
@@ -65,10 +72,10 @@ export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
             : "Tudo já está registrado no seu histórico."}
         </p>
         <Link
-          href="/app"
+          href={sessao.encerradaEm ? hrefDoResumo : hrefDeRetorno}
           className="inline-flex min-h-12 items-center rounded-full bg-marca px-6 font-semibold text-painel transition-colors duration-150 hover:bg-marca-apoio"
         >
-          Voltar ao plano
+          {sessao.encerradaEm ? "Ver resumo da sessão" : "Voltar ao estudo"}
         </Link>
       </div>
     );
@@ -76,27 +83,54 @@ export function SessaoTela({ sessao }: { sessao: SessaoDaTela }) {
 
   return (
     <div className="mx-auto max-w-leitura">
-      <CabecalhoDaSessao contexto={sessao.contexto} />
+      <CabecalhoDaSessao contexto={sessao.contexto} blocoId={sessao.blocoId} />
       <TrilhaDaSessao
-        total={sessao.itens.length}
+        itens={sessao.itens}
+        total={sessao.totalItens}
         posicao={indice}
-        respondidas={placar.respondidas}
+        respondidas={sessao.itensRespondidos + placar.respondidas}
         erros={placar.erros}
+        aoSelecionar={setIndice}
       />
-      <QuestaoAtual
-        key={item.id}
-        sessaoId={sessao.id}
-        item={item}
-        posicao={indice + 1}
-        total={sessao.itens.length}
-        aoRegistrar={registrarNoPlacar}
-        aoAvancar={() => setIndice((valor) => valor + 1)}
-      />
+      {item.somenteLeitura ? (
+        <QuestaoRespondida key={item.id} item={item} />
+      ) : (
+        <QuestaoAtual
+          key={item.id}
+          sessaoId={sessao.id}
+          item={item}
+          aoRegistrar={registrarNoPlacar}
+          aoAvancar={avancarParaProximaPendente}
+          ultima={indiceSeguintePendente(sessao.itens, indice) === null}
+          hrefResumo={hrefDoResumo}
+        />
+      )}
     </div>
   );
 }
 
-function CabecalhoDaSessao({ contexto }: { contexto: Contexto }) {
+function primeiroIndicePendente(itens: readonly ItemDaSessao[]): number {
+  const indice = itens.findIndex((item) => !item.somenteLeitura);
+  return indice === -1 ? 0 : indice;
+}
+
+function indiceSeguintePendente(
+  itens: readonly ItemDaSessao[],
+  indiceAtual: number,
+): number | null {
+  const indice = itens.findIndex(
+    (item, indice) => indice > indiceAtual && !item.somenteLeitura,
+  );
+  return indice === -1 ? null : indice;
+}
+
+function retornoDaSessao(blocoId: string | null): string {
+  return blocoId === null
+    ? "/app/progresso"
+    : `/app/estudo?bloco=${encodeURIComponent(blocoId)}`;
+}
+
+function CabecalhoDaSessao({ contexto, blocoId }: { contexto: Contexto; blocoId: string | null }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
@@ -108,7 +142,7 @@ function CabecalhoDaSessao({ contexto }: { contexto: Contexto }) {
         </h1>
       </div>
       <Link
-        href="/app"
+        href={retornoDaSessao(blocoId)}
         className="inline-flex min-h-10 shrink-0 items-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave no-underline transition-colors duration-150 hover:border-marca/50 hover:text-marca"
       >
         Pausar e sair
@@ -120,18 +154,23 @@ function CabecalhoDaSessao({ contexto }: { contexto: Contexto }) {
 /**
  * A trilha substitui o "QUESTÃO 1 / 10" solto: a mesma informação, mas com o
  * quanto falta visível de relance. Cada segmento é uma questão desta sessão —
- * feito, errado, atual, pendente.
+ * feito, errado, atual, pendente. Os segmentos já respondidos são botões de
+ * revisão; os pendentes continuam sem gabarito e sem navegação para trás.
  */
 function TrilhaDaSessao({
+  itens,
   total,
   posicao,
   respondidas,
   erros,
+  aoSelecionar,
 }: {
+  itens: readonly ItemDaSessao[];
   total: number;
   posicao: number;
   respondidas: number;
   erros: readonly number[];
+  aoSelecionar: (indice: number) => void;
 }) {
   return (
     <div className="mt-6.5">
@@ -141,25 +180,41 @@ function TrilhaDaSessao({
         </p>
         {respondidas > 0 ? (
           <p className="font-utilitaria text-[0.8125rem] text-suave">
-            {respondidas - erros.length} de {respondidas} nesta sessão
+            {respondidas} de {total} respondidas
           </p>
         ) : null}
       </div>
-      <div className="mt-2.5 grid gap-1" style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }} aria-hidden="true">
-        {Array.from({ length: total }, (_, indice) => (
-          <span
-            key={indice}
-            className={`h-1 rounded-full ${
-              erros.includes(indice)
+      <div
+        className="mt-2.5 grid gap-1"
+        style={{ gridTemplateColumns: `repeat(${Math.max(total, 1)}, minmax(0, 1fr))` }}
+        aria-label="Navegação das questões"
+      >
+        {itens.map((item, indice) => {
+          const respondidaAntes = item.somenteLeitura;
+          const erro = respondidaAntes ? !item.correta : erros.includes(indice);
+          const classe = `h-1 rounded-full ${
+            indice === posicao
+              ? "bg-marca"
+              : erro
                 ? "bg-erro"
-                : indice < posicao
+                : respondidaAntes || indice < posicao
                   ? "bg-marca-viva"
-                  : indice === posicao
-                    ? "bg-marca"
-                    : "bg-linha"
-            }`}
-          />
-        ))}
+                  : "bg-linha"
+          }`;
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => aoSelecionar(indice)}
+              className="block min-w-0 rounded-full focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marca"
+              aria-label={`${respondidaAntes ? "Rever" : "Abrir"} questão ${indice + 1}`}
+              aria-current={indice === posicao ? "step" : undefined}
+            >
+              <span className={`block w-full ${classe}`} />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -168,17 +223,17 @@ function TrilhaDaSessao({
 function QuestaoAtual({
   sessaoId,
   item,
-  posicao,
-  total,
   aoRegistrar,
   aoAvancar,
+  ultima,
+  hrefResumo,
 }: {
   sessaoId: string;
-  item: ItemDaSessao;
-  posicao: number;
-  total: number;
+  item: Extract<ItemDaSessao, { somenteLeitura: false }>;
   aoRegistrar: (correta: boolean) => void;
   aoAvancar: () => void;
+  ultima: boolean;
+  hrefResumo: string;
 }) {
   const [estado, action, pendente] = useActionState(responderQuestao, ESTADO_INICIAL);
   const [inicio] = useState(() => Date.now());
@@ -207,8 +262,9 @@ function QuestaoAtual({
     return (
       <FeedbackDaResposta
         estado={estado}
-        ultima={posicao === total}
+        ultima={ultima}
         aoAvancar={aoAvancar}
+        hrefResumo={hrefResumo}
         questao={item.questao}
         respostaDada={escolhida}
       />
@@ -302,6 +358,63 @@ function QuestaoAtual({
   );
 }
 
+function QuestaoRespondida({
+  item,
+}: {
+  item: Extract<ItemDaSessao, { somenteLeitura: true }>;
+}) {
+  const alternativas = alternativasDaQuestao(item.questao);
+
+  return (
+    <article className="mt-5">
+      <header>
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+          Questão já respondida · somente leitura
+        </p>
+        <h2 className="mt-3 max-w-[62ch] text-[1.1875rem] leading-[1.65] tracking-[-0.005em] sm:text-xl">
+          {item.questao.enunciado}
+        </h2>
+        <Imagens imagens={item.questao.imagens.filter((imagem) => imagem.posicao === "enunciado")} />
+      </header>
+
+      <section className="mt-5 rounded-2xl border border-linha bg-painel px-6 pb-6 pt-6 sm:px-9 sm:pb-7 sm:pt-7">
+        <p className="text-sm leading-6 text-suave">
+          Sua resposta e o gabarito estão preservados. Esta revisão não registra uma nova tentativa.
+        </p>
+
+        <div className="mt-5 grid gap-2" role="group" aria-label="Alternativas da questão respondida">
+          {alternativas.map((alternativa) => {
+            const foiEscolhida = alternativa.letra === item.respostaDada;
+            const eGabarito = alternativa.letra === item.questao.respostaCorreta;
+            const tom = eGabarito ? "certo" : foiEscolhida ? "errado" : "neutro";
+
+            return (
+              <div
+                key={alternativa.letra}
+                className={`flex min-h-15 items-start gap-3.5 rounded-xl border px-5 py-4 leading-[1.55] ${
+                  eGabarito
+                    ? "border-ok/45 bg-marca-suave"
+                    : foiEscolhida
+                      ? "border-erro/45 bg-erro-fundo"
+                      : "border-linha bg-painel"
+                }`}
+              >
+                <LetraDaAlternativa letra={alternativa.letra} tom={tom} />
+                <span className="min-w-0 flex-1 pt-0.5">{alternativa.texto}</span>
+                {eGabarito || foiEscolhida ? (
+                  <span className={`shrink-0 self-center font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] ${eGabarito ? "text-ok" : "text-erro"}`}>
+                    {eGabarito && foiEscolhida ? "Sua resposta · gabarito" : eGabarito ? "Gabarito" : "Sua resposta"}
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </article>
+  );
+}
+
 /**
  * A causa não é um `<select>` escondido numa caixa de alerta: são sete opções
  * curtas, e vê-las todas é o que faz o aluno escolher a verdadeira em vez da
@@ -378,7 +491,7 @@ function Alternativas({
   escolhida: string | null;
   aoEscolher: (letra: string) => void;
 }) {
-  const alternativas = questao.alternativas ?? OPCOES_CERTO_ERRADO.map(([letra, texto]) => ({ letra, texto }));
+  const alternativas = alternativasDaQuestao(questao);
   const imagens = new Map(questao.imagens.map((imagem) => [imagem.posicao, imagem]));
 
   return (
@@ -417,6 +530,10 @@ function Alternativas({
       </div>
     </fieldset>
   );
+}
+
+function alternativasDaQuestao(questao: QuestaoDaSessao): readonly { letra: string; texto: string }[] {
+  return questao.alternativas ?? OPCOES_CERTO_ERRADO.map(([letra, texto]) => ({ letra, texto }));
 }
 
 function LetraDaAlternativa({
@@ -470,12 +587,14 @@ export function FeedbackDaResposta({
   estado,
   ultima,
   aoAvancar,
+  hrefResumo,
   questao,
   respostaDada = null,
 }: {
   estado: Extract<EstadoDaResposta, { status: "respondida" }>;
   ultima: boolean;
   aoAvancar: () => void;
+  hrefResumo: string;
   questao?: QuestaoDaSessao;
   respostaDada?: string | null;
 }) {
@@ -552,10 +671,10 @@ export function FeedbackDaResposta({
 
           {ultima ? (
             <Link
-              href="/app"
+              href={hrefResumo}
               className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-marca px-7 font-semibold text-painel no-underline transition-colors duration-150 hover:bg-marca-apoio"
             >
-              Concluir e voltar ao plano
+              Ver resumo da sessão
             </Link>
           ) : (
             <button

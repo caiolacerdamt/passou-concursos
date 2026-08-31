@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import {
@@ -303,4 +305,39 @@ function mensagemDaSessao(motivo: SessaoRecusada["motivo"]): string {
     return "Essa questão não está mais disponível nesta sessão.";
   }
   return "Não conseguimos carregar esta questão. Tente novamente.";
+}
+
+/**
+ * Descarta uma sessão que ficou aberta — AD-115.
+ *
+ * Encerrar é **carimbar `encerrada_em`**, nunca apagar: as tentativas já
+ * gravadas continuam de pé (invariante 1, `tentativas` só recebe INSERT), e a
+ * sessão passa a valer como histórico com o que foi respondido. Descartar aqui
+ * significa "não vou terminar", não "isso não aconteceu".
+ *
+ * O formulário só entrega o `id`. O dono vem da RLS: o `update` roda com o
+ * cliente da sessão e a policy `sessoes_do_proprio` recusa a linha alheia sem
+ * que este código precise conferir `user_id` — conferir aqui seria uma segunda
+ * fonte de verdade que pode divergir da primeira.
+ *
+ * `is("encerrada_em", null)` torna o duplo clique inofensivo: o segundo não
+ * encontra linha e não reescreve o carimbo do primeiro.
+ */
+export async function descartarSessao(formulario: FormData): Promise<void> {
+  await exigirMatriculaAtiva();
+  const sessaoId = texto(formulario, "sessaoId");
+  if (sessaoId === "") return;
+
+  const supabase = await clienteDaSessao();
+  const descarte = await supabase
+    .from("sessoes")
+    .update({ encerrada_em: new Date().toISOString() })
+    .eq("id", sessaoId)
+    .is("encerrada_em", null);
+
+  if (descarte.error) {
+    reportarErro(descarte.error, { modulo: "aluno", operacao: "descartar_sessao" });
+  }
+
+  revalidatePath("/app/sessao");
 }

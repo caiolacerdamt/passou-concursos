@@ -622,7 +622,31 @@
   rodada: o menu ainda promete "Ciclo do edital" numa rota que entrega o plano do dia.
 - **Scope**: `src/modules/aluno/sessao/{pratica.ts,pratica-tela.tsx}` (novos),
   `src/modules/aluno/sessao/indice-tela.tsx` (removido), `src/modules/aluno/sessao.ts`,
-  `src/app/app/sessao/page.tsx`, `supabase/migrations/20260831120000_revisao_avulsa.sql`.
+  `src/app/app/sessao/{page.tsx,acoes.ts}`,
+  `supabase/migrations/20260831120000_revisao_avulsa.sql`.
+- **Date**: 2026-08-31
+- **Status**: active
+
+### AD-116
+- **Decision**: A sessão abandonada **não expira por data** e continua listada em `/app/sessao`, mas
+  a tela passa a dizer a idade dela ("aberta há 5 dias"); acima de **24 h** ela troca de rótulo
+  ("Ficou aberta" / "Uma sessão de outro dia ficou pela metade"), perde o anel de foco e ganha
+  **Descartar**. Descartar é `update encerrada_em = now()` — **nunca** DELETE: as tentativas já
+  gravadas continuam no histórico, e a sessão vale como o que foi respondido. O dono vem da RLS, não
+  de conferência no código; `is('encerrada_em', null)` torna o duplo clique inofensivo.
+- **Reason**: Uma sessão só encerra quando **todo** item é respondido (`acoes.ts`), e nada fecha a
+  abandonada — ela fica `encerrada_em = null` para sempre. Com a leitura sem corte de data, a sessão
+  largada dias atrás aparecia sob "Em andamento · Você parou no meio de uma sessão", o que é mentira
+  e foi pego em uso. Cortar por data devolveria a sessão ao buraco de onde a AD-115 a tirou — era
+  justamente por não ter tela que ela se perdia. Job de expiração foi recusado: fecharia bloco de dia
+  antigo em silêncio e pede infra nova para um problema que ainda não existe em escala.
+- **Trade-off**: A tela mostra **uma** sessão aberta, a mais recente; quem largou três vê uma e
+  descarta uma por vez. O limiar de 24 h é calibração, não medida — vive no componente, não em
+  configuração. E retomar uma sessão antiga conclui o bloco do **dia dela**: `conclusoesDosBlocos` só
+  lê blocos do plano de hoje, então esse fechamento não aparece em tela nenhuma (as tentativas
+  contam no anel do dia). Comportamento que já existia e que a AD-115 tornou alcançável.
+- **Scope**: `src/app/app/sessao/acoes.ts` (`descartarSessao`),
+  `src/modules/aluno/sessao/pratica-tela.tsx`.
 - **Date**: 2026-08-31
 - **Status**: active
 
@@ -638,18 +662,22 @@
   `prepararSessaoDeRevisao` em `sessao.ts`, com a agenda como porteiro e `revisao_indisponivel` novo
   em `SessaoRecusada`. (4) `page.tsx` ganha a entrada `?revisao=<topico>` e passa a excluir da lista
   os tópicos **pendentes** do plano de hoje. (5) Migration só de comentário: `refacao_chave` passa a
-  documentar o formato `tópico|qualificador`.
+  documentar o formato `tópico|qualificador`. (6) **AD-116**: a sessão aberta mostra a idade, e
+  acima de 24 h troca de rótulo, perde o destaque e ganha `Descartar` — que carimba `encerrada_em`,
+  nunca apaga.
 - **Gates**: `tsc --noEmit` limpo, `eslint` limpo nos arquivos tocados, `vitest --project unit`
-  **937/937** (era 905/905 na `main`; +32 testes). Sensores conferidos por mutação: o porteiro da
-  agenda, o descarte da revisão que já está no plano e a contagem de questões distintas do histórico
-  falham quando invertidos.
+  **947/947** (era 905/905 na `main`; +42 testes). Sensores conferidos por mutação: o porteiro da
+  agenda, o descarte da revisão que já está no plano, a contagem de questões distintas do histórico,
+  o envelhecimento da sessão aberta e o carimbo do `Descartar` (trocado por DELETE) falham quando
+  invertidos.
 - **External checks**: `test:db` **410/411**. A falha é `spec14-sequencia` esperando `fora_agenda` e
   recebendo `plano_indisponivel`, **reproduzida na `main`** com o mesmo comando — é herdada, não
   desta branch. A migration desta rodada é comentário puro e **não foi aplicada** no projeto de
   desenvolvimento.
 - **In-progress** (file:line): falta a **verificação visual** de `/app/sessao` com conta autenticada
-  (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px e a coluna dupla revisões ×
-  caderno no ponto de quebra `lg`. Segue pendente a verificação visual do `/app/raio-x`, e as duas
+  (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px, a coluna dupla revisões ×
+  caderno no ponto de quebra `lg` e o par Retomar/Descartar empilhado no celular. O `Descartar`
+  **não foi exercido contra o banco**: só tem teste de unidade com cliente falso. Segue pendente a verificação visual do `/app/raio-x`, e as duas
   correções do W2-A sem teste (reserva do simulado, porteiro da cobertura) continuam sem sensor.
 - **Next step**: PR desta branch. Depois, a dívida que esta rodada expôs e não resolveu: `/app` e
   `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"

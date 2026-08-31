@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { descartarSessao } from "@/app/app/sessao/acoes";
+
 import { NOMES_DAS_CAUSAS } from "../progresso";
 import { nomeDoRotuloDoTopico, type RotuloDoTopico } from "../rotulo-do-topico";
 import type { Contexto } from "../tentativas";
@@ -198,14 +200,39 @@ function EmAndamento({
           <Trilha resultados={sessao.resultados} />
         </div>
 
-        <Link
-          href={`/app/sessao/${encodeURIComponent(sessao.id)}`}
-          className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-7 font-semibold text-painel no-underline transition-colors duration-150 hover:bg-marca-apoio"
-        >
-          Retomar
-          <Seta />
-        </Link>
+        <div className="flex shrink-0 flex-col items-stretch gap-2.5 sm:items-end">
+          <Link
+            href={`/app/sessao/${encodeURIComponent(sessao.id)}`}
+            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-7 font-semibold text-painel no-underline transition-colors duration-150 hover:bg-marca-apoio"
+          >
+            Retomar
+            <Seta />
+          </Link>
+          {/*
+            Descartar só aparece na sessão que envelheceu. Na de hoje seria
+            oferecer desistência a quem acabou de sair para o café.
+          */}
+          {antiga ? (
+            <form action={descartarSessao}>
+              <input type="hidden" name="sessaoId" value={sessao.id} />
+              <button
+                type="submit"
+                className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
+              >
+                Descartar
+              </button>
+            </form>
+          ) : null}
+        </div>
       </div>
+
+      {antiga ? (
+        <p className="mt-4 text-[0.8125rem] leading-6 text-suave">
+          Descartar fecha a sessão sem apagar nada: as{" "}
+          {sessao.nRespondidas === 1 ? "resposta que você já deu continua" : `${sessao.nRespondidas} respostas que você já deu continuam`}{" "}
+          no seu histórico.
+        </p>
+      ) : null}
     </section>
   );
 }

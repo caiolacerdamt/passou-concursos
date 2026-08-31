@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/app/app/sessao/acoes", () => ({ descartarSessao: vi.fn() }));
 
 import { PraticaTela, atrasoEmDias, idadeDaSessao, textoDoAtraso } from "./pratica-tela";
 import type { DadosDaPratica } from "./pratica";
@@ -219,6 +221,17 @@ describe("PraticaTela — a sessão velha não se passa por recente", () => {
       },
     };
   }
+
+  it("oferece descartar só na sessão velha, e diz que nada se perde", () => {
+    const antiga = render(sessaoIniciadaEm(new Date(Date.now() - 5 * 86_400_000).toISOString()));
+    const recente = render(sessaoIniciadaEm(new Date(Date.now() - 2 * 3_600_000).toISOString()));
+
+    expect(antiga).toContain("Descartar");
+    expect(antiga).toContain('name="sessaoId"');
+    expect(antiga).toContain("4 respostas que você já deu continuam");
+    // Na sessão de hoje seria oferecer desistência a quem saiu para o café.
+    expect(recente).not.toContain("Descartar");
+  });
 
   it("troca o rótulo e o destaque quando a sessão passou de 24 h", () => {
     const antiga = render(sessaoIniciadaEm(new Date(Date.now() - 5 * 86_400_000).toISOString()));

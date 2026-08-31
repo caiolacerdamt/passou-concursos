@@ -26,6 +26,7 @@ export const TABELAS_GRUPO_1 = [
   "matriculas",
   "perfil_estudo",
   "plano_dia",
+  "recurso_visto",
   "revisao_agenda",
   "revisao_evento",
   "solicitacoes_esquecimento",

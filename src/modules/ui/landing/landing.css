@@ -1,23 +1,85 @@
 /* ==========================================================================
    Landing — a folha de estilo própria da página de vendas.
 
-   Porte fiel de `scrollcraft/builds/passou-lp/pagina.css`, com uma diferença
-   de fundo: **nenhuma cor mora aqui**. Toda cor vem do `@theme` do
-   `globals.css`, que é a regra escrita do `DESIGN.md`. O que sobrou neste
-   arquivo é composição: grade, escala, espaço e movimento.
+   **Nenhuma cor mora aqui.** Toda cor vem do `@theme` do `globals.css`, que é
+   a regra escrita do `DESIGN.md`. O que existe neste arquivo é composição:
+   grade, escala, espaço e movimento.
 
-   Layout convencional: sete seções empilhadas em largura cheia, cada uma com
-   o seu movimento. Chão creme quase o tempo todo; duas seções viram breu, e
-   uma delas é o pico. É esse racionamento que faz o pico valer.
+   Dez atos empilhados em largura cheia, cada um com o próprio movimento
+   (`scrollcraft/builds/passou-lp-v2/PLANO.md`). Chão creme quase o tempo todo;
+   **dois** atos viram breu — a pergunta de terça e a questão. É esse
+   racionamento que faz o breu significar alguma coisa.
 
-   A escala tipográfica é deliberadamente grande, na referência do MindMarket:
-   uma família só (Geist), e a autoridade vem do tamanho, do tracking negativo
-   e do espaço em volta — não de uma segunda fonte.
+   Uma família de fonte só (Geist). A autoridade vem do tamanho, do tracking
+   negativo e do espaço em volta, nunca de uma segunda fonte.
 
    Esta folha **não reestiliza** `.sc-stage`, `.sc-copy` nem nenhum seletor
    `[data-sc-*]`: aquilo é o mecanismo. Os tokens `--sc-*` são remapeados uma
    vez, no `:root`, e o motor continua intocado.
    ========================================================================== */
+
+/*
+ * REDE DE SEGURANÇA DO REVELAR.
+ *
+ * `scrollcraft.css` nasce com `[data-sc-in] { opacity: 0 }` **e**
+ * `[data-sc-cue] { opacity: 0 }`, e só o motor devolve a opacidade. Isso torna
+ * o texto **dependente de JavaScript para existir**: se o motor não montar —
+ * script bloqueado, erro no meio do `mount`, volta por navegação client-side,
+ * bfcache — a copy fica invisível para sempre, e foi exatamente esse o defeito
+ * relatado ("a headline some do nada").
+ *
+ * Duas travas, as duas de negação, então nenhuma atrapalha o caminho feliz:
+ *
+ *   · `sc-armado` é escrito por um script inline no layout, durante o parse do
+ *     HTML e antes da primeira pintura. Sem JS a classe nunca aparece e o texto
+ *     nasce visível — que é o comportamento correto, não uma degradação.
+ *   · `sc-falhou` é escrito pelo temporizador de `motor.tsx` quando o motor
+ *     passou do prazo sem publicar `sc-ready`. É o conserto do caso "JS vivo,
+ *     motor morto".
+ *
+ * `[data-sc-cue]` entrou na lista na rodada v2 e **faltava antes**: a rede
+ * cobria só `[data-sc-in]`, e a headline do herói sempre foi cue. O caso
+ * "motor morto" continuava apagando exatamente o texto que a rede existe para
+ * salvar. Com oito atos, quase toda a copy da página é cue.
+ *
+ * A especificidade é maior que a do motor de propósito: `[data-sc-cue]` vale
+ * 0,1,0 e estas regras valem 0,3,1. Nada aqui reestiliza o mecanismo — só
+ * garante que a ausência dele não apague conteúdo.
+ */
+html:not(.sc-armado) .lp :is([data-sc-in], [data-sc-cue]),
+html:not(.sc-armado) .lp [data-sc-stagger] > *,
+html.sc-falhou .lp :is([data-sc-in], [data-sc-cue]),
+html.sc-falhou .lp [data-sc-stagger] > * {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * A MESMA REDE, PARA O QUE ENTRA POR `--sc-p`.
+ *
+ * Os atos 4, 5 e 6 escrevem a própria entrada em CSS, lendo o progresso que o
+ * motor publica no elemento da seção. Sem motor esse valor cai no fallback 0 e
+ * o bloco, a alternativa e o marco nasceriam em `opacity: 0` — o mesmo defeito
+ * de novo, por outra porta.
+ *
+ * Cada um deles computa a entrada num `--entra` local. Aqui só forçamos esse
+ * número a 1, e a fórmula de cada elemento cuida do resto: uma linha cobre
+ * quatro mecânicas diferentes, e a próxima que aparecer entra na lista.
+ */
+html:not(.sc-armado) .lp :is(.bloco, .alt, .marco, .anel__arco),
+html.sc-falhou .lp :is(.bloco, .alt, .marco, .anel__arco) {
+  --entra: 1;
+}
+html:not(.sc-armado) .lp .publicacao,
+html.sc-falhou .lp .publicacao {
+  --cria: 1;
+  --foto: 1;
+  --legenda: 1;
+  --feed: 1;
+  --reacao: 1;
+  opacity: 1;
+  transform: none;
+}
 
 /*
  * O remap do motor mora no `:root` e não em `.lp` de propósito: o `body` não
@@ -68,10 +130,21 @@
   align-items: center;
   gap: clamp(1rem, 3vw, 2.5rem);
   padding-inline: var(--gutter);
-  /* Opaca, não translúcida: sobre as duas seções escuras uma barra de vidro
-     fica ilegível — foi um defeito real da verificação. */
+  /* Opaca, não translúcida: sobre as seções escuras uma barra de vidro fica
+     ilegível — foi um defeito real da verificação. */
   background: var(--color-papel);
-  transition: box-shadow 220ms ease;
+  transition:
+    box-shadow 220ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 320ms;
+}
+/* Escondida sobre o herói: recolhe para cima e sai do caminho do foco e do
+   leitor de tela enquanto está fora. `visibility` junto do `transform` porque
+   um elemento só deslocado continua tabulável, e um link invisível que rouba
+   o foco é defeito de acessibilidade, não de estilo. */
+.lp .barra--oculta {
+  transform: translate3d(0, -100%, 0);
+  visibility: hidden;
 }
 .lp .barra--flutua {
   box-shadow: 0 1px 0 var(--color-risco), 0 8px 28px -20px rgb(27 29 26 / 0.5);
@@ -135,8 +208,7 @@
 
 /* =============================================================== SEÇÕES ==
    Cada seção pinta o próprio fundo. Corte duro entre elas, nunca interpolação:
-   `drift` é para páginas que são um lugar só, e esta é uma sequência de
-   capítulos.
+   `drift` é para páginas que são um lugar só, e esta é uma sequência de atos.
 
    O fundo é pintado **por seção** e nunca numa camada `position: fixed`. Chão
    fixo reprovou a régua de contraste inteira na verificação: a régua esconde
@@ -146,27 +218,43 @@
   position: relative;
   background: var(--color-papel);
 }
+/* O herói não tem folga nenhuma: ele é sangria de tela cheia e a barra não
+   existe por cima dele. Padding aqui abriria uma faixa de papel acima do
+   vídeo, que é justamente o que uma abertura em sangria não pode ter. */
 .lp .secao--heroi {
-  padding-top: calc(var(--barra-h) + clamp(1.5rem, 5vh, 4rem));
-  /* Menos que a folga das outras: quem fecha o herói é a fita, e ela é uma
-     faixa de borda a borda. Uma folga inteira embaixo dela deixava um vão
-     morto entre a régua e a primeira seção escura. */
-  padding-bottom: clamp(2rem, 6vh, 4.5rem);
+  padding: 0;
 }
-.lp .secao--medida {
+.lp .secao--contou {
+  padding-block: var(--folga);
+}
+/* O ato 6 e fixado. O `padding-block` da secao viraria folga DENTRO da altura
+   que o motor escreve (2,6 x 100vh), empurrando o palco para baixo do topo e
+   comendo o fim da viagem. A folga mora no palco. */
+.lp .secao--volta {
   background: var(--color-papel-recuo);
-  padding-block: clamp(3rem, 8vh, 6rem) var(--folga);
+  padding-block: 0;
 }
-.lp .secao--metodo {
-  padding-block: clamp(3rem, 8vh, 6rem) var(--folga);
+.lp .secao--evidencia {
+  background: var(--color-papel);
+  padding-block: var(--folga);
 }
-.lp .secao--hoje {
+.lp .secao--comunidade {
+  background: var(--color-breu);
+  color: var(--color-breu-tinta);
+}
+.lp .secao--oferta {
   background: var(--color-papel-recuo);
   padding-block: var(--folga);
 }
-.lp .secao--problema,
-.lp .secao--pico {
+/* Os dois atos escuros da página, e só eles. */
+.lp .secao--terca,
+.lp .secao--questao {
   background: var(--color-breu);
+}
+/* O pico. Chão recuado para a folha branca do plano ser o objeto mais claro
+   da página inteira — o pico ganha a luz, não só o span. */
+.lp .secao--dia {
+  background: var(--color-papel-recuo);
 }
 
 .lp .palco {
@@ -225,9 +313,6 @@
 .lp .rotulo--claro {
   color: var(--color-breu-verde);
 }
-.lp .rotulo--cinza {
-  color: var(--color-tinta-suave);
-}
 
 .lp .lede {
   font-size: clamp(1.125rem, 1rem + 0.68vw, 1.5rem);
@@ -239,9 +324,6 @@
 }
 .lp .lede--clara {
   color: var(--color-breu-suave);
-}
-.lp .lede--fraca {
-  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
 }
 
 .lp .micro {
@@ -263,7 +345,8 @@
   font-weight: 500;
   color: var(--color-tinta);
 }
-.lp .lede--clara em {
+.lp .lede--clara em,
+.lp .titulo--claro em {
   color: var(--color-breu-tinta);
 }
 
@@ -302,17 +385,17 @@
   box-shadow: inset 0 0 0 1px var(--color-tinta-suave);
 }
 /* O anel de foco global do `globals.css` é verde escuro: sobre o breu ele
-   some. Nas duas seções escuras o anel troca de cor, não de existência. */
-.lp .secao--problema a:focus-visible,
-.lp .secao--pico a:focus-visible {
+   some. Nas seções escuras o anel troca de cor, não de existência. */
+.lp .secao--terca a:focus-visible,
+.lp .secao--questao a:focus-visible {
   outline-color: var(--color-breu-verde);
 }
 
 /* ================================================================ FALAS ==
    Blocos empilhados na MESMA célula do grid, um por cima do outro, que se
    substituem por cue. Parágrafo solto com margem colide assim que um título
-   quebra numa linha a mais — foi um defeito real do pico, e é esta estrutura
-   que impede ele de voltar. */
+   quebra numa linha a mais — foi um defeito real, e é esta estrutura que
+   impede ele de voltar. */
 .lp .falas {
   display: grid;
   align-content: center;
@@ -330,31 +413,75 @@
  * declaram a própria cor — e reprovado por qualquer régua que leia o elemento
  * em vez do filho, incluindo `forced-colors`.
  */
-.lp .secao--problema .fala,
-.lp .secao--pico .fala {
+.lp .secao--terca .fala {
   color: var(--color-breu-tinta);
 }
 
-/* =============================================================== SEÇÃO 1 ==
-   O herói.
-
-   Antes: duas artes recortadas em `position: absolute`, cada uma com a própria
-   taxa de paralaxe. Duas peças posicionadas à mão só ficam juntas na largura em
-   que foram posicionadas — no celular elas brigavam pela mesma faixa e saíam
-   cortadas por bordas diferentes. Agora é uma cena só, em fluxo, e não há o que
-   desalinhar.
-
-   O movimento vem de três camadas aninhadas, e são três porque `transform` não
-   se soma: quem escreve uma apaga a outra.
-     `.heroi__arte`   → deriva de rolagem, escrita pelo CSS a partir de `--sc-p`
-     `.heroi__palco`  → inclinação ao ponteiro, escrita pelo MOTOR (`data-sc-tilt`)
-     `.heroi__cena`   → flutuação lenta, escrita pelo relógio do `@keyframes`
-   Empilhadas assim, as três convivem sem nenhuma precisar saber da outra.     */
-.lp .heroi {
+/* ================================================================= ATO 1 ==
+   O corredor. Sangria de tela cheia com a copy ancorada à esquerda.         */
+/* SEM `position` aqui, e isso é uma armadilha documentada do motor, não
+   estilo. O motor adiciona `.sc-stage` no palco, e é `.sc-stage` quem traz o
+   `position: sticky` que fixa o ato. Qualquer regra de autor com
+   especificidade maior — `.lp .palco--heroi` vale 0,2,0 — apaga esse sticky, e
+   aí o ato **não fixa**: o palco simplesmente rola embora, o clipe congela no
+   primeiro quadro e sobra a altura do ato pintada de fundo. Foi o que a
+   captura pegou, e o próprio motor avisa no console quando acontece. */
+.lp .palco--heroi {
+  min-height: 100svh;
   display: grid;
-  gap: clamp(2rem, 4vw, 3.5rem);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   align-items: center;
+  /* `.lp .palco` define `justify-content: center`, e isso vale em grid tanto
+     quanto em flex: a coluna única inteira era centralizada no palco, então a
+     copy aparecia no meio da tela mesmo estando alinhada à esquerda dentro da
+     própria coluna. Trocar `display` sem trocar o alinhamento que vinha junto
+     foi o erro. */
+  justify-content: start;
+}
+
+/* O quadro do clipe. Existe como camada própria para que o vídeo e o pôster
+   compartilhem exatamente o mesmo `object-fit`: se o pôster cobrir de um jeito
+   e o clipe de outro, a troca entre os dois salta na hora em que o primeiro
+   quadro real pinta, que é a falha que o pôster existe para evitar. */
+.lp .heroi__quadro {
+  position: absolute;
+  inset: 0;
+  background: var(--color-tinta);
+}
+.lp .heroi__pintura {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* A mesa fica à direita do centro no quadro final. Num recorte centrado ela
+     é a primeira coisa a sair, e a mesa é o argumento. */
+  object-position: 62% 50%;
+}
+
+/* SEM VÉU. O gradiente claro que ficava atrás da coluna de texto era opaco até
+   46% da largura: metade do corredor apagada, e a borda do degradê lia como um
+   painel colado por cima do vídeo. Quem sustenta o texto agora é o par
+   tinta-cheia sobre parede bege — que é escuro sobre claro, a direção que a
+   régua de contraste aprova. Se algum quadro do clipe medir apertado, a
+   correção é sombra de texto ou uma faixa curta atrás da copy, nunca uma
+   camada de quadro inteiro. */
+
+/* Encostada na borda esquerda da seção, não centrada numa faixa. A faixa
+   centraliza um contêiner de 80rem e, numa tela larga, isso empurra o título
+   para o meio do quadro e deixa a parede esquerda vazia ao lado dele. */
+.lp .heroi__copy {
+  position: relative;
+  z-index: 1;
+  width: min(62rem, 62vw);
+  padding-left: clamp(1.25rem, 5vw, 5.5rem);
+  padding-right: var(--gutter);
+}
+/* O lede do herói usa tinta cheia, não a suave. Cinza sobre a parede do
+   corredor no meio do travelling, quando ela escurece, mediu abaixo de 3:1 na
+   régua — e cinza sobre bege é justo o par que a régua reprova. */
+.lp .heroi__copy .lede {
+  color: var(--color-tinta);
+  max-width: 54ch;
 }
 .lp .heroi__acoes {
   display: flex;
@@ -362,188 +489,38 @@
   gap: 0.85rem;
   margin-top: 2.5rem;
 }
-.lp .heroi__arte {
-  position: relative;
-  /* Sangra para a borda da janela: contida na coluna, uma cena de 1536px de
-     largura vira miniatura e o argumento (papel → barra) some. */
-  margin-right: calc(var(--gutter) * -1);
-  /* `--sc-p` no herói fica em torno de 0,5 com a página no topo, então o
-     deslocamento é medido a partir dali: no primeiro quadro ele é zero, e a
-     cena só começa a subir quando o leitor rola. */
-  transform: translate3d(0, calc((0.5 - var(--sc-p, 0.5)) * 5rem), 0);
-  perspective: 1100px;
+.lp .heroi__copy .display {
+  max-width: 19ch;
 }
-.lp .heroi__palco {
-  position: relative;
-  z-index: 1;
-  transform-style: preserve-3d;
-}
-.lp .heroi__cena {
+.lp .heroi__copy .display span {
   display: block;
-  width: 100%;
-  height: auto;
-  user-select: none;
-  animation: lp-flutua 13s ease-in-out infinite;
 }
-/* A varredura: uma régua verde que atravessa a cena da pilha até as barras.
-   É a medição encenada, e é o que dá movimento antes de qualquer rolagem. */
-.lp .heroi__varredura {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
+.lp .heroi__copy .display span + span {
+  margin-top: 0.12em;
 }
-/* Uma RÉGUA, não um brilho: fio fino na frente e um rastro quase invisível
-   atrás. A primeira versão tinha 9rem de faixa tingida e, parada num quadro,
-   lia como uma coluna opaca por cima do desenho — defeito pego na captura. */
-.lp .heroi__varredura::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto;
-  left: 0;
-  width: 1.5px;
-  background: var(--color-verde-vivo);
-  /* Some nas duas pontas: a cena tem margem transparente, e uma linha que vai
-     de borda a borda da CAIXA lê como um painel de vidro por cima do desenho,
-     não como uma régua passando por ele. Defeito pego na captura. */
-  mask-image: linear-gradient(
-    180deg,
-    transparent,
-    #000 22%,
-    #000 78%,
-    transparent
-  );
-  animation: lp-varre 7s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-}
-/* O chão: a mancha sage que impede a cena de parecer colada sobre o creme. */
-.lp .heroi__chao {
-  position: absolute;
-  left: 2%;
-  right: 2%;
-  bottom: 3%;
-  height: 24%;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    var(--color-verde-tenue),
-    transparent
-  );
+.lp .heroi__copy .micro {
+  max-width: 62ch;
+  line-height: 1.5;
 }
 
-@keyframes lp-flutua {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(0, -0.9rem, 0);
-  }
-}
-@keyframes lp-varre {
-  0% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  58% {
-    opacity: 1;
-  }
-  70%,
-  100% {
-    transform: translate3d(calc(100vw), 0, 0);
-    opacity: 0;
-  }
-}
-
-/* ================================================================= FITA ==
-   O extrato do acervo correndo sob o herói. Três razões para ela existir:
-   movimento imediato antes de qualquer rolagem, prova de que o número da
-   página vem de dado real, e um piso visual que fecha a primeira tela.
-
-   `aria-hidden` porque é a MESMA informação que o pico entrega em texto de
-   verdade, com rótulo, número e ordem. Repetir no leitor de tela seria ruído. */
-.lp .fita {
-  margin-top: clamp(2.5rem, 6vh, 4rem);
-  padding-block: 0.85rem;
-  border-block: 1px solid var(--color-risco);
-  overflow: hidden;
-  /* Some nas pontas em vez de bater na borda: sem isso o texto é decepado no
-     meio de uma palavra e lê como bug de layout. */
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 7%,
-    #000 93%,
-    transparent
-  );
-}
-.lp .fita__trilho {
-  display: flex;
-  width: max-content;
-  animation: lp-fita 52s linear infinite;
-}
-.lp .fita__lista {
-  display: flex;
-  align-items: baseline;
-  gap: clamp(1.5rem, 4vw, 3rem);
-  margin: 0;
-  padding: 0 clamp(1.5rem, 4vw, 3rem) 0 0;
-  list-style: none;
-}
-.lp .fita__item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.45rem;
-  white-space: nowrap;
-  color: var(--color-tinta-suave);
-  font-size: 0.9375rem;
-}
-.lp .fita__n {
-  color: var(--color-verde-texto);
-  font-family: var(--font-lp-mono);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-/* -50% e não -100%: a lista está duplicada, então meia volta já recomeça no
-   mesmo ponto e o laço não tem emenda. */
-@keyframes lp-fita {
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-/* =============================================================== SEÇÃO 2 == */
-.lp .palco__grade {
+/* ================================================================= ATO 2 ==
+   A pergunta de terça. Falas à esquerda, o edital correndo à direita.       */
+.lp .terca {
   display: grid;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   align-items: center;
 }
-/* A torre sangra sobre o breu em altura de palco. O contraste de escala entre
-   a figura minúscula e a torre é o argumento da seção — pôr isso dentro de um
-   cartão de 300px mataria exatamente o que ela diz. */
-.lp .palco__arte {
-  margin: 0;
-  align-self: center;
-}
-.lp .palco__arte img {
+.lp .fala .titulo > span,
+.lp .fala .titulo > strong {
   display: block;
-  width: auto;
-  max-width: 100%;
-  height: clamp(22rem, 76vh, 47rem);
-  margin-inline: auto;
+  margin-top: 0.45em;
 }
-/* A torre cresce e sobe enquanto as falas passam. Ancorada no pé: crescer pelo
-   centro faria a base descolar do chão do palco. */
-.lp .secao--problema .palco__arte img {
-  transform-origin: 50% 100%;
-  transform: translate3d(0, calc(var(--sc-p, 0) * -2.5rem), 0)
-    scale(calc(1 + var(--sc-p, 0) * 0.07));
+.lp .palco--terca {
+  padding-block: clamp(3rem, 10vh, 6rem);
 }
 
-/* ============================================================== TRILHO ==
+/* ---------------------------------------------------------------- TRILHO --
    A linha que percorre a seção.
 
    Tudo aqui é CSS lendo `--sc-p`, que o motor já publica no elemento do ato a
@@ -551,10 +528,10 @@
    movimento: propriedade customizada herda, então o filho lê o progresso do
    pai de graça.
 
-   Ele não é enfeite. A seção tem três momentos que se substituem no mesmo
+   Ele não é enfeite: a seção tem três momentos que se substituem no mesmo
    lugar da tela, e sem régua o leitor não sabe em qual deles está nem quanto
-   falta — que era exatamente a queixa. Cada nó carrega o próprio `--em`: a
-   fração de `p` em que aquela fala entra. */
+   falta. Cada nó carrega o próprio `--em`: a fração de `p` em que aquela fala
+   entra. */
 .lp .palco__coluna {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -611,14 +588,174 @@
   margin: -0.175rem 0 0 -0.175rem;
   border-radius: 50%;
   background: var(--color-breu-tinta);
-  opacity: clamp(0.16, calc((var(--sc-p, 0) - var(--em, 0)) * 14), 1);
+  /* Rampas abertas junto com o span 2,8. Multiplicador alto é rampa curta: a
+     14 o nó acendia em 7% do ato, que num ato quase duas vezes mais longo vira
+     um estalo isolado no meio de nada. */
+  opacity: clamp(0.16, calc((var(--sc-p, 0) - var(--em, 0)) * 8), 1);
 }
 
-/* =============================================================== SEÇÃO 3 ==
-   O `clip-path` do reveal corta a CAIXA, não a tinta. Um numerão com
-   line-height 1 tem caixa mais curta que os glifos, e o wipe decepa o topo dos
-   algarismos. Nenhuma auditoria estática pega isso — só a captura. Daí o
-   `padding-block` no invólucro. */
+/* As três escolhas da fala do meio. Régua fina à esquerda em vez de marcador:
+   um bullet aqui leria como lista de features, e estas três linhas são fala. */
+.lp .escolhas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(0.75rem, 2.4vh, 1.35rem);
+}
+.lp .escolhas li {
+  padding-left: clamp(0.9rem, 2vw, 1.4rem);
+  border-left: 2px solid color-mix(in srgb, var(--color-breu-verde) 45%, transparent);
+  font-size: clamp(1.375rem, 1rem + 1.5vw, 2.125rem);
+  line-height: 1.18;
+  letter-spacing: -0.028em;
+  color: var(--color-breu-tinta);
+}
+
+/* ----------------------------------------------------------------- EDITAL --
+   A lista que não acaba. É a única coisa da página que se move sem a pessoa
+   mandar, e isso é o argumento: o edital não espera você.
+
+   Máscara nas duas bordas em vez de corte reto — uma lista que bate na borda
+   lê como bug de layout, e uma que some lê como "continua". A lista está
+   duplicada no DOM, então -50% recomeça no mesmo ponto e o laço não tem
+   emenda. */
+.lp .edital {
+  position: relative;
+  height: min(70vh, 34rem);
+  overflow: hidden;
+  border-left: 1px solid var(--color-breu-linha);
+  padding-left: clamp(1rem, 2.5vw, 2rem);
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    #000 16%,
+    #000 84%,
+    transparent 100%
+  );
+}
+.lp .edital__caos,
+.lp .edital__ordem {
+  position: absolute;
+  inset: 0 0 0 clamp(1rem, 2.5vw, 2rem);
+}
+/* O caos some devagar. A 8 a lista inteira apagava em 12% do ato; a 4 ela
+   desbota ao longo de um quarto dele, que é tempo de a pessoa perceber que a
+   coisa está saindo de cena em vez de ter piscado. */
+.lp .edital__caos {
+  opacity: clamp(0, calc((0.8 - var(--sc-p, 0)) * 4), 1);
+}
+.lp .edital__trilho {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* O laço é a única coisa da página que anda sem a pessoa mandar, então ele
+     não depende de `--sc-p` — é tempo puro. 78s em vez de 54s: com o ato mais
+     longo, a 54s a mesma lista passava duas vezes na frente de quem lê. */
+  animation: lp-edital 78s linear infinite;
+}
+.lp .edital__item {
+  --escolhe: clamp(0, calc((var(--sc-p, 0) - var(--pick, 1)) * 9), 1);
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: baseline;
+  padding-block: 0.62rem;
+  border-bottom: 1px solid var(--color-breu-linha);
+  background: color-mix(
+    in oklab,
+    var(--color-breu-verde) calc(var(--escolhe) * 18%),
+    transparent
+  );
+  opacity: calc(0.72 + var(--escolhe) * 0.28);
+  transform: translate3d(calc(var(--escolhe) * -0.7rem), 0, 0);
+}
+.lp .edital__m {
+  color: color-mix(in srgb, var(--color-breu-suave) 62%, transparent);
+  font-family: var(--font-lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lp .edital__t {
+  color: var(--color-breu-suave);
+  font-size: 0.9375rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes lp-edital {
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+.lp .edital__ordem {
+  --organiza: clamp(0, calc((var(--sc-p, 0) - 0.6) * 4), 1);
+  display: grid;
+  align-content: center;
+  gap: clamp(0.55rem, 1.6vh, 0.9rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  opacity: var(--organiza);
+}
+.lp .prioridade {
+  --chega: clamp(0, calc((var(--organiza) * 3.4) - var(--ordem, 0) * 0.62), 1);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  padding: clamp(0.8rem, 1.8vw, 1.1rem);
+  border: 1px solid color-mix(in srgb, var(--color-breu-verde) 28%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-breu-tinta) 7%, transparent);
+  opacity: var(--chega);
+  transform: translate3d(calc((1 - var(--chega)) * 1.5rem), 0, 0);
+}
+.lp .prioridade__n {
+  color: var(--color-breu-verde);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+}
+.lp .prioridade__texto {
+  display: grid;
+  gap: 0.25rem;
+}
+.lp .prioridade__texto strong {
+  color: var(--color-breu-tinta);
+  font-size: clamp(1rem, 0.9rem + 0.45vw, 1.25rem);
+  font-weight: 500;
+}
+.lp .prioridade__texto small {
+  color: var(--color-breu-verde);
+  font-size: 0.75rem;
+}
+
+/* ================================================================= ATO 3 ==
+   Alguém contou. O respiro: uma frase, um número enorme, nada mais.
+
+   Centrado, e é o único ato centrado da página. Variar a âncora é o que
+   impede nove seções de lerem como a mesma seção nove vezes — o herói é
+   esquerda, o 2 é dividido, o 4 é folha, este é centro.
+
+   O `padding-block` do `.medida` não é folga estética: o `clip-path` do reveal
+   corta a CAIXA, e a caixa de um numerão com line-height 1 é mais curta que os
+   glifos. Sem ele o wipe decepa o topo dos algarismos. Nenhuma auditoria
+   estática pega isso — só a captura. */
+.lp .contou {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  padding-block: clamp(2rem, 8vh, 5rem);
+}
+.lp .contou__frase {
+  margin: 0;
+  max-width: 34ch;
+  text-wrap: balance;
+}
 .lp .medida {
   padding-block: 0.4em;
 }
@@ -631,135 +768,1259 @@
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
-.lp .medida__grade {
+.lp .numerao--gigante {
+  font-size: clamp(5rem, 1rem + 17vw, 17rem);
+  letter-spacing: -0.06em;
+}
+.lp .contou .numerao--gigante {
+  font-size: clamp(4rem, 1rem + 13vw, 12rem);
+}
+.lp .contou__pe {
+  margin: 0;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+.lp .contou__pe > span {
+  display: block;
+  max-width: 48ch;
+  margin-top: 1rem;
+}
+
+/* ================================================================= ATO 4 ==
+   O PICO. O dia se monta.
+
+   Chão recuado, folha branca no meio: a folha é o objeto mais claro da página
+   inteira, e ela é o pico. O ato 3 imediatamente antes é o mais vazio de
+   todos, de propósito — o contraste entre os dois é metade do efeito.        */
+/* O palco é fixo e tem 100svh de altura com `overflow: clip`: o que não couber
+   é cortado, e cortar o título do pico foi exatamente o defeito. O plano padrão
+   passou de 3 para 5 blocos, então a seção inteira perdeu folga — pouca em cada
+   lugar, o suficiente para o dia cheio caber numa tela. */
+.lp .palco--dia {
+  padding-block: clamp(2.25rem, 6.5vh, 4.25rem);
+}
+.lp .dia {
   display: grid;
-  gap: clamp(2rem, 5vw, 4rem);
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  align-items: center;
+  align-content: center;
+  gap: clamp(1rem, 2.6vh, 1.6rem);
 }
-.lp .medida__pe {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-  margin-top: clamp(2.5rem, 6vh, 4rem);
-  border-top: 1px solid var(--color-risco);
-  padding-top: clamp(2rem, 5vh, 3rem);
+.lp .dia__cabeca {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 2.5rem);
 }
-.lp .medida__pe .lede {
-  margin-top: 0;
-}
-.lp .medida__arte {
+.lp .dia__cabeca .titulo {
   margin: 0;
 }
 
-/* =============================================================== SEÇÃO 4 ==
-   O PICO. Tudo desenhado em `transform` — 86 elementos por quadro só cabem em
-   16ms se nenhum deles pedir layout. */
-.lp .palco--pico {
-  justify-content: flex-start;
-  padding-top: clamp(5rem, 13vh, 8rem);
+/* ------------------------------------------------------------------ DIAL --
+   O movimento assinatura. Três rádios nativos vestidos de controle
+   segmentado: o `input` fica por cima do rótulo, transparente, então o clique
+   e o foco continuam sendo os do navegador. `opacity: 0` e não
+   `display: none`, que tiraria o campo da ordem de foco e do grupo de rádio.  */
+.lp .dial {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-inline-size: 0;
 }
-.lp .falas--pico {
-  flex: 0 0 auto;
-  min-height: clamp(9rem, 22vh, 14rem);
-  align-content: start;
+.lp .dial__pergunta {
+  padding: 0;
+  margin-bottom: 0.6rem;
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
-.lp .falas--pico .titulo {
-  max-width: 22ch;
+.lp .dial__ops {
+  display: inline-flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--color-papel);
+  box-shadow: inset 0 0 0 1px var(--color-risco);
 }
-.lp .falas--pico .lede {
-  max-width: 44ch;
-}
-
-/* `width` e não `padding`: filho absoluto se posiciona pelo padding box, então
-   padding aqui faria x=0 cair antes da margem e o gráfico nascer torto. */
-.lp .raiox {
+.lp .dial__op {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  margin-top: clamp(1rem, 3vh, 2rem);
-  width: min(100% - var(--gutter) * 2, var(--largura));
-  margin-inline: auto;
+  display: block;
 }
-.lp .chip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 200px;   /* base fixa: toda variação é escala */
-  height: 24px;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-.lp .chip__b {
+.lp .dial__op input {
   position: absolute;
   inset: 0;
-  transform-origin: 0 50%;
-  background: var(--color-pilha-papel);
-  border-radius: 2px;
-  /* Sombra estática de propósito: na fase de pilha o chip lê como folha de
-     papel solta, e escrever `box-shadow` em 86 elementos por quadro custaria
-     mais do que mostra. */
-  box-shadow: 0 2px 7px rgb(0 0 0 / 0.34);
-  will-change: transform, background-color;
-}
-.lp .chip__l,
-.lp .chip__n {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  white-space: nowrap;
-  line-height: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
-  will-change: transform, opacity;
+  cursor: pointer;
 }
-/* `transform-origin` na ponta esquerda: o rótulo nasce pequeno, escrito dentro
-   do papel, e cresce ao sair para a coluna do gráfico. Ancorado no centro ele
-   escorregaria para dentro do próprio texto durante a escala. */
-.lp .chip__l {
+.lp .dial__rotulo {
+  display: block;
+  padding: 0.68rem 1.3rem;
+  border-radius: 999px;
   font-size: 0.9375rem;
   font-weight: 500;
   letter-spacing: -0.01em;
-  color: var(--color-breu-tinta);
-  transform-origin: 0 50%;
+  color: var(--color-tinta-suave);
+  white-space: nowrap;
+  transition: background 200ms ease, color 200ms ease;
 }
-/* O eixo do gráfico. Sem ele os doze retângulos verdes flutuam no breu e não
-   leem como gráfico — leem como mais papel, só que verde. Ele se desenha
-   conforme as barras chegam, então também avisa que a ordenação terminou. */
-.lp .raiox__eixo {
-  position: absolute;
-  left: -1px;
-  top: 0;
-  width: 2px;
-  height: 0;
-  transform-origin: 50% 0;
-  transform: scaleY(0);
-  opacity: 0;
-  background: color-mix(in srgb, var(--color-breu-verde) 55%, transparent);
-  will-change: transform, opacity;
+.lp .dial__op:hover .dial__rotulo {
+  color: var(--color-tinta);
 }
-.lp .chip__n {
-  font-size: 0.8125rem;
-  color: var(--color-breu-verde);
-  font-family: var(--font-lp-mono);
-  font-variant-numeric: tabular-nums;
+.lp .dial__op input:checked + .dial__rotulo {
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
 }
-.lp .raiox__nota {
-  position: absolute;
-  left: 0;
-  top: 0;
+/* O foco vive no `input`, que é invisível: sem esta regra o anel do
+   `globals.css` desenharia em volta de uma caixa transparente e o teclado
+   ficaria sem indicador. */
+.lp .dial__op input:focus-visible + .dial__rotulo {
+  outline: 3px solid var(--color-verde);
+  outline-offset: 3px;
+}
+
+/* ----------------------------------------------------------------- FOLHA --
+   A superfície onde o plano se escreve. */
+.lp .folha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  background: var(--color-papel-alto);
+  border-radius: var(--radius-bloco);
+  padding: clamp(1.2rem, 2.7vw, 2.1rem);
+  box-shadow: var(--shadow-lp-alta);
+}
+.lp .plano {
+  list-style: none;
   margin: 0;
-  color: var(--color-breu-suave);
+  padding: 0;
+  display: grid;
+  gap: clamp(0.5rem, 1.2vh, 0.8rem);
+}
+
+/* Cada bloco se escreve quando o progresso do ato passa pelo `--em` dele.
+   `--entra` é a única conta: a rede de segurança lá em cima força esse número
+   a 1 quando o motor não vem, e a fórmula abaixo cuida do resto. */
+.lp .bloco {
+  --entra: clamp(0, calc((var(--sc-p, 0) - var(--em, 0)) * 8), 1);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem 1.25rem;
+  align-items: baseline;
+  padding: clamp(0.7rem, 1.7vw, 1rem) clamp(0.9rem, 2.2vw, 1.35rem);
+  border-radius: 16px;
+  background: var(--color-papel);
+  opacity: var(--entra);
+  transform: translate3d(0, calc((1 - var(--entra)) * 1.6rem), 0);
+}
+/* O bloco de revisão desce por cima dos outros em vez de subir por baixo: ele
+   não é o próximo item da fila, é a pergunta de ontem voltando. */
+.lp .bloco--revisao {
+  background: var(--color-verde-tenue);
+  transform: translate3d(0, calc((1 - var(--entra)) * -1.6rem), 0);
+}
+.lp .bloco__k {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  color: var(--color-verde-texto);
   font-family: var(--font-lp-mono);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  opacity: 0;
-  white-space: nowrap;
-  will-change: transform, opacity;
 }
-.lp .raiox-texto {
+.lp .bloco__t {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0.18rem 0 0;
+  color: var(--color-tinta);
+  font-size: clamp(1.05rem, 0.98rem + 0.45vw, 1.25rem);
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.lp .bloco__m {
+  grid-column: 1;
+  grid-row: 3;
+  margin: 0.1rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: clamp(0.84rem, 0.8rem + 0.18vw, 0.9375rem);
+  line-height: 1.4;
+}
+.lp .bloco__n {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  margin: 0;
+  color: var(--color-verde);
+  font-size: clamp(1.25rem, 1rem + 0.9vw, 1.75rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lp .bloco__n span {
+  color: var(--color-tinta-suave);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.lp .bloco__selo {
+  position: absolute;
+  top: -0.55rem;
+  left: clamp(0.9rem, 2.2vw, 1.35rem);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ ANEL --
+   Um arco por bloco. Mudar o dial muda a quantidade de arcos, que é o jeito
+   mais direto de o anel MOSTRAR que o dia foi refeito, em vez de só trocar o
+   número no meio. */
+.lp .anel {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(13rem, 20vw, 18rem);
+}
+.lp .anel__svg {
+  grid-area: 1 / 1;
+  width: clamp(9rem, 15vw, 12rem);
+  height: auto;
+  fill: none;
+  stroke-linecap: round;
+}
+.lp .anel__trilha {
+  stroke: var(--color-risco);
+  stroke-width: 7;
+}
+/* Começa às 12 horas. O padrão do SVG é às 3, e um anel que enche a partir da
+   direita lê como relógio quebrado. */
+.lp .anel__arcos {
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.lp .anel__arco {
+  --entra: clamp(0, calc((var(--sc-p, 0) - var(--em, 0)) * 8), 1);
+  stroke: var(--color-verde);
+  stroke-width: 9;
+  stroke-opacity: var(--entra);
+}
+.lp .anel__centro {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+.lp .anel__n {
+  margin: 0;
+  color: var(--color-verde);
+  font-size: clamp(2rem, 1.2rem + 2.2vw, 3rem);
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.lp .anel__l {
+  margin: 0.2rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.8125rem;
+}
+.lp .anel__pe {
+  grid-area: 2 / 1;
+  margin: 0.9rem 0 0;
+  color: var(--color-tinta-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.lp .anel__explica {
+  grid-area: 3 / 1;
+  margin: 0.75rem 0 0;
+  max-width: 25ch;
+  color: var(--color-tinta-suave);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  text-align: center;
+}
+.lp .dia__seta {
+  --seta: clamp(0, calc((var(--sc-p, 0) - 0.72) * 8), 1);
+  display: grid;
+  place-items: center;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(0.75rem, 2vh, 1.25rem);
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-risco);
+  border-radius: 50%;
+  margin: 0;
+  color: var(--color-verde);
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: var(--seta);
+  transform: translate3d(-50%, calc((1 - var(--seta)) * -0.8rem), 0);
+}
+
+/* ================================================================= ATO 5 ==
+   A questão. Cartão claro sobre breu: a única coisa iluminada da tela é a
+   questão, que é o que a seção pede — concentração.                         */
+.lp .palco--questao {
+  padding-block: clamp(3rem, 10vh, 6rem);
+}
+.lp .questao {
+  display: grid;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  align-items: center;
+}
+/*
+ * Cor própria no invólucro, e não só nos filhos.
+ *
+ * O bloco que carrega a cue é uma `div` sem cor, então ela herdava a tinta
+ * escura do corpo por cima do breu: 1,03:1 na régua. Invisível a olho nu — o
+ * `.lede--clara` dentro declara a própria cor — e reprovado por qualquer régua
+ * que leia o elemento em vez do filho, incluindo `forced-colors`. É o mesmo
+ * defeito que `.fala` já tinha pago no ato 2.
+ */
+.lp .questao__fala {
+  color: var(--color-breu-tinta);
+}
+.lp .questao__texto > div {
+  margin-top: 0;
+}
+.lp .questao__texto .lede {
+  margin-top: 1.25rem;
+}
+
+.lp .cartaoq {
+  position: relative;
+  background: var(--color-papel-alto);
+  border-radius: var(--radius-bloco);
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  box-shadow: var(--shadow-lp-alta);
+}
+.lp .cartaoq__etiqueta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 1.1rem;
+  color: var(--color-tinta-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* A etiqueta diz "exemplo" e diz alto. A página promete proveniência duas
+   seções antes; um item com banca e ano inventados aqui seria a página se
+   contradizendo na própria vitrine. */
+.lp .cartaoq__tag {
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-ouro-fundo);
+  color: var(--color-ouro-texto);
+  letter-spacing: 0.12em;
+}
+.lp .cartaoq__enunciado {
+  margin: 0 0 1.25rem;
+  color: var(--color-tinta);
+  font-size: clamp(1.0625rem, 1rem + 0.5vw, 1.3125rem);
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
+.lp .alts {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+/* Cada alternativa entra num degrau de `--sc-p`. Mesma mecânica dos blocos do
+   ato 4, e coberta pela mesma rede de segurança. */
+.lp .alt {
+  --entra: clamp(0, calc((var(--sc-p, 0) - var(--em, 0)) * 11), 1);
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+  border-radius: 12px;
+  background: var(--color-papel);
+  opacity: var(--entra);
+  transform: translate3d(calc((1 - var(--entra)) * -0.9rem), 0, 0);
+}
+.lp .alt__l {
+  display: grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--color-papel-alto);
+  box-shadow: inset 0 0 0 1px var(--color-risco);
+  color: var(--color-tinta-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+}
+.lp .alt__t {
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+}
+/* A escolhida acende tarde, depois de as cinco estarem na tela. `--marca` é o
+   mesmo número em três lugares: fundo, aro e carimbo. */
+.lp .alt--escolhida {
+  --marca: clamp(0, calc((var(--sc-p, 0) - 0.56) * 7), 1);
+  background: color-mix(
+    in oklab,
+    var(--color-erro-fundo) calc(var(--marca) * 100%),
+    var(--color-papel)
+  );
+  box-shadow: inset 0 0 0 calc(var(--marca) * 1.5px) var(--color-erro);
+}
+/* A certa só se identifica DEPOIS do erro. Antes disso ela é uma alternativa
+   como as outras, que é como ela chega numa prova de verdade. */
+.lp .alt--correta {
+  --marca: clamp(0, calc((var(--sc-p, 0) - 0.74) * 7), 1);
+  box-shadow: inset 0 0 0 calc(var(--marca) * 1.5px) var(--color-verde-vivo);
+}
+.lp .alt--correta .alt__l {
+  color: color-mix(
+    in oklab,
+    var(--color-verde) calc(var(--marca) * 100%),
+    var(--color-tinta-suave)
+  );
+}
+/* O carimbo cai: entra girado e grande, assenta no ângulo final. Mora dentro
+   da alternativa que ele carimba, então nenhuma quebra de texto o desalinha. */
+.lp .carimbo {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  padding: 0.22rem 0.6rem;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-erro);
+  color: var(--color-erro);
+  font-family: var(--font-lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: var(--marca, 0);
+  transform: translate3d(0, -50%, 0) rotate(calc(-8deg - (1 - var(--marca, 0)) * 14deg))
+    scale(calc(1 + (1 - var(--marca, 0)) * 0.5));
+}
+.lp .cartaoq__pe {
+  margin: 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--color-risco);
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+.lp .cartaoq__pe strong {
+  color: var(--color-erro);
+  font-weight: 500;
+}
+
+/* ================================================================= ATO 6 ==
+   O que volta. O cartão errado se desprende e entra na linha do tempo.      */
+.lp .volta__cabeca {
+  max-width: 52rem;
+}
+.lp .volta__cabeca .lede {
+  max-width: 46ch;
+}
+.lp .linha {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  margin-top: clamp(2.5rem, 7vh, 4.5rem);
+  padding: clamp(1.5rem, 4vw, 3rem) 0;
+}
+/* A curva de esquecimento é o pano de fundo do argumento, não o argumento:
+   atrás de tudo, sem eixo e sem número, e mais lenta que o resto por paralaxe.
+   Um gráfico com escala aqui pediria um dado que não é nosso. */
+.lp .linha__curva {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: visible;
+  opacity: 0.5;
+}
+.lp .linha__curva-esq {
+  stroke: var(--color-risco);
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+  vector-effect: non-scaling-stroke;
+}
+.lp .linha__curva-rev {
+  stroke: var(--color-verde-vivo);
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+}
+.lp .solto {
+  position: relative;
+  z-index: 1;
+  background: var(--color-papel-alto);
+  border-radius: 16px;
+  padding: clamp(0.9rem, 2.2vw, 1.25rem) clamp(1.1rem, 2.6vw, 1.6rem);
+  box-shadow: var(--shadow-lp);
+  /* Inclinado: ele acabou de se soltar do cartão do ato anterior. */
+  rotate: -3deg;
+}
+.lp .solto__k {
+  margin: 0 0 0.35rem;
+  color: var(--color-erro);
+  font-family: var(--font-lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lp .solto__t {
+  margin: 0;
+  color: var(--color-tinta);
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.lp .solto__n {
+  margin: 0.15rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.8125rem;
+}
+
+.lp .marcos {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0.9rem 0 0;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+/* O trilho apagado e, por cima, o mesmo trilho aceso escalando com `--sc-p`.
+   Dois elementos e nenhum JavaScript: a linha se desenha da esquerda para a
+   direita conforme a seção sobe. */
+.lp .marcos::before,
+.lp .marcos::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  height: 2px;
+  width: 100%;
+}
+.lp .marcos::before {
+  background: var(--color-risco);
+}
+.lp .marcos::after {
+  background: var(--color-verde);
+  transform-origin: 0 50%;
+  transform: scaleX(clamp(0, calc((var(--sc-p, 0) - 0.16) * 2.4), 1));
+}
+.lp .marco {
+  --entra: clamp(0, calc((var(--sc-p, 0) - var(--em, 0)) * 12), 1);
+  position: relative;
+  padding-top: 1.4rem;
+}
+/* Acende quando a linha chega. O aro fica; o miolo é que enche de verde, para
+   o ponto não mudar de tamanho ao acender. */
+.lp .marco__ponto {
+  position: absolute;
+  left: 0;
+  top: 0.9rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.375rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--color-risco);
+  background: color-mix(
+    in oklab,
+    var(--color-verde) calc(var(--entra) * 100%),
+    var(--color-papel-recuo)
+  );
+  transform: scale(calc(0.7 + var(--entra) * 0.3));
+}
+.lp .marco__r {
+  display: block;
+  color: color-mix(
+    in oklab,
+    var(--color-tinta) calc(var(--entra) * 100%),
+    var(--color-tinta-suave)
+  );
+  font-size: clamp(0.9375rem, 0.85rem + 0.5vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  opacity: calc(0.45 + var(--entra) * 0.55);
+}
+
+.lp .volta__pe {
+  display: grid;
+  gap: clamp(1.75rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: start;
+  margin-top: clamp(2.5rem, 7vh, 4.5rem);
+  border-top: 1px solid var(--color-risco);
+  padding-top: clamp(2rem, 5vh, 3rem);
+}
+.lp .fila {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.lp .fila__item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 12px;
+  background: var(--color-papel-alto);
+  box-shadow: var(--shadow-lp);
+}
+.lp .fila__t {
+  color: var(--color-tinta);
+  font-size: 0.9375rem;
+}
+.lp .fila__d {
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.lp .volta__texto .lede {
+  margin-top: 0;
+  max-width: 48ch;
+}
+
+/* A evidência científica. O número É o argumento, então ele ganha corpo de
+   numerão — e pode contar na entrada porque é dado citado da meta-análise, não
+   estimativa nossa. A proibição é inventar número, não animar número real. */
+.lp .evidencia {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(1.1rem, 3vw, 2rem);
+  align-items: start;
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  padding-top: clamp(1.5rem, 3.5vh, 2rem);
+  border-top: 1px solid var(--color-risco);
+}
+.lp .evidencia__n {
+  margin: 0;
+  font-size: clamp(2.75rem, 1.5rem + 4vw, 4.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  font-weight: 500;
+  color: var(--color-verde);
+  font-variant-numeric: tabular-nums;
+}
+.lp .evidencia__legenda {
+  margin: 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  max-width: 52ch;
+}
+.lp .evidencia__fonte {
+  margin: 0.85rem 0 0;
+  font-size: 0.875rem;
+}
+
+/* ================================================================= ATO 6 ==
+   A revisão volta. Agenda reta, cartão que viaja, marcos que acendem.
+
+   O ato é FIXADO (`pin`, span 2,6), e é isso que conserta o tempo: em `flow` o
+   progresso já contava com a seção espiando pela borda de baixo da tela, então
+   a viagem começava antes de a pessoa estar dentro dela e terminava em pouco
+   mais de uma tela de rolagem. Fixado, `--sc-p` só sai de 0 com a seção
+   ocupando a tela inteira.
+
+   `--viaja` ainda espera mais um pedaço depois disso: o primeiro sexto do ato
+   é a seção parada, para o título ser lido antes de qualquer coisa se mexer. A
+   viagem inteira acontece entre 0,16 e 0,78 — sessenta por cento de 1,6 tela
+   de rolagem para quatro paradas. */
+.lp .palco--volta {
+  padding-block: clamp(2.5rem, 8vh, 5rem);
+}
+.lp .timeline-revisao {
+  /* 1/(0,78-0,16) = 1,61. Escrito assim, mexer numa das pontas não obriga a
+     recalcular a outra à mão. */
+  --viaja: clamp(0, calc((var(--sc-p, 0) - 0.16) * 1.61), 1);
+  /* O aviso é consequência da viagem, não do relógio do ato: aparece quando o
+     cartão chega na SEGUNDA parada (viaja = 1/3), que é o primeiro retorno.
+     Amarrado a `--sc-p` ele saía de hora toda vez que a viagem mudasse de
+     janela. */
+  --aviso: clamp(0, calc((var(--viaja) - 0.3) * 9), 1);
+  position: relative;
+  margin-top: clamp(2.5rem, 7vh, 5rem);
+  /* A folga acima da pista tem duas faixas: o aviso em cima, o cartão embaixo.
+     Empilhados em vez de sobrepostos — com o aviso em `top: 0.5rem` o cartão
+     passava por cima dele e cortava a frase pela metade. */
+  padding-top: 8.75rem;
+}
+.lp .timeline-revisao__marcos {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lp .timeline-revisao__marcos::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-risco);
+}
+/* A linha se pinta atrás do cartão: o trecho percorrido fica verde, o que falta
+   continua cinza. Sem isso, quatro pontos verdes iguais não dizem onde o
+   assunto está na agenda. Vai até 75% porque a pista tem quatro colunas e os
+   pontos ficam na borda esquerda de cada uma — o último está em 75%. */
+.lp .timeline-revisao__marcos::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--viaja, 0) * 75%);
+  height: 2px;
+  background: var(--color-verde);
+}
+/* `--aceso` é "o cartão já chegou aqui?". `--viaja` vai de 0 a 1 por quatro
+   paradas, então `viaja * 3` é a posição do cartão medida em marcos e a
+   comparação com `--ordem` é direta. Rampa curta de propósito: acender é um
+   evento, não um degradê. */
+.lp .timeline-revisao__marco {
+  --aceso: clamp(0, calc((var(--viaja, 0) * 3 - var(--ordem, 0) + 0.14) * 9), 1);
+  position: relative;
+  display: grid;
+  gap: 0.3rem;
+  padding: 1.45rem clamp(0.5rem, 1.6vw, 1.25rem) 0 0;
+}
+.lp .timeline-revisao__ponto {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: -0.33rem;
+  border: 2px solid var(--color-papel-recuo);
+  border-radius: 50%;
+  background: color-mix(
+    in srgb,
+    var(--color-verde) calc(26% + var(--aceso) * 74%),
+    var(--color-risco)
+  );
+  box-shadow: 0 0 0 1px
+    color-mix(
+      in srgb,
+      var(--color-verde) calc(26% + var(--aceso) * 74%),
+      var(--color-risco)
+    );
+  transform: scale(calc(1 + var(--aceso) * 0.42));
+}
+/* O halo é o "chegou". Ele nasce com o marco aceso e não sai mais: um pulso que
+   some faria quem voltou a rolar achar que perdeu alguma coisa. */
+.lp .timeline-revisao__ponto::after {
+  content: "";
+  position: absolute;
+  inset: -0.45rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-verde) 45%, transparent);
+  opacity: var(--aceso, 0);
+  transform: scale(calc(0.62 + var(--aceso) * 0.38));
+}
+.lp .timeline-revisao__quando {
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lp .timeline-revisao__marco strong {
+  color: var(--color-tinta);
+  font-size: clamp(1rem, 0.92rem + 0.35vw, 1.2rem);
+  font-weight: 500;
+}
+/* Marco ainda não alcançado fica apagado, não invisível: a agenda inteira
+   precisa ser legível desde o começo, senão o leitor não sabe para onde o
+   cartão está indo. 0,42 é o piso, não 0. */
+.lp .timeline-revisao__marco > :not(.timeline-revisao__ponto) {
+  opacity: calc(0.42 + var(--aceso) * 0.58);
+}
+.lp .timeline-revisao__marco small {
+  /* "REVISAR" sai do cinza e vira verde quando o assunto de fato chega ali. É
+     a mesma palavra; o que mudou é que agora ela vale. */
+  color: color-mix(
+    in srgb,
+    var(--color-verde-texto) calc(var(--aceso) * 100%),
+    var(--color-tinta-suave)
+  );
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* -------------------------------------------------------------- VIAJANTE --
+   O invólucro tem a largura de UMA coluna da pista e anda 300% dela, ou seja,
+   três colunas: o cartão para em cima de cada marco. O jeito antigo ia de 0% a
+   100% da pista com um `translate` proporcional à própria largura, e assim ele
+   não coincidia com ponto nenhum — encostava na borda direita enquanto o
+   último marco ficava em 75%. */
+.lp .viajante {
+  position: absolute;
+  top: 2.75rem;
+  left: 0;
+  z-index: 2;
+  width: 25%;
+  padding-right: clamp(0.5rem, 1.6vw, 1.25rem);
+  transform: translate3d(calc(var(--viaja, 0) * 300%), 0, 0);
+}
+/* O cartão não viaja: ele respira. `--entre` é a distância até a parada mais
+   próxima, medida em marcos e normalizada — 0 em cima do ponto, 1 no meio do
+   caminho. Entre paradas o cartão sobe e encolhe de leve; ao chegar, assenta.
+
+   `abs()`/`round()` são funções matemáticas de CSS. Onde não existirem, a
+   substituição de `--entre` falha e o `transform` inteiro cai para `none`: o
+   cartão continua parando certo em cada marco, só não respira. É a degradação
+   que se quer, e é por isso que a viagem NÃO depende desta conta. */
+.lp .viajante__cartao {
+  --entre: clamp(0, calc(abs(var(--viaja, 0) * 3 - round(var(--viaja, 0) * 3)) * 2), 1);
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--color-verde) 30%, var(--color-risco));
+  border-radius: 14px;
+  background: var(--color-papel-alto);
+  color: var(--color-tinta);
+  box-shadow: var(--shadow-lp);
+  transform: translate3d(0, calc(var(--entre) * -0.5rem), 0)
+    scale(calc(1 - var(--entre) * 0.045));
+}
+.lp .viajante__k {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lp .viajante__k::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--color-verde);
+}
+.lp .viajante__t {
+  color: var(--color-tinta);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+/* O rabo liga o cartão ao ponto embaixo dele. Sem ele o cartão flutua sobre a
+   pista e a pessoa tem que adivinhar a qual marco ele se refere. */
+.lp .viajante__rabo {
+  position: absolute;
+  left: 1.2rem;
+  top: 100%;
+  width: 1px;
+  height: 1.6rem;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-verde) 55%, transparent),
+    transparent
+  );
+}
+/* Colado na segunda parada, que é onde o primeiro retorno acontece. 33,333%
+   era a conta da pista antiga, que não batia com marco nenhum. */
+.lp .timeline-revisao__aviso {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  z-index: 1;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-verde-tenue);
+  color: var(--color-verde-texto);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: var(--aviso);
+  transform: translate3d(-12%, calc((1 - var(--aviso)) * 0.6rem), 0);
+}
+
+/* A evidência fica sozinha para o número ter peso e a explicação continuar
+   curta. Não repete a mecânica da timeline anterior. */
+.lp .evidencia--grande {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: center;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.lp .evidencia--grande .evidencia__n {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-size: clamp(7rem, 4rem + 10vw, 15rem);
+  line-height: 0.78;
+  letter-spacing: -0.07em;
+}
+.lp .evidencia--grande .evidencia__n small {
+  margin-top: 0.55em;
+  color: var(--color-tinta);
+  font-family: var(--font-lp-texto);
+  font-size: clamp(1.1rem, 0.9rem + 0.7vw, 1.55rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.lp .evidencia__texto .titulo {
+  margin: 0;
+}
+.lp .evidencia__texto .lede {
+  max-width: 48ch;
+}
+.lp .evidencia__apoio {
+  max-width: 50ch;
+  margin: 1rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+/* Comunidade: o post nasce, recebe a foto, escreve a legenda e só depois
+   mostra as reações. Todas as fases continuam no DOM para leitura e no-JS. */
+.lp .palco--comunidade {
+  padding-block: clamp(3rem, 9vh, 6rem);
+}
+.lp .comunidade {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: center;
+}
+.lp .comunidade__texto .titulo {
+  color: var(--color-breu-tinta);
+}
+.lp .comunidade__texto .lede {
   color: var(--color-breu-suave);
-  padding-block: 2rem;
+}
+.lp .comunidade__nota {
+  max-width: 44ch;
+  margin: 1.25rem 0 0;
+  color: var(--color-breu-verde);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.lp .feed-comunidade {
+  display: grid;
+  place-items: center;
+  min-height: min(76vh, 44rem);
+}
+.lp .publicacao {
+  --cria: clamp(0, calc((var(--sc-p, 0) - 0.02) * 9), 1);
+  --foto: clamp(0, calc((var(--sc-p, 0) - 0.2) * 9), 1);
+  --legenda: clamp(0, calc((var(--sc-p, 0) - 0.38) * 9), 1);
+  --feed: clamp(0, calc((var(--sc-p, 0) - 0.52) * 8), 1);
+  --reacao: clamp(0, calc((var(--sc-p, 0) - 0.7) * 10), 1);
+  width: min(100%, 31rem);
+  overflow: hidden;
+  border-radius: 22px;
+  background: var(--color-papel-alto);
+  color: var(--color-tinta);
+  box-shadow: 0 2rem 5rem -2.6rem rgb(0 0 0 / 0.7);
+  opacity: var(--cria);
+  transform: translate3d(
+      0,
+      calc((1 - var(--cria)) * 2rem + (1 - var(--feed)) * 0.8rem),
+      0
+    )
+    scale(calc(0.96 + var(--cria) * 0.04));
+}
+.lp .publicacao__topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 1.1rem;
+}
+.lp .publicacao__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  background: var(--color-verde);
+  color: var(--color-papel-alto);
+  font-weight: 600;
+}
+.lp .publicacao__topo > span:nth-child(2) {
+  display: grid;
+}
+.lp .publicacao__topo strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.lp .publicacao__topo small {
+  color: var(--color-tinta-suave);
+  font-size: 0.6875rem;
+}
+.lp .publicacao__sequencia {
+  color: var(--color-ouro-texto);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: var(--reacao);
+}
+.lp .publicacao__foto {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  clip-path: inset(calc((1 - var(--foto)) * 10%) 0 calc((1 - var(--foto)) * 10%) 0);
+  opacity: var(--foto);
+}
+.lp .publicacao__foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 57%;
+  transform: scale(calc(1.04 - var(--foto) * 0.04));
+}
+.lp .publicacao__legenda {
+  width: max-content;
+  max-width: calc(100% - 2.2rem);
+  margin: 1rem 1.1rem 0;
+  overflow: hidden;
+  color: var(--color-tinta);
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  clip-path: inset(0 calc((1 - var(--legenda)) * 100%) 0 0);
+}
+.lp .publicacao__acoes {
+  display: flex;
+  gap: 1rem;
+  margin: 0.9rem 1.1rem 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-risco);
+  color: var(--color-tinta-suave);
+  font-size: 0.75rem;
+  opacity: var(--reacao);
+}
+.lp .publicacao__comentario {
+  margin: 0.8rem 1.1rem 1rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: var(--color-papel);
+  opacity: var(--reacao);
+  transform: translate3d(0, calc((1 - var(--reacao)) * 0.7rem), 0);
+}
+.lp .publicacao__comentario p,
+.lp .publicacao__comentario small {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.lp .publicacao__comentario strong {
+  font-weight: 600;
+}
+.lp .publicacao__comentario small {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--color-verde-texto);
+  font-size: 0.6875rem;
+}
+
+/* ================================================================= ATO 7 ==
+   Por que o número aguenta. O trilho corre de lado enquanto a página desce.
+
+   O motor translada `[data-sc-pan]` por `-(scrollWidth - viewport) * p`, então
+   o trilho PRECISA ser mais largo que a janela: se couber na tela, o ato não
+   anda e vira uma fileira parada. `width: max-content` garante isso enquanto
+   houver sete cartões.
+
+   Em movimento reduzido `scrollcraft.css` transforma o palco numa região de
+   rolagem horizontal de verdade, então os cinco continuam alcançáveis sem
+   movimento nenhum. Nada aqui precisa ajudar. */
+.lp .palco--aguenta {
+  justify-content: center;
+  gap: clamp(2rem, 5.5vh, 4rem);
+}
+.lp .aguenta__cabeca {
+  position: relative;
+}
+.lp .aguenta__sopro {
+  margin: 0 0 0.8rem;
+  color: var(--color-verde-texto);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.lp .aguenta__cabeca .titulo {
+  margin: 0;
+  max-width: 24ch;
+}
+.lp .aguenta__lede {
+  max-width: 42ch;
+  margin: 1.15rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: clamp(1rem, 0.92rem + 0.3vw, 1.16rem);
+  line-height: 1.5;
+}
+.lp .rail {
+  list-style: none;
+  margin: 0;
+  padding-inline: var(--gutter);
+  width: max-content;
+  gap: clamp(1.25rem, 2.75vw, 2.25rem);
+  align-items: stretch;
+}
+.lp .rail__item {
+  display: flex;
+  width: clamp(20rem, 31vw, 28rem);
+}
+.lp .cartao.cartao--fato {
+  --fato-acento: var(--color-verde-vivo);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: clamp(20rem, 43vh, 30rem);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid color-mix(in oklab, var(--fato-acento) 34%, var(--color-risco));
+  border-radius: 2.25rem;
+  padding: clamp(2rem, 4vw, 3.25rem);
+  background:
+    radial-gradient(
+      circle at calc(var(--sc-mx, 0.5) * 100%) calc(var(--sc-my, 0.5) * 100%),
+      color-mix(in oklab, var(--fato-acento) 24%, transparent) 0%,
+      transparent 38%
+    ),
+    color-mix(in oklab, var(--color-papel-alto) 90%, var(--fato-acento) 10%);
+  box-shadow: 0 1rem 2.8rem -2rem color-mix(in oklab, var(--fato-acento) 46%, transparent);
+  transition:
+    box-shadow 260ms ease,
+    border-color 260ms ease;
+}
+.lp .cartao.cartao--fato::before {
+  display: none;
+}
+.lp .cartao.cartao--fato::after {
+  display: none;
+}
+.lp .cartao.cartao--fato > * {
+  position: relative;
+  z-index: 1;
+}
+.lp .cartao.cartao--fato:hover {
+  border-color: color-mix(in oklab, var(--fato-acento) 62%, var(--color-risco));
+  box-shadow: 0 1.5rem 3.5rem -2rem color-mix(in oklab, var(--fato-acento) 58%, transparent);
+}
+.lp .cartao.cartao--fato:hover::before {
+  transform: scaleY(1);
+}
+.lp .cartao.cartao--fato:hover::after {
+  transform: translate3d(-1.1rem, -1.1rem, 0);
+}
+.lp .cartao__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(2rem, 5vh, 3.5rem);
+}
+.lp .cartao.cartao--fato .cartao__k {
+  margin: 0;
+  color: var(--fato-acento);
+  text-transform: uppercase;
+}
+.lp .cartao__sinal {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.7rem;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in oklab, var(--fato-acento) 62%, transparent);
+  border-radius: 50%;
+  transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lp .cartao__sinal::before {
+  content: "";
+  position: absolute;
+  inset: 50% 23% auto;
+  height: 1px;
+  background: var(--fato-acento);
+}
+.lp .cartao__sinal::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 0.2rem);
+  left: calc(50% - 0.2rem);
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--fato-acento);
+}
+.lp .cartao.cartao--fato:hover .cartao__sinal {
+  transform: rotate(45deg);
+}
+.lp .cartao.cartao--fato .cartao__t {
+  max-width: 12ch;
+  font-size: clamp(1.55rem, 1.15rem + 1.1vw, 2.25rem);
+  line-height: 1.08;
+}
+.lp .cartao.cartao--fato .cartao__p {
+  max-width: 31ch;
+  font-size: clamp(1.03rem, 0.96rem + 0.25vw, 1.16rem);
+  line-height: 1.5;
+}
+.lp .rail__item:nth-child(2) .cartao--fato {
+  --fato-acento: var(--color-ouro);
+}
+.lp .rail__item:nth-child(3) .cartao--fato {
+  --fato-acento: var(--color-arte-azul);
+}
+.lp .rail__item:nth-child(4) .cartao--fato {
+  --fato-acento: var(--color-erro);
+}
+.lp .rail__item:nth-child(5) .cartao--fato {
+  --fato-acento: var(--color-verde);
+}
+.lp .rail__item:nth-child(6) .cartao--fato {
+  --fato-acento: var(--color-ouro-texto);
+}
+.lp .rail__item:nth-child(7) .cartao--fato {
+  --fato-acento: var(--color-verde-texto);
+}
+.lp .cartao--fato .cartao__p {
+  margin-top: auto;
+  padding-top: 1.5rem;
 }
 
 /* ================================================================ CARTÕES ==
@@ -775,9 +2036,6 @@
 }
 .lp .cartao:hover {
   box-shadow: var(--shadow-lp-alta);
-}
-.lp .cartao--alto {
-  padding: clamp(1.75rem, 3.4vw, 2.75rem);
 }
 .lp .cartao__k {
   margin: 0 0 2.5rem;
@@ -801,116 +2059,20 @@
   line-height: 1.55;
 }
 
-.lp .pilares {
-  display: grid;
-  gap: clamp(1.25rem, 2.5vw, 2rem);
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-  margin-top: clamp(2.5rem, 6vh, 4rem);
-}
+/* ================================================================= ATO 8 ==
+   O preço. `flow`, e não anima nada além da entrada.
 
-/* ============================================================ EVIDÊNCIA ==
-   Era título, parágrafo e link soltos no chão da seção, com a arte flutuando
-   num vazio à direita: a afirmação mais forte da página entregue com o menor
-   peso visual dela.
-
-   Agora é um bloco. Painel elevado, o número grande de um lado da divisória e
-   a frase do outro, e a arte encostando na quina do painel em vez de boiar. O
-   número ganha corpo de numerão porque ele É o argumento — e pode contar na
-   entrada porque é dado citado da meta-análise, não estimativa nossa. */
-.lp .evidencia {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.34fr);
-  align-items: center;
-  margin-top: clamp(4rem, 10vh, 7rem);
+   Foi ato fixado numa rodada anterior e o palco de 100vh não comportava dois
+   cartões de preço + garantia + legal + CTA: sobrava rolagem aninhada dentro
+   do palco, e o texto legal acabava medido contra o rodapé escuro. Conteúdo
+   que não cabe numa tela não é ato fixado, é seção. */
+.lp .oferta .titulo {
+  margin-bottom: 0.75rem;
 }
-.lp .evidencia__painel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(1.5rem, 3.5vw, 2.75rem);
-  align-items: center;
-  background: var(--color-papel-alto);
-  border-radius: 32px;
-  padding: clamp(1.75rem, 3.6vw, 3rem);
-  /* Folga à direita para a arte encostar sem cobrir texto. */
-  padding-right: clamp(2rem, 10vw, 8rem);
-  box-shadow: var(--shadow-lp);
-}
-.lp .evidencia__n {
-  margin: 0.4rem 0 0;
-  font-size: clamp(3.25rem, 1.5rem + 5.4vw, 6rem);
-  line-height: 0.92;
-  letter-spacing: -0.05em;
-  font-weight: 500;
-  color: var(--color-verde);
-  font-variant-numeric: tabular-nums;
-}
-.lp .evidencia__legenda {
-  margin: 0.7rem 0 0;
-  max-width: 19ch;
+.lp .oferta__subtitulo {
+  margin: 0 0 clamp(2.5rem, 6vh, 4rem);
   color: var(--color-tinta-suave);
-  font-size: 0.9375rem;
-  line-height: 1.4;
-}
-.lp .evidencia__texto {
-  border-left: 1px solid var(--color-risco);
-  padding-left: clamp(1.5rem, 3.5vw, 2.75rem);
-}
-.lp .evidencia__texto .titulo {
-  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem);
-  max-width: 24ch;
-}
-.lp .evidencia__texto .lede {
-  margin-top: 1rem;
-}
-.lp .evidencia__fonte {
-  margin: 1.25rem 0 0;
-  font-size: 0.9375rem;
-}
-/* Encosta no painel: a sobreposição é o que faz os dois lerem como uma peça
-   só, e não como um cartão com uma figura ao lado. */
-.lp .evidencia__arte {
-  position: relative;
-  z-index: 1;
-  margin: 0 0 0 -34%;
-}
-
-/* =============================================================== SEÇÃO 6 ==
-   Título e arte lado a lado. A arte aqui é literal — um painel com quatro
-   vistos e um painel vazio — então ela diz a mesma coisa que os dois cartões
-   abaixo, em vez de decorar. */
-.lp .hoje__cabeca {
-  display: grid;
-  gap: clamp(2rem, 5vw, 4rem);
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
-  align-items: center;
-}
-.lp .hoje__arte {
-  margin: 0;
-}
-.lp .razonetes {
-  display: grid;
-  gap: clamp(1.25rem, 3vw, 2.25rem);
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-  margin-top: clamp(2.5rem, 6vh, 4rem);
-}
-/* Os dois cartões vinham de `data-sc-reveal`, o mesmo corte de `clip-path`
-   das artes — e aqui era pior, porque o corte decepa TEXTO no meio da palavra
-   enquanto varre. Agora eles convergem: um vem de fora à esquerda, o outro de
-   fora à direita, e se encontram no centro da rolagem. Contínuo, reversível, e
-   nenhum caractere é cortado em nenhum quadro. */
-.lp .razonete {
-  transform: translate3d(
-    calc(var(--lado, 1) * (0.55 - var(--sc-p, 0.55)) * 5rem),
-    0,
-    0
-  );
-}
-.lp .cartao--fora {
-  background: transparent;
-  box-shadow: inset 0 0 0 1px var(--color-risco);
-}
-.lp .cartao--fora:hover {
-  box-shadow: inset 0 0 0 1px var(--color-risco);
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.1875rem);
 }
 .lp .lista {
   list-style: none;
@@ -927,9 +2089,6 @@
 }
 .lp .lista--dentro li {
   color: var(--color-tinta);
-}
-.lp .lista--fora li {
-  color: var(--color-tinta-suave);
 }
 .lp .lista--miuda li {
   font-size: 0.9375rem;
@@ -952,55 +2111,11 @@
   width: 0.68rem;
   height: 0.36rem;
 }
-.lp .lista--fora li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.7em;
-  width: 0.8rem;
-  height: 2px;
-  background: var(--color-risco);
-}
-.lp .nota {
-  margin: clamp(3rem, 7vh, 4.5rem) 0 0;
-  padding-top: 2rem;
-  border-top: 1px solid var(--color-risco);
-  max-width: 62ch;
-  color: var(--color-tinta-suave);
-}
-.lp .nota strong {
-  color: var(--color-tinta);
-  font-weight: 500;
-}
-
-/* =============================================================== SEÇÃO 7 ==
-   `flow`, não `pin`. Foi ato fixado numa rodada anterior e o palco de 100vh não
-   comportava título gigante + arte + dois cartões de preço + garantia + legal +
-   CTA: sobrava rolagem aninhada dentro do palco, e o texto legal acabava medido
-   contra o rodapé escuro. Conteúdo que não cabe numa tela não é ato, é seção. */
-.lp .secao--oferta {
-  padding-block: var(--folga);
-}
-.lp .fecho__cabeca {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 3.5rem);
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  align-items: center;
-}
-.lp .fecho__arte {
-  margin: 0;
-}
-.lp .fecho__acao {
-  margin-top: 1.75rem;
-}
-.lp .oferta {
-  margin-top: clamp(2rem, 5vh, 3.5rem);
-}
 .lp .precos {
   display: grid;
   gap: clamp(1.25rem, 2.5vw, 2rem);
   grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  margin-bottom: clamp(1.5rem, 3vh, 2.25rem);
+  margin-bottom: clamp(2.75rem, 7vh, 4.5rem);
 }
 .lp .cartao--preco {
   position: relative;
@@ -1057,7 +2172,6 @@
 .lp .cartao--destaque .preco__n {
   border-bottom-color: color-mix(in oklab, var(--color-verde-vivo) 40%, transparent);
 }
-
 .lp .garantia {
   background: var(--color-ouro-fundo);
   border-radius: 24px;
@@ -1076,12 +2190,49 @@
   line-height: 1.55;
   max-width: 62ch;
 }
-
 .lp .legal {
   margin: 1.5rem 0;
   font-size: 0.9375rem;
   color: var(--color-tinta-suave);
   max-width: 62ch;
+}
+.lp .oferta__decisao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.lp .oferta__cta {
+  order: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: min(100%, 23rem);
+  min-height: 58px;
+  padding: 0.85rem 1.5rem;
+  border-radius: 16px;
+  color: var(--color-papel-alto);
+  font-size: 1.125rem;
+  font-weight: 650;
+  text-align: center;
+}
+.lp .oferta__microcopy {
+  order: 2;
+  margin: 0.8rem 0 0;
+  color: var(--color-tinta-suave);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+.lp .oferta__garantia {
+  order: 3;
+  width: min(100%, 42rem);
+  margin-top: clamp(2rem, 5vh, 3rem);
+}
+.lp .oferta__legal {
+  order: 4;
+  margin: 1.5rem 0 0;
+  text-align: center;
 }
 
 /* ================================================================ RODAPÉ == */
@@ -1125,38 +2276,10 @@
   outline-color: var(--color-breu-verde);
 }
 
-/* Arte de personagem que senta direto no chão da seção, sem cartão: o recorte
-   já tem alfa de verdade, então moldura seria uma caixa em volta de nada. */
 .lp figure img {
   display: block;
   width: 100%;
   height: auto;
-}
-
-/* ============================================================== FIGURA ==
-   As três artes das seções 5, 6 e 7 entravam por `data-sc-reveal`: um corte de
-   `clip-path` que varre a imagem quando ela cruza um ponto do scroll. O dono
-   descreveu o resultado como "a imagem vai aparecendo", e ele está certo sobre
-   o que incomoda — o corte é um EVENTO. Ele dispara, termina, e daí em diante a
-   arte fica parada. Três vezes na mesma página, a página inteira passa a ter um
-   tique.
-
-   O que entrou no lugar é presença, não aparição: a arte já está lá e anda o
-   tempo todo junto com a seção. Duas camadas, porque `transform` não se soma:
-
-     `<figure data-sc-parallax>`  o MOTOR escreve — deriva de profundidade
-     `figure img`                 o CSS escreve a partir de `--sc-p` — sobe e
-                                  assenta, ancorada no pé
-
-   Nada some, nada pisca, e voltar a rolar para cima desfaz o movimento em vez
-   de deixar um bloco já revelado. */
-.lp .figura img {
-  /* 0,55 é onde a figura está no meio da vida do ato: o repouso da animação
-     coincide com o momento em que ela está centrada na tela. */
-  --assenta: calc(0.55 - var(--sc-p, 0.55));
-  transform-origin: 50% 100%;
-  transform: translate3d(0, calc(var(--assenta) * 6rem), 0)
-    scale(calc(1 - var(--assenta) * 0.07));
 }
 
 /* ============================================================== CELULAR == */
@@ -1164,28 +2287,81 @@
   .lp .barra__nav {
     display: none;
   }
-  .lp .heroi,
-  .lp .palco__grade,
-  .lp .medida__grade,
-  .lp .evidencia,
-  .lp .evidencia__painel,
-  .lp .hoje__cabeca,
-  .lp .fecho__cabeca,
+
+  /* O herói deixa de ser sangria no celular, e é decisão, não desistência.
+     O clipe é 16:9; coberto numa tela 9:16 o recorte come a mesa, que fica à
+     direita do centro no quadro final e é o argumento da cena inteira. Então
+     o vídeo vira uma caixa 16:9 no topo, com a composição inteira preservada,
+     e a copy desce para uma faixa embaixo. É também o caminho mais seguro no
+     iPhone, onde vídeo em sangria é o item que mais quebra. */
+  .lp .palco--heroi {
+    display: block;
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: clamp(2.5rem, 8vh, 4rem);
+    background: var(--color-papel);
+  }
+  .lp .heroi__quadro {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .lp .heroi__copy {
+    width: auto;
+    padding-inline: var(--gutter);
+    margin-top: clamp(1.25rem, 4vh, 2rem);
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .lp .heroi__copy .display {
+    font-size: clamp(2.5rem, 1.8rem + 3.2vw, 3.2rem);
+  }
+  .lp .heroi__copy .lede {
+    margin-top: 1.15rem;
+    font-size: 1.0625rem;
+    line-height: 1.48;
+  }
+  .lp .heroi__acoes {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+    gap: 0.55rem;
+    margin-top: 1.5rem;
+  }
+  .lp .heroi__acoes .botao {
+    display: grid;
+    place-items: center;
+    padding: 0.85rem 0.75rem;
+    font-size: 0.9375rem;
+    text-align: center;
+  }
+  .lp .heroi__copy .micro {
+    margin-top: 1.1rem;
+    font-size: 0.8125rem;
+  }
+  .lp .terca,
+  .lp .questao,
+  .lp .folha,
+  .lp .linha,
+  .lp .volta__pe,
+  .lp .evidencia--grande,
+  .lp .comunidade,
   .lp .rodape__grade {
     grid-template-columns: 1fr;
   }
-  /* A cena é uma peça só: no estreito ela ocupa a largura toda da janela, das
-     duas bordas, e continua inteira — que era o problema das duas artes
-     sobrepostas, cada uma cortada por uma borda diferente. */
-  .lp .heroi__arte {
-    margin-inline: calc(var(--gutter) * -1);
-    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+
+  /* O edital encolhe mas não some: sem ele a seção vira três falas soltas no
+     breu, e a lista É o argumento. */
+  .lp .edital {
+    height: clamp(16rem, 34vh, 20rem);
+    border-left: 0;
+    border-top: 1px solid var(--color-breu-linha);
+    padding-left: 0;
+    padding-top: 1rem;
   }
-  /* A arte agora CABE: a coluna de falas ficou mais curta e o ato ganhou meia
-     tela de span. Escondê-la deixava o palco do celular sendo texto sobre
-     preto, sem nada do argumento de escala. */
-  .lp .palco__arte img {
-    height: clamp(11rem, 27vh, 17rem);
+  .lp .edital__item {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+    padding-block: 0.5rem;
   }
   .lp .palco__coluna {
     gap: 0.85rem;
@@ -1193,33 +2369,214 @@
   .lp .trilho {
     min-height: 11rem;
   }
-  .lp .evidencia__painel {
-    padding-right: clamp(1.75rem, 3.6vw, 3rem);
+
+  .lp .palco--questao {
+    justify-content: flex-start;
+    padding-block: calc(var(--barra-h) + 0.75rem) 1rem;
   }
-  .lp .evidencia__texto {
-    border-left: 0;
-    border-top: 1px solid var(--color-risco);
-    padding-left: 0;
-    padding-top: clamp(1.25rem, 4vw, 2rem);
+  .lp .questao {
+    gap: 0.8rem;
+    align-content: start;
   }
-  .lp .evidencia__arte {
-    margin: -8% auto 0;
-    max-width: 22rem;
+  .lp .questao__texto .titulo {
+    margin-bottom: 0.4rem;
+    font-size: 2rem;
   }
-  .lp .evidencia__legenda {
-    max-width: none;
+  .lp .questao__texto .lede {
+    margin-top: 0.4rem;
+    font-size: 0.9375rem;
+    line-height: 1.4;
   }
-  /* Idem: o fecho precisa caber numa tela. */
-  .lp .fecho__arte {
+  .lp .cartaoq {
+    padding: 1rem;
+  }
+  .lp .cartaoq__etiqueta {
+    gap: 0.4rem;
+    margin-bottom: 0.65rem;
+    font-size: 0.5625rem;
+  }
+  .lp .cartaoq__enunciado {
+    margin-bottom: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+  }
+  .lp .alts {
+    gap: 0.3rem;
+    margin-bottom: 0.7rem;
+  }
+  .lp .alt {
+    gap: 0.55rem;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.875rem;
+  }
+  .lp .alt__l {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.625rem;
+  }
+  .lp .carimbo {
+    right: 0.35rem;
+    padding: 0.16rem 0.38rem;
+    font-size: 0.5rem;
+  }
+  .lp .cartaoq__pe {
+    padding-top: 0.65rem;
+    font-size: 0.75rem;
+    line-height: 1.38;
+  }
+
+  .lp .dia__cabeca {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .lp .anel {
+    width: min(100%, 18rem);
+    justify-self: center;
+  }
+  .lp .bloco {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .lp .linha {
+    gap: 1.25rem;
+  }
+  .lp .solto {
+    justify-self: start;
+  }
+  .lp .marcos {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: 0.75rem;
+    padding-top: 0;
+  }
+  /* A linha do tempo vira vertical no estreito: quatro marcos em coluna de
+     390px ficariam com duas letras cada. O trilho horizontal não faz sentido
+     numa lista vertical, então ele sai. */
+  .lp .marcos::before,
+  .lp .marcos::after {
     display: none;
   }
-  .lp .falas--pico {
-    min-height: clamp(8rem, 26vh, 12rem);
+  .lp .marco {
+    padding-top: 0;
+    padding-left: 1.5rem;
   }
-  .lp .rodape__elos {
-    grid-auto-flow: column;
-    justify-content: start;
-    gap: 1.25rem;
+  .lp .marco__ponto {
+    top: 0.55em;
+  }
+
+  .lp .rail__item {
+    width: clamp(18rem, 86vw, 24rem);
+  }
+  .lp .evidencia--grande {
+    gap: 2rem;
+  }
+  .lp .evidencia--grande .evidencia__n {
+    font-size: clamp(6rem, 30vw, 9rem);
+  }
+  .lp .comunidade {
+    gap: 1.5rem;
+  }
+  .lp .comunidade__texto .titulo {
+    font-size: clamp(2.15rem, 1.5rem + 3vw, 3rem);
+  }
+  .lp .feed-comunidade {
+    min-height: 0;
+  }
+  .lp .publicacao {
+    width: min(100%, 25rem);
+  }
+  .lp .publicacao__foto {
+    aspect-ratio: 16 / 9;
+  }
+  /* O ato 6 tambem e fixado no celular, e palco fixo corta o que passa de
+     100svh. A pista e medida em svh, nao em rem: numa tela curta ela encolhe
+     junto em vez de estourar o palco e sumir com o titulo. */
+  .lp .palco--volta {
+    padding-block: clamp(1.5rem, 4vh, 2.5rem);
+  }
+  .lp .volta__cabeca .titulo {
+    font-size: clamp(1.9rem, 1.35rem + 2.6vw, 2.5rem);
+  }
+  .lp .timeline-revisao {
+    /* Medida em svh, não em rem: numa tela curta a pista encolhe junto em vez
+       de estourar o palco fixo e engolir o título. 50svh dá ~105px por linha,
+       que é o mínimo para o rótulo do marco e o aviso não se encostarem. */
+    min-height: min(27rem, 50svh);
+    margin-top: clamp(1.5rem, 4vh, 2.5rem);
+    padding-top: 0;
+    /* A pista desce pelo meio: à esquerda dela viaja o cartão, à direita ficam
+       os marcos. 5,25rem não davam largura para o cartão, que ficava a menos
+       zero e era cortado pelo `overflow` do palco. */
+    padding-left: 8.5rem;
+  }
+  .lp .timeline-revisao__marcos {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    min-height: min(27rem, 50svh);
+  }
+  .lp .timeline-revisao__marcos::before {
+    width: 2px;
+    height: 100%;
+  }
+  /* A linha que se pinta gira junto: na vertical o que cresce e a altura. */
+  .lp .timeline-revisao__marcos::after {
+    width: 2px;
+    height: calc(var(--viaja, 0) * 75%);
+  }
+  .lp .timeline-revisao__marco {
+    align-content: start;
+    padding: 0 0 1.25rem 1.25rem;
+  }
+  .lp .timeline-revisao__ponto {
+    top: 0;
+  }
+  /* Mesma pista de quatro estações, no outro eixo: o invólucro vale uma linha e
+     anda três. O cartão fica à esquerda da linha, ancorado nela por `left` na
+     coluna da pista — no `left: 0` de antes o `translate` de -100% jogava o
+     cartão inteiro para fora do palco, e o palco fixo corta o que sai. O
+     `top` negativo centra o cartão no ponto em vez de pendurá-lo abaixo. */
+  .lp .viajante {
+    top: -0.95rem;
+    left: 8.5rem;
+    width: auto;
+    height: 25%;
+    padding-right: 0;
+    transform: translate3d(-100%, calc(var(--viaja, 0) * 300%), 0);
+  }
+  .lp .viajante__cartao {
+    margin-right: 0.8rem;
+    padding: 0.45rem 0.7rem;
+  }
+  /* Pílula compacta: na vertical o cartão divide a largura com a coluna dos
+     marcos, e a etiqueta de duas linhas não cabe nas duas. */
+  .lp .viajante__k {
+    display: none;
+  }
+  .lp .viajante__t {
+    font-size: 0.8125rem;
+  }
+  .lp .viajante__rabo {
+    left: 100%;
+    top: 50%;
+    width: 0.8rem;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--color-verde) 55%, transparent),
+      transparent
+    );
+  }
+  /* Logo ACIMA do rótulo do marco, na folga que sobra no fim da linha anterior.
+     À esquerda da pista corre o cartão, e na altura do ponto está o próprio
+     rótulo: os dois lugares óbvios estão ocupados, e a folga não. */
+  .lp .timeline-revisao__aviso {
+    top: 25%;
+    left: 9.75rem;
+    font-size: 0.625rem;
+    transform: translate3d(0, calc(-1.75rem + (1 - var(--aviso)) * 0.6rem), 0);
+  }
+  .lp .oferta__cta {
+    width: 100%;
   }
   .lp .selo {
     left: 1.25rem;
@@ -1231,7 +2588,8 @@
   .lp .botao,
   .lp .barra,
   .lp .barra__nav a,
-  .lp .cartao {
+  .lp .cartao,
+  .lp .dial__rotulo {
     transition: none;
   }
   .lp .botao:hover {
@@ -1240,20 +2598,72 @@
   /* Movimento por relógio é o que este modo existe para desligar: ele acontece
      sem o leitor pedir e não para. O que é dirigido por rolagem continua — o
      leitor controla, e o motor já reduz por conta própria. */
-  .lp .heroi__cena,
-  .lp .heroi__varredura::before,
-  .lp .fita__trilho {
+  .lp .edital__trilho {
     animation: none;
   }
-  .lp .heroi__varredura {
+  .lp .edital__caos {
     display: none;
   }
-  /* Sem rolagem dirigindo, `--sc-p` fica no valor de repouso e a arte precisa
-     estar no lugar final, não no meio de uma viagem. */
-  .lp .heroi__arte,
-  .lp .figura img,
-  .lp .razonete,
-  .lp .secao--problema .palco__arte img {
+  .lp .edital__ordem {
+    --organiza: 1;
+    opacity: 1;
+  }
+  .lp .prioridade {
+    --chega: 1;
+    opacity: 1;
     transform: none;
+  }
+  .lp .publicacao {
+    --cria: 1;
+    --foto: 1;
+    --legenda: 1;
+    --feed: 1;
+    --reacao: 1;
+    opacity: 1;
+    transform: none;
+  }
+  .lp .publicacao__foto,
+  .lp .publicacao__legenda {
+    clip-path: none;
+  }
+  /* Sob movimento reduzido a agenda chega pronta: o cartao ja esta na ultima
+     parada e todos os marcos acesos. `--viaja: 1` faz as duas coisas de uma
+     vez, porque `--aceso` e derivado dele. */
+  .lp .timeline-revisao {
+    --viaja: 1;
+    --aviso: 1;
+  }
+  .lp .viajante__cartao {
+    --entre: 0;
+  }
+  .lp .dia__seta {
+    --seta: 1;
+    opacity: 1;
+    transform: translateX(-50%);
+  }
+  /*
+   * O que o motor NÃO cobre: as entradas escritas em CSS a partir de `--sc-p`.
+   * Sob movimento reduzido o motor continua publicando o progresso, então
+   * `.bloco`, `.alt` e `.marco` continuariam nascendo transparentes e
+   * deslizando — e deslizar é justamente o que este modo pede para não
+   * acontecer. Aqui eles já chegam prontos: o conteúdo continua inteiro, só não
+   * viaja para chegar.
+   */
+  .lp .bloco,
+  .lp .alt,
+  .lp .marco,
+  .lp .anel__arco,
+  .lp .marco__ponto,
+  .lp .carimbo {
+    --entra: 1;
+    --marca: 1;
+    transform: none;
+  }
+  .lp .marcos::after,
+  .lp .trilho__haste::after {
+    transform: none;
+  }
+  .lp .solto {
+    rotate: none;
   }
 }

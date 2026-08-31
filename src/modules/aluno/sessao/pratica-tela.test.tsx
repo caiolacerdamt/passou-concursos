@@ -1,11 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { PraticaTela, atrasoEmDias, textoDoAtraso } from "./pratica-tela";
+import { PraticaTela, atrasoEmDias, idadeDaSessao, textoDoAtraso } from "./pratica-tela";
 import type { DadosDaPratica } from "./pratica";
 import type { RotuloDoTopico } from "../rotulo-do-topico";
 
 const HOJE = "2026-08-31";
+
+/** Relativo ao relógio: fixture com carimbo fixo envelhece sozinha e troca de rótulo. */
+const HA_DUAS_HORAS = new Date(Date.now() - 2 * 3_600_000).toISOString();
 
 const rotulos = new Map<string, RotuloDoTopico>([
   ["topico-sfn", { materia: "Conhecimentos Bancários", topico: "SFN e mercados" }],
@@ -33,7 +36,7 @@ describe("PraticaTela — fronteira com o plano", () => {
         id: "sessao-1",
         contexto: "plano",
         topicoId: "topico-sfn",
-        iniciadaEm: "2026-08-31T12:00:00Z",
+        iniciadaEm: HA_DUAS_HORAS,
         nItens: 3,
         nRespondidas: 2,
         resultados: ["acerto", "erro", "pendente"],
@@ -54,7 +57,7 @@ describe("PraticaTela — sessão em andamento", () => {
         id: "sessao-1",
         contexto: "plano",
         topicoId: "topico-sfn",
-        iniciadaEm: "2026-08-31T12:00:00Z",
+        iniciadaEm: HA_DUAS_HORAS,
         nItens: 3,
         nRespondidas: 2,
         resultados: ["acerto", "erro", "pendente"],
@@ -181,5 +184,59 @@ describe("atraso da revisão", () => {
 
   it("nunca anuncia atraso negativo para uma revisão adiantada", () => {
     expect(textoDoAtraso("2026-09-02", HOJE)).toBe("Venceu hoje");
+  });
+});
+
+describe("idade da sessão aberta", () => {
+  const inicio = "2026-08-31T12:00:00Z";
+
+  it("conta em minutos, horas e dias", () => {
+    expect(idadeDaSessao(inicio, new Date("2026-08-31T12:20:00Z"))).toBe("aberta há 20 min");
+    expect(idadeDaSessao(inicio, new Date("2026-08-31T15:00:00Z"))).toBe("aberta há 3 h");
+    expect(idadeDaSessao(inicio, new Date("2026-09-05T12:00:00Z"))).toBe("aberta há 5 dias");
+    expect(idadeDaSessao(inicio, new Date("2026-09-01T12:00:00Z"))).toBe("aberta há 1 dia");
+  });
+
+  it("não inventa idade para um carimbo ilegível", () => {
+    expect(idadeDaSessao("nao-e-data")).toBe("aberta há algum tempo");
+  });
+});
+
+describe("PraticaTela — a sessão velha não se passa por recente", () => {
+  function sessaoIniciadaEm(iniciadaEm: string) {
+    return {
+      sessaoAberta: {
+        id: "sessao-1",
+        contexto: "revisao" as const,
+        topicoId: "topico-sfn",
+        iniciadaEm,
+        nItens: 10,
+        nRespondidas: 4,
+        resultados: [
+          "acerto", "erro", "acerto", "erro",
+          "pendente", "pendente", "pendente", "pendente", "pendente", "pendente",
+        ] as const,
+      },
+    };
+  }
+
+  it("troca o rótulo e o destaque quando a sessão passou de 24 h", () => {
+    const antiga = render(sessaoIniciadaEm(new Date(Date.now() - 5 * 86_400_000).toISOString()));
+
+    expect(antiga).toContain("Ficou aberta");
+    expect(antiga).toContain("Uma sessão de outro dia ficou pela metade");
+    expect(antiga).toContain("aberta há 5 dias");
+    // Sessão de outro dia não usa o anel de foco: ela não é o que está
+    // acontecendo agora, e o destaque diria que é.
+    expect(antiga).not.toContain("ring-marca/20");
+  });
+
+  it("mantém o destaque na sessão de hoje", () => {
+    const recente = render(sessaoIniciadaEm(new Date(Date.now() - 2 * 3_600_000).toISOString()));
+
+    expect(recente).toContain("Em andamento");
+    expect(recente).toContain("Você parou no meio de uma sessão");
+    expect(recente).toContain("aberta há 2 h");
+    expect(recente).toContain("ring-marca/20");
   });
 });

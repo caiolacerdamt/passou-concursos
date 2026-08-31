@@ -38,6 +38,38 @@ type Props = {
   hoje: string;
 };
 
+/**
+ * Quanto tempo a sessão está aberta, em palavras.
+ *
+ * Existe porque o rótulo "Em andamento" sozinho mente: uma sessão só encerra
+ * quando **todo** item é respondido, e nada fecha a que foi abandonada. Sem a
+ * idade na linha, a sessão largada semana passada lê como se o aluno tivesse
+ * acabado de sair dela.
+ */
+export function idadeDaSessao(iniciadaEm: string, agora: Date = new Date()): string {
+  const inicio = Date.parse(iniciadaEm);
+  if (Number.isNaN(inicio)) return "aberta há algum tempo";
+
+  const minutos = Math.floor((agora.getTime() - inicio) / 60_000);
+  if (minutos < 1) return "aberta agora há pouco";
+  if (minutos < 60) return `aberta há ${minutos} min`;
+
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `aberta há ${horas} h`;
+
+  const dias = Math.floor(horas / 24);
+  return `aberta há ${dias} ${dias === 1 ? "dia" : "dias"}`;
+}
+
+/** A partir daqui a sessão deixou de ser "o que você está fazendo agora". */
+const HORAS_ATE_ENVELHECER = 24;
+
+function envelheceu(iniciadaEm: string, agora: Date = new Date()): boolean {
+  const inicio = Date.parse(iniciadaEm);
+  if (Number.isNaN(inicio)) return false;
+  return agora.getTime() - inicio >= HORAS_ATE_ENVELHECER * 3_600_000;
+}
+
 export function PraticaTela({ dados, rotulosDosTopicos, hoje }: Props) {
   const { sessaoAberta, revisoesForaDoPlano, caderno, historico } = dados;
   const vazia =
@@ -129,27 +161,39 @@ function EmAndamento({
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
 }) {
   const pendentes = sessao.nItens - sessao.nRespondidas;
+  const antiga = envelheceu(sessao.iniciadaEm);
 
   return (
     <section
       aria-labelledby="sessao-em-andamento"
-      className="rounded-2xl border border-marca/40 bg-painel px-7 pb-6 pt-5 ring-1 ring-inset ring-marca/20"
+      className={`rounded-2xl border px-7 pb-6 pt-5 ${
+        antiga
+          ? "border-linha bg-painel"
+          : "border-marca/40 bg-painel ring-1 ring-inset ring-marca/20"
+      }`}
     >
-      <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca">
-        Em andamento
+      <p
+        className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${
+          antiga ? "text-suave" : "text-marca"
+        }`}
+      >
+        {antiga ? "Ficou aberta" : "Em andamento"}
       </p>
 
       <div className="mt-2.5 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 flex-1">
           <h2 id="sessao-em-andamento" className="text-[1.375rem] font-semibold">
-            Você parou no meio de uma sessão
+            {antiga
+              ? "Uma sessão de outro dia ficou pela metade"
+              : "Você parou no meio de uma sessão"}
           </h2>
           <p className="mt-2 font-semibold tracking-[-0.015em]">
             {nomeDoTopico(sessao.topicoId, rotulosDosTopicos)}
           </p>
           <p className="mt-1 font-utilitaria text-[0.8125rem] text-suave">
             {NOMES_DOS_CONTEXTOS[sessao.contexto]} · {sessao.nRespondidas} de {sessao.nItens}{" "}
-            respondidas · {pendentes} {pendentes === 1 ? "pendente" : "pendentes"}
+            respondidas · {pendentes} {pendentes === 1 ? "pendente" : "pendentes"} ·{" "}
+            {idadeDaSessao(sessao.iniciadaEm)}
           </p>
           <Trilha resultados={sessao.resultados} />
         </div>

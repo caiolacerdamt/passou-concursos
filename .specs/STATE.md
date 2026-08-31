@@ -594,26 +594,64 @@
 - **Date**: 2026-08-30
 - **Status**: active
 
+### AD-115
+- **Decision**: `/app/sessao` **deixa de listar bloco do plano do dia** e passa a ser a tela de
+  prática: sessão em andamento, revisão vencida que **não** entrou no plano de hoje, caderno de erros
+  e histórico de sessões. O plano continua exclusivo de `/app` e `/app/plano`; o único vestígio dele
+  aqui é um link no cabeçalho. A tela **não** tem cartão herói nem breu — o AD-111 dá esse tratamento
+  ao próximo bloco em `/app`, um por tela, e um segundo aqui seria a segunda infração. A revisão
+  avulsa ganha `prepararSessaoDeRevisao`, cujo porteiro é a **agenda**, não o parâmetro: o tópico só
+  abre sessão se `revisao_agenda` disser que venceu. A chave contra duplo clique reusa
+  `refacao_chave` no formato `tópico|qualificador`, com `revisao_avulsa` como qualificador — não
+  pertence a `causa_erro`, então as duas famílias nunca colidem e quem lê a chave segue tirando o
+  tópico do primeiro campo.
+- **Reason**: `/app` e `/app/plano` já renderizam **o mesmo componente com os mesmos dados**
+  (`plano-pagina.tsx` chama `PlanoTela` com o mesmo `consultarPlanoDoDia()` nas duas); a lista de
+  blocos em `/app/sessao` era a terceira cópia, e era isso — não o acabamento — que fazia a rota
+  parecer supérflua. As quatro peças que sobraram não tinham tela em lugar nenhum: a sessão aberta só
+  era alcançável voltando pelo bloco de origem, a revisão vencida que não virou bloco sumia da
+  interface, o caderno só existia em `/app` e `/app/progresso`, e o resumo de uma sessão de ontem era
+  inalcançável. A tela também repetia a mesma revisão duas vezes (em *Blocos pendentes* e em
+  *Revisões devidas*) e terminava numa linha sem ação — "Ainda não há bloco para esta revisão hoje".
+- **Trade-off**: A rota passa a fazer seis consultas onde fazia três, e o histórico agrega por sessão
+  **em memória** — `tentativas` é particionada, e agregar por `sessao_id` no `SELECT` obrigaria a
+  varrer partição por partição para montar um número de dezenas de linhas. O teto de 12 sessões é
+  arbitrário: acima disso a leitura é do Progresso. Um bloco **concluído** deixa de proteger o tópico
+  contra a lista de revisões — se a revisão dele vencer hoje, ela aparece; esconder seria perder a
+  única tela que a mostra. A duplicação `/app` × `/app/plano` **continua de pé** e não é desta
+  rodada: o menu ainda promete "Ciclo do edital" numa rota que entrega o plano do dia.
+- **Scope**: `src/modules/aluno/sessao/{pratica.ts,pratica-tela.tsx}` (novos),
+  `src/modules/aluno/sessao/indice-tela.tsx` (removido), `src/modules/aluno/sessao.ts`,
+  `src/app/app/sessao/page.tsx`, `supabase/migrations/20260831120000_revisao_avulsa.sql`.
+- **Date**: 2026-08-31
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Fechamento do PR #33 (landing v2 — corredor de nove atos). O código da landing já
-  estava verde; o que segurava o PR eram **duas falhas de `test:db` herdadas da `main`**, que este
-  PR passa a corrigir junto. Ajuste fora da numeração de specs — fecha com a **AD-114**.
-- **Phase / Task**: concluída. `test:db` volta a 411/411 na branch.
-- **Completed**: (1) `recurso_visto` entra em `TABELAS_GRUPO_1` — tabela com `user_id` criada na
-  `20260825142000` e nunca registrada no inventário do direito ao esquecimento; era bug real de LGPD,
-  não do teste. (2) `20260830130000_w2a_reaplica_correcoes.sql` reaplica as três correções do W2-A
-  que a `20260825141000` desfez ao copiar o corpo da `20260824102000` em vez da definição vigente:
-  plano vazio fora da agenda (com `v_planos + 1`), reserva de um slot quando
-  `flag.m4.simulado_semanal` está ligada e o porteiro de `perfil_concurso` ativo no desvio de
-  cobertura virgem. Os quatro literais acentuados da `20260825141000` foram preservados.
-- **Gates**: `tsc --noEmit` limpo, `vitest --project unit` 905/905, `test:db` **411/411**
-  (era 404 passando + 2 falhando).
-- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`;
-  `pg_get_functiondef` confirma as três âncoras de volta e o acento intacto.
-- **In-progress** (file:line): continua pendente a **verificação visual do `/app/raio-x`** com conta
-  autenticada (a rota exige matrícula ativa) — tabela de matérias a 390px, gráfico com rótulo longo e
-  cartão breu quando o mapa pessoal falha. As duas correções do W2-A sem teste (reserva do simulado e
-  porteiro da cobertura) seguem sem sensor: só a de agenda falha se regredir de novo.
-- **Next step**: merge do PR #33; depois as demais telas de `/app/*`, ou a `.specs/ROADMAP.md` a
-  partir da SPEC 16.
+- **Feature**: Refatoração de `/app/sessao` — a rota vira **tela de prática** e para de listar bloco
+  do plano. Ajuste fora da numeração de specs, pedido direto; fecha com a **AD-115**.
+- **Phase / Task**: concluída na branch `feat/sessao-tela-de-pratica`.
+- **Completed**: (1) `sessao/pratica.ts` — leitura das quatro peças (sessão aberta com a trilha
+  item a item, revisão vencida fora do plano, caderno, histórico agregado por sessão). (2)
+  `sessao/pratica-tela.tsx` substitui `indice-tela.tsx`, no vocabulário do resto do app: olho
+  `font-utilitaria` de 11px, título de 34px, cartão sem sombra, **sem breu** (AD-111). (3)
+  `prepararSessaoDeRevisao` em `sessao.ts`, com a agenda como porteiro e `revisao_indisponivel` novo
+  em `SessaoRecusada`. (4) `page.tsx` ganha a entrada `?revisao=<topico>` e passa a excluir da lista
+  os tópicos **pendentes** do plano de hoje. (5) Migration só de comentário: `refacao_chave` passa a
+  documentar o formato `tópico|qualificador`.
+- **Gates**: `tsc --noEmit` limpo, `eslint` limpo nos arquivos tocados, `vitest --project unit`
+  **937/937** (era 905/905 na `main`; +32 testes). Sensores conferidos por mutação: o porteiro da
+  agenda, o descarte da revisão que já está no plano e a contagem de questões distintas do histórico
+  falham quando invertidos.
+- **External checks**: `test:db` **410/411**. A falha é `spec14-sequencia` esperando `fora_agenda` e
+  recebendo `plano_indisponivel`, **reproduzida na `main`** com o mesmo comando — é herdada, não
+  desta branch. A migration desta rodada é comentário puro e **não foi aplicada** no projeto de
+  desenvolvimento.
+- **In-progress** (file:line): falta a **verificação visual** de `/app/sessao` com conta autenticada
+  (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px e a coluna dupla revisões ×
+  caderno no ponto de quebra `lg`. Segue pendente a verificação visual do `/app/raio-x`, e as duas
+  correções do W2-A sem teste (reserva do simulado, porteiro da cobertura) continuam sem sensor.
+- **Next step**: PR desta branch. Depois, a dívida que esta rodada expôs e não resolveu: `/app` e
+  `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
+  numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
+  deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.

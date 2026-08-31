@@ -493,33 +493,127 @@
 - **Date**: 2026-08-25
 - **Status**: active
 
+### AD-111
+- **Decision**: **Rodada de design do app (`/app`)** — a que o `DESIGN.md` deixou marcada quando a
+  rodada 1 cobriu só a landing. Três mudanças de fundo. **(a) O breu entra no app.** Os tokens
+  `--color-breu-*` deixam de ser exclusivos da landing e passam a valer em `/app/*` sob a MESMA regra
+  de racionamento que os governa lá: a barra de navegação (que é chrome, não conteúdo) e **um** cartão
+  de conteúdo por tela — o próximo bloco do dia. Nenhum terceiro. Isto **não** é tema escuro, que
+  continua fora do escopo. **(b) Duas linhas do `DESIGN.md` caem, com critério**: "sem hero card dentro
+  do app" e "app: 14–32px, sem display". O cartão do próximo bloco é cartão-herói e o título dele é
+  36px. Só ele — o resto do painel fica dentro da régua antiga. **(c) A ordem da superfície Hoje passa
+  a ser**: cabeçalho + cartão do dia (no lugar da caixa "Estado atual") → estudo de hoje → últimos 7
+  dias com a contagem da prova ao lado → recuperar erro. Some o grid de quatro cartões de métrica do
+  plano, que era exatamente o "grid automático de 3–4 cards de métrica" que o anti-slop proíbe; o
+  resumo vira uma linha com uma barra de progresso só.
+- **Reason**: A landing e o app pareciam dois produtos. Compartilhar a paleta de neutros não bastou:
+  o que dá caráter à landing é a escala tipográfica, o rótulo mono e o racionamento do escuro, e nada
+  disso existia do outro lado do login. A régua "sem hero card" foi escrita para impedir decoração,
+  não para impedir hierarquia — e a superfície Hoje tem exatamente um item que merece hierarquia, que é
+  o próximo bloco. A caixa "Estado atual" dizia o estado do *sistema* ("Plano de hoje disponível"), não
+  o do aluno; o cartão do dia responde a pergunta que ele traz ao abrir a tela.
+- **Trade-off**: O app ganha uma superfície escura para manter em duas paletas — toda cor nova no
+  cartão do próximo bloco precisa de par no breu, e um contribuidor distraído pode pintar um terceiro
+  bloco de escuro e furar o racionamento sem que nada quebre. A barra colapsável introduz o primeiro
+  componente cliente do shell (estado + cookie), então `AppShell` virou assíncrono e o teste dele passa
+  a precisar de `next/headers` mockado.
+- **Scope**: `src/modules/ui/{app-shell,barra-lateral,barra-do-celular,navegacao}.tsx`,
+  `src/modules/aluno/{plano-pagina,plano-tela,painel-do-dia-tela,progresso}.*`,
+  `src/app/globals.css`, `DESIGN.md`.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-112
+- **Decision**: `RelatorioSemanal` ganha `porDia`: sete posições, do mais antigo ao dia de hoje, cada
+  uma com `data` (calendário do produto), `questoes` e `acertos`. Sai da **mesma lista de tentativas**
+  que já alimenta o total — nenhuma consulta nova, nenhum número estimado. Dia sem tentativa é `0`, e a
+  tela desenha coluna de altura mínima em vez de buraco.
+- **Reason**: A leitura semanal do painel mostra os sete dias lado a lado e um agregado não sustenta
+  essa coluna. A alternativa era desenhar o gráfico sem dado atrás, o que é inventar número — proibido.
+  As chaves saem de `dataHojeDoProduto` e não de UTC: uma tentativa das 22h de Brasília cairia no dia
+  seguinte e a coluna de hoje apareceria vazia com o aluno tendo estudado.
+- **Trade-off**: O contrato de `RelatorioSemanal` fica maior e toda fixture de teste que o monta passa
+  a precisar das sete posições.
+- **Scope**: `src/modules/aluno/progresso.ts` e as telas que leem o relatório.
+- **Date**: 2026-08-25
+- **Status**: active
+
+### AD-113
+- **Decision**: O Raio-X ganha um **segundo grão de projeção**: a tabela `raiox_projecoes_materia`,
+  escrita pela mesma `recalcula_raiox()`, com a mesma fórmula (decaimento por ano, amortecimento por
+  amostra, duas janelas de tendência) agrupada por `materia_id` e o **mesmo denominador** da leitura
+  por tópico. A tela `/app/raio-x` passa a abrir pela matéria e só revela tópico quando o aluno pede
+  — tanto na leitura do edital quanto no Mapa de Prioridade, que ganha duas visualizações à escolha
+  (tabela e gráfico peso × domínio). A **normalização para 100% é da borda de leitura**, não do
+  banco: `consultarRaioX` devolve `peso` cru e `fatia` normalizada, e a fatia de um tópico é a fatia
+  da matéria repartida entre os tópicos dela. A view `raiox_peso_topico` **não muda** — o motor do
+  plano (M4) continua raciocinando por tópico.
+- **Reason**: A tela mostrava os 86 tópicos do edital numa lista plana, que ninguém termina de ler; a
+  matéria é a unidade com que o aluno decide o que estudar. Somar as linhas de tópico para chegar à
+  matéria **dá número errado** e foi rejeitado: cada linha já foi amortecida contra a média, então a
+  soma acumula o viés uma vez por tópico e uma matéria com muitos tópicos sem questão fica
+  artificialmente pesada. Recalcular por matéria com o `n` da matéria inteira faz o amortecimento
+  praticamente desaparecer, que é o comportamento correto — uma matéria com 297 questões reais não
+  precisa ser puxada para a média. Calcular no `SELECT` (view) ou no front violaria o invariante 7,
+  "pré-computa primeiro".
+- **Trade-off**: `recalcula_raiox()` passa a varrer `questoes` duas vezes por perfil. O inteiro que
+  ela devolve **continua contando só o grão de tópico** — somar a matéria mudaria um contrato de
+  quem chama a função sem entregar informação nova, já que os dois grãos vivem na mesma transação.
+  Uma matéria fora do
+  `programa_edital` some das duas leituras — é o comportamento desejado, mas significa que corrigir o
+  programa é pré-requisito para a tela ficar certa. `RaioXTela` vira componente de cliente (abrir,
+  fechar e trocar de aba são estado local); nenhum dado pessoal a mais atravessa a fronteira, o DTO
+  continua montado no servidor.
+- **Scope**: `supabase/migrations/20260830120000_raiox_projecao_por_materia.sql`,
+  `src/modules/raiox/{index.ts,mapa-por-materia.ts,tela.tsx}`, `src/app/app/raio-x/page.tsx`.
+- **Date**: 2026-08-30
+- **Status**: active
+
+### AD-114
+- **Decision**: A definição vigente de `gera_plano_do_dia` volta a viver **inteira num arquivo de
+  migration**, não como patch de texto sobre outra. A `20260830130000_w2a_reaplica_correcoes.sql`
+  reescreve o corpo com as três correções do W2-A embutidas, e a técnica de patchar por
+  `pg_get_functiondef` + `replace` (usada na `20260824102100`) fica proibida para função de domínio:
+  quem precisar mudar a função copia o corpo **do arquivo mais recente que a cria**, nunca de uma
+  migration anterior.
+- **Reason**: A `20260825141000` se propôs a acentuar quatro literais de `motivo` e copiou o corpo da
+  `20260824102000` — que já não era a definição vigente. Entre as duas, a `20260824102100` havia
+  patchado a função em três pontos, e o `create or replace` de corpo inteiro os desfez em silêncio:
+  o plano vazio fora da agenda deixou de ser gravado e de contar no retorno, a reserva de um slot
+  para o simulado sumiu e o desvio de cobertura virgem voltou a valer sem `perfil_concurso` ativo.
+  Só a primeira perda tinha teste — `ciclo-adaptativo` W2-A recebia 0 onde espera 1 —, então duas
+  regressões viajaram para a `main` sem nenhum sinal. Enquanto a definição vigente for "arquivo A
+  mais patch em B", a próxima cópia de corpo inteiro repete o acidente.
+- **Trade-off**: O repositório passa a carregar mais uma cópia de 33 KB da mesma função, e um `diff`
+  entre migrations continua sendo a única forma de ver o que mudou de uma versão para a outra. Aceito:
+  o custo é disco e ruído de leitura; o custo do outro lado foi regressão silenciosa em produção-
+  candidata. As duas correções sem teste (reserva do simulado, porteiro da cobertura) **continuam sem
+  teste** — quem mexer na SPEC 32 ou no ciclo adaptativo deve fechar essa lacuna.
+- **Scope**: `supabase/migrations/20260830130000_w2a_reaplica_correcoes.sql`,
+  `src/modules/lgpd/grupo-1.ts`.
+- **Date**: 2026-08-30
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Rodada de copy da landing pedida pelo dono (AD-110), depois da rodada de design
-  (AD-109). Ajuste de superfície, fora da numeração de specs.
-- **Phase / Task**: concluído. Sem ritual de spec.
-- **Completed**: barra com link "Entrar" (`/entrar`) que faltava e CTA "Começar"; herói com headline,
-  sub e CTA novos, rótulo de prova removido do topo e a contagem de provas movida para a linha de
-  confiança sob o CTA; seção 2 com as três falas reescritas e os rótulos acima de cada uma removidos,
-  mais um multiplicador calculado (nunca escrito à mão, AD-108) entre o maior e o menor tópico; seção 3
-  com rótulo e título novos; seção 5 com título e os três cartões reescritos em tom positivo; seção 6
-  reduzida a um cartão só (tirou "ainda não", ver AD-110) sob o título "O que você recebe quando
-  assina"; fecho com headline e sub novos, tirando "Esta página não promete aprovação" como manchete.
-- **Gates**: `tsc --noEmit` limpo, `eslint src/modules/ui/landing src/app/(landing)` sem erro,
-  `vitest --project unit` 837/837 (suíte inteira, não só a rota).
-- **External checks**: nenhuma migration, nenhuma geração de arte nova — as ilustrações da AD-106/109
-  não mudaram.
-- **In-progress** (file:line): captura de scroll (desktop/390px/`prefers-reduced-motion`) da copy nova
-  **não feita** nesta rodada — a rodada anterior (AD-109) já tinha validado o motor e o layout; esta
-  rodada só trocou texto e removeu um cartão do grid `auto-fit`, sem tocar `data-sc-*` nem CSS de
-  animação.
-- **Next step**: seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
-- **Blockers**: nenhum. O rótulo longo encostando no número no celular **foi corrigido** (teto de 20
-  caracteres abaixo de 900px), herdado da AD-109. Continua **não feita** a verificação em aparelho real
-  (iPhone) — Chrome headless não reproduz decodificador, autoplay nem toque.
-- **Inherited notes**: preservar F-13 e F-14; não apagar `caiolacerdamt@` nem `raiox-demo@passou.dev`;
-  `npm test` agregado segue com falha preexistente de `maxWorkers` — usar `test:unit` e `test:db`.
-- **Uncommitted files**: diretórios não rastreados preexistentes do usuário (`.claude/skills/`,
-  `.github/agents/`, `.github/hooks/`, `.github/skills/`) e os PNG de referência na raiz
-  (`mm-*.png`, `neuro-*.png`, `v-hero.png`); não alterar nem incluir.
-- **Branch**: `feat/landing-porte-scrollcraft`.
+- **Feature**: Fechamento do PR #33 (landing v2 — corredor de nove atos). O código da landing já
+  estava verde; o que segurava o PR eram **duas falhas de `test:db` herdadas da `main`**, que este
+  PR passa a corrigir junto. Ajuste fora da numeração de specs — fecha com a **AD-114**.
+- **Phase / Task**: concluída. `test:db` volta a 411/411 na branch.
+- **Completed**: (1) `recurso_visto` entra em `TABELAS_GRUPO_1` — tabela com `user_id` criada na
+  `20260825142000` e nunca registrada no inventário do direito ao esquecimento; era bug real de LGPD,
+  não do teste. (2) `20260830130000_w2a_reaplica_correcoes.sql` reaplica as três correções do W2-A
+  que a `20260825141000` desfez ao copiar o corpo da `20260824102000` em vez da definição vigente:
+  plano vazio fora da agenda (com `v_planos + 1`), reserva de um slot quando
+  `flag.m4.simulado_semanal` está ligada e o porteiro de `perfil_concurso` ativo no desvio de
+  cobertura virgem. Os quatro literais acentuados da `20260825141000` foram preservados.
+- **Gates**: `tsc --noEmit` limpo, `vitest --project unit` 905/905, `test:db` **411/411**
+  (era 404 passando + 2 falhando).
+- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`;
+  `pg_get_functiondef` confirma as três âncoras de volta e o acento intacto.
+- **In-progress** (file:line): continua pendente a **verificação visual do `/app/raio-x`** com conta
+  autenticada (a rota exige matrícula ativa) — tabela de matérias a 390px, gráfico com rótulo longo e
+  cartão breu quando o mapa pessoal falha. As duas correções do W2-A sem teste (reserva do simulado e
+  porteiro da cobertura) seguem sem sensor: só a de agenda falha se regredir de novo.
+- **Next step**: merge do PR #33; depois as demais telas de `/app/*`, ou a `.specs/ROADMAP.md` a
+  partir da SPEC 16.

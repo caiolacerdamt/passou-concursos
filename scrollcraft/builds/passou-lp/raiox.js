@@ -1,0 +1,51 @@
+/* Frequência real medida no acervo do Passou Concursos.
+   Extraído em 2026-08-25 de `questoes` vigentes com origem='real'.
+   28 provas oficiais · 2010–2025 · 1.395 questões · 86 tópicos.
+   Nada aqui é estimado. Se o acervo crescer, este arquivo é regerado. */
+window.RAIOX = {
+  totalQuestoes: 1395, totalTopicos: 86, totalProvas: 28, anos: "2010–2025",
+  top12Questoes: 567, top12Pct: 40.6, caudaTopicos: 19, caudaPct: 4.7,
+  topicos: [
+["Interpretação","Língua Portuguesa",93],["Produtos e serviços","Conhecimentos Bancários",89],
+["Probabilidade e estatística","Matemática",77],["SFN e mercados","Conhecimentos Bancários",47],
+["Câmbio","Conhecimentos Bancários",41],["Sintaxe","Língua Portuguesa",34],
+["Mercado de capitais","Conhecimentos Bancários",33],["Marketing de serviços","Vendas e Negociação",33],
+["Proporções, regra de três e porcentagem","Matemática",31],["Segurança","Conhecimentos de Informática",30],
+["Classes de palavras","Língua Portuguesa",30],["Juros compostos","Matemática Financeira",29],
+["Valor e experiência do cliente","Vendas e Negociação",29],["Relacionamento","Vendas e Negociação",27],
+["Garantias","Conhecimentos Bancários",24],["Ética","Conhecimentos Bancários",24],
+["Microsoft 365","Conhecimentos de Informática",23],["Navegadores","Conhecimentos de Informática",22],
+["Concordância","Língua Portuguesa",22],["Price e SAC","Matemática Financeira",21],
+["Capital, juros e taxas","Matemática Financeira",21],["Conjuntos, relações e funções","Matemática",21],
+["Compreensão de texto","Língua Inglesa",21],["Política monetária","Conhecimentos Bancários",21],
+["CDC","Vendas e Negociação",20],["Pontuação","Língua Portuguesa",18],["Vendas","Vendas e Negociação",17],
+["Lógica proposicional","Matemática",16],["Windows e Linux","Conhecimentos de Informática",16],
+["Juros simples","Matemática Financeira",15],["PLD/FT","Conhecimentos Bancários",15],
+["Acessibilidade","Vendas e Negociação",15],["Estratégia","Vendas e Negociação",15],
+["E-mail e colaboração","Conhecimentos de Informática",15],["BI e analytics","Conhecimentos de Informática",15],
+["Moedas e blockchain","Atualidades do Mercado Financeiro",14],["Orçamento e dívida pública","Conhecimentos Bancários",14],
+["Crase","Língua Portuguesa",14],["Vocabulário","Língua Inglesa",14],["Marketing digital","Vendas e Negociação",13],
+["Fintechs, startups e big techs","Atualidades do Mercado Financeiro",12],["Geral","Conhecimentos Bancários",12],
+["Redes","Conhecimentos de Informática",12],["Responsabilidade socioambiental e ASG","Conhecimentos Bancários",12],
+["Canais remotos","Vendas e Negociação",12],["LGPD","Conhecimentos Bancários",11],
+["Segmentação","Vendas e Negociação",11],["Colocação pronominal","Língua Portuguesa",11],
+["Gramática básica","Língua Inglesa",10],["Comportamento do consumidor","Vendas e Negociação",10],
+["Matrizes e sistemas","Matemática",10],["Arquivos","Conhecimentos de Informática",10],
+["Transformação digital","Atualidades do Mercado Financeiro",10],["Números","Matemática",9],["PA e PG","Matemática",9],
+["Open banking","Atualidades do Mercado Financeiro",8],["Anticorrupção","Conhecimentos Bancários",8],
+["PIX","Atualidades do Mercado Financeiro",8],["Ferramentas de trabalho remoto","Conhecimentos de Informática",7],
+["Equivalência de capitais","Matemática Financeira",7],["Ouvidoria","Vendas e Negociação",6],
+["Multimídia","Conhecimentos de Informática",6],["Arranjos de pagamento","Atualidades do Mercado Financeiro",6],
+["Redes sociais","Conhecimentos de Informática",6],["Geral","Atualidades do Mercado Financeiro",6],
+["Regência","Língua Portuguesa",6],["Ética em vendas","Vendas e Negociação",6],
+["Res. CMN 4.949/2021","Vendas e Negociação",5],["Geral","Língua Portuguesa",5],["Medidas","Matemática",5],
+["Geral","Conhecimentos de Informática",5],["Shadow banking","Atualidades do Mercado Financeiro",5],
+["Sequências","Matemática",4],["Ortografia","Língua Portuguesa",4],
+["Internet e mobile banking","Atualidades do Mercado Financeiro",4],["Criptoativos","Atualidades do Mercado Financeiro",4],
+["Sigilo bancário","Conhecimentos Bancários",4],["EAD","Conhecimentos de Informática",4],
+["Geral","Vendas e Negociação",3],["Fluxos de caixa","Matemática Financeira",3],
+["Correspondentes bancários","Atualidades do Mercado Financeiro",2],["Geral","Matemática",2],
+["Valor do dinheiro","Matemática Financeira",2],["Autorregulação","Conhecimentos Bancários",2],
+["Cibersegurança","Conhecimentos Bancários",1],["Bancos digitais","Atualidades do Mercado Financeiro",1]
+  ]
+};

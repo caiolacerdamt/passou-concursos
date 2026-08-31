@@ -16,6 +16,7 @@ vi.mock("@/lib/db/servidor", () => ({
 
 import {
   SessaoRecusada,
+  consultarSessao,
   itensPendentes,
   mapearQuestaoParaTela,
   prepararSessao,
@@ -172,6 +173,55 @@ function clienteParaRefacao({
   return { cliente, insercoes };
 }
 
+function clienteParaConsultar({
+  sessao,
+  itens,
+  tentativas,
+  questoesPublicas,
+  questoesRespondidas,
+}: {
+  sessao: Record<string, unknown>;
+  itens: unknown[];
+  tentativas: unknown[];
+  questoesPublicas: unknown[];
+  questoesRespondidas: unknown[];
+}) {
+  const selecoesDeQuestoes: string[] = [];
+  const from = vi.fn((tabela: string) => {
+    const builder: Record<string, unknown> = {};
+    let campos = "";
+    builder.select = vi.fn((valor: string) => {
+      campos = valor;
+      if (tabela === "questoes") selecoesDeQuestoes.push(valor);
+      return builder;
+    });
+    for (const metodo of ["eq", "is", "order", "in", "limit"]) {
+      builder[metodo] = vi.fn(() => builder);
+    }
+    builder.maybeSingle = vi.fn(async () => ({ data: sessao, error: null }));
+    builder.then = (resolve: (valor: unknown) => unknown, reject: (erro: unknown) => unknown) => {
+      const data =
+        tabela === "sessao_itens"
+          ? itens
+          : tabela === "tentativas"
+            ? tentativas
+            : tabela === "questoes"
+              ? campos.includes("resposta_correta")
+                ? questoesRespondidas
+                : questoesPublicas
+              : [];
+      return Promise.resolve({ data, error: null }).then(resolve, reject);
+    };
+    return builder;
+  });
+
+  return {
+    cliente: { from },
+    from,
+    selecoesDeQuestoes,
+  };
+}
+
 describe("sessão de estudo", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -208,6 +258,78 @@ describe("sessão de estudo", () => {
         { respondido_em: null },
       ]),
     ).toEqual([1, 2]);
+  });
+
+  it("devolve contagem completa e mantém o gabarito somente nos itens respondidos", async () => {
+    const { cliente, selecoesDeQuestoes } = clienteParaConsultar({
+      sessao: {
+        id: "sessao-1",
+        plano_bloco_id: "bloco-1",
+        contexto: "treino",
+        encerrada_em: null,
+        refacao_chave: null,
+      },
+      itens: [
+        {
+          id: "item-1",
+          sessao_id: "sessao-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          ordem: 1,
+          respondido_em: null,
+        },
+        {
+          id: "item-2",
+          sessao_id: "sessao-1",
+          questao_id: "questao-2",
+          questao_versao: 2,
+          ordem: 2,
+          respondido_em: "2026-08-24T12:00:00Z",
+        },
+      ],
+      tentativas: [
+        {
+          questao_id: "questao-2",
+          questao_versao: 2,
+          ordem_na_sessao: 2,
+          resposta_dada: "A",
+          correta: false,
+        },
+      ],
+      questoesPublicas: [linha({ id: "questao-1", questao_versao: 1 })],
+      questoesRespondidas: [
+        linha({
+          id: "questao-2",
+          questao_versao: 2,
+          resposta_correta: "B",
+          gabarito_versao: "gabarito-2",
+        }),
+      ],
+    });
+
+    const resultado = await consultarSessao(cliente as never, "sessao-1");
+
+    expect(resultado).toMatchObject({
+      totalItens: 2,
+      itensRespondidos: 1,
+      itens: [
+        { somenteLeitura: false, respondidoEm: null },
+        {
+          somenteLeitura: true,
+          respostaDada: "A",
+          correta: false,
+          questao: { respostaCorreta: "B" },
+        },
+      ],
+    });
+    expect(resultado?.itens[0]).not.toHaveProperty("respostaCorreta");
+    expect(selecoesDeQuestoes).toHaveLength(2);
+    expect(selecoesDeQuestoes.find((select) => !select.includes("resposta_correta"))).toBe(
+      "id, questao_versao, origem, topico_id, tipo_questao, enunciado, alternativas, imagens, fonte_citacao, status, vigente, anulada",
+    );
+    expect(selecoesDeQuestoes.find((select) => select.includes("resposta_correta"))).toContain(
+      "resposta_correta",
+    );
   });
 
   it("mapeia imagem para URL assinada sem levar o caminho nem o gabarito", async () => {

@@ -143,6 +143,95 @@ descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
     });
   });
 
+  it("piso vazio exige meta cheia satisfeita no recalculo retroativo", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await criarUsuario(cliente);
+      await criarPerfil(cliente, aluno, [1, 2]);
+
+      await criarPlano(cliente, aluno, "2026-08-17", false);
+      const planoComMeta = await criarPlano(cliente, aluno, "2026-08-18", false);
+      const blocoMeta = await cliente.query<{ id: string }>(
+        `insert into public.plano_bloco
+           (plano_dia_id, tipo, nivel, ordem, minutos_estimados)
+         values ($1, 'avancar', 'meta_cheia', 1, 20) returning id`,
+        [planoComMeta],
+      );
+      await cliente.query(
+        `insert into public.sessoes
+           (user_id, contexto, plano_bloco_id, iniciada_em, encerrada_em)
+         values ($1, 'plano', $2, '2026-08-18T19:00:00Z', '2026-08-18T20:00:00Z')`,
+        [aluno, blocoMeta.rows[0].id],
+      );
+
+      await cliente.query("select public.recalcula_sequencia($1, $2::date)", [aluno, "2026-08-18"]);
+      const { rows } = await cliente.query<{
+        data: string;
+        estado: string;
+        sequencia: number;
+        piso_entregue: boolean;
+        piso_cumprido: boolean;
+      }>(
+        `select data::text, estado, sequencia, piso_entregue, piso_cumprido
+           from public.sequencia_dia where user_id = $1 order by data`,
+        [aluno],
+      );
+      expect(rows).toEqual([
+        {
+          data: "2026-08-17",
+          estado: "piso_pendente",
+          sequencia: 0,
+          piso_entregue: false,
+          piso_cumprido: false,
+        },
+        {
+          data: "2026-08-18",
+          estado: "cumprido",
+          sequencia: 1,
+          piso_entregue: false,
+          piso_cumprido: true,
+        },
+      ]);
+    });
+  });
+
+  it("consulta piso vazio de hoje como pendente ou cumprido", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const data = dataDeHojeEmSaoPaulo();
+      const dia = diaDaSemana(data);
+      const pendente = await criarUsuario(cliente);
+      const cumprido = await criarUsuario(cliente);
+      await criarPerfil(cliente, pendente, [dia]);
+      await criarPerfil(cliente, cumprido, [dia]);
+      await criarPlano(cliente, pendente, data, false);
+      const planoCumprido = await criarPlano(cliente, cumprido, data, false);
+      const blocoMeta = await cliente.query<{ id: string }>(
+        `insert into public.plano_bloco
+           (plano_dia_id, tipo, nivel, ordem, minutos_estimados)
+         values ($1, 'avancar', 'meta_cheia', 1, 20) returning id`,
+        [planoCumprido],
+      );
+      await cliente.query(
+        `insert into public.sessoes
+           (user_id, contexto, plano_bloco_id, iniciada_em, encerrada_em)
+         values ($1, 'plano', $2, now() - interval '1 hour', now())`,
+        [cumprido, blocoMeta.rows[0].id],
+      );
+
+      await comoAluno(cliente, pendente, async () => {
+        const { rows } = await cliente.query<{ estado: string; piso_cumprido: boolean }>(
+          "select estado, piso_cumprido from public.consultar_sequencia_do_dia()",
+        );
+        expect(rows).toEqual([{ estado: "piso_pendente", piso_cumprido: false }]);
+      });
+      await comoAluno(cliente, cumprido, async () => {
+        const { rows } = await cliente.query<{ estado: string; piso_cumprido: boolean }>(
+          "select estado, piso_cumprido from public.consultar_sequencia_do_dia()",
+        );
+        expect(rows).toEqual([{ estado: "cumprido", piso_cumprido: true }]);
+      });
+    });
+  });
+
   it("folga declarada carrega a sequência e o piso pendente zera no dia agendado", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = await criarUsuario(cliente);

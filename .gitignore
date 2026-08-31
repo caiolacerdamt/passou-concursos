@@ -54,3 +54,22 @@ desktop.ini
 /provas/*.pdf
 /provas/*.png
 /fontes/
+
+# Bancada do scrollcraft. Os PLANO/BRIEF/HANDOFF ficam versionados: o codigo
+# os cita como fonte (landing.css, page.test.tsx, frequencia-extrato.ts) e
+# referencia pendurada e pior que arquivo a mais. Fora vao os 233 MB de arte
+# bruta e captura de scroll, e o prototipo standalone — cujo motor e CSS ja
+# vivem, byte a byte, em public/motor/ e src/modules/ui/landing/.
+/scrollcraft/**/arte-bruta/
+/scrollcraft/**/assets/
+/scrollcraft/**/lab/
+/scrollcraft/**/*.png
+/scrollcraft/**/*.webp
+/scrollcraft/**/*.mp4
+/scrollcraft/**/index.html
+/scrollcraft/**/pagina.css
+/scrollcraft/**/pagina.js
+/scrollcraft/**/scrollcraft.css
+/scrollcraft/**/scrollcraft.js
+/docs/planos/
+/.claude/launch.json

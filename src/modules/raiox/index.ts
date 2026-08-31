@@ -22,9 +22,39 @@ export type LinhaRaioX = {
   amostraBaixa: boolean;
 };
 
+/**
+ * Um tópico dentro da leitura da matéria.
+ *
+ * `fatia` é número de **exibição**, não da projeção: a soma das fatias dos
+ * tópicos de uma matéria fecha exatamente a fatia da matéria. O `peso` cru
+ * continua ao lado, porque é ele que o motor do plano consome.
+ */
+export type TopicoDaMateria = LinhaRaioX & { fatia: number };
+
+export type LinhaMateriaRaioX = {
+  materiaId: string;
+  materia: string;
+  /** Peso cru da projeção agregada. Não soma 1 entre as matérias. */
+  peso: number;
+  /** Peso normalizado sobre o total das matérias — é o que a tela mostra. */
+  fatia: number;
+  nQuestoes: number;
+  nTopicos: number;
+  tendencia: TendenciaRaioX;
+  amostraBaixa: boolean;
+  /** Tópicos da matéria, do maior peso para o menor. */
+  topicos: TopicoDaMateria[];
+};
+
 export type DadosRaioX = {
   perfil: PerfilRaioX | null;
   linhas: LinhaRaioX[];
+  /**
+   * A mesma leitura agrupada por matéria. Vem de `raiox_projecoes_materia`,
+   * que é projeção própria — nunca a soma de `linhas`, porque cada linha de
+   * tópico já foi amortecida contra a média e somá-las acumularia esse viés.
+   */
+  materias: LinhaMateriaRaioX[];
 };
 
 /**
@@ -95,7 +125,21 @@ type ProjecaoBanco = {
   amostra_baixa: boolean;
 };
 
-type TopicoBanco = { id: string; nome: string };
+type TopicoBanco = {
+  id: string;
+  nome: string;
+  materia_id?: string | null;
+  materias?: { nome?: unknown } | { nome?: unknown }[] | null;
+};
+
+type ProjecaoMateriaBanco = {
+  materia_id: string;
+  peso: number | string;
+  n_questoes: number;
+  n_topicos: number;
+  tendencia: TendenciaRaioX;
+  amostra_baixa: boolean;
+};
 
 type DominioBanco = {
   topico_id: string;
@@ -268,6 +312,105 @@ function ordenarMapa(a: LinhaMapaPrioridade, b: LinhaMapaPrioridade): number {
   return porNome !== 0 ? porNome : a.topicoId.localeCompare(b.topicoId);
 }
 
+/** O join do PostgREST volta objeto ou lista conforme a cardinalidade lida. */
+function nomeDaMateria(relacao: TopicoBanco["materias"]): string | null {
+  const alvo = Array.isArray(relacao) ? relacao[0] : relacao;
+  const nome = alvo?.nome;
+  return typeof nome === "string" && nome.trim().length > 0 ? nome : null;
+}
+
+/**
+ * Normaliza para exibição.
+ *
+ * O peso da projeção não soma 1 — o amortecimento contra a média empurra cada
+ * linha para perto do centro, e uma matéria sem questão fica com a média
+ * inteira em vez de zero. A tela precisa de porcentagem que feche 100%, então
+ * a divisão pelo total acontece **aqui**, na borda de leitura, e nunca no
+ * banco: o valor cru continua sendo o que o motor do plano consome.
+ */
+function fatiasDe(pesos: readonly number[]): number[] {
+  const total = pesos.reduce((soma, peso) => soma + peso, 0);
+  if (total <= 0) return pesos.map(() => 0);
+  return pesos.map((peso) => peso / total);
+}
+
+/**
+ * Costura a projeção por matéria com os tópicos que a compõem.
+ *
+ * A matéria sem linha na projeção agregada não é inventada aqui: ela some da
+ * leitura por matéria, exatamente como um tópico fora do programa some da
+ * leitura por tópico.
+ */
+function montarMaterias(
+  projecoes: readonly ProjecaoMateriaBanco[],
+  topicos: readonly TopicoBanco[],
+  linhas: readonly LinhaRaioX[],
+): LinhaMateriaRaioX[] {
+  if (projecoes.length === 0) return [];
+
+  const materiaDoTopico = new Map<string, string>();
+  const nomeDeMateria = new Map<string, string>();
+  for (const topico of topicos) {
+    const materiaId = topico.materia_id;
+    if (typeof materiaId !== "string" || materiaId.length === 0) continue;
+    materiaDoTopico.set(topico.id, materiaId);
+    const nome = nomeDaMateria(topico.materias);
+    if (nome !== null) nomeDeMateria.set(materiaId, nome);
+  }
+
+  const topicosPorMateria = new Map<string, LinhaRaioX[]>();
+  for (const linha of linhas) {
+    const materiaId = materiaDoTopico.get(linha.topicoId);
+    if (materiaId === undefined) continue;
+    const lista = topicosPorMateria.get(materiaId);
+    if (lista === undefined) topicosPorMateria.set(materiaId, [linha]);
+    else lista.push(linha);
+  }
+
+  const ordenadas = [...projecoes].sort((a, b) => {
+    const diferenca = Number(b.peso) - Number(a.peso);
+    return diferenca !== 0 ? diferenca : a.materia_id.localeCompare(b.materia_id);
+  });
+
+  const fatias = fatiasDe(
+    ordenadas.map((projecao) => {
+      const peso = Number(projecao.peso);
+      if (!Number.isFinite(peso)) {
+        throw new Error("raiox_projecoes_materia contém peso inválido");
+      }
+      return peso;
+    }),
+  );
+
+  return ordenadas.map((projecao, indice) => {
+    const daMateria = (topicosPorMateria.get(projecao.materia_id) ?? [])
+      .slice()
+      .sort((a, b) =>
+        b.peso !== a.peso ? b.peso - a.peso : a.topico.localeCompare(b.topico, "pt-BR"),
+      );
+
+    // A fatia do tópico é a fatia da matéria repartida entre os tópicos dela:
+    // é isso que faz a soma dos tópicos abertos fechar o número do cabeçalho.
+    const fatiaDaMateria = fatias[indice];
+    const internas = fatiasDe(daMateria.map((linha) => linha.peso));
+
+    return {
+      materiaId: projecao.materia_id,
+      materia: nomeDeMateria.get(projecao.materia_id) ?? "Matéria sem nome",
+      peso: Number(projecao.peso),
+      fatia: fatiaDaMateria,
+      nQuestoes: Number(projecao.n_questoes),
+      nTopicos: Number(projecao.n_topicos),
+      tendencia: projecao.tendencia,
+      amostraBaixa: projecao.amostra_baixa,
+      topicos: daMateria.map((linha, posicao) => ({
+        ...linha,
+        fatia: fatiaDaMateria * internas[posicao],
+      })),
+    } satisfies LinhaMateriaRaioX;
+  });
+}
+
 /**
  * Leitura pública do M5. O cliente de serviço fica aqui, no servidor; a tela
  * recebe apenas o perfil e os campos que precisa apresentar.
@@ -286,7 +429,7 @@ export async function consultarRaioX(
   }
 
   const perfil = perfilConsulta.data as PerfilBanco | null;
-  if (!perfil) return { perfil: null, linhas: [] };
+  if (!perfil) return { perfil: null, linhas: [], materias: [] };
 
   const projecoesConsulta = await cliente
     .from("raiox_projecoes")
@@ -310,29 +453,50 @@ export async function consultarRaioX(
         programaEdital: idsDoPrograma(perfil.programa_edital),
       },
       linhas: [],
+      materias: [],
     };
   }
 
   const topicoIds = projecoes.map((projecao) => projecao.topico_id);
-  const topicosConsulta = await cliente
-    .from("topicos")
-    .select("id, nome")
-    .in("id", topicoIds);
+  const [topicosConsulta, materiasConsulta] = await Promise.all([
+    cliente.from("topicos").select("id, nome, materia_id, materias(nome)").in("id", topicoIds),
+    cliente
+      .from("raiox_projecoes_materia")
+      .select("materia_id, peso, n_questoes, n_topicos, tendencia, amostra_baixa")
+      .eq("perfil_concurso_id", perfil.id)
+      .order("peso", { ascending: false })
+      .order("materia_id", { ascending: true }),
+  ]);
 
   if (topicosConsulta.error) {
     throw falhaAoLer("topicos", topicosConsulta.error.message);
   }
+  if (materiasConsulta.error) {
+    throw falhaAoLer("raiox_projecoes_materia", materiasConsulta.error.message);
+  }
 
-  const nomes = new Map(
-    ((topicosConsulta.data ?? []) as TopicoBanco[]).map((topico) => [
-      topico.id,
-      topico.nome,
-    ]),
-  );
+  const topicos = (topicosConsulta.data ?? []) as TopicoBanco[];
+  const nomes = new Map(topicos.map((topico) => [topico.id, topico.nome]));
 
   if (nomes.size !== new Set(topicoIds).size) {
     throw new Error("raiox_projecoes aponta para tópico que não existe");
   }
+
+  const linhas: LinhaRaioX[] = projecoes.map((projecao) => {
+    const peso = Number(projecao.peso);
+    if (!Number.isFinite(peso)) {
+      throw new Error("raiox_projecoes contém peso inválido");
+    }
+
+    return {
+      topicoId: projecao.topico_id,
+      topico: nomes.get(projecao.topico_id)!,
+      peso,
+      nQuestoes: Number(projecao.n_questoes),
+      tendencia: projecao.tendencia,
+      amostraBaixa: projecao.amostra_baixa,
+    };
+  });
 
   return {
     perfil: {
@@ -342,21 +506,12 @@ export async function consultarRaioX(
       formato: perfil.formato,
       programaEdital: idsDoPrograma(perfil.programa_edital),
     },
-    linhas: projecoes.map((projecao) => {
-      const peso = Number(projecao.peso);
-      if (!Number.isFinite(peso)) {
-        throw new Error("raiox_projecoes contém peso inválido");
-      }
-
-      return {
-        topicoId: projecao.topico_id,
-        topico: nomes.get(projecao.topico_id)!,
-        peso,
-        nQuestoes: Number(projecao.n_questoes),
-        tendencia: projecao.tendencia,
-        amostraBaixa: projecao.amostra_baixa,
-      };
-    }),
+    linhas,
+    materias: montarMaterias(
+      (materiasConsulta.data ?? []) as ProjecaoMateriaBanco[],
+      topicos,
+      linhas,
+    ),
   };
 }
 

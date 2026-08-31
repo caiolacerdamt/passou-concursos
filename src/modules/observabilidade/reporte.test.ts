@@ -117,4 +117,31 @@ describe("ponto unico de reporte", () => {
     expect(descreverErro("texto solto")).toBe("texto solto");
     expect(descreverErro(undefined)).toBe("undefined");
   });
+
+  it("descreverErro serializa objeto puro e recua para String em referencia circular", () => {
+    expect(
+      descreverErro({
+        code: "23502",
+        message: "null value in column",
+      }),
+    ).toBe('{"code":"23502","message":"null value in column"}');
+
+    const circular: Record<string, unknown> = { code: "XX000" };
+    circular.self = circular;
+
+    expect(descreverErro(circular)).toBe("[object Object]");
+  });
+
+  it("saneia dado pessoal dentro do JSON serializado antes de escrever no console", () => {
+    const espiao = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    reportarErro({
+      code: "23505",
+      message: "conta aluno@exemplo.com recusada",
+    });
+
+    expect(espiao.mock.calls[0][2]).toBe(
+      '{"code":"23505","message":"conta [email] recusada"}',
+    );
+  });
 });

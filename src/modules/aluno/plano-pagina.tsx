@@ -2,14 +2,12 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { consultarPerfilEstudo } from "./onboarding";
 import { consultarPlanoDoDia, type PlanoDoDia } from "./plano";
 import { consultarRotulosDosTopicos, type RotuloDoTopico } from "./plano-rotulos";
+import type { DadosGamificacao } from "./gamificacao";
 import { consultarPainelDoDia, type PainelDoDia } from "./painel-do-dia";
-import { PainelDoDiaTela } from "./painel-do-dia-tela";
+import { AcompanhamentoDoDia, CartaoDoDia } from "./painel-do-dia-tela";
+import { Ofensiva } from "./ofensiva-tela";
 import { OnboardingTela } from "./onboarding-tela";
-import {
-  PlanoTela,
-  type ResultadoDoPlano,
-  type SuperficieDoPlano,
-} from "./plano-tela";
+import { PlanoTela, type SuperficieDoPlano } from "./plano-tela";
 import { Estado } from "@/modules/ui/estado";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 
@@ -34,7 +32,7 @@ export async function renderizarPainelDoPlano({
 
   if (!perfil?.onboardingConcluido) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-10">
         <CabecalhoDoPainel estado="onboarding" superficie={superficie} />
         <OnboardingTela acao={acaoDeOnboarding} erro={erro} />
       </div>
@@ -50,7 +48,6 @@ export async function renderizarPainelDoPlano({
 
   return conteudoDoPlano(supabase, {
     superficie,
-    resultado: resultadoDoPlano(parametros.resultado),
     painel,
   });
 }
@@ -59,21 +56,24 @@ async function conteudoDoPlano(
   supabase: Awaited<ReturnType<typeof clienteDaSessao>>,
   opcoes: {
     superficie: SuperficieDoPlano;
-    resultado: ResultadoDoPlano;
     painel: PainelDoDia | null;
   },
 ) {
   const plano = await consultarPlanoDoDia(supabase);
   if (!plano) {
     return (
-      <div className="space-y-8">
-        <CabecalhoDoPainel estado="preparando" superficie={opcoes.superficie} />
-        {opcoes.painel ? <PainelDoDiaTela painel={opcoes.painel} /> : null}
+      <div className="space-y-10">
+        <CabecalhoDoPainel
+          estado="preparando"
+          superficie={opcoes.superficie}
+          gamificacao={opcoes.painel?.gamificacao ?? null}
+        />
         <Estado
           tipo="vazio"
           titulo="Seu plano de hoje ainda está sendo preparado"
           acao="Recarregue em alguns instantes. Seu perfil já está salvo e a geração do plano não depende de uma resposta da IA."
         />
+        {opcoes.painel ? <AcompanhamentoDoDia painel={opcoes.painel} /> : null}
       </div>
     );
   }
@@ -81,19 +81,19 @@ async function conteudoDoPlano(
   const rotulosDosTopicos = await lerRotulosComFallback(supabase, plano);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <CabecalhoDoPainel
         estado="pronto"
         superficie={opcoes.superficie}
         nBlocos={plano.metaCheia.length > 0 ? plano.metaCheia.length : plano.piso.length}
+        gamificacao={opcoes.painel?.gamificacao ?? null}
       />
-      {opcoes.painel ? <PainelDoDiaTela painel={opcoes.painel} /> : null}
       <PlanoTela
         plano={plano}
         rotulosDosTopicos={rotulosDosTopicos}
         superficie={opcoes.superficie}
-        resultado={opcoes.resultado}
       />
+      {opcoes.painel ? <AcompanhamentoDoDia painel={opcoes.painel} /> : null}
     </div>
   );
 }
@@ -111,16 +111,28 @@ async function lerRotulosComFallback(
   }
 }
 
+/**
+ * O alto da tela: quem é o aluno, em que dia ele está, e — no lugar onde antes
+ * ficava a caixa "Estado atual" — o cartão do dia.
+ *
+ * A troca é deliberada: "Plano de hoje disponível" era o estado do *sistema*,
+ * não do aluno. O cartão do dia diz o que ele já fez e o que falta, que é a
+ * pergunta que ele traz ao abrir a tela. Com a gamificação desligada (AD-076) o
+ * cartão não existe, e aí a caixa de estado do sistema volta a ser o que há de
+ * mais honesto para ocupar o canto.
+ */
 function CabecalhoDoPainel({
   estado,
   nBlocos,
   superficie,
+  gamificacao = null,
 }: {
   estado: "onboarding" | "preparando" | "pronto";
   nBlocos?: number;
   superficie: SuperficieDoPlano;
+  gamificacao?: DadosGamificacao | null;
 }) {
-  const nomeDaTela = superficie === "plano" ? "Seu plano de estudo" : "Hoje, um passo de cada vez";
+  const nomeDaTela = superficie === "plano" ? "Seu plano de estudo" : "O que estudar hoje";
   const detalhes = {
     onboarding: "Configure seu ponto de partida para receber um plano compatível com a sua rotina.",
     preparando: "Seu perfil está salvo. A geração do plano acontece sem depender de uma resposta da IA.",
@@ -134,26 +146,33 @@ function CabecalhoDoPainel({
   }[estado];
 
   return (
-    <section className="flex flex-col gap-5 border-b border-linha pb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Área do aluno</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{nomeDaTela}</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-suave">O que importa para hoje aparece aqui, em um só lugar.</p>
+    <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24.75rem)] lg:items-end">
+      <div className="min-w-0 lg:pt-1.5">
+        <p className="font-utilitaria text-xs font-semibold uppercase tracking-[0.16em] text-marca-apoio">
+          Área do aluno
+        </p>
+        <h1 className="mt-3.5 max-w-[15ch] text-4xl font-semibold leading-[1.04] tracking-[-0.035em] sm:text-[2.75rem]">
+          {nomeDaTela}
+        </h1>
+        <p className="mt-3.5 max-w-[44ch] text-[1.0625rem] leading-relaxed text-suave">
+          Estudo, revisão, questões, tudo em um só lugar planejado
+        </p>
+        {gamificacao?.sequencia ? <Ofensiva sequencia={gamificacao.sequencia} /> : null}
       </div>
-      <div className="shrink-0 rounded-lg border border-linha bg-painel px-4 py-3 sm:min-w-56">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-suave">Estado atual</p>
-        <p className="mt-1 font-semibold text-texto">{status}</p>
-        <p className="mt-1 text-xs leading-5 text-suave">{detalhes}</p>
-      </div>
+
+      {gamificacao ? (
+        <CartaoDoDia dados={gamificacao} />
+      ) : (
+        <div className="rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5">
+          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
+            Estado atual
+          </p>
+          <p className="mt-2.5 text-xl font-semibold">{status}</p>
+          <p className="mt-2 text-sm leading-6 text-suave">{detalhes}</p>
+        </div>
+      )}
     </section>
   );
-}
-
-function resultadoDoPlano(valor: string | string[] | undefined): ResultadoDoPlano {
-  const resultado = comoTexto(valor);
-  return resultado === "reordenado" || resultado === "adiado" || resultado === "curta" || resultado === "erro"
-    ? resultado
-    : null;
 }
 
 function comoTexto(valor: string | string[] | undefined): string | undefined {

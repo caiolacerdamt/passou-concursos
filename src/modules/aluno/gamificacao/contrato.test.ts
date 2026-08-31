@@ -12,9 +12,33 @@ const respostaBase = {
   habilitada: true,
   estado: "ok",
   anel: {
-    estudo: { progresso: 2, meta: 2, bruto: 3, percentual: 1, concluido: true },
-    questoes: { progresso: 10, meta: 10, bruto: 14, percentual: 1, concluido: true },
-    revisao: { progresso: 1, meta: 2, bruto: 1, percentual: 0.5, concluido: false },
+    estudo: {
+      progresso: 2,
+      meta: 2,
+      piso_meta: 1,
+      piso_progresso: 3,
+      bruto: 3,
+      percentual: 1,
+      concluido: true,
+    },
+    questoes: {
+      progresso: 10,
+      meta: 10,
+      piso_meta: 5,
+      piso_progresso: 2,
+      bruto: 14,
+      percentual: 1,
+      concluido: true,
+    },
+    revisao: {
+      progresso: 1,
+      meta: 2,
+      piso_meta: 1,
+      piso_progresso: 0,
+      bruto: 1,
+      percentual: 0.5,
+      concluido: false,
+    },
   },
   pontos: {
     dia: 45,
@@ -52,9 +76,9 @@ describe("contrato da gamificação", () => {
     const dados = mapearGamificacao(respostaBase);
 
     expect(dados.anel).toMatchObject({
-      estudo: { progresso: 2, meta: 2, bruto: 3, percentual: 1 },
-      questoes: { progresso: 10, meta: 10, bruto: 14, percentual: 1 },
-      revisao: { progresso: 1, meta: 2, bruto: 1, percentual: 0.5 },
+      estudo: { progresso: 2, meta: 2, pisoMeta: 1, pisoProgresso: 1, bruto: 3, percentual: 1 },
+      questoes: { progresso: 10, meta: 10, pisoMeta: 5, pisoProgresso: 2, bruto: 14, percentual: 1 },
+      revisao: { progresso: 1, meta: 2, pisoMeta: 1, pisoProgresso: 0, bruto: 1, percentual: 0.5 },
     });
     expect(dados.pontos).toEqual({
       dia: 45,
@@ -96,6 +120,8 @@ describe("contrato da gamificação", () => {
     expect(dados.anel.estudo).toEqual({
       progresso: 0,
       meta: 0,
+      pisoMeta: 0,
+      pisoProgresso: 0,
       bruto: 0,
       percentual: 0,
       concluido: false,
@@ -131,5 +157,17 @@ describe("contrato da gamificação", () => {
         conquistas: [{ id: "ranking", desbloqueada_em: "2026-08-24T00:00:00Z" }],
       }),
     ).toThrow(/conquista desconhecida/);
+  });
+
+  it("recusa piso maior que a meta da dimensão", () => {
+    expect(() =>
+      mapearGamificacao({
+        ...respostaBase,
+        anel: {
+          ...respostaBase.anel,
+          estudo: { ...respostaBase.anel.estudo, piso_meta: 3 },
+        },
+      }),
+    ).toThrow(/piso_meta ultrapassa meta/);
   });
 });

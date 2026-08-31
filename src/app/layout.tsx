@@ -29,7 +29,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR">
+    /*
+     * `suppressHydrationWarning` cobre UM caso e é o idiomático para ele: o
+     * layout da landing escreve `sc-armado` no `<html>` por script inline,
+     * durante o parse, para armar o esconde-esconde do motor antes da primeira
+     * pintura. O servidor não emitiu essa classe, então o React acusa
+     * divergência de atributo no `<html>` — barulho no console por um atributo
+     * que É para divergir. A supressão vale só neste elemento e não desce para
+     * os filhos.
+     */
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${geist.variable} ${geistMono.variable}`}>{children}</body>
     </html>
   );

@@ -3,8 +3,6 @@
 import Script from "next/script";
 import { useEffect } from "react";
 
-import type { TopicoFrequente } from "@/modules/acervo";
-
 import { ligarComportamento } from "./assinatura";
 
 declare global {
@@ -17,9 +15,49 @@ declare global {
 }
 
 /**
+ * Raízes que já receberam uma instância do motor.
+ *
+ * A trava antiga era `instances.length > 0`, um contador global — e contador
+ * global não sabe distinguir "já montei nesta página" de "montei na página
+ * anterior, que o roteador já descartou". Numa volta por navegação
+ * client-side o `<main>` é outro elemento, o contador continua em 1, o mount é
+ * pulado, o IntersectionObserver nunca observa o DOM novo e todo `[data-sc-in]`
+ * fica preso em `opacity: 0`. Um `WeakSet` de raízes responde a pergunta certa
+ * e ainda solta a referência quando o elemento sai do documento.
+ */
+const raizesMontadas = new WeakSet<HTMLElement>();
+
+/** Prazo do motor para publicar `sc-ready` antes de a rede de segurança valer. */
+const PRAZO_DO_MOTOR_MS = 1500;
+
+/**
+ * Monta o motor na raiz da página, não no `body`.
+ *
+ * `mount()` só usa a raiz para dois `querySelectorAll` e para ler a taxa de
+ * lerp, então montar no `<main>` da rota dá o mesmo resultado e ganha uma
+ * propriedade que o `body` não tem: o `<main>` é descartado e recriado pelo
+ * roteador, então "esta página já foi montada?" vira uma pergunta com resposta.
+ */
+function montarMotor() {
+  const motor = window.ScrollCraft;
+  const raiz = document.querySelector<HTMLElement>("main#topo");
+
+  if (!motor || !raiz) return revelarSemMotor();
+  if (raizesMontadas.has(raiz)) return;
+
+  raizesMontadas.add(raiz);
+  motor.mount(raiz);
+}
+
+/** O motor não vai vir. Solta o texto que ele estava segurando escondido. */
+function revelarSemMotor() {
+  document.documentElement.classList.add("sc-falhou");
+}
+
+/**
  * Camada de movimento da landing.
  *
- * Componente sem marcação própria: as sete seções continuam sendo server
+ * Componente sem marcação própria: as dez seções continuam sendo server
  * components e só expõem ganchos `data-sc-*`. Isto aqui monta no cliente e liga
  * o motor neles — a mesma costura que a rodada anterior usava com o GSAP.
  *
@@ -30,26 +68,43 @@ declare global {
  * servidor, e "adaptar para importar" seria editar o motor pela porta dos
  * fundos.
  */
-export function MotorDaLanding({ topicos }: { topicos: readonly TopicoFrequente[] }) {
+export function MotorDaLanding() {
   /*
-   * O comportamento próprio (barra, pico, contador) não espera o motor: ele lê
-   * `--sc-p` do elemento do pico a cada quadro, e enquanto o motor não montou
-   * esse valor é 0 — que é exatamente o primeiro quadro do movimento. Sem
-   * ordem imposta entre os dois, nenhum deles pode travar o outro.
+   * O comportamento próprio (barra, assinatura, contador) não espera o motor:
+   * ele lê `--sc-p` do ato 4 a cada quadro, e enquanto o motor não montou esse
+   * valor é 0 — que é exatamente o primeiro quadro do movimento. Sem ordem
+   * imposta entre os dois, nenhum deles pode travar o outro.
    */
-  useEffect(() => ligarComportamento(topicos), [topicos]);
+  useEffect(() => ligarComportamento(), []);
+
+  /*
+   * Rede de segurança do revelar. O motor é a única coisa que devolve opacidade
+   * a `[data-sc-in]`, então "motor não montou" e "página sem texto" eram o mesmo
+   * evento. Este temporizador quebra esse acoplamento: passado o prazo sem
+   * `sc-ready`, `sc-falhou` entra e o CSS revela tudo de uma vez.
+   *
+   * Ele vive aqui e não no `onReady` porque precisa cobrir também o caso em que
+   * `onReady` nunca dispara — script bloqueado por rede, por extensão ou por
+   * CSP. Se o motor montar dentro do prazo, o temporizador é cancelado e nada
+   * disto aparece no DOM.
+   */
+  useEffect(() => {
+    const raiz = document.documentElement;
+    if (raiz.classList.contains("sc-ready")) return;
+
+    const prazo = window.setTimeout(() => {
+      if (!raiz.classList.contains("sc-ready")) raiz.classList.add("sc-falhou");
+    }, PRAZO_DO_MOTOR_MS);
+
+    return () => window.clearTimeout(prazo);
+  }, []);
 
   return (
     <Script
       src="/motor/scrollcraft.js"
       strategy="afterInteractive"
-      onReady={() => {
-        const motor = window.ScrollCraft;
-        // `onReady` dispara de novo a cada montagem, inclusive quando o script
-        // já está no documento. Duas instâncias dirigiriam os mesmos atos.
-        if (!motor || motor.instances.length > 0) return;
-        motor.mount(document.body);
-      }}
+      onReady={montarMotor}
+      onError={revelarSemMotor}
     />
   );
 }

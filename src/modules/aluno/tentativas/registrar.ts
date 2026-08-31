@@ -60,7 +60,15 @@ export async function registrarTentativa(
         "Esta questao nao faz parte de uma sessao sua.",
       );
     }
-    throw error;
+    throw new Error(
+      `registrar_tentativa falhou: ${JSON.stringify({
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+      })}`,
+      { cause: error },
+    );
   }
 
   const linha = (Array.isArray(data) ? data[0] : data) as

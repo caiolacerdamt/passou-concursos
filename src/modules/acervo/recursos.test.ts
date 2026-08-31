@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   consultarRecursosDoTopico,
+  consultarRecursosVistos,
   lerRecursosCsv,
   lerRecursosEstudo,
   lerRecursosJson,
@@ -91,6 +92,7 @@ describe("recursos de estudo curados", () => {
     const cadeia = {
       select: vi.fn(() => cadeia),
       eq: vi.fn(() => cadeia),
+      in: vi.fn(() => cadeia),
       order: vi.fn(() => cadeia),
       then: (resolve: (valor: unknown) => unknown, reject: (erro: unknown) => unknown) =>
         Promise.resolve({
@@ -125,5 +127,23 @@ describe("recursos de estudo curados", () => {
     ]);
     expect(cadeia.eq).toHaveBeenNthCalledWith(1, "topico_id", "topico-1");
     expect(cadeia.eq).toHaveBeenNthCalledWith(2, "ativo", true);
+  });
+
+  it("lê somente as marcas dos recursos pedidos", async () => {
+    const cadeia = {
+      select: vi.fn(() => cadeia),
+      in: vi.fn(() => cadeia),
+      then: (resolve: (valor: unknown) => unknown, reject: (erro: unknown) => unknown) =>
+        Promise.resolve({ data: [{ recurso_id: "recurso-1" }], error: null }).then(resolve, reject),
+    };
+    const cliente = { from: vi.fn(() => cadeia) };
+
+    await expect(
+      consultarRecursosVistos(cliente as never, ["recurso-1", "recurso-2"]),
+    ).resolves.toEqual(
+      new Set(["recurso-1"]),
+    );
+    expect(cliente.from).toHaveBeenCalledWith("recurso_visto");
+    expect(cadeia.in).toHaveBeenCalledWith("recurso_id", ["recurso-1", "recurso-2"]);
   });
 });

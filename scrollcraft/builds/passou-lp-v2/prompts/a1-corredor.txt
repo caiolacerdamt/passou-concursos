@@ -1,0 +1,17 @@
+3D rendered illustration. Soft matte clay-like surfaces with absolutely no gloss, no plastic shine, no specular highlights. Gentle diffuse lighting with soft ambient occlusion contact shadows. Strongly stylised chunky simplified forms with soft rounded volumes, like a modern 3D diorama, closer to a matte clay model than to a photograph. No outlines, no cel shading, no line art.
+PALETTE. Everything in the image is restricted to: warm cream #F5F2E9, warm off-white #FFFDF8, sand #D8CDB8, deep green #245B46, mid green #4F8B72, pale sage #E6EEE9, warm near-black #1B1D1A. Nothing else.
+Forbidden: any text, letter, number, word or logo anywhere in the image; gradient background; neon; purple; magenta; photorealism; glossy plastic; rim light; lens flare; any person, any human figure, any hand.
+
+SCENE: the interior of a long straight narrow corridor, seen in strong symmetrical one point perspective. The camera sits in the MIDDLE of the corridor, low, near floor level, pointing straight down the corridor into the distance. BOTH side walls are fully visible at once, one on the left and one on the right, converging towards the far end. The corridor is long and narrow: the two walls are close together, and they run away from the camera for a great distance.
+
+THE WALLS: both side walls of the corridor are built entirely out of stacked paper. Thousands of plain unmarked rectangular cream sheets stacked flat in dense horizontal layers, like enormous compressed stacks of loose paper, forming solid walls. The walls rise straight up and continue out of the top of the frame, so the top of the walls is never visible and the corridor reads as impossibly tall. The paper is plain, matte and completely unmarked.
+
+THE LEFT WALL, hard requirement: the left third of the frame is filled edge to edge by the receding surface of the left paper wall, kept plain, even, softly lit and very low in contrast, with no bright spot, no object, no opening and no strong detail anywhere on it. It is a calm empty surface. The right wall mirrors it on the other side.
+
+THE FLOOR: plain matte cream floor running away from the camera down the middle of the corridor.
+
+THE FAR END: the vanishing point sits slightly to the RIGHT of the centre of the frame. Far away at the end of the corridor the walls stop and open onto a bright room, seen as a clear bright rectangular opening in the distance, about one third of the frame height tall and clearly wider than it is tall. The little room is filled with warm clean light that is noticeably brighter than the dim corridor. Inside that distant bright opening, small but readable, stand three chunky solid rectangular blocks of different heights in deep green #245B46 and mid green #4F8B72, and one simple chunky chair. Nothing else is inside the room.
+
+LIGHT: the corridor itself is dim, calm and evenly lit with soft shadowless light, gradually getting brighter towards the far end. All the warm light in the image comes from the small distant room. No visible lamp, no light beam, no glow effect.
+
+Wide horizontal framing, deep perspective, strong sense of depth and length.

@@ -39,6 +39,15 @@ const base: DadosProgresso = {
     topicosTocados: 1,
     revisoesConcluidas: 1,
     tendencia: "subindo",
+    porDia: [
+      { data: "2026-08-16", questoes: 0, acertos: 0 },
+      { data: "2026-08-17", questoes: 1, acertos: 1 },
+      { data: "2026-08-18", questoes: 0, acertos: 0 },
+      { data: "2026-08-19", questoes: 1, acertos: 1 },
+      { data: "2026-08-20", questoes: 0, acertos: 0 },
+      { data: "2026-08-21", questoes: 1, acertos: 0 },
+      { data: "2026-08-22", questoes: 1, acertos: 1 },
+    ],
   },
 };
 

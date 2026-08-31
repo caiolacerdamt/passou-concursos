@@ -112,17 +112,20 @@ describe("/app", () => {
     expect(html).toContain("O diagnóstico adaptativo é opcional");
   });
 
-  it("mostra piso, meta cheia, motivo e frase quando o plano existe", async () => {
+  it("mostra mínimo, meta, descrição do tipo e frase quando o plano existe", async () => {
     dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
     dependencias.plano.mockResolvedValue(plano);
 
     const html = renderToStaticMarkup(await renderApp());
 
     expect(dependencias.plano).toHaveBeenCalledTimes(1);
-    expect(html).toContain("Piso");
-    expect(html).toContain("Meta cheia");
-    expect(html).toContain("A revisão vence hoje.");
-    expect(html).toContain("Este tema tem peso alto na prova.");
+    expect(html).toContain("MÍNIMO");
+    expect(html).toContain("META");
+    expect(html).toContain("lg:items-end");
+    expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
+    expect(html).toContain("Assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem.");
+    expect(html).not.toContain("A revisão vence hoje.");
+    expect(html).not.toContain("Este tema tem peso alto na prova.");
     expect(html).toContain("Hoje, consistência antes de velocidade.");
     expect(html).toContain("/app/estudo?bloco=bloco-piso");
   });
@@ -203,6 +206,15 @@ describe("/app", () => {
         topicosTocados: 3,
         revisoesConcluidas: 2,
         tendencia: "subindo" as const,
+        porDia: [
+          { data: "2026-08-18", questoes: 0, acertos: 0 },
+          { data: "2026-08-19", questoes: 2, acertos: 2 },
+          { data: "2026-08-20", questoes: 3, acertos: 2 },
+          { data: "2026-08-21", questoes: 0, acertos: 0 },
+          { data: "2026-08-22", questoes: 4, acertos: 3 },
+          { data: "2026-08-23", questoes: 1, acertos: 0 },
+          { data: "2026-08-24", questoes: 2, acertos: 2 },
+        ],
       },
       recuperacao: [
         {
@@ -220,7 +232,7 @@ describe("/app", () => {
 
     expect(dependencias.painel).toHaveBeenCalledWith(expect.anything(), { dataProva: "2026-09-10" });
     expect(html).toContain("17 dias para a prova");
-    expect(html).toContain("Anel de hoje");
+    expect(html).toContain("Você está no meio do dia");
     expect(html).toContain("Sua semana até aqui");
     expect(html).toContain("Erros que merecem outra chance");
     expect(html).toContain("/app/sessao?refacao=1&amp;topico=topico-1&amp;causa=errei_a_conta");

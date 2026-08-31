@@ -36,10 +36,26 @@ const geistMono = Geist_Mono({
 
 export default function LayoutDaLanding({ children }: LayoutProps<"/">) {
   return (
-    <div
-      className={`lp ${geist.variable} ${geistMono.variable} min-h-dvh bg-papel font-lp text-tinta`}
-    >
-      {children}
-    </div>
+    <>
+      {/*
+        Arma o esconde-esconde do motor. `scrollcraft.css` zera a opacidade de
+        todo `[data-sc-in]` e só o motor devolve; sem esta classe, `landing.css`
+        mantém o texto visível, então JS ausente ou quebrado nunca apaga
+        conteúdo. Roda durante o parse, antes da primeira pintura, e por isso é
+        inline e não um `<Script>`: um script assíncrono chegaria depois do
+        primeiro quadro e o texto piscaria.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.documentElement.classList.add("sc-armado")`,
+        }}
+      />
+
+      <div
+        className={`lp ${geist.variable} ${geistMono.variable} min-h-dvh bg-papel font-lp text-tinta`}
+      >
+        {children}
+      </div>
+    </>
   );
 }

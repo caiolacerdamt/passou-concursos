@@ -20,6 +20,7 @@ import { pathToFileURL } from "node:url";
 
 import { Client } from "pg";
 
+import { nomeDoRotuloDoTopico } from "@/modules/aluno/rotulo-do-topico";
 import { definirLeitorDeConfig } from "@/modules/config";
 import {
   type ClienteSql,
@@ -55,6 +56,7 @@ export const INSTRUCAO = [
 
 export type BlocoDoPlano = {
   tipo: string;
+  materia: string | null;
   topico: string | null;
   motivo: string | null;
 };
@@ -68,7 +70,9 @@ export type PlanoSemFrase = {
 /** A parte variavel do pedido: o que o SQL decidiu para este aluno hoje. */
 export function entradaDoPedido(plano: PlanoSemFrase): string {
   const linhas = plano.blocos.map((bloco) => {
-    const alvo = bloco.topico ?? "assuntos misturados";
+    const alvo =
+      nomeDoRotuloDoTopico({ materia: bloco.materia, topico: bloco.topico }) ??
+      "assuntos misturados";
     const porque = bloco.motivo ? ` (${bloco.motivo})` : "";
     return `- ${bloco.tipo}: ${alvo}${porque}`;
   });
@@ -97,9 +101,11 @@ export const CONSULTA_DOS_PLANOS = `
 `;
 
 export const CONSULTA_DOS_BLOCOS = `
-  select pb.plano_dia_id, pb.tipo::text as tipo, pb.motivo, t.nome as topico
+  select pb.plano_dia_id, pb.tipo::text as tipo, pb.motivo,
+         m.nome as materia, t.nome as topico
     from public.plano_bloco pb
-    left join public.topicos t on t.id = pb.topico_id
+   left join public.topicos t on t.id = pb.topico_id
+   left join public.materias m on m.id = t.materia_id
    where pb.plano_dia_id = any($1)
      and pb.nivel = 'meta_cheia'
    order by pb.plano_dia_id, pb.ordem
@@ -121,6 +127,10 @@ export async function planosSemFrase(
     const lista = porPlano.get(id) ?? [];
     lista.push({
       tipo: String(bloco.tipo),
+      materia:
+        bloco.materia === null || bloco.materia === undefined
+          ? null
+          : String(bloco.materia),
       topico: bloco.topico === null ? null : String(bloco.topico),
       motivo: bloco.motivo === null ? null : String(bloco.motivo),
     });

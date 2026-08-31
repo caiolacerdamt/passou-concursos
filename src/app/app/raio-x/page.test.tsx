@@ -40,11 +40,34 @@ const dados = {
   linhas: [
     {
       topicoId: "topico-1",
-      topico: "Matemática Financeira",
+      topico: "Juros compostos",
       peso: 0.7,
       nQuestoes: 3,
       tendencia: "subindo" as const,
       amostraBaixa: true,
+    },
+  ],
+  materias: [
+    {
+      materiaId: "materia-1",
+      materia: "Matemática Financeira",
+      peso: 0.7,
+      fatia: 1,
+      nQuestoes: 3,
+      nTopicos: 7,
+      tendencia: "subindo" as const,
+      amostraBaixa: true,
+      topicos: [
+        {
+          topicoId: "topico-1",
+          topico: "Juros compostos",
+          peso: 0.7,
+          nQuestoes: 3,
+          tendencia: "subindo" as const,
+          amostraBaixa: true,
+          fatia: 1,
+        },
+      ],
     },
   ],
 };

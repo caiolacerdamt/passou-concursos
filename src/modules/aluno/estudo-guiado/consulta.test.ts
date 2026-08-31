@@ -10,6 +10,7 @@ function clienteCom(respostas: Record<string, { data: unknown; error: null | { m
     const cadeia = {
       select: vi.fn(() => cadeia),
       eq: vi.fn(() => cadeia),
+      in: vi.fn(() => cadeia),
       not: vi.fn(() => cadeia),
       limit: vi.fn(() => cadeia),
       order: vi.fn(() => cadeia),
@@ -38,10 +39,28 @@ const bloco = {
 };
 
 describe("leitor do estudo guiado", () => {
-  it("preserva o snapshot, enriquece taxonomia e lê recurso/agenda pela RLS", async () => {
+  it("preserva o snapshot, enriquece taxonomia e lê recurso/marcas pela RLS", async () => {
     const { cliente, chamadas } = clienteCom({
       plano_bloco: { data: bloco, error: null },
-      sessoes: { data: null, error: null },
+      sessoes: {
+        data: [{ id: "sessao-aberta", encerrada_em: null }],
+        error: null,
+      },
+      sessao_itens: {
+        data: [
+          { id: "item-1", respondido_em: "2026-08-25T12:00:00Z" },
+          { id: "item-2", respondido_em: "2026-08-25T12:01:00Z" },
+          { id: "item-3", respondido_em: "2026-08-25T12:02:00Z" },
+          { id: "item-4", respondido_em: "2026-08-25T12:03:00Z" },
+          { id: "item-5", respondido_em: null },
+          { id: "item-6", respondido_em: null },
+          { id: "item-7", respondido_em: null },
+          { id: "item-8", respondido_em: null },
+          { id: "item-9", respondido_em: null },
+          { id: "item-10", respondido_em: null },
+        ],
+        error: null,
+      },
       topicos: {
         data: {
           id: bloco.topico_id,
@@ -50,7 +69,6 @@ describe("leitor do estudo guiado", () => {
         },
         error: null,
       },
-      revisao_agenda: { data: { due: "2026-08-30" }, error: null },
       materias: { data: { id: "f3ba4a98-57df-4803-a56c-7d69de94a5bf", nome: "Conhecimentos Bancários" }, error: null },
       recursos_estudo: {
         data: [
@@ -67,6 +85,10 @@ describe("leitor do estudo guiado", () => {
         ],
         error: null,
       },
+      recurso_visto: {
+        data: [{ recurso_id: "7d86194a-f1cf-4e65-bc2e-69d67766366a" }],
+        error: null,
+      },
     });
 
     await expect(consultarEstudoGuiado(cliente, bloco.id)).resolves.toMatchObject({
@@ -81,15 +103,16 @@ describe("leitor do estudo guiado", () => {
       },
       materia: "Conhecimentos Bancários",
       topico: "Mercado de crédito",
-      proximaRevisao: "2026-08-30",
-      recursos: [{ titulo: "Aula sobre crédito", ordem: 1 }],
+      andamento: { respondidas: 4, total: 10 },
+      recursos: [{ titulo: "Aula sobre crédito", ordem: 1, visto: true }],
     });
     expect(chamadas).toEqual([
       "plano_bloco",
       "sessoes",
+      "sessao_itens",
       "topicos",
       "recursos_estudo",
-      "revisao_agenda",
+      "recurso_visto",
       "materias",
     ]);
   });
@@ -103,7 +126,7 @@ describe("leitor do estudo guiado", () => {
 
     const concluido = clienteCom({
       plano_bloco: { data: bloco, error: null },
-      sessoes: { data: { id: "sessao-concluida" }, error: null },
+      sessoes: { data: [{ id: "sessao-concluida", encerrada_em: "2026-08-25T12:00:00Z" }], error: null },
     });
     await expect(consultarEstudoGuiado(concluido.cliente, bloco.id)).rejects.toBeInstanceOf(
       EstudoGuiadoRecusado,
@@ -111,17 +134,17 @@ describe("leitor do estudo guiado", () => {
     expect(concluido.chamadas).toEqual(["plano_bloco", "sessoes"]);
   });
 
-  it("mantém bloco sem tópico utilizável e não cria revisão", async () => {
+  it("mantém bloco sem tópico utilizável sem consultar conteúdo", async () => {
     const semTopico = clienteCom({
       plano_bloco: { data: { ...bloco, topico_id: null }, error: null },
-      sessoes: { data: null, error: null },
+      sessoes: { data: [], error: null },
     });
 
     await expect(consultarEstudoGuiado(semTopico.cliente, bloco.id)).resolves.toMatchObject({
       materia: null,
       topico: null,
       recursos: [],
-      proximaRevisao: null,
+      andamento: null,
     });
     expect(semTopico.chamadas).toEqual(["plano_bloco", "sessoes"]);
   });

@@ -7,6 +7,8 @@ import {
   DURACAO_POMODORO_FOCO_SEGUNDOS,
   DURACAO_POMODORO_PAUSA_SEGUNDOS,
   formatarTempoCronometro,
+  sincronizarCronometro,
+  trocarConfiguracaoDoCronometro,
 } from "./cronometro";
 
 describe("cronômetro de estudo", () => {
@@ -61,5 +63,107 @@ describe("cronômetro de estudo", () => {
     const estado = alternarCronometro(criarEstadoDoCronometro({ modo: "foco", duracaoMinutos: 45 }));
     expect(avancarCronometro(estado, 0.9)).toEqual(estado);
     expect(avancarCronometro(estado, -4)).toEqual(estado);
+  });
+
+  it("deriva o restante do relógio de parede, não da quantidade de ticks", () => {
+    const iniciado = alternarCronometro(
+      criarEstadoDoCronometro({ modo: "foco", duracaoMinutos: 30 }),
+      1_000,
+    );
+
+    const depoisDeUmMinuto = sincronizarCronometro(iniciado, 61_500);
+
+    expect(depoisDeUmMinuto).toMatchObject({
+      restanteSegundos: 1_740,
+      executando: true,
+      iniciadoEm: 1_000,
+    });
+
+    const depoisDeMaisUmSegundo = sincronizarCronometro(
+      depoisDeUmMinuto,
+      62_500,
+    );
+
+    expect(depoisDeMaisUmSegundo.restanteSegundos).toBe(1_739);
+  });
+
+  it("pausa na transição de fase e encerra um retorno muito atrasado", () => {
+    const pomodoro = alternarCronometro(
+      criarEstadoDoCronometro({ modo: "pomodoro" }),
+      0,
+    );
+
+    const pausa = sincronizarCronometro(
+      pomodoro,
+      DURACAO_POMODORO_FOCO_SEGUNDOS * 1_000,
+    );
+
+    expect(pausa).toMatchObject({
+      fase: "pausa",
+      restanteSegundos: DURACAO_POMODORO_PAUSA_SEGUNDOS,
+      executando: false,
+      iniciadoEm: null,
+    });
+
+    const atrasado = sincronizarCronometro(
+      alternarCronometro(
+        criarEstadoDoCronometro({ modo: "foco", duracaoMinutos: 30 }),
+        0,
+      ),
+      (1_800 + 3_600 + 1) * 1_000,
+    );
+
+    expect(atrasado).toMatchObject({
+      fase: "concluido",
+      restanteSegundos: 0,
+      executando: false,
+      iniciadoEm: null,
+    });
+  });
+
+  it("troca a duração preservando o foco transcorrido e os ciclos", () => {
+    const cincoMinutosDeFoco = sincronizarCronometro(
+      alternarCronometro(
+        criarEstadoDoCronometro({ modo: "foco", duracaoMinutos: 30 }),
+        0,
+      ),
+      5 * 60 * 1_000,
+    );
+
+    const comCiclos = { ...cincoMinutosDeFoco, ciclosCompletos: 3 };
+    const trocado = trocarConfiguracaoDoCronometro(
+      comCiclos,
+      { modo: "foco", duracaoMinutos: 45 },
+      5 * 60 * 1_000,
+    );
+
+    expect(trocado).toMatchObject({
+      modo: "foco",
+      restanteSegundos: 2_400,
+      executando: true,
+      ciclosCompletos: 3,
+      iniciadoEm: 5 * 60 * 1_000,
+    });
+  });
+
+  it("não transforma pausa em foco ao trocar de técnica", () => {
+    const pausa = avancarCronometro(
+      alternarCronometro(criarEstadoDoCronometro({ modo: "pomodoro" })),
+      DURACAO_POMODORO_FOCO_SEGUNDOS,
+    );
+
+    const trocado = trocarConfiguracaoDoCronometro(
+      pausa,
+      { modo: "foco", duracaoMinutos: 30 },
+      0,
+    );
+
+    expect(trocado).toMatchObject({
+      modo: "foco",
+      fase: "foco",
+      restanteSegundos: 1_800,
+      executando: false,
+      ciclosCompletos: 0,
+    });
   });
 });

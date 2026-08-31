@@ -569,37 +569,51 @@
 - **Date**: 2026-08-30
 - **Status**: active
 
+### AD-114
+- **Decision**: A definição vigente de `gera_plano_do_dia` volta a viver **inteira num arquivo de
+  migration**, não como patch de texto sobre outra. A `20260830130000_w2a_reaplica_correcoes.sql`
+  reescreve o corpo com as três correções do W2-A embutidas, e a técnica de patchar por
+  `pg_get_functiondef` + `replace` (usada na `20260824102100`) fica proibida para função de domínio:
+  quem precisar mudar a função copia o corpo **do arquivo mais recente que a cria**, nunca de uma
+  migration anterior.
+- **Reason**: A `20260825141000` se propôs a acentuar quatro literais de `motivo` e copiou o corpo da
+  `20260824102000` — que já não era a definição vigente. Entre as duas, a `20260824102100` havia
+  patchado a função em três pontos, e o `create or replace` de corpo inteiro os desfez em silêncio:
+  o plano vazio fora da agenda deixou de ser gravado e de contar no retorno, a reserva de um slot
+  para o simulado sumiu e o desvio de cobertura virgem voltou a valer sem `perfil_concurso` ativo.
+  Só a primeira perda tinha teste — `ciclo-adaptativo` W2-A recebia 0 onde espera 1 —, então duas
+  regressões viajaram para a `main` sem nenhum sinal. Enquanto a definição vigente for "arquivo A
+  mais patch em B", a próxima cópia de corpo inteiro repete o acidente.
+- **Trade-off**: O repositório passa a carregar mais uma cópia de 33 KB da mesma função, e um `diff`
+  entre migrations continua sendo a única forma de ver o que mudou de uma versão para a outra. Aceito:
+  o custo é disco e ruído de leitura; o custo do outro lado foi regressão silenciosa em produção-
+  candidata. As duas correções sem teste (reserva do simulado, porteiro da cobertura) **continuam sem
+  teste** — quem mexer na SPEC 32 ou no ciclo adaptativo deve fechar essa lacuna.
+- **Scope**: `supabase/migrations/20260830130000_w2a_reaplica_correcoes.sql`,
+  `src/modules/lgpd/grupo-1.ts`.
+- **Date**: 2026-08-30
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Rodada de design do app (`/app/*`), continuação da AD-111/AD-112. Nesta sessão:
-  **`/app/raio-x`**. Ajuste de superfície fora da numeração de specs — mas com mudança de dados, por
-  isso fecha com a **AD-113**.
-- **Phase / Task**: concluída a tela do Raio-X, ponta a ponta (banco → módulo → tela). As demais
-  telas de `/app/*` (Plano, Sessão, Progresso, Conta, Reembolso) continuam com o conteúdo antigo
-  dentro da barra nova.
-- **Completed**: `raiox_projecoes_materia` + segundo bloco em `recalcula_raiox()` com a mesma fórmula
-  agrupada por matéria e o mesmo denominador; `consultarRaioX` devolve `materias` com os tópicos
-  aninhados, `peso` cru e `fatia` normalizada (a fatia do tópico reparte a da matéria);
-  `agruparMapaPorMateria` cruza o mapa por tópico com a projeção agregada — domínio ponderado pelo
-  peso do tópico (média simples deixava um tópico irrelevante mascarar o que carrega a matéria),
-  cobertura como "x de y" e contagem de revisões devidas; tela reescrita no padrão do `/app`
-  (cabeçalho de duas colunas, um cartão breu, tabela de matérias que abre nos tópicos, Mapa de
-  Prioridade com abas Tabela/Gráfico), usando a coluna cheia do shell em vez do `max-w-3xl`.
-  Corrigidos dois guardas do teste da tela que passavam por acidente: o regex de largura em px
-  atravessava o atributo `style`, e o de `bg-breu` casava com `bg-breu-verde`/`bg-breu-tinta`.
-- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/raiox` e `src/app/app/raio-x`,
-  `vitest --project unit` 901/901, `next build` exit 0 (31 rotas).
-- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`, e
-  `select public.recalcula_raiox()` rodado — 85 linhas por tópico e 8 por matéria. `test:db` 409
-  passando, com **as mesmas 2 falhas que já existiam na branch**, nenhuma nova: `grupo-1` acusa
-  `recurso_visto` fora de `TABELAS_GRUPO_1` (tabela com `user_id` criada na migration
-  `20260825142000` e nunca registrada no inventário do direito ao esquecimento — é bug real de LGPD,
-  não do Raio-X) e `ciclo-adaptativo` W2-A devolve 0 blocos onde espera 1. O peso cru por matéria
-  soma ~102%, o que confirma a normalização na borda de leitura.
-- **In-progress** (file:line): **verificação visual não feita** (a rota exige matrícula ativa). Falta
-  olho humano em: a tabela de matérias a 390px (as colunas empilham por `grid-cols-[...]`), o gráfico
-  do mapa com rótulo longo de matéria, e o cartão breu quando o mapa pessoal falha. Falta também
-  conferir se `raiox_projecoes` tem linha hoje e se `perfil_concurso.programa_edital` está preenchido
-  — sem isso a tela nasce vazia por dado, não por código.
-- **Next step**: aplicar a migration e conferir a tela com conta autenticada; depois, as demais telas
-  de `/app/*`, ou seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Feature**: Fechamento do PR #33 (landing v2 — corredor de nove atos). O código da landing já
+  estava verde; o que segurava o PR eram **duas falhas de `test:db` herdadas da `main`**, que este
+  PR passa a corrigir junto. Ajuste fora da numeração de specs — fecha com a **AD-114**.
+- **Phase / Task**: concluída. `test:db` volta a 411/411 na branch.
+- **Completed**: (1) `recurso_visto` entra em `TABELAS_GRUPO_1` — tabela com `user_id` criada na
+  `20260825142000` e nunca registrada no inventário do direito ao esquecimento; era bug real de LGPD,
+  não do teste. (2) `20260830130000_w2a_reaplica_correcoes.sql` reaplica as três correções do W2-A
+  que a `20260825141000` desfez ao copiar o corpo da `20260824102000` em vez da definição vigente:
+  plano vazio fora da agenda (com `v_planos + 1`), reserva de um slot quando
+  `flag.m4.simulado_semanal` está ligada e o porteiro de `perfil_concurso` ativo no desvio de
+  cobertura virgem. Os quatro literais acentuados da `20260825141000` foram preservados.
+- **Gates**: `tsc --noEmit` limpo, `vitest --project unit` 905/905, `test:db` **411/411**
+  (era 404 passando + 2 falhando).
+- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`;
+  `pg_get_functiondef` confirma as três âncoras de volta e o acento intacto.
+- **In-progress** (file:line): continua pendente a **verificação visual do `/app/raio-x`** com conta
+  autenticada (a rota exige matrícula ativa) — tabela de matérias a 390px, gráfico com rótulo longo e
+  cartão breu quando o mapa pessoal falha. As duas correções do W2-A sem teste (reserva do simulado e
+  porteiro da cobertura) seguem sem sensor: só a de agenda falha se regredir de novo.
+- **Next step**: merge do PR #33; depois as demais telas de `/app/*`, ou a `.specs/ROADMAP.md` a
+  partir da SPEC 16.

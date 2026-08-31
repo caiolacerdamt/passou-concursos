@@ -273,11 +273,13 @@ descreveComBanco("SPEC 14 — sequência, piso, agenda e folga", () => {
 
   it("a consulta de hoje deriva o titular, é inicial e não grava a sequência", async () => {
     await comTransacaoRevertida(async (cliente) => {
+      const hoje = dataDeHojeEmSaoPaulo();
       const aluno = await criarUsuario(cliente);
-      await criarPerfil(cliente, aluno, [1]);
+      // `fora_agenda` só sai quando hoje NÃO é dia de estudo. Fixar segunda-feira
+      // fazia o teste passar seis dias por semana e reprovar na segunda.
+      await criarPerfil(cliente, aluno, [(diaDaSemana(hoje) + 1) % 7]);
 
       await comoAluno(cliente, aluno, async () => {
-        const hoje = dataDeHojeEmSaoPaulo();
         const { rows } = await cliente.query<{
           data: string;
           sequencia: number;

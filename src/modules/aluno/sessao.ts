@@ -13,6 +13,7 @@ import {
 } from "@/modules/acervo";
 import { getParam, getParams } from "@/modules/config";
 
+import { dataHojeDoProduto } from "./plano";
 import {
   CAUSAS_DO_CADERNO,
   type CausaDoCaderno,
@@ -148,6 +149,7 @@ export class SessaoRecusada extends Error {
     | "item_inexistente"
     | "gabarito_ausente"
     | "refacao_indisponivel"
+    | "revisao_indisponivel"
     | "acervo_inconsistente"
     | "falha_imagem";
 
@@ -222,6 +224,14 @@ type ItemDaRefacaoBanco = Omit<ItemEsperadoDaRefacao, "sessao_id"> & {
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * O sufixo que separa a revisão avulsa da refação dentro de `refacao_chave`
+ * (AD-115). Não pertence a `CAUSAS_DO_CADERNO`, então as duas famílias de chave
+ * nunca colidem, e `tópico|qualificador` continua sendo o formato único —
+ * quem lê a chave segue tirando o tópico do primeiro campo.
+ */
+const QUALIFICADOR_DA_REVISAO = "revisao_avulsa";
 
 /**
  * Filtra novamente no domínio o contrato que o banco já filtra na consulta.
@@ -577,6 +587,117 @@ export async function prepararSessaoDeRefacao(
   return criada;
 }
 
+/**
+ * Monta uma revisão avulsa de um tópico que já venceu na agenda — AD-115.
+ *
+ * É a ação da tela de prática para a revisão que venceu e **não** entrou no
+ * plano de hoje. Sem ela aquela lista seria leitura sem saída, que é o defeito
+ * que o redesenho existe para remover.
+ *
+ * A agenda é o porteiro, não o parâmetro: o tópico só abre sessão se
+ * `revisao_agenda` disser que ele venceu. Isso mantém a regra do produto — a
+ * revisão acontece na data certa — mesmo com a URL editada à mão.
+ *
+ * A chave reusa `refacao_chave` na forma `tópico|qualificador`: é o mesmo
+ * problema (sessão sem bloco precisa de chave própria contra o duplo clique) e
+ * o mesmo índice parcial resolve. `revisao_avulsa` não pertence a
+ * `CAUSAS_DO_CADERNO`, então nunca colide com uma chave de refação.
+ */
+export async function prepararSessaoDeRevisao(
+  cliente: SupabaseClient,
+  opcoes: { topicoId: string; hoje?: string },
+): Promise<{ id: string; retomada: boolean }> {
+  if (!UUID.test(opcoes.topicoId)) {
+    throw new SessaoRecusada(
+      "revisao_indisponivel",
+      "Não foi possível identificar este tópico de revisão.",
+    );
+  }
+
+  const usuario = await usuarioDaSessao(cliente);
+  const hoje = opcoes.hoje ?? dataHojeDoProduto();
+
+  const devida = await lerUma<{ topico_id: string }>(
+    cliente
+      .from("revisao_agenda")
+      .select("topico_id")
+      .eq("topico_id", opcoes.topicoId)
+      .lte("due", hoje)
+      .limit(1)
+      .maybeSingle(),
+    "agenda da revisão",
+  );
+  if (devida === null) {
+    throw new SessaoRecusada(
+      "revisao_indisponivel",
+      "Este tópico não tem revisão vencida na sua agenda.",
+    );
+  }
+
+  const revisaoChave = `${opcoes.topicoId}|${QUALIFICADOR_DA_REVISAO}`;
+  const aberta = await lerUma<SessaoDaConsulta>(
+    cliente
+      .from("sessoes")
+      .select("id, plano_bloco_id, contexto, encerrada_em, refacao_chave")
+      .eq("user_id", usuario.id)
+      .eq("refacao_chave", revisaoChave)
+      .is("encerrada_em", null)
+      .order("iniciada_em", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    "revisão aberta",
+  );
+  if (aberta !== null) {
+    const itensExistentes = await lerItensDaRefacao(cliente, aberta.id);
+    if (itensExistentes.length > 0) return { id: aberta.id, retomada: true };
+  }
+
+  const [questoesPorBloco] = await getParams("param.m4.questoes_por_bloco");
+  const linhas = await lerLista<LinhaDeQuestao>(
+    cliente
+      .from("questoes")
+      .select(QUESTAO_PUBLICA_SELECT)
+      .eq("topico_id", opcoes.topicoId)
+      .eq("status", "publicada")
+      .eq("vigente", true)
+      .eq("anulada", false)
+      .order("id", { ascending: true })
+      .limit(questoesPorBloco),
+    "questões da revisão",
+  );
+
+  const selecionadas = selecionarQuestoesDisponiveis(linhas, {
+    tipo: "revisar",
+    topicoId: opcoes.topicoId,
+    quantidade: questoesPorBloco,
+  });
+  if (selecionadas.length === 0) {
+    throw new SessaoRecusada(
+      "acervo_vazio",
+      "Não há questões publicadas disponíveis para esta revisão.",
+    );
+  }
+
+  const criada = await inserirSessaoRefacao(cliente, {
+    userId: usuario.id,
+    refacaoChave: revisaoChave,
+    contexto: "revisao",
+  });
+
+  await garantirItensDaRefacao(
+    cliente,
+    criada.id,
+    selecionadas.map((questao, indice) => ({
+      sessao_id: criada.id,
+      questao_id: questao.id,
+      questao_versao: questao.questao_versao,
+      ordem: indice + 1,
+    })),
+  );
+
+  return criada;
+}
+
 /** Lê a sessão completa; itens respondidos chegam à tela somente para leitura. */
 export async function consultarSessao(
   cliente: SupabaseClient,
@@ -895,13 +1016,15 @@ async function inserirSessao(
 
 async function inserirSessaoRefacao(
   cliente: SupabaseClient,
-  entrada: { userId: string; refacaoChave: string },
+  entrada: { userId: string; refacaoChave: string; contexto?: Contexto },
 ): Promise<{ id: string; retomada: boolean }> {
   const { data, error } = await cliente
     .from("sessoes")
     .insert({
       user_id: entrada.userId,
-      contexto: "treino",
+      // A refação do caderno é treino; a revisão avulsa é revisão de verdade e
+      // precisa do contexto certo para a agenda do FSRS reagir a ela.
+      contexto: entrada.contexto ?? "treino",
       refacao_chave: entrada.refacaoChave,
     })
     .select("id")

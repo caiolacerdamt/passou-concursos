@@ -594,26 +594,136 @@
 - **Date**: 2026-08-30
 - **Status**: active
 
+### AD-115
+- **Decision**: `/app/sessao` **deixa de listar bloco do plano do dia** e passa a ser a tela de
+  prática: sessão em andamento, revisão vencida que **não** entrou no plano de hoje, caderno de erros
+  e histórico de sessões. O plano continua exclusivo de `/app` e `/app/plano`; o único vestígio dele
+  aqui é um link no cabeçalho. A tela **não** tem cartão herói nem breu — o AD-111 dá esse tratamento
+  ao próximo bloco em `/app`, um por tela, e um segundo aqui seria a segunda infração. A revisão
+  avulsa ganha `prepararSessaoDeRevisao`, cujo porteiro é a **agenda**, não o parâmetro: o tópico só
+  abre sessão se `revisao_agenda` disser que venceu. A chave contra duplo clique reusa
+  `refacao_chave` no formato `tópico|qualificador`, com `revisao_avulsa` como qualificador — não
+  pertence a `causa_erro`, então as duas famílias nunca colidem e quem lê a chave segue tirando o
+  tópico do primeiro campo.
+- **Reason**: `/app` e `/app/plano` já renderizam **o mesmo componente com os mesmos dados**
+  (`plano-pagina.tsx` chama `PlanoTela` com o mesmo `consultarPlanoDoDia()` nas duas); a lista de
+  blocos em `/app/sessao` era a terceira cópia, e era isso — não o acabamento — que fazia a rota
+  parecer supérflua. As quatro peças que sobraram não tinham tela em lugar nenhum: a sessão aberta só
+  era alcançável voltando pelo bloco de origem, a revisão vencida que não virou bloco sumia da
+  interface, o caderno só existia em `/app` e `/app/progresso`, e o resumo de uma sessão de ontem era
+  inalcançável. A tela também repetia a mesma revisão duas vezes (em *Blocos pendentes* e em
+  *Revisões devidas*) e terminava numa linha sem ação — "Ainda não há bloco para esta revisão hoje".
+- **Trade-off**: A rota passa a fazer seis consultas onde fazia três, e o histórico agrega por sessão
+  **em memória** — `tentativas` é particionada, e agregar por `sessao_id` no `SELECT` obrigaria a
+  varrer partição por partição para montar um número de dezenas de linhas. O teto de 12 sessões é
+  arbitrário: acima disso a leitura é do Progresso. Um bloco **concluído** deixa de proteger o tópico
+  contra a lista de revisões — se a revisão dele vencer hoje, ela aparece; esconder seria perder a
+  única tela que a mostra. A duplicação `/app` × `/app/plano` **continua de pé** e não é desta
+  rodada: o menu ainda promete "Ciclo do edital" numa rota que entrega o plano do dia.
+- **Scope**: `src/modules/aluno/sessao/{pratica.ts,pratica-tela.tsx}` (novos),
+  `src/modules/aluno/sessao/indice-tela.tsx` (removido), `src/modules/aluno/sessao.ts`,
+  `src/app/app/sessao/{page.tsx,acoes.ts}`,
+  `supabase/migrations/20260831120000_revisao_avulsa.sql`.
+- **Date**: 2026-08-31
+- **Status**: active
+
+### AD-116
+- **Decision**: A sessão abandonada **não expira por data** e continua listada em `/app/sessao`, mas
+  a tela passa a dizer a idade dela ("aberta há 5 dias"); acima de **24 h** ela troca de rótulo
+  ("Ficou aberta" / "Uma sessão de outro dia ficou pela metade"), perde o anel de foco e ganha
+  **Descartar**. Descartar é `update encerrada_em = now()` — **nunca** DELETE: as tentativas já
+  gravadas continuam no histórico, e a sessão vale como o que foi respondido. O dono vem da RLS, não
+  de conferência no código; `is('encerrada_em', null)` torna o duplo clique inofensivo.
+- **Reason**: Uma sessão só encerra quando **todo** item é respondido (`acoes.ts`), e nada fecha a
+  abandonada — ela fica `encerrada_em = null` para sempre. Com a leitura sem corte de data, a sessão
+  largada dias atrás aparecia sob "Em andamento · Você parou no meio de uma sessão", o que é mentira
+  e foi pego em uso. Cortar por data devolveria a sessão ao buraco de onde a AD-115 a tirou — era
+  justamente por não ter tela que ela se perdia. Job de expiração foi recusado: fecharia bloco de dia
+  antigo em silêncio e pede infra nova para um problema que ainda não existe em escala.
+- **Trade-off**: A tela mostra **uma** sessão aberta, a mais recente; quem largou três vê uma e
+  descarta uma por vez. O limiar de 24 h é calibração, não medida — vive no componente, não em
+  configuração. E retomar uma sessão antiga conclui o bloco do **dia dela**: `conclusoesDosBlocos` só
+  lê blocos do plano de hoje, então esse fechamento não aparece em tela nenhuma (as tentativas
+  contam no anel do dia). Comportamento que já existia e que a AD-115 tornou alcançável.
+- **Scope**: `src/app/app/sessao/acoes.ts` (`descartarSessao`),
+  `src/modules/aluno/sessao/pratica-tela.tsx`.
+- **Date**: 2026-08-31
+- **Status**: active
+
+### AD-117
+- **Decision**: Três mudanças de acabamento em `/app/sessao`, pedidas em uso. (1) **Cor carrega o
+  estado**: o cartão da sessão aberta é o único com fundo tingido da tela — `bg-marca-suave` +
+  `border-marca/30` enquanto é de hoje, `bg-conquista-fundo` + `border-ouro/45` depois de envelhecer.
+  O anel interno do AD-116 sai: com fundo tingido ele vira ruído. Vermelho fica **fora** — sessão
+  parada não é erro. (2) **Uma pílula por cartão**: `Descartar` deixa de ser segunda pílula e vira
+  `<button type="submit">` de texto sublinhado dentro da frase que já o explicava. A `<form>` continua
+  a mesma; muda só a casca. (3) **Teto nos blocos que crescem**: `caderno_erros` e `revisao_agenda`
+  ganham `limit(24)` + `count: "exact"`; a tela corta em **4**, abre em lotes de **8** com o rodapé
+  `sticky` no pé do cartão, e quando não há mais lote a abrir o rodapé entrega `/app/progresso` em vez
+  de mais um lote. O filtro do plano de hoje vai junto **para o banco** (`not.topico_id.in`, só ids
+  com formato de uuid). O histórico não entra nisso: já nascia cortado em `SESSOES_NO_HISTORICO`, e
+  passa a **dizer** isso em vez de fingir que são todas.
+- **Reason**: Os dois cartões de destaque usavam o mesmo `bg-painel` dos blocos comuns e só a borda
+  mudava — a um braço de distância nada distingue "isto está andando" de "isto esfriou". As duas
+  pílulas empilhadas tinham alturas (48 × 40), corpos (16 × 13) e larguras diferentes: liam como dois
+  botões brigando pelo mesmo canto. E as duas consultas sem `limit` traziam **todas** as linhas do
+  banco para o HTML com quatro desenhadas na tela: uma linha por tópico vencido e uma por par
+  tópico×causa passam das dezenas no fim de um ciclo, e o cartão empurrava o resto da tela para fora
+  do campo de visão. Paginação de verdade foi recusada: `/app/progresso` já é a tela dona da lista
+  longa, e construir navegação de lista em duas telas é a duplicação que a AD-115 existe para evitar.
+- **Trade-off**: A lista entra num componente cliente (`lista-com-teto.tsx`) — o primeiro `"use client"`
+  desta tela. O estado aberto **não** sobrevive à navegação, de propósito: lembrá-lo devolveria o rolo
+  que o teto evita. O teto de 24 e o lote de 8 são calibração, não medida: vivem no código, não em
+  configuração. A contagem do caderno ignora linha com causa fora do domínio (o `flatMap` a descarta
+  depois do `count`), então um banco corrompido conta alguns itens a mais — preferível a uma segunda
+  consulta só para isso. Sem jsdom no projeto (AD-083), o clique não tem teste: o que os testes
+  afirmam é o primeiro quadro de cada estado, que é onde o componente escolhe o ramo.
+- **Scope**: `src/modules/aluno/sessao/pratica.ts` (teto, `count`, filtro do plano no banco),
+  `src/modules/aluno/sessao/pratica-tela.tsx`, `src/modules/aluno/sessao/lista-com-teto.tsx` (novo).
+- **Date**: 2026-08-31
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Fechamento do PR #33 (landing v2 — corredor de nove atos). O código da landing já
-  estava verde; o que segurava o PR eram **duas falhas de `test:db` herdadas da `main`**, que este
-  PR passa a corrigir junto. Ajuste fora da numeração de specs — fecha com a **AD-114**.
-- **Phase / Task**: concluída. `test:db` volta a 411/411 na branch.
-- **Completed**: (1) `recurso_visto` entra em `TABELAS_GRUPO_1` — tabela com `user_id` criada na
-  `20260825142000` e nunca registrada no inventário do direito ao esquecimento; era bug real de LGPD,
-  não do teste. (2) `20260830130000_w2a_reaplica_correcoes.sql` reaplica as três correções do W2-A
-  que a `20260825141000` desfez ao copiar o corpo da `20260824102000` em vez da definição vigente:
-  plano vazio fora da agenda (com `v_planos + 1`), reserva de um slot quando
-  `flag.m4.simulado_semanal` está ligada e o porteiro de `perfil_concurso` ativo no desvio de
-  cobertura virgem. Os quatro literais acentuados da `20260825141000` foram preservados.
-- **Gates**: `tsc --noEmit` limpo, `vitest --project unit` 905/905, `test:db` **411/411**
-  (era 404 passando + 2 falhando).
-- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`;
-  `pg_get_functiondef` confirma as três âncoras de volta e o acento intacto.
-- **In-progress** (file:line): continua pendente a **verificação visual do `/app/raio-x`** com conta
-  autenticada (a rota exige matrícula ativa) — tabela de matérias a 390px, gráfico com rótulo longo e
-  cartão breu quando o mapa pessoal falha. As duas correções do W2-A sem teste (reserva do simulado e
-  porteiro da cobertura) seguem sem sensor: só a de agenda falha se regredir de novo.
-- **Next step**: merge do PR #33; depois as demais telas de `/app/*`, ou a `.specs/ROADMAP.md` a
-  partir da SPEC 16.
+- **Feature**: Refatoração de `/app/sessao` — a rota vira **tela de prática** e para de listar bloco
+  do plano. Ajuste fora da numeração de specs, pedido direto; fecha com a **AD-115**.
+- **Phase / Task**: concluída na branch `feat/sessao-tela-de-pratica`.
+- **Completed**: (1) `sessao/pratica.ts` — leitura das quatro peças (sessão aberta com a trilha
+  item a item, revisão vencida fora do plano, caderno, histórico agregado por sessão). (2)
+  `sessao/pratica-tela.tsx` substitui `indice-tela.tsx`, no vocabulário do resto do app: olho
+  `font-utilitaria` de 11px, título de 34px, cartão sem sombra, **sem breu** (AD-111). (3)
+  `prepararSessaoDeRevisao` em `sessao.ts`, com a agenda como porteiro e `revisao_indisponivel` novo
+  em `SessaoRecusada`. (4) `page.tsx` ganha a entrada `?revisao=<topico>` e passa a excluir da lista
+  os tópicos **pendentes** do plano de hoje. (5) Migration só de comentário: `refacao_chave` passa a
+  documentar o formato `tópico|qualificador`. (6) **AD-116**: a sessão aberta mostra a idade, e
+  acima de 24 h troca de rótulo, perde o destaque e ganha `Descartar` — que carimba `encerrada_em`,
+  nunca apaga. (7) **AD-117**, acabamento pedido em uso: fundo tingido no cartão da sessão (verde de
+  hoje / ouro da que esfriou), `Descartar` vira link dentro da frase em vez de segunda pílula, e
+  `lista-com-teto.tsx` (novo, `"use client"`) corta Memória e Recuperar erro em 4 com lotes de 8,
+  rodapé `sticky` e saída para `/app/progresso` quando o teto da consulta cortou antes. A consulta
+  ganhou `limit(24)` + `count: "exact"` nas duas tabelas e leva o filtro do plano para o banco.
+- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/aluno/sessao/`, `next build`
+  compila as 31 rotas, `vitest --project unit` **963/963** (era 905/905 na `main`; +58 testes).
+  Sensores conferidos por mutação: o porteiro da agenda, o descarte da revisão que já está no plano,
+  a contagem de questões distintas do histórico, o envelhecimento da sessão aberta, o carimbo do
+  `Descartar` (trocado por DELETE) e, na AD-117, o `limit` do bloco (24 → 9999), a peneira de uuid do
+  filtro do plano, o `sticky` do rodapé, a cor do cartão que envelheceu e a guarda que segura a saída
+  para a tela dona enquanto ainda há lote a abrir — todos falham quando invertidos.
+- **External checks**: `test:db` **410/411**. A falha é `spec14-sequencia` esperando `fora_agenda` e
+  recebendo `plano_indisponivel`, **reproduzida na `main`** com o mesmo comando — é herdada, não
+  desta branch. A migration desta rodada é comentário puro e **não foi aplicada** no projeto de
+  desenvolvimento. O `test:db` **não foi rodado de novo depois da AD-117**: ela não toca migration
+  nem contrato de tabela, só `select`.
+- **In-progress** (file:line): falta a **verificação visual** de `/app/sessao` com conta autenticada
+  (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px, a coluna dupla revisões ×
+  caderno no ponto de quebra `lg`, e agora o rodapé `sticky` no celular (é onde ele mais importa e
+  onde barra de navegação do navegador pode disputar o pé da tela). O `Descartar`
+  **não foi exercido contra o banco**: só tem teste de unidade com cliente falso, e agora mudou de
+  casca — o `<form>` é o mesmo, mas o botão é outro elemento. **O clique de abrir/fechar não tem
+  teste**: sem jsdom (AD-083) os testes afirmam o primeiro quadro de cada estado, não a transição.
+  Segue pendente a verificação visual do `/app/raio-x`, e as duas
+  correções do W2-A sem teste (reserva do simulado, porteiro da cobertura) continuam sem sensor.
+- **Next step**: PR desta branch. Depois, a dívida que esta rodada expôs e não resolveu: `/app` e
+  `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
+  numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
+  deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.

@@ -9,6 +9,14 @@ const dependencias = vi.hoisted(() => ({
   finalizar: vi.fn(),
   agendar: vi.fn(),
   reportar: vi.fn(),
+  revalidatePath: vi.fn(),
+}));
+
+// Mock parcial: `unstable_cache` continua o real porque `modules/config` o usa
+// no carregamento, e substituir o módulo inteiro derruba o import da ação.
+vi.mock("next/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/cache")>()),
+  revalidatePath: dependencias.revalidatePath,
 }));
 
 vi.mock("@/modules/conta/matricula", () => ({
@@ -44,6 +52,7 @@ vi.mock("@/modules/aluno/revisao", async (importOriginal) => ({
 import { TentativaRecusada } from "@/modules/aluno/tentativas";
 
 import {
+  descartarSessao,
   responderQuestao,
 } from "./acoes";
 
@@ -388,5 +397,82 @@ describe("responderQuestao", () => {
       responderQuestao(ESTADO_INICIAL_DA_RESPOSTA, formulario()),
     ).rejects.toThrow("NEXT_REDIRECT:/assinar");
     expect(dependencias.cliente).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("descartarSessao", () => {
+  function clienteDoDescarte(resposta: { data: unknown; error: null | { message: string } } = { data: null, error: null }) {
+    const consulta = builder(resposta);
+    const cliente = { from: vi.fn(() => consulta) };
+    return { cliente, consulta };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    dependencias.matricula.mockResolvedValue({ id: "matricula-1" });
+  });
+
+  it("encerra carimbando a data, sem apagar a sessão nem as tentativas", async () => {
+    const { cliente, consulta } = clienteDoDescarte();
+    dependencias.cliente.mockResolvedValue(cliente);
+    const dados = new FormData();
+    dados.set("sessaoId", "sessao-1");
+
+    await descartarSessao(dados);
+
+    expect(cliente.from).toHaveBeenCalledWith("sessoes");
+    // Descartar é "não vou terminar", não "isso não aconteceu": as respostas
+    // já gravadas seguem no histórico (invariante 1).
+    expect(consulta.delete).toBeUndefined();
+    const carimbo = (consulta.update as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    expect(Object.keys(carimbo)).toEqual(["encerrada_em"]);
+    expect(typeof carimbo.encerrada_em).toBe("string");
+    expect(consulta.eq).toHaveBeenCalledWith("id", "sessao-1");
+  });
+
+  it("não reescreve o carimbo de uma sessão que já fechou", async () => {
+    const { cliente, consulta } = clienteDoDescarte();
+    dependencias.cliente.mockResolvedValue(cliente);
+    const dados = new FormData();
+    dados.set("sessaoId", "sessao-1");
+
+    await descartarSessao(dados);
+
+    // O duplo clique não encontra linha e sai sem tocar no primeiro carimbo.
+    expect(consulta.is).toHaveBeenCalledWith("encerrada_em", null);
+  });
+
+  it("exige matrícula ativa antes de qualquer escrita", async () => {
+    dependencias.matricula.mockRejectedValue(new Error("sem matrícula"));
+    const { cliente } = clienteDoDescarte();
+    dependencias.cliente.mockResolvedValue(cliente);
+    const dados = new FormData();
+    dados.set("sessaoId", "sessao-1");
+
+    await expect(descartarSessao(dados)).rejects.toThrow("sem matrícula");
+    expect(cliente.from).not.toHaveBeenCalled();
+  });
+
+  it("ignora o formulário sem id em vez de emitir update sem alvo", async () => {
+    const { cliente } = clienteDoDescarte();
+    dependencias.cliente.mockResolvedValue(cliente);
+
+    await descartarSessao(new FormData());
+
+    expect(cliente.from).not.toHaveBeenCalled();
+  });
+
+  it("reporta a falha do banco sem derrubar a tela", async () => {
+    const { cliente } = clienteDoDescarte({ data: null, error: { message: "indisponível" } });
+    dependencias.cliente.mockResolvedValue(cliente);
+    const dados = new FormData();
+    dados.set("sessaoId", "sessao-1");
+
+    await expect(descartarSessao(dados)).resolves.toBeUndefined();
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      { message: "indisponível" },
+      { modulo: "aluno", operacao: "descartar_sessao" },
+    );
   });
 });

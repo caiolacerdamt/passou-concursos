@@ -75,7 +75,15 @@ export const config = {
      * o visitante deslogado recebia o HTML de `/entrar` no lugar do script. A
      * landing e publica, mas o arquivo nao vem de `_next/static` — asset em
      * `public/` e servido pela raiz.
+     *
+     * `mp4|webm|m4v` entrou pelo MESMO defeito, de novo: o clipe do heroi em
+     * `/video/heroi.mp4` voltava 307 para `/entrar`, o motor buscava o arquivo
+     * como Blob e recebia 36 bytes de redirecionamento, e o navegador falhava
+     * com `DEMUXER_ERROR_COULD_NOT_OPEN`. Lido de fora isso parece codec
+     * quebrado ou encode ruim, e nao e nem um nem outro. A correcao e por
+     * extensao, e nao por pasta, porque o que precisa passar e a classe de
+     * arquivo, nao um caminho especifico.
      */
-    "/((?!_next/static|_next/image|favicon.ico|monitoring|motor/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|monitoring|motor/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|m4v)$).*)",
   ],
 };

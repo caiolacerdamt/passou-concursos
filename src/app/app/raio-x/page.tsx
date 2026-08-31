@@ -2,11 +2,13 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { isFlagOn } from "@/modules/config";
 import { consultarMapaPrioridade, consultarRaioX } from "@/modules/raiox";
+import { agruparMapaPorMateria } from "@/modules/raiox/mapa-por-materia";
 import { RaioXTela } from "@/modules/raiox/tela";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { Estado } from "@/modules/ui/estado";
 
-import type { DadosMapaPrioridade, DadosRaioX } from "@/modules/raiox";
+import type { DadosRaioX } from "@/modules/raiox";
+import type { DadosMapaPorMateria } from "@/modules/raiox/mapa-por-materia";
 
 /**
  * A superfície do Raio-X nasce atrás da flag global. A guarda vem antes dela e
@@ -32,21 +34,18 @@ export default async function RaioX() {
   const dados = await consultarRaioX();
   const mapa = dados.perfil
     ? await lerMapaComFalha(dados)
-    : { dados: null as DadosMapaPrioridade | null };
+    : { dados: null as DadosMapaPorMateria | null };
 
-  return (
-    <div className="mx-auto max-w-3xl">
-      <RaioXTela dados={dados} mapa={dados.perfil ? mapa.dados : undefined} />
-    </div>
-  );
+  return <RaioXTela dados={dados} mapa={dados.perfil ? mapa.dados : undefined} />;
 }
 
 async function lerMapaComFalha(
   dados: DadosRaioX,
-): Promise<{ dados: DadosMapaPrioridade | null }> {
+): Promise<{ dados: DadosMapaPorMateria | null }> {
   try {
     const cliente = await clienteDaSessao();
-    return { dados: await consultarMapaPrioridade(cliente, dados) };
+    const porTopico = await consultarMapaPrioridade(cliente, dados);
+    return { dados: agruparMapaPorMateria(dados, porTopico) };
   } catch (erro) {
     reportarErro(erro, { modulo: "raiox", operacao: "consultar_mapa_prioridade" });
     return { dados: null };

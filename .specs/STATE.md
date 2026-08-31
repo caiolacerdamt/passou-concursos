@@ -650,6 +650,39 @@
 - **Date**: 2026-08-31
 - **Status**: active
 
+### AD-117
+- **Decision**: Três mudanças de acabamento em `/app/sessao`, pedidas em uso. (1) **Cor carrega o
+  estado**: o cartão da sessão aberta é o único com fundo tingido da tela — `bg-marca-suave` +
+  `border-marca/30` enquanto é de hoje, `bg-conquista-fundo` + `border-ouro/45` depois de envelhecer.
+  O anel interno do AD-116 sai: com fundo tingido ele vira ruído. Vermelho fica **fora** — sessão
+  parada não é erro. (2) **Uma pílula por cartão**: `Descartar` deixa de ser segunda pílula e vira
+  `<button type="submit">` de texto sublinhado dentro da frase que já o explicava. A `<form>` continua
+  a mesma; muda só a casca. (3) **Teto nos blocos que crescem**: `caderno_erros` e `revisao_agenda`
+  ganham `limit(24)` + `count: "exact"`; a tela corta em **4**, abre em lotes de **8** com o rodapé
+  `sticky` no pé do cartão, e quando não há mais lote a abrir o rodapé entrega `/app/progresso` em vez
+  de mais um lote. O filtro do plano de hoje vai junto **para o banco** (`not.topico_id.in`, só ids
+  com formato de uuid). O histórico não entra nisso: já nascia cortado em `SESSOES_NO_HISTORICO`, e
+  passa a **dizer** isso em vez de fingir que são todas.
+- **Reason**: Os dois cartões de destaque usavam o mesmo `bg-painel` dos blocos comuns e só a borda
+  mudava — a um braço de distância nada distingue "isto está andando" de "isto esfriou". As duas
+  pílulas empilhadas tinham alturas (48 × 40), corpos (16 × 13) e larguras diferentes: liam como dois
+  botões brigando pelo mesmo canto. E as duas consultas sem `limit` traziam **todas** as linhas do
+  banco para o HTML com quatro desenhadas na tela: uma linha por tópico vencido e uma por par
+  tópico×causa passam das dezenas no fim de um ciclo, e o cartão empurrava o resto da tela para fora
+  do campo de visão. Paginação de verdade foi recusada: `/app/progresso` já é a tela dona da lista
+  longa, e construir navegação de lista em duas telas é a duplicação que a AD-115 existe para evitar.
+- **Trade-off**: A lista entra num componente cliente (`lista-com-teto.tsx`) — o primeiro `"use client"`
+  desta tela. O estado aberto **não** sobrevive à navegação, de propósito: lembrá-lo devolveria o rolo
+  que o teto evita. O teto de 24 e o lote de 8 são calibração, não medida: vivem no código, não em
+  configuração. A contagem do caderno ignora linha com causa fora do domínio (o `flatMap` a descarta
+  depois do `count`), então um banco corrompido conta alguns itens a mais — preferível a uma segunda
+  consulta só para isso. Sem jsdom no projeto (AD-083), o clique não tem teste: o que os testes
+  afirmam é o primeiro quadro de cada estado, que é onde o componente escolhe o ramo.
+- **Scope**: `src/modules/aluno/sessao/pratica.ts` (teto, `count`, filtro do plano no banco),
+  `src/modules/aluno/sessao/pratica-tela.tsx`, `src/modules/aluno/sessao/lista-com-teto.tsx` (novo).
+- **Date**: 2026-08-31
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Refatoração de `/app/sessao` — a rota vira **tela de prática** e para de listar bloco
@@ -664,20 +697,31 @@
   os tópicos **pendentes** do plano de hoje. (5) Migration só de comentário: `refacao_chave` passa a
   documentar o formato `tópico|qualificador`. (6) **AD-116**: a sessão aberta mostra a idade, e
   acima de 24 h troca de rótulo, perde o destaque e ganha `Descartar` — que carimba `encerrada_em`,
-  nunca apaga.
-- **Gates**: `tsc --noEmit` limpo, `eslint` limpo nos arquivos tocados, `vitest --project unit`
-  **947/947** (era 905/905 na `main`; +42 testes). Sensores conferidos por mutação: o porteiro da
-  agenda, o descarte da revisão que já está no plano, a contagem de questões distintas do histórico,
-  o envelhecimento da sessão aberta e o carimbo do `Descartar` (trocado por DELETE) falham quando
-  invertidos.
+  nunca apaga. (7) **AD-117**, acabamento pedido em uso: fundo tingido no cartão da sessão (verde de
+  hoje / ouro da que esfriou), `Descartar` vira link dentro da frase em vez de segunda pílula, e
+  `lista-com-teto.tsx` (novo, `"use client"`) corta Memória e Recuperar erro em 4 com lotes de 8,
+  rodapé `sticky` e saída para `/app/progresso` quando o teto da consulta cortou antes. A consulta
+  ganhou `limit(24)` + `count: "exact"` nas duas tabelas e leva o filtro do plano para o banco.
+- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/aluno/sessao/`, `next build`
+  compila as 31 rotas, `vitest --project unit` **963/963** (era 905/905 na `main`; +58 testes).
+  Sensores conferidos por mutação: o porteiro da agenda, o descarte da revisão que já está no plano,
+  a contagem de questões distintas do histórico, o envelhecimento da sessão aberta, o carimbo do
+  `Descartar` (trocado por DELETE) e, na AD-117, o `limit` do bloco (24 → 9999), a peneira de uuid do
+  filtro do plano, o `sticky` do rodapé, a cor do cartão que envelheceu e a guarda que segura a saída
+  para a tela dona enquanto ainda há lote a abrir — todos falham quando invertidos.
 - **External checks**: `test:db` **410/411**. A falha é `spec14-sequencia` esperando `fora_agenda` e
   recebendo `plano_indisponivel`, **reproduzida na `main`** com o mesmo comando — é herdada, não
   desta branch. A migration desta rodada é comentário puro e **não foi aplicada** no projeto de
-  desenvolvimento.
+  desenvolvimento. O `test:db` **não foi rodado de novo depois da AD-117**: ela não toca migration
+  nem contrato de tabela, só `select`.
 - **In-progress** (file:line): falta a **verificação visual** de `/app/sessao` com conta autenticada
   (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px, a coluna dupla revisões ×
-  caderno no ponto de quebra `lg` e o par Retomar/Descartar empilhado no celular. O `Descartar`
-  **não foi exercido contra o banco**: só tem teste de unidade com cliente falso. Segue pendente a verificação visual do `/app/raio-x`, e as duas
+  caderno no ponto de quebra `lg`, e agora o rodapé `sticky` no celular (é onde ele mais importa e
+  onde barra de navegação do navegador pode disputar o pé da tela). O `Descartar`
+  **não foi exercido contra o banco**: só tem teste de unidade com cliente falso, e agora mudou de
+  casca — o `<form>` é o mesmo, mas o botão é outro elemento. **O clique de abrir/fechar não tem
+  teste**: sem jsdom (AD-083) os testes afirmam o primeiro quadro de cada estado, não a transição.
+  Segue pendente a verificação visual do `/app/raio-x`, e as duas
   correções do W2-A sem teste (reserva do simulado, porteiro da cobertura) continuam sem sensor.
 - **Next step**: PR desta branch. Depois, a dívida que esta rodada expôs e não resolveu: `/app` e
   `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"

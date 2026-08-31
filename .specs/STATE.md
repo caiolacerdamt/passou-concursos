@@ -589,9 +589,13 @@
   atravessava o atributo `style`, e o de `bg-breu` casava com `bg-breu-verde`/`bg-breu-tinta`.
 - **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/raiox` e `src/app/app/raio-x`,
   `vitest --project unit` 901/901, `next build` exit 0 (31 rotas).
-- **External checks**: **a migration não foi aplicada** — o acesso ao banco está bloqueado nesta
-  sessão. `test:db` não rodado pelo mesmo motivo. Antes de olhar a tela é preciso aplicar
-  `20260830120000_raiox_projecao_por_materia.sql` e rodar `select public.recalcula_raiox();`.
+- **External checks**: migration **aplicada** no projeto de desenvolvimento por `npm run db:push`, e
+  `select public.recalcula_raiox()` rodado — 85 linhas por tópico e 8 por matéria. `test:db` 409
+  passando, com **as mesmas 2 falhas que já existiam na branch**, nenhuma nova: `grupo-1` acusa
+  `recurso_visto` fora de `TABELAS_GRUPO_1` (tabela com `user_id` criada na migration
+  `20260825142000` e nunca registrada no inventário do direito ao esquecimento — é bug real de LGPD,
+  não do Raio-X) e `ciclo-adaptativo` W2-A devolve 0 blocos onde espera 1. O peso cru por matéria
+  soma ~102%, o que confirma a normalização na borda de leitura.
 - **In-progress** (file:line): **verificação visual não feita** (a rota exige matrícula ativa). Falta
   olho humano em: a tabela de matérias a 390px (as colunas empilham por `grid-cols-[...]`), o gráfico
   do mapa com rótulo longo de matéria, e o cartão breu quando o mapa pessoal falha. Falta também

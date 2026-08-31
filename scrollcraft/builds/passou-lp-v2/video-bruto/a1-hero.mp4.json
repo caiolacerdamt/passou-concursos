@@ -1,0 +1,16 @@
+{
+  "model": "kling-3.0/video",
+  "taskId": "bf9945153c5e829f56ea5bff8a0c398d",
+  "input": {
+    "prompt": "The camera pushes slowly and steadily forward in one single continuous dolly-in, with a very slight downward tilt, moving from the first frame to the last frame. The move is slow, smooth, controlled and cinematic, at a constant speed from the first frame to the last.\n\nThe scattered flat cream paper sheets lying on the floor lift gently off the ground and settle into the ordered row of upright green blocks, sorted by height. The transformation is continuous, calm and even across the whole clip, with the sheets rising and turning rather than dissolving or popping.\n\nThe woman on the right stands completely still throughout, in the same pose, in the same place, at the same size in the frame. She never walks, never turns her body, never raises her arms. The empty cream left side of the frame stays empty for the whole clip.\n\nNothing enters the frame and nothing leaves the frame. One single continuous take. No cuts, no camera shake, no zoom snap, no direction change, no scene change. No text, no letters, no numbers and no logos appear at any point.",
+    "image_urls": [
+      "https://tempfile.redpandaai.co/kieai/11716801/passou-lp/a1-caos.png",
+      "https://tempfile.redpandaai.co/kieai/11716801/passou-lp/a1-ordem.png"
+    ],
+    "sound": false,
+    "duration": "5",
+    "aspect_ratio": "16:9",
+    "mode": "pro",
+    "multi_shots": false
+  }
+}

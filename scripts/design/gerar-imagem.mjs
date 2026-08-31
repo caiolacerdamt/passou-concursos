@@ -57,7 +57,43 @@ if (!prompt || !saida) {
   process.exit(1);
 }
 
+/**
+ * Imagens de referencia (`input_references`), repetivel: `--ref a.png --ref b.png`.
+ *
+ * E o que transforma o script de "gerar" em "editar": duas geracoes de texto
+ * independentes nunca devolvem o mesmo enquadramento, o mesmo chao e a mesma
+ * pessoa, e um par de quadros que vai virar inicio e fim de um video precisa
+ * ser identico em tudo menos no que muda. Com a referencia, o segundo quadro e
+ * uma edicao do primeiro.
+ *
+ * O modelo precisa declarar `input_references` em `supported_parameters` (veja
+ * `GET /api/v1/images/models`). `openai/gpt-image-2` aceita ate 16.
+ */
+function referencias() {
+  const refs = [];
+  process.argv.forEach((valor, i) => {
+    if (valor !== "--ref") return;
+    const arquivo = process.argv[i + 1];
+    if (!arquivo || arquivo.startsWith("--")) return;
+
+    const abs = path.resolve(arquivo);
+    if (!fs.existsSync(abs)) {
+      console.error(`referencia nao encontrada: ${abs}`);
+      process.exit(1);
+    }
+    const ext = path.extname(abs).slice(1).toLowerCase();
+    const mime = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
+    refs.push({
+      type: "image_url",
+      image_url: { url: `data:${mime};base64,${fs.readFileSync(abs).toString("base64")}` },
+    });
+  });
+  return refs;
+}
+
 const corpo = { model: arg("model", MODELO_PADRAO), prompt };
+const refs = referencias();
+if (refs.length > 0) corpo.input_references = refs;
 if (arg("size")) corpo.size = arg("size");
 if (arg("aspect")) corpo.aspect_ratio = arg("aspect");
 if (arg("quality")) corpo.quality = arg("quality");
@@ -66,7 +102,11 @@ if (arg("seed")) corpo.seed = Number(arg("seed"));
 if (arg("n")) corpo.n = Number(arg("n"));
 
 if (flag("dry-run")) {
-  console.log(JSON.stringify({ ...corpo, prompt: `${prompt.slice(0, 120)}...` }, null, 2));
+  // A referencia e um data URL de megabytes: imprimir o corpo cru enche a tela
+  // e esconde justamente o que se quer conferir num ensaio.
+  const enxuto = { ...corpo, prompt: `${prompt.slice(0, 120)}...` };
+  if (enxuto.input_references) enxuto.input_references = `${refs.length} imagem(ns)`;
+  console.log(JSON.stringify(enxuto, null, 2));
   process.exit(0);
 }
 
@@ -106,7 +146,18 @@ imagens.forEach((imagem, indice) => {
   // O sidecar guarda o prompt: sem ele nao da para regerar nem variar a arte.
   fs.writeFileSync(
     `${destino}.json`,
-    JSON.stringify({ ...corpo, media_type: imagem.media_type, custo: json.usage?.cost ?? null }, null, 2),
+    JSON.stringify(
+      {
+        ...corpo,
+        // O data URL da referencia tem megabytes e nao serve para reproduzir
+        // nada: o que importa registrar e quantas entraram.
+        input_references: refs.length || undefined,
+        media_type: imagem.media_type,
+        custo: json.usage?.cost ?? null,
+      },
+      null,
+      2,
+    ),
   );
   console.log(`${destino}  (${(fs.statSync(destino).size / 1024).toFixed(0)} KB)`);
 });

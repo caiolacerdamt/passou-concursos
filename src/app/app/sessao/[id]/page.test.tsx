@@ -9,7 +9,8 @@ const dependencias = vi.hoisted(() => ({
   consultar: vi.fn(),
   plano: vi.fn(),
   rotulos: vi.fn(),
-  revisoes: vi.fn(),
+  pratica: vi.fn(),
+  prepararRevisao: vi.fn(),
   sair: vi.fn(),
   redirect: vi.fn((destino: string): never => {
     throw new Error(`NEXT_REDIRECT:${destino}`);
@@ -26,15 +27,19 @@ vi.mock("@/modules/aluno/sessao", async (importOriginal) => {
     ...atual,
     prepararSessao: dependencias.preparar,
     prepararSessaoDeRefacao: dependencias.prepararRefacao,
+    prepararSessaoDeRevisao: dependencias.prepararRevisao,
     consultarSessao: dependencias.consultar,
   };
 });
-vi.mock("@/modules/aluno/plano", () => ({ consultarPlanoDoDia: dependencias.plano }));
+vi.mock("@/modules/aluno/plano", () => ({
+  consultarPlanoDoDia: dependencias.plano,
+  dataHojeDoProduto: () => "2026-08-22",
+}));
 vi.mock("@/modules/aluno/plano-rotulos", () => ({
   consultarRotulosDosTopicosPorIds: dependencias.rotulos,
 }));
-vi.mock("@/modules/aluno/revisoes-devidas", () => ({
-  consultarRevisoesDevidas: dependencias.revisoes,
+vi.mock("@/modules/aluno/sessao/pratica", () => ({
+  consultarPratica: dependencias.pratica,
 }));
 vi.mock("../../../entrar/acoes", () => ({ sair: dependencias.sair }));
 vi.mock("@/modules/aluno/sessao/tela", () => ({
@@ -77,9 +82,15 @@ describe("rotas da sessão", () => {
     dependencias.consultar.mockResolvedValue(sessao);
     dependencias.preparar.mockResolvedValue({ id: "sessao-1", retomada: false });
     dependencias.prepararRefacao.mockResolvedValue({ id: "sessao-refacao", retomada: false });
+    dependencias.prepararRevisao.mockResolvedValue({ id: "sessao-revisao", retomada: false });
     dependencias.plano.mockResolvedValue(null);
     dependencias.rotulos.mockResolvedValue(new Map());
-    dependencias.revisoes.mockResolvedValue([]);
+    dependencias.pratica.mockResolvedValue({
+      sessaoAberta: null,
+      revisoesForaDoPlano: [],
+      caderno: [],
+      historico: [],
+    });
   });
 
   it("redireciona a entrada do bloco para uma sessão persistida", async () => {
@@ -89,7 +100,7 @@ describe("rotas da sessão", () => {
     expect(dependencias.preparar).toHaveBeenCalledWith({}, "bloco-1");
   });
 
-  it("lista blocos pendentes e revisões devidas quando a entrada não recebe bloco", async () => {
+  it("não recebendo bloco, monta a prática — e nenhum bloco do plano vaza para ela", async () => {
     dependencias.plano.mockResolvedValue({
       id: "plano-1",
       data: "2026-08-22",
@@ -110,12 +121,58 @@ describe("rotas da sessão", () => {
           adiadoDe: null,
           conclusao: null,
         },
+      ],
+      metaCheia: [],
+    });
+    dependencias.pratica.mockResolvedValue({
+      sessaoAberta: null,
+      revisoesForaDoPlano: [{ topicoId: "topico-2", due: "2026-08-17" }],
+      caderno: [],
+      historico: [],
+    });
+    dependencias.rotulos.mockResolvedValue(
+      new Map([["topico-2", { materia: "Conhecimentos Bancários", topico: "Garantias" }]]),
+    );
+
+    const html = renderToStaticMarkup(
+      await AbrirSessao({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(html).toContain("Venceram e ficaram de fora");
+    expect(html).toContain("Conhecimentos Bancários · Garantias");
+    // A rota deixou de listar bloco do plano (AD-115): esse é o assunto de
+    // /app e /app/plano, e a terceira cópia era a duplicação removida.
+    expect(html).not.toContain("bloco-revisao");
+    expect(html).not.toContain("/app/sessao?bloco=");
+  });
+
+  it("passa ao motor da prática só os tópicos pendentes do plano de hoje", async () => {
+    dependencias.plano.mockResolvedValue({
+      id: "plano-1",
+      data: "2026-08-22",
+      frase: null,
+      piso: [
+        {
+          id: "bloco-pendente",
+          tipo: "revisar",
+          nivel: "piso",
+          ordem: 1,
+          topicoId: "topico-pendente",
+          nQuestoes: 5,
+          nQuestoesCheias: 5,
+          minutosEstimados: 20,
+          minutosEstimadosCheios: 20,
+          motivo: null,
+          ajusteUsuario: false,
+          adiadoDe: null,
+          conclusao: null,
+        },
         {
           id: "bloco-concluido",
           tipo: "avancar",
           nivel: "meta_cheia",
           ordem: 2,
-          topicoId: "topico-2",
+          topicoId: "topico-concluido",
           nQuestoes: 5,
           nQuestoesCheias: 5,
           minutosEstimados: 20,
@@ -133,31 +190,75 @@ describe("rotas da sessão", () => {
       ],
       metaCheia: [],
     });
-    dependencias.revisoes.mockResolvedValue([{ topicoId: "topico-1", due: "2026-08-22" }]);
-    dependencias.rotulos.mockResolvedValue(
-      new Map([["topico-1", { materia: "Conhecimentos Bancários", topico: "Geral" }]]),
-    );
 
-    const html = renderToStaticMarkup(
-      await AbrirSessao({ searchParams: Promise.resolve({}) }),
-    );
+    renderToStaticMarkup(await AbrirSessao({ searchParams: Promise.resolve({}) }));
 
-    expect(html).toContain("Blocos pendentes");
-    expect(html).toContain("Revisões devidas");
-    expect(html).toContain("Conhecimentos Bancários");
-    expect(html).toContain("/app/sessao?bloco=bloco-revisao");
-    expect(html).not.toContain("bloco-concluido");
-    expect(dependencias.plano).toHaveBeenCalledWith({});
-    expect(dependencias.revisoes).toHaveBeenCalledWith({});
+    // Um bloco já concluído não protege mais o tópico: a revisão dele pode
+    // voltar hoje, e escondê-la seria perder a única tela que a mostra.
+    expect(dependencias.pratica).toHaveBeenCalledWith(
+      {},
+      { topicosNoPlanoDeHoje: ["topico-pendente"], hoje: "2026-08-22" },
+    );
   });
 
-  it("mostra caminho de volta quando não há plano nem revisão devida", async () => {
+  it("sem sessão, revisão, erro nem histórico, oferece a saída para o plano", async () => {
     const html = renderToStaticMarkup(
       await AbrirSessao({ searchParams: Promise.resolve({}) }),
     );
 
-    expect(html).toContain("Não há questões ou revisões pendentes agora");
+    expect(html).toContain("Esta tela enche sozinha conforme você estuda");
     expect(html).toContain("/app");
+  });
+
+  it("segue mostrando a prática quando a leitura do plano de hoje cai", async () => {
+    dependencias.plano.mockRejectedValue(new Error("plano indisponível"));
+    dependencias.pratica.mockResolvedValue({
+      sessaoAberta: null,
+      revisoesForaDoPlano: [],
+      caderno: [
+        { topicoId: "topico-2", causa: "errei_a_conta", nErros: 3, ultimoErroEm: "2026-08-21" },
+      ],
+      historico: [],
+    });
+
+    const html = renderToStaticMarkup(
+      await AbrirSessao({ searchParams: Promise.resolve({}) }),
+    );
+
+    expect(html).toContain("Erros que merecem outra chance");
+    expect(dependencias.pratica).toHaveBeenCalledWith(
+      {},
+      { topicosNoPlanoDeHoje: [], hoje: "2026-08-22" },
+    );
+  });
+
+  it("redireciona a revisão avulsa pelo tópico, sem aceitar outro parâmetro", async () => {
+    await expect(
+      AbrirSessao({
+        searchParams: Promise.resolve({
+          revisao: "11111111-1111-4111-8111-111111111111",
+          user_id: "aluno-alheio",
+        }),
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:/app/sessao/sessao-revisao");
+    expect(dependencias.prepararRevisao).toHaveBeenCalledWith({}, {
+      topicoId: "11111111-1111-4111-8111-111111111111",
+    });
+    expect(dependencias.prepararRevisao.mock.calls[0][1]).not.toHaveProperty("user_id");
+  });
+
+  it("recusa a revisão que não está vencida sem derrubar a rota", async () => {
+    dependencias.prepararRevisao.mockRejectedValue(
+      new SessaoRecusada("revisao_indisponivel", "não venceu"),
+    );
+
+    const html = renderToStaticMarkup(
+      await AbrirSessao({
+        searchParams: Promise.resolve({ revisao: "11111111-1111-4111-8111-111111111111" }),
+      }),
+    );
+
+    expect(html).toContain("Esta revisão não está vencida na sua agenda");
   });
 
   it("redireciona a refação usando somente o filtro autenticado do caderno", async () => {

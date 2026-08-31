@@ -3,23 +3,31 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
-import { consultarPlanoDoDia } from "@/modules/aluno/plano";
+import { consultarPlanoDoDia, dataHojeDoProduto } from "@/modules/aluno/plano";
 import {
   consultarRotulosDosTopicosPorIds,
   type RotuloDoTopico,
 } from "@/modules/aluno/plano-rotulos";
-import { consultarRevisoesDevidas } from "@/modules/aluno/revisoes-devidas";
-import { IndiceDeSessoes } from "@/modules/aluno/sessao/indice-tela";
+import { consultarPratica } from "@/modules/aluno/sessao/pratica";
+import { PraticaTela } from "@/modules/aluno/sessao/pratica-tela";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import {
   prepararSessao,
   prepararSessaoDeRefacao,
+  prepararSessaoDeRevisao,
   SessaoRecusada,
 } from "@/modules/aluno/sessao";
 import type { CausaDoCaderno } from "@/modules/aluno/progresso";
 import { Estado } from "@/modules/ui/estado";
 
-/** Entrada curta que transforma o bloco do plano em uma sessão retomável. */
+/**
+ * A entrada da prática — AD-115.
+ *
+ * Sem parâmetro ela é a **tela de prática**: sessão aberta, revisão vencida
+ * fora do plano, caderno de erros e histórico. Com parâmetro ela é o despacho
+ * curto que abre a sessão e redireciona; nenhum dos três caminhos desenha
+ * lista de bloco, que é assunto de `/app` e `/app/plano`.
+ */
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
@@ -31,6 +39,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
   const modoRefacao = comoTexto(parametros.refacao) ?? comoTexto(parametros.refazer);
   const topicoDaRefacao = comoTexto(parametros.topico);
   const causaDaRefacao = comoTexto(parametros.causa);
+  const topicoDaRevisao = comoTexto(parametros.revisao);
 
   if (modoRefacao !== undefined && modoRefacao !== "") {
     if (topicoDaRefacao === undefined || causaDaRefacao === undefined) {
@@ -60,41 +69,25 @@ export default async function AbrirSessao({ searchParams }: Props) {
     redirect(`/app/sessao/${sessao.id}`);
   }
 
-  if (blocoId === undefined || blocoId === "") {
+  if (topicoDaRevisao !== undefined && topicoDaRevisao !== "") {
     const supabase = await clienteDaSessao();
-    let plano;
-    let revisoesDevidas;
+    let sessao: { id: string };
     try {
-      [plano, revisoesDevidas] = await Promise.all([
-        consultarPlanoDoDia(supabase),
-        consultarRevisoesDevidas(supabase),
-      ]);
+      sessao = await prepararSessaoDeRevisao(supabase, { topicoId: topicoDaRevisao });
     } catch (erro) {
-      reportarErro(erro, { modulo: "aluno", operacao: "consultar_indice_de_sessoes" });
-      return <div className="mx-auto max-w-2xl"><Estado tipo="erro" /></div>;
+      if (!(erro instanceof SessaoRecusada)) throw erro;
+      return (
+        <div className="mx-auto max-w-2xl">
+          <EstadoDaFalha motivo={erro.motivo} />
+        </div>
+      );
     }
 
-    const blocosPendentes = plano === null
-      ? []
-      : [...plano.piso, ...plano.metaCheia].filter((bloco) => bloco.conclusao === null);
-    const idsDosTopicos = [
-      ...blocosPendentes.flatMap((bloco) => (bloco.topicoId ? [bloco.topicoId] : [])),
-      ...revisoesDevidas.map((revisao) => revisao.topicoId),
-    ];
-    let rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico> = new Map();
-    try {
-      rotulosDosTopicos = await consultarRotulosDosTopicosPorIds(supabase, idsDosTopicos);
-    } catch (erro) {
-      reportarErro(erro, { modulo: "aluno", operacao: "consultar_rotulos_sessoes" });
-    }
+    redirect(`/app/sessao/${sessao.id}`);
+  }
 
-    return (
-      <IndiceDeSessoes
-        blocosPendentes={blocosPendentes}
-        revisoesDevidas={revisoesDevidas}
-        rotulosDosTopicos={rotulosDosTopicos}
-      />
-    );
+  if (blocoId === undefined || blocoId === "") {
+    return telaDaPratica();
   }
 
   const supabase = await clienteDaSessao();
@@ -111,6 +104,59 @@ export default async function AbrirSessao({ searchParams }: Props) {
   }
 
   redirect(`/app/sessao/${sessao.id}`);
+}
+
+/**
+ * O plano de hoje é lido só para **excluir** dele as revisões: uma revisão que
+ * já virou bloco vive em `/app`, e repeti-la aqui era a duplicação que o
+ * AD-115 remove. Se essa leitura cair, a tela continua — o custo é uma revisão
+ * aparecer nos dois lugares, não a página quebrar.
+ *
+ * É função que devolve elemento pronto, e **não** um componente `async`
+ * aninhado: a página é o único ponto que espera. Um segundo componente
+ * assíncrono aqui dentro suspende no `renderToStaticMarkup` e derruba a rota
+ * inteira no teste — foi assim que este arquivo quebrou uma vez.
+ */
+async function telaDaPratica() {
+  const supabase = await clienteDaSessao();
+  const hoje = dataHojeDoProduto();
+
+  let topicosNoPlanoDeHoje: string[] = [];
+  try {
+    const plano = await consultarPlanoDoDia(supabase);
+    topicosNoPlanoDeHoje =
+      plano === null
+        ? []
+        : [...plano.piso, ...plano.metaCheia].flatMap((bloco) =>
+            bloco.conclusao === null && bloco.topicoId !== null ? [bloco.topicoId] : [],
+          );
+  } catch (erro) {
+    reportarErro(erro, { modulo: "aluno", operacao: "consultar_plano_da_pratica" });
+  }
+
+  let dados;
+  try {
+    dados = await consultarPratica(supabase, { topicosNoPlanoDeHoje, hoje });
+  } catch (erro) {
+    reportarErro(erro, { modulo: "aluno", operacao: "consultar_pratica" });
+    return <div className="mx-auto max-w-2xl"><Estado tipo="erro" /></div>;
+  }
+
+  const idsDosTopicos = [
+    ...(dados.sessaoAberta?.topicoId ? [dados.sessaoAberta.topicoId] : []),
+    ...dados.revisoesForaDoPlano.map((revisao) => revisao.topicoId),
+    ...dados.caderno.map((erro) => erro.topicoId),
+    ...dados.historico.flatMap((sessao) => (sessao.topicoId ? [sessao.topicoId] : [])),
+  ];
+
+  let rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico> = new Map();
+  try {
+    rotulosDosTopicos = await consultarRotulosDosTopicosPorIds(supabase, idsDosTopicos);
+  } catch (erro) {
+    reportarErro(erro, { modulo: "aluno", operacao: "consultar_rotulos_pratica" });
+  }
+
+  return <PraticaTela dados={dados} rotulosDosTopicos={rotulosDosTopicos} hoje={hoje} />;
 }
 
 function EstadoDaFalha({ motivo, refacao = false }: { motivo: SessaoRecusada["motivo"]; refacao?: boolean }) {
@@ -139,6 +185,23 @@ function EstadoDaFalha({ motivo, refacao = false }: { motivo: SessaoRecusada["mo
         tipo="vazio"
         titulo="Esta refação não está disponível"
         acao={<Link href="/app/progresso" className="font-semibold text-marca underline">Voltar ao progresso</Link>}
+      />
+    );
+  }
+
+  if (motivo === "revisao_indisponivel") {
+    return (
+      <Estado
+        tipo="vazio"
+        titulo="Esta revisão não está vencida na sua agenda"
+        acao={
+          <>
+            {"A revisão volta sozinha na data certa. "}
+            <Link href="/app/sessao" className="font-semibold text-marca underline">
+              Voltar à prática
+            </Link>
+          </>
+        }
       />
     );
   }

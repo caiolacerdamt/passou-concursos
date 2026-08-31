@@ -70,8 +70,39 @@ describe("consultarRaioX", () => {
       },
       topicos: {
         data: [
-          { id: "topico-a", nome: "Matemática Financeira" },
-          { id: "topico-b", nome: "Conhecimentos Bancários" },
+          {
+            id: "topico-a",
+            nome: "Matemática Financeira",
+            materia_id: "materia-1",
+            materias: { nome: "Matemática Financeira" },
+          },
+          {
+            id: "topico-b",
+            nome: "Conhecimentos Bancários",
+            materia_id: "materia-2",
+            materias: [{ nome: "Conhecimentos Bancários" }],
+          },
+        ],
+        error: null,
+      },
+      raiox_projecoes_materia: {
+        data: [
+          {
+            materia_id: "materia-2",
+            peso: "0.4",
+            n_questoes: 18,
+            n_topicos: 4,
+            tendencia: "estavel",
+            amostra_baixa: false,
+          },
+          {
+            materia_id: "materia-1",
+            peso: 0.1,
+            n_questoes: 3,
+            n_topicos: 2,
+            tendencia: "subindo",
+            amostra_baixa: true,
+          },
         ],
         error: null,
       },
@@ -103,11 +134,58 @@ describe("consultarRaioX", () => {
           amostraBaixa: false,
         },
       ],
+      // A projeção por matéria é leitura própria, não a soma de `linhas`: as
+      // fatias saem do peso agregado (0,4 e 0,1) e fecham 100%.
+      materias: [
+        {
+          materiaId: "materia-2",
+          materia: "Conhecimentos Bancários",
+          peso: 0.4,
+          fatia: 0.8,
+          nQuestoes: 18,
+          nTopicos: 4,
+          tendencia: "estavel",
+          amostraBaixa: false,
+          topicos: [
+            {
+              topicoId: "topico-b",
+              topico: "Conhecimentos Bancários",
+              peso: 0.41,
+              nQuestoes: 18,
+              tendencia: "estavel",
+              amostraBaixa: false,
+              fatia: 0.8,
+            },
+          ],
+        },
+        {
+          materiaId: "materia-1",
+          materia: "Matemática Financeira",
+          peso: 0.1,
+          fatia: 0.2,
+          nQuestoes: 3,
+          nTopicos: 2,
+          tendencia: "subindo",
+          amostraBaixa: true,
+          topicos: [
+            {
+              topicoId: "topico-a",
+              topico: "Matemática Financeira",
+              peso: 0.72,
+              nQuestoes: 3,
+              tendencia: "subindo",
+              amostraBaixa: true,
+              fatia: 0.2,
+            },
+          ],
+        },
+      ],
     });
     expect(falso.chamadas).toEqual([
       "perfil_concurso",
       "raiox_projecoes",
       "topicos",
+      "raiox_projecoes_materia",
     ]);
   });
 
@@ -121,6 +199,7 @@ describe("consultarRaioX", () => {
     await expect(consultarRaioX(falso.cliente as never)).resolves.toEqual({
       perfil: null,
       linhas: [],
+      materias: [],
     });
     expect(falso.chamadas).toEqual(["perfil_concurso"]);
   });
@@ -201,6 +280,7 @@ describe("consultarMapaPrioridade", () => {
         amostraBaixa: false,
       },
     ],
+    materias: [],
   };
 
   it("cruza quatro sinais, preserva tópico sem projeção e ordena de forma estável", async () => {

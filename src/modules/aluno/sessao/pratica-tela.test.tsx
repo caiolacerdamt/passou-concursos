@@ -21,13 +21,26 @@ const rotulos = new Map<string, RotuloDoTopico>([
 const VAZIO: DadosDaPratica = {
   sessaoAberta: null,
   revisoesForaDoPlano: [],
+  totalDeRevisoes: 0,
   caderno: [],
+  totalNoCaderno: 0,
   historico: [],
 };
 
+/**
+ * O total padrão acompanha a lista. Quem quiser exercitar o corte (lista menor
+ * que o total) passa `totalNoCaderno`/`totalDeRevisoes` explicitamente — é essa
+ * diferença que faz o rodapé oferecer a tela dona em vez de mais um lote.
+ */
 function render(dados: Partial<DadosDaPratica>): string {
+  const completo: DadosDaPratica = {
+    ...VAZIO,
+    ...dados,
+    totalDeRevisoes: dados.totalDeRevisoes ?? dados.revisoesForaDoPlano?.length ?? 0,
+    totalNoCaderno: dados.totalNoCaderno ?? dados.caderno?.length ?? 0,
+  };
   return renderToStaticMarkup(
-    <PraticaTela dados={{ ...VAZIO, ...dados }} rotulosDosTopicos={rotulos} hoje={HOJE} />,
+    <PraticaTela dados={completo} rotulosDosTopicos={rotulos} hoje={HOJE} />,
   );
 }
 
@@ -239,9 +252,10 @@ describe("PraticaTela — a sessão velha não se passa por recente", () => {
     expect(antiga).toContain("Ficou aberta");
     expect(antiga).toContain("Uma sessão de outro dia ficou pela metade");
     expect(antiga).toContain("aberta há 5 dias");
-    // Sessão de outro dia não usa o anel de foco: ela não é o que está
-    // acontecendo agora, e o destaque diria que é.
-    expect(antiga).not.toContain("ring-marca/20");
+    // A que esfriou é ouro, não verde: ela não é o que está acontecendo agora,
+    // e o verde diria que é (AD-117).
+    expect(antiga).toContain("bg-conquista-fundo");
+    expect(antiga).not.toContain("bg-marca-suave");
   });
 
   it("mantém o destaque na sessão de hoje", () => {
@@ -250,6 +264,79 @@ describe("PraticaTela — a sessão velha não se passa por recente", () => {
     expect(recente).toContain("Em andamento");
     expect(recente).toContain("Você parou no meio de uma sessão");
     expect(recente).toContain("aberta há 2 h");
-    expect(recente).toContain("ring-marca/20");
+    expect(recente).toContain("bg-marca-suave");
+    expect(recente).not.toContain("bg-conquista-fundo");
+  });
+
+  it("oferece descartar como link na frase, não como segunda pílula", () => {
+    const antiga = render(sessaoIniciadaEm(new Date(Date.now() - 5 * 86_400_000).toISOString()));
+
+    // Duas pílulas de alturas diferentes empilhadas no canto era o que estava
+    // feio. Retomar segue sendo o único botão cheio do cartão; descartar é
+    // `<button>` de texto dentro da frase que já o explicava (AD-117).
+    expect(antiga).toContain("Não vai voltar a esta?");
+    expect(antiga).toMatch(/<button type="submit"[^>]*underline/);
+    expect(antiga).not.toMatch(/<button type="submit"[^>]*border-linha/);
+  });
+});
+
+describe("PraticaTela — blocos que crescem (AD-117)", () => {
+  function erros(quantos: number) {
+    return Array.from({ length: quantos }, (_, indice) => ({
+      topicoId: `topico-${indice}`,
+      causa: "chutei" as const,
+      nErros: quantos - indice,
+      ultimoErroEm: "2026-08-30T12:00:00Z",
+    }));
+  }
+
+  it("corta a lista longa e diz quantos existem ao todo", () => {
+    const html = render({ caderno: erros(12) });
+
+    // Quatro linhas, não doze: o cartão tem altura de repouso previsível.
+    expect(html).toContain("Mostrar mais 8");
+    expect(html).toContain("· 12");
+    expect(html).toContain("Tópico do ciclo");
+    // O quinto item existe no payload mas não no primeiro corte.
+    expect(html.match(/Tópico do ciclo/g)).toHaveLength(4);
+  });
+
+  it("não corta nem conta quando a lista inteira cabe", () => {
+    const html = render({ caderno: erros(3) });
+
+    expect(html).not.toContain("Mostrar mais");
+    // Contador em cima de três itens é ruído: o olho já mostra os três.
+    expect(html).not.toMatch(/Recuperar erro<span[^>]*> · 3</);
+  });
+
+  it("conta o que ficou fora da consulta, e não só o que veio", () => {
+    // 24 vieram do banco, 214 existem. O rodapé abre mais um lote, mas o
+    // "restam" precisa contar os 190 que nem foram lidos — senão o corte da
+    // consulta vira uma mentira silenciosa sobre o tamanho da fila.
+    const html = render({ caderno: erros(24), totalNoCaderno: 214 });
+
+    expect(html).toContain("· 214");
+    expect(html).toContain("Mostrar mais 8");
+    expect(html).toContain("· restam 210");
+  });
+
+  it("avisa que o histórico já nasce cortado, em vez de fingir que são todas", () => {
+    const sessoes = Array.from({ length: 12 }, (_, indice) => ({
+      id: `sessao-${indice}`,
+      contexto: "plano" as const,
+      topicoId: "topico-sfn",
+      encerradaEm: "2026-08-30T12:00:00Z",
+      nQuestoes: 10,
+      nAcertos: 8,
+    }));
+
+    const cheio = render({ historico: sessoes });
+    const curto = render({ historico: sessoes.slice(0, 3) });
+
+    expect(cheio).toContain("12 sessões mais recentes");
+    // Sem o corte valendo, a ressalva seria mentira ao contrário.
+    expect(curto).not.toContain("sessões mais recentes");
+    // O histórico nunca ganha "Mostrar mais": não há o que abrir.
+    expect(cheio).not.toContain("Mostrar mais");
   });
 });

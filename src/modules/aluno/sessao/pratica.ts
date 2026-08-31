@@ -25,7 +25,22 @@ import type { Contexto } from "../tentativas";
  */
 
 /** Teto do histórico. Acima disso a leitura é do Progresso, não daqui. */
-const SESSOES_NO_HISTORICO = 12;
+export const SESSOES_NO_HISTORICO = 12;
+
+/**
+ * Teto dos dois blocos que crescem com o aluno — AD-117.
+ *
+ * `revisao_agenda` tem uma linha por tópico vencido e `caderno_erros` uma por
+ * par tópico×causa: nenhum dos dois é ilimitado (o teto real é o tamanho da
+ * taxonomia), mas os dois passam das dezenas no fim de um ciclo. Sem `limit`
+ * essas linhas viajavam **todas** do banco para o HTML mesmo com quatro
+ * desenhadas na tela.
+ *
+ * A contagem total vem junto no mesmo ida-e-volta (`count: "exact"`), porque é
+ * ela que o rodapé usa para dizer quantos ficaram de fora — e é o que permite
+ * cortar a lista sem mentir sobre o tamanho dela.
+ */
+const ITENS_NO_BLOCO = 24;
 
 export type ResultadoDoItem = "acerto" | "erro" | "pendente";
 
@@ -64,7 +79,14 @@ export type SessaoDoHistorico = {
 export type DadosDaPratica = {
   sessaoAberta: SessaoAberta | null;
   revisoesForaDoPlano: readonly RevisaoForaDoPlano[];
+  /**
+   * Quantas existem ao todo, e não quantas vieram: o teto corta a **lista**,
+   * nunca a contagem. É a diferença entre os dois que a tela usa para decidir
+   * se o rodapé abre mais um lote ou entrega a tela dona (AD-117).
+   */
+  totalDeRevisoes: number;
   caderno: readonly ErroDoCaderno[];
+  totalNoCaderno: number;
   historico: readonly SessaoDoHistorico[];
 };
 
@@ -239,6 +261,44 @@ async function consultarHistorico(
 }
 
 /**
+ * A consulta das revisões vencidas, com o filtro do plano **no banco**.
+ *
+ * Ele precisa estar lá, e não só no JS, por causa do `limit`: filtrando depois,
+ * as 24 linhas trazidas poderiam ser todas de tópicos que o plano de hoje já
+ * cobre — e a tela mostraria vazio tendo o que mostrar. A contagem total teria
+ * o mesmo defeito: contaria o que a tela esconde de propósito.
+ *
+ * O filtro em JS continua existindo depois desta consulta. Não é redundância
+ * inútil: é ele que segura um id que não passe pela peneira de formato abaixo,
+ * e é o que mantém a regra verdadeira mesmo se esta consulta mudar.
+ */
+function consultarRevisoesDevidas(
+  cliente: SupabaseClient,
+  hoje: string,
+  noPlano: readonly string[],
+) {
+  const consulta = cliente
+    .from("revisao_agenda")
+    .select("topico_id, due", { count: "exact" })
+    .lte("due", hoje);
+
+  // `topico_id` é uuid. Interpolar qualquer outra coisa numa lista literal do
+  // PostgREST é o tipo de coisa que vira injeção de filtro: o que não tem
+  // formato de uuid não entra aqui e sobra para o filtro em JS.
+  const filtraveis = noPlano.filter((id) => /^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id));
+
+  const semOPlano =
+    filtraveis.length === 0
+      ? consulta
+      : consulta.not("topico_id", "in", `(${filtraveis.join(",")})`);
+
+  return semOPlano
+    .order("due", { ascending: true })
+    .order("topico_id", { ascending: true })
+    .limit(ITENS_NO_BLOCO);
+}
+
+/**
  * A leitura completa da tela.
  *
  * `blocosComRevisaoHoje` são os tópicos que o plano de hoje já cobre: uma
@@ -258,17 +318,13 @@ export async function consultarPratica(
       .select("id, contexto, plano_bloco_id, refacao_chave, iniciada_em, encerrada_em")
       .order("iniciada_em", { ascending: false })
       .limit(SESSOES_NO_HISTORICO + 1),
-    cliente
-      .from("revisao_agenda")
-      .select("topico_id, due")
-      .lte("due", hoje)
-      .order("due", { ascending: true })
-      .order("topico_id", { ascending: true }),
+    consultarRevisoesDevidas(cliente, hoje, [...noPlano]),
     cliente
       .from("caderno_erros")
-      .select("topico_id, causa_erro, n_erros, ultimo_erro_em")
+      .select("topico_id, causa_erro, n_erros, ultimo_erro_em", { count: "exact" })
       .order("n_erros", { ascending: false })
-      .order("ultimo_erro_em", { ascending: false }),
+      .order("ultimo_erro_em", { ascending: false })
+      .limit(ITENS_NO_BLOCO),
   ]);
 
   if (sessoesConsulta.error) throw falhaAoLer("sessões do aluno", sessoesConsulta.error.message);
@@ -335,5 +391,16 @@ export async function consultarPratica(
     },
   );
 
-  return { sessaoAberta, revisoesForaDoPlano, caderno, historico };
+  return {
+    sessaoAberta,
+    revisoesForaDoPlano,
+    // `count` vem do banco já sem o que o filtro do plano tirou. Quando o
+    // cliente não devolve contagem, o total é o tamanho da própria lista — o
+    // bloco então só não oferece a saída para a tela dona, que é o certo:
+    // sem contagem não há como afirmar que existe mais do que veio.
+    totalDeRevisoes: revisoesConsulta.count ?? revisoesForaDoPlano.length,
+    caderno,
+    totalNoCaderno: cadernoConsulta.count ?? caderno.length,
+    historico,
+  };
 }

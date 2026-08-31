@@ -5,13 +5,15 @@ import { descartarSessao } from "@/app/app/sessao/acoes";
 import { NOMES_DAS_CAUSAS } from "../progresso";
 import { nomeDoRotuloDoTopico, type RotuloDoTopico } from "../rotulo-do-topico";
 import type { Contexto } from "../tentativas";
-import type {
-  DadosDaPratica,
-  ErroDoCaderno,
-  ResultadoDoItem,
-  RevisaoForaDoPlano,
-  SessaoAberta,
-  SessaoDoHistorico,
+import { ListaComTeto } from "./lista-com-teto";
+import {
+  SESSOES_NO_HISTORICO,
+  type DadosDaPratica,
+  type ErroDoCaderno,
+  type ResultadoDoItem,
+  type RevisaoForaDoPlano,
+  type SessaoAberta,
+  type SessaoDoHistorico,
 } from "./pratica";
 
 /**
@@ -73,7 +75,8 @@ function envelheceu(iniciadaEm: string, agora: Date = new Date()): boolean {
 }
 
 export function PraticaTela({ dados, rotulosDosTopicos, hoje }: Props) {
-  const { sessaoAberta, revisoesForaDoPlano, caderno, historico } = dados;
+  const { sessaoAberta, revisoesForaDoPlano, totalDeRevisoes, caderno, totalNoCaderno, historico } =
+    dados;
   const vazia =
     sessaoAberta === null &&
     revisoesForaDoPlano.length === 0 &&
@@ -101,12 +104,17 @@ export function PraticaTela({ dados, rotulosDosTopicos, hoje }: Props) {
               {revisoesForaDoPlano.length > 0 ? (
                 <Revisoes
                   revisoes={revisoesForaDoPlano}
+                  total={totalDeRevisoes}
                   rotulosDosTopicos={rotulosDosTopicos}
                   hoje={hoje}
                 />
               ) : null}
               {caderno.length > 0 ? (
-                <Caderno erros={caderno} rotulosDosTopicos={rotulosDosTopicos} />
+                <Caderno
+                  erros={caderno}
+                  total={totalNoCaderno}
+                  rotulosDosTopicos={rotulosDosTopicos}
+                />
               ) : null}
             </div>
           ) : null}
@@ -151,9 +159,17 @@ function Cabecalho() {
 }
 
 /**
- * A sessão que ficou aberta. Recebe a marca de foco do plano
- * (`border-marca/40` + anel interno), não o breu: continuar o que estava no
- * meio é o mais urgente **desta** tela, e nada aqui disputa com o `/app`.
+ * A sessão que ficou aberta — o único cartão desta tela com fundo tingido
+ * (AD-117).
+ *
+ * Antes os dois estados usavam o mesmo `bg-painel` dos blocos comuns e só a
+ * borda mudava, o que some a um braço de distância. Agora o fundo carrega o
+ * estado: **verde tênue** enquanto a sessão é de hoje ("isto está andando") e
+ * **ouro tênue** depois de envelhecer ("isto esfriou e espera uma decisão").
+ * Vermelho fica de fora de propósito — sessão parada não é erro.
+ *
+ * Continua sem breu: o AD-111 reserva esse tratamento ao próximo bloco em
+ * `/app`, um por tela.
  */
 function EmAndamento({
   sessao,
@@ -169,14 +185,12 @@ function EmAndamento({
     <section
       aria-labelledby="sessao-em-andamento"
       className={`rounded-2xl border px-7 pb-6 pt-5 ${
-        antiga
-          ? "border-linha bg-painel"
-          : "border-marca/40 bg-painel ring-1 ring-inset ring-marca/20"
+        antiga ? "border-ouro/45 bg-conquista-fundo" : "border-marca/30 bg-marca-suave"
       }`}
     >
       <p
         className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${
-          antiga ? "text-suave" : "text-marca"
+          antiga ? "text-conquista" : "text-marca"
         }`}
       >
         {antiga ? "Ficou aberta" : "Em andamento"}
@@ -197,41 +211,52 @@ function EmAndamento({
             respondidas · {pendentes} {pendentes === 1 ? "pendente" : "pendentes"} ·{" "}
             {idadeDaSessao(sessao.iniciadaEm)}
           </p>
-          <Trilha resultados={sessao.resultados} />
+          {/*
+            `bg-linha` é calibrado contra o papel branco do painel: sobre fundo
+            tingido ele quase desaparece. A tinta a 20% escurece o suficiente
+            nos dois fundos sem virar mais um token.
+          */}
+          <Trilha
+            resultados={sessao.resultados}
+            tomPendente={antiga ? "bg-conquista/25" : "bg-marca/20"}
+          />
         </div>
 
-        <div className="flex shrink-0 flex-col items-stretch gap-2.5 sm:items-end">
-          <Link
-            href={`/app/sessao/${encodeURIComponent(sessao.id)}`}
-            className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-7 font-semibold text-painel no-underline transition-colors duration-150 hover:bg-marca-apoio"
-          >
-            Retomar
-            <Seta />
-          </Link>
-          {/*
-            Descartar só aparece na sessão que envelheceu. Na de hoje seria
-            oferecer desistência a quem acabou de sair para o café.
-          */}
-          {antiga ? (
-            <form action={descartarSessao}>
-              <input type="hidden" name="sessaoId" value={sessao.id} />
-              <button
-                type="submit"
-                className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-linha px-4 text-[0.8125rem] font-semibold text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca"
-              >
-                Descartar
-              </button>
-            </form>
-          ) : null}
-        </div>
+        <Link
+          href={`/app/sessao/${encodeURIComponent(sessao.id)}`}
+          className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-7 font-semibold text-painel no-underline transition-colors duration-150 hover:bg-marca-apoio"
+        >
+          Retomar
+          <Seta />
+        </Link>
       </div>
 
+      {/*
+        Descartar só aparece na sessão que envelheceu — na de hoje seria oferecer
+        desistência a quem acabou de sair para o café — e aparece **como link
+        dentro da frase que já explicava o que ele faz**, não como segunda
+        pílula. Duas pílulas de alturas e corpos diferentes empilhadas no canto
+        liam como dois botões brigando; aqui a explicação e a ação são a mesma
+        linha, no vocabulário de link que o resto da tela já usa.
+      */}
       {antiga ? (
-        <p className="mt-4 text-[0.8125rem] leading-6 text-suave">
-          Descartar fecha a sessão sem apagar nada: as{" "}
-          {sessao.nRespondidas === 1 ? "resposta que você já deu continua" : `${sessao.nRespondidas} respostas que você já deu continuam`}{" "}
-          no seu histórico.
-        </p>
+        <form action={descartarSessao} className="mt-4 border-t border-ouro/30 pt-3.5">
+          <input type="hidden" name="sessaoId" value={sessao.id} />
+          <p className="text-[0.8125rem] leading-6 text-suave">
+            Não vai voltar a esta?{" "}
+            <button
+              type="submit"
+              className="font-semibold text-suave underline underline-offset-2 transition-colors duration-150 hover:text-marca"
+            >
+              Descartar a sessão
+            </button>{" "}
+            — fecha sem apagar nada: as{" "}
+            {sessao.nRespondidas === 1
+              ? "resposta que você já deu continua"
+              : `${sessao.nRespondidas} respostas que você já deu continuam`}{" "}
+            no seu histórico.
+          </p>
+        </form>
       ) : null}
     </section>
   );
@@ -242,11 +267,18 @@ function EmAndamento({
  * leitura: reconhecer a peça é o que faz "Retomar" parecer continuar, e não
  * recomeçar. Sem botão — navegar por questão é lá dentro.
  */
-function Trilha({ resultados }: { resultados: readonly ResultadoDoItem[] }) {
+function Trilha({
+  resultados,
+  tomPendente = "bg-linha",
+}: {
+  resultados: readonly ResultadoDoItem[];
+  /** O cinza da barra pendente muda com o fundo do cartão — ver `EmAndamento`. */
+  tomPendente?: string;
+}) {
   const materia: Record<ResultadoDoItem, string> = {
     acerto: "bg-marca-viva",
     erro: "bg-erro",
-    pendente: "bg-linha",
+    pendente: tomPendente,
   };
 
   return (
@@ -268,20 +300,28 @@ function Trilha({ resultados }: { resultados: readonly ResultadoDoItem[] }) {
 
 function Revisoes({
   revisoes,
+  total,
   rotulosDosTopicos,
   hoje,
 }: {
   revisoes: readonly RevisaoForaDoPlano[];
+  total: number;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   hoje: string;
 }) {
   return (
     <section
       aria-labelledby="revisoes-fora-do-plano"
-      className="flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
+      className="flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-3 pt-5"
     >
+      {/*
+        O total no olho do bloco. Sem ele o corte mente: quatro linhas visíveis
+        parecem quatro revisões na fila. Só entra acima do primeiro corte — em
+        cima de três itens seria ruído.
+      */}
       <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-conquista">
         Memória
+        {total > 4 ? <span className="text-suave">{` · ${total}`}</span> : null}
       </p>
       <h2 id="revisoes-fora-do-plano" className="mt-2.5 text-xl font-semibold">
         Venceram e ficaram de fora
@@ -291,8 +331,12 @@ function Revisoes({
         altera o mínimo.
       </p>
 
-      <ul className="mt-4">
-        {revisoes.map((revisao) => (
+      <ListaComTeto
+        total={total}
+        hrefDoResto="/app/progresso"
+        rotuloDoResto={`Ver as ${total - revisoes.length} restantes no Progresso`}
+        nomeDosItens="revisões"
+        itens={revisoes.map((revisao) => (
           <li
             key={`${revisao.topicoId}:${revisao.due}`}
             className="flex flex-wrap items-center justify-between gap-4 border-t border-linha px-1 py-3.5"
@@ -315,26 +359,29 @@ function Revisoes({
             </Link>
           </li>
         ))}
-      </ul>
+      />
     </section>
   );
 }
 
 function Caderno({
   erros,
+  total,
   rotulosDosTopicos,
 }: {
   erros: readonly ErroDoCaderno[];
+  total: number;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
 }) {
   return (
     <section
       aria-labelledby="caderno-de-erros"
-      className="flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5"
+      className="flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-3 pt-5"
     >
       <div className="flex items-baseline justify-between gap-4">
         <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-aviso">
           Recuperar erro
+          {total > 4 ? <span className="text-suave">{` · ${total}`}</span> : null}
         </p>
         <Link
           href="/app/progresso"
@@ -350,8 +397,12 @@ function Caderno({
         Refazer conta como recuperação, e a causa que você marcou é o que decide qual questão volta.
       </p>
 
-      <ul className="mt-4">
-        {erros.map((erro) => (
+      <ListaComTeto
+        total={total}
+        hrefDoResto="/app/progresso"
+        rotuloDoResto={`Ver os ${total - erros.length} restantes no Caderno completo`}
+        nomeDosItens="erros"
+        itens={erros.map((erro) => (
           <li
             key={`${erro.topicoId}:${erro.causa}`}
             className="flex flex-wrap items-center justify-between gap-4 border-t border-linha px-1 py-3.5"
@@ -371,7 +422,7 @@ function Caderno({
             </Link>
           </li>
         ))}
-      </ul>
+      />
     </section>
   );
 }
@@ -441,6 +492,22 @@ function Historico({
           </ul>
         </div>
       ))}
+
+      {/*
+        O histórico não ganha "Mostrar mais": ele já nasce cortado em
+        `SESSOES_NO_HISTORICO`, e um botão que abrisse mais não teria o que
+        abrir. Quando o corte está valendo, a tela diz isso em vez de deixar o
+        aluno achar que estudou só doze vezes na vida.
+      */}
+      {sessoes.length >= SESSOES_NO_HISTORICO ? (
+        <p className="mt-4 border-t border-linha px-1 pt-3.5 text-[0.8125rem] leading-6 text-suave">
+          Aqui ficam as suas {SESSOES_NO_HISTORICO} sessões mais recentes. O resto está no{" "}
+          <Link href="/app/progresso" className="font-semibold text-marca underline underline-offset-2">
+            relatório do Progresso
+          </Link>
+          .
+        </p>
+      ) : null}
     </section>
   );
 }

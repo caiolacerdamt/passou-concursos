@@ -2,9 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { consultarPratica } from "./pratica";
 
-type Resposta = { data: unknown; error: { message: string } | null };
+type Resposta = { data: unknown; error: { message: string } | null; count?: number };
 
-type Chamada = { tabela: string; filtros: Array<[string, unknown]> };
+type Chamada = {
+  tabela: string;
+  filtros: Array<[string, unknown]>;
+  /** O teto que a consulta pediu ao banco, quando pediu. */
+  limite?: number;
+};
 
 /**
  * Um cliente falso que despacha por tabela.
@@ -22,7 +27,10 @@ function clienteFalso(respostas: Record<string, Resposta>, chamadas: Chamada[] =
       const construtor = {
         select: () => construtor,
         order: () => construtor,
-        limit: () => construtor,
+        limit: (quantos: number) => {
+          chamada.limite = quantos;
+          return construtor;
+        },
         eq: (campo: string, valor: unknown) => {
           chamada.filtros.push([campo, valor]);
           return construtor;
@@ -33,6 +41,10 @@ function clienteFalso(respostas: Record<string, Resposta>, chamadas: Chamada[] =
         },
         in: (campo: string, valor: unknown) => {
           chamada.filtros.push([campo, valor]);
+          return construtor;
+        },
+        not: (campo: string, operador: string, valor: unknown) => {
+          chamada.filtros.push([`not.${campo}.${operador}`, valor]);
           return construtor;
         },
         then: (resolve: (valor: unknown) => unknown, reject: (erro: unknown) => unknown) =>
@@ -81,6 +93,94 @@ describe("consultarPratica — revisões fora do plano", () => {
 
     const agenda = chamadas.find((chamada) => chamada.tabela === "revisao_agenda");
     expect(agenda?.filtros).toContainEqual(["due", "2026-08-31"]);
+  });
+});
+
+describe("consultarPratica — teto dos blocos que crescem (AD-117)", () => {
+  const UM_TOPICO = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
+
+  it("pede ao banco um teto de itens, e não a fila inteira", async () => {
+    const chamadas: Chamada[] = [];
+
+    await consultarPratica(clienteFalso(SEM_DADOS, chamadas) as never, { hoje: "2026-08-31" });
+
+    // Sem isto as 214 linhas do caderno viajavam do banco para o HTML com
+    // quatro desenhadas na tela.
+    expect(chamadas.find((c) => c.tabela === "caderno_erros")?.limite).toBe(24);
+    expect(chamadas.find((c) => c.tabela === "revisao_agenda")?.limite).toBe(24);
+  });
+
+  it("leva o filtro do plano para o banco, junto com o teto", async () => {
+    const chamadas: Chamada[] = [];
+
+    await consultarPratica(clienteFalso(SEM_DADOS, chamadas) as never, {
+      topicosNoPlanoDeHoje: [UM_TOPICO],
+      hoje: "2026-08-31",
+    });
+
+    // Filtrar só no JS depois do `limit` faria as 24 linhas trazidas serem
+    // todas de tópicos que o plano já cobre: tela vazia tendo o que mostrar.
+    expect(chamadas.find((c) => c.tabela === "revisao_agenda")?.filtros).toContainEqual([
+      "not.topico_id.in",
+      `(${UM_TOPICO})`,
+    ]);
+  });
+
+  it("não interpola no filtro do banco um id que não tem formato de uuid", async () => {
+    const chamadas: Chamada[] = [];
+
+    await consultarPratica(clienteFalso(SEM_DADOS, chamadas) as never, {
+      topicosNoPlanoDeHoje: ['x") or true --'],
+      hoje: "2026-08-31",
+    });
+
+    const filtros = chamadas.find((c) => c.tabela === "revisao_agenda")?.filtros ?? [];
+    expect(filtros.some(([campo]) => campo === "not.topico_id.in")).toBe(false);
+  });
+
+  it("devolve a contagem do banco, não o tamanho da lista cortada", async () => {
+    const dados = await consultarPratica(
+      clienteFalso({
+        ...SEM_DADOS,
+        caderno_erros: {
+          data: [
+            { topico_id: "t1", causa_erro: "chutei", n_erros: 9, ultimo_erro_em: "2026-08-30" },
+          ],
+          error: null,
+          count: 214,
+        },
+        revisao_agenda: {
+          data: [{ topico_id: "t2", due: "2026-08-20" }],
+          error: null,
+          count: 61,
+        },
+      }) as never,
+      { hoje: "2026-08-31" },
+    );
+
+    expect(dados.caderno).toHaveLength(1);
+    expect(dados.totalNoCaderno).toBe(214);
+    expect(dados.revisoesForaDoPlano).toHaveLength(1);
+    expect(dados.totalDeRevisoes).toBe(61);
+  });
+
+  it("cai no tamanho da lista quando o banco não devolveu contagem", async () => {
+    const dados = await consultarPratica(
+      clienteFalso({
+        ...SEM_DADOS,
+        // Banco que não devolveu contagem: o total cai no tamanho da lista.
+        caderno_erros: {
+          data: [
+            { topico_id: "t1", causa_erro: "chutei", n_erros: 2, ultimo_erro_em: "2026-08-30" },
+            { topico_id: "t2", causa_erro: "chutei", n_erros: 1, ultimo_erro_em: "2026-08-29" },
+          ],
+          error: null,
+        },
+      }) as never,
+      { hoje: "2026-08-31" },
+    );
+
+    expect(dados.totalNoCaderno).toBe(2);
   });
 });
 

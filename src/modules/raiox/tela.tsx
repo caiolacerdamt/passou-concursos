@@ -543,18 +543,101 @@ function LinhaDoMapa({
   );
 }
 
-/**
+/*
  * O mesmo mapa como imagem.
  *
  * Direita = a banca cobra muito. Baixo = o aluno domina pouco. O quadrante de
  * baixo à direita é onde o estudo rende mais — e é o único pintado, porque
  * destacar os quatro seria não destacar nenhum.
+ *
+ * Duas regras de honestidade governam este desenho:
+ *
+ * 1. **Matéria sem nenhuma resposta não entra no plano.** Ela não tem domínio
+ *    zero — ela não tem domínio. Desenhá-la na linha de baixo diria que o
+ *    aluno errou tudo, e ainda empilha todas elas no mesmo ponto. Elas saem
+ *    para uma faixa própria, embaixo, onde o peso continua visível.
+ * 2. **O eixo termina no maior valor real**, com uma folga. Um teto fixo
+ *    espremeria todas as matérias contra a esquerda quando a maior fatia é
+ *    pequena, que é justamente o caso em que separar uma da outra importa.
  */
+
+const AREA = { x0: 64, x1: 704, y0: 24, y1: 444 };
+/** Altura de uma linha de rótulo, com folga: abaixo disso dois nomes colidem. */
+const ALTURA_DO_ROTULO = 19;
+
+export type PontoDoMapa = {
+  id: string;
+  nome: string;
+  cx: number;
+  cy: number;
+  raio: number;
+  aEsquerda: boolean;
+  destaque: boolean;
+};
+
+/**
+ * Empurra o rótulo que colidiria com o vizinho.
+ *
+ * Cada lado do desenho é uma pilha independente: dois nomes só disputam espaço
+ * se saírem para o mesmo lado do círculo. Dentro da pilha, o de cima fica onde
+ * quer e cada seguinte desce o mínimo necessário; se a pilha estourar o fundo,
+ * ela sobe inteira, preservando a ordem.
+ */
+export function posicoesDosRotulos(pontos: readonly PontoDoMapa[]): Map<string, number> {
+  const posicoes = new Map<string, number>();
+
+  for (const aEsquerda of [true, false]) {
+    const fila = pontos
+      .filter((ponto) => ponto.aEsquerda === aEsquerda)
+      .sort((a, b) => a.cy - b.cy);
+
+    let anterior = Number.NEGATIVE_INFINITY;
+    for (const ponto of fila) {
+      const y = Math.max(ponto.cy, anterior + ALTURA_DO_ROTULO);
+      posicoes.set(ponto.id, y);
+      anterior = y;
+    }
+
+    const excesso = anterior - AREA.y1;
+    if (excesso > 0) {
+      for (const ponto of fila) {
+        posicoes.set(ponto.id, posicoes.get(ponto.id)! - excesso);
+      }
+    }
+  }
+
+  return posicoes;
+}
+
 function GraficoDoMapa({ linhas }: { linhas: LinhaMateriaMapa[] }) {
-  const teto = Math.max(0.32, ...linhas.map((linha) => linha.fatia));
-  const x = (fatia: number) => 64 + (fatia / teto) * 640;
-  const y = (score: number | null) => 444 - (score ?? 0) * 420;
-  const raio = (nTopicos: number) => Math.min(13, Math.max(6, 5 + nTopicos * 0.5));
+  const comDominio = linhas.filter((linha) => linha.score !== null);
+  const semResposta = linhas.filter((linha) => linha.score === null);
+
+  // O teto sai de todas as matérias, não só das desenhadas: mudar a escala
+  // conforme o aluno responde faria a mesma prova mudar de forma sozinha.
+  const maiorFatia = Math.max(0.01, ...linhas.map((linha) => linha.fatia));
+  const teto = maiorFatia * 1.12;
+  const x = (fatia: number) => AREA.x0 + (fatia / teto) * (AREA.x1 - AREA.x0);
+  const y = (score: number) => AREA.y1 - score * (AREA.y1 - AREA.y0);
+  const raioDe = (nTopicos: number) => Math.min(13, Math.max(6, 5 + nTopicos * 0.5));
+
+  const pontos: PontoDoMapa[] = comDominio.map((linha, indice) => {
+    const cx = x(linha.fatia);
+    return {
+      id: linha.materiaId,
+      nome: linha.materia,
+      cx,
+      cy: y(linha.score!),
+      raio: raioDe(linha.nTopicos),
+      // Perto da borda direita o nome sairia do desenho — e é lá que fica a
+      // matéria que mais cai, justo a que não pode ficar ilegível.
+      aEsquerda: cx > (AREA.x0 + AREA.x1) / 2,
+      destaque: indice === 0,
+    };
+  });
+
+  const rotulos = posicoesDosRotulos(pontos);
+  const meio = teto / 2;
 
   return (
     <div className="mt-4 rounded-2xl border border-linha bg-painel px-6 pb-5 pt-5 sm:px-7">
@@ -563,99 +646,129 @@ function GraficoDoMapa({ linhas }: { linhas: LinhaMateriaMapa[] }) {
         de baixo à direita é onde o estudo rende mais hoje.
       </p>
 
-      <svg viewBox="0 0 760 500" className="mt-4 block w-full" role="img" aria-hidden="true">
-        <rect x="314" y="213" width="390" height="231" className="fill-conquista-fundo" />
-        <line x1="314" y1="24" x2="314" y2="444" strokeDasharray="4 5" className="stroke-linha" />
-        <line x1="64" y1="213" x2="704" y2="213" strokeDasharray="4 5" className="stroke-linha" />
-        <line x1="64" y1="444" x2="704" y2="444" strokeWidth="1.5" className="stroke-linha" />
-        <line x1="64" y1="24" x2="64" y2="444" strokeWidth="1.5" className="stroke-linha" />
+      {pontos.length === 0 ? (
+        <p className="mt-4 rounded-xl bg-fundo-suave px-4 py-3 text-sm leading-6 text-suave">
+          O gráfico cruza peso com domínio, e você ainda não respondeu nada. Depois da primeira
+          sessão de questões ele começa a se desenhar.
+        </p>
+      ) : (
+        <svg viewBox="0 0 760 500" className="mt-4 block w-full" role="img" aria-hidden="true">
+          <rect x="314" y="213" width="390" height="231" className="fill-conquista-fundo" />
+          <line x1="314" y1="24" x2="314" y2="444" strokeDasharray="4 5" className="stroke-linha" />
+          <line x1="64" y1="213" x2="704" y2="213" strokeDasharray="4 5" className="stroke-linha" />
+          <line x1="64" y1="444" x2="704" y2="444" strokeWidth="1.5" className="stroke-linha" />
+          <line x1="64" y1="24" x2="64" y2="444" strokeWidth="1.5" className="stroke-linha" />
 
-        <text x="330" y="436" fontSize="11" letterSpacing="1.5" className="fill-conquista">
-          MAIOR GANHO AGORA
-        </text>
-        <text x="330" y="42" fontSize="11" letterSpacing="1.5" className="fill-suave">
-          SEU PONTO FORTE
-        </text>
-        <text x="76" y="42" fontSize="11" letterSpacing="1.5" className="fill-suave">
-          MANUTENÇÃO
-        </text>
-        <text x="76" y="436" fontSize="11" letterSpacing="1.5" className="fill-suave">
-          PODE ESPERAR
-        </text>
+          <text x="330" y="436" fontSize="11" letterSpacing="1.5" className="fill-conquista">
+            MAIOR GANHO AGORA
+          </text>
+          <text x="330" y="42" fontSize="11" letterSpacing="1.5" className="fill-suave">
+            SEU PONTO FORTE
+          </text>
+          <text x="76" y="42" fontSize="11" letterSpacing="1.5" className="fill-suave">
+            MANUTENÇÃO
+          </text>
+          <text x="76" y="436" fontSize="11" letterSpacing="1.5" className="fill-suave">
+            PODE ESPERAR
+          </text>
 
-        <text x="64" y="466" fontSize="11" className="fill-suave">
-          0%
-        </text>
-        <text x="656" y="466" fontSize="11" className="fill-suave">
-          {percentual(teto, 0)}
-        </text>
-        <text x="64" y="488" fontSize="13" className="fill-texto">
-          Peso na prova
-        </text>
+          <text x="64" y="466" fontSize="11" className="fill-suave">
+            0%
+          </text>
+          <text x={x(meio)} y="466" fontSize="11" textAnchor="middle" className="fill-suave">
+            {percentual(meio, 0)}
+          </text>
+          <text x="704" y="466" fontSize="11" textAnchor="end" className="fill-suave">
+            {percentual(teto, 0)}
+          </text>
+          <text x="64" y="488" fontSize="13" className="fill-texto">
+            Peso na prova
+          </text>
 
-        <text x="30" y="448" fontSize="11" className="fill-suave">
-          0%
-        </text>
-        <text x="18" y="28" fontSize="11" className="fill-suave">
-          100%
-        </text>
-        <text
-          x="14"
-          y="250"
-          fontSize="13"
-          transform="rotate(-90 14 250)"
-          textAnchor="middle"
-          className="fill-texto"
-        >
-          Seu domínio
-        </text>
+          <text x="30" y="448" fontSize="11" className="fill-suave">
+            0%
+          </text>
+          <text x="18" y="28" fontSize="11" className="fill-suave">
+            100%
+          </text>
+          <text
+            x="14"
+            y="250"
+            fontSize="13"
+            transform="rotate(-90 14 250)"
+            textAnchor="middle"
+            className="fill-texto"
+          >
+            Seu domínio
+          </text>
 
-        {linhas.map((linha, indice) => {
-          const cx = x(linha.fatia);
-          const semBase = linha.score === null;
-          // O rótulo vira para a esquerda perto da borda direita, senão sai do
-          // desenho na matéria que mais cai — justo a mais importante.
-          const paraEsquerda = cx > 520;
-          return (
-            <g key={linha.materiaId}>
-              <circle
-                cx={cx}
-                cy={y(linha.score)}
-                r={raio(linha.nTopicos)}
-                className={
-                  semBase
-                    ? "fill-linha stroke-suave"
-                    : indice === 0
-                      ? "fill-marca"
-                      : "fill-marca-viva"
-                }
-                strokeWidth={semBase ? 1.2 : 0}
-              />
-              <text
-                x={cx + (paraEsquerda ? -(raio(linha.nTopicos) + 8) : raio(linha.nTopicos) + 8)}
-                y={y(linha.score) + 5}
-                fontSize="14"
-                fontWeight={semBase ? 400 : 600}
-                textAnchor={paraEsquerda ? "end" : "start"}
-                className={semBase ? "fill-suave" : "fill-texto"}
+          {pontos.map((ponto) => {
+            const rotuloY = rotulos.get(ponto.id)!;
+            const recuo = ponto.raio + 8;
+            const rotuloX = ponto.aEsquerda ? ponto.cx - recuo : ponto.cx + recuo;
+            const deslocado = Math.abs(rotuloY - ponto.cy) > 2;
+
+            return (
+              <g key={ponto.id}>
+                {deslocado ? (
+                  <line
+                    x1={ponto.aEsquerda ? ponto.cx - ponto.raio - 2 : ponto.cx + ponto.raio + 2}
+                    y1={ponto.cy}
+                    x2={ponto.aEsquerda ? rotuloX + 2 : rotuloX - 2}
+                    y2={rotuloY - 4}
+                    className="stroke-linha"
+                  />
+                ) : null}
+                <circle
+                  cx={ponto.cx}
+                  cy={ponto.cy}
+                  r={ponto.raio}
+                  className={ponto.destaque ? "fill-marca" : "fill-marca-viva"}
+                />
+                <text
+                  x={rotuloX}
+                  y={rotuloY + 4}
+                  fontSize="14"
+                  fontWeight={600}
+                  textAnchor={ponto.aEsquerda ? "end" : "start"}
+                  className="fill-texto"
+                >
+                  {ponto.nome}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      )}
+
+      {semResposta.length > 0 ? (
+        <div className="mt-4 border-t border-linha pt-4">
+          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] text-suave">
+            Fora do gráfico · você ainda não respondeu
+          </p>
+          <ul className="mt-2.5 flex flex-wrap gap-2">
+            {semResposta.map((linha) => (
+              <li
+                key={linha.materiaId}
+                className="inline-flex items-center gap-2 rounded-lg border border-linha bg-fundo-suave px-2.5 py-1.5 text-[0.8125rem]"
               >
-                {linha.materia}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+                <span>{linha.materia}</span>
+                <span className="font-utilitaria font-semibold text-marca">
+                  {percentual(linha.fatia)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2.5 max-w-[74ch] text-[0.8125rem] leading-6 text-suave">
+            Elas pesam na prova, mas não cabem no gráfico: sem nenhuma resposta sua não existe
+            domínio para cruzar — e desenhá-las no zero diria que você errou tudo.
+          </p>
+        </div>
+      ) : null}
 
-      <ul className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-linha pt-3.5 text-[0.8125rem] text-suave">
-        <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full bg-marca-viva" aria-hidden="true" />O tamanho do
-          círculo é o número de tópicos da matéria
-        </li>
-        <li className="flex items-center gap-2">
-          <span className="size-3 rounded-full border border-suave bg-linha" aria-hidden="true" />
-          Cinza: você ainda não respondeu nada da matéria
-        </li>
-      </ul>
+      <p className="mt-4 border-t border-linha pt-3.5 text-[0.8125rem] text-suave">
+        O tamanho do círculo é o número de tópicos da matéria.
+      </p>
     </div>
   );
 }

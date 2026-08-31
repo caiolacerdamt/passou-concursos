@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { DadosRaioX, LinhaMateriaRaioX } from "./index";
 import type { DadosMapaPorMateria } from "./mapa-por-materia";
-import { RaioXTela } from "./tela";
+import { posicoesDosRotulos, RaioXTela, type PontoDoMapa } from "./tela";
 
 const perfil = {
   orgao: "Banco do Brasil",
@@ -200,5 +200,59 @@ describe("RaioXTela", () => {
 
     expect(html).toContain("Mapa de Prioridade está indisponível agora");
     expect(html).not.toContain("stack");
+  });
+});
+
+/*
+ * O gráfico do mapa só existe depois que o aluno troca de aba, então ele não
+ * chega ao HTML servido. O que precisa de guarda é a matemática que impedia os
+ * nomes de empilharem — e ela é testável sozinha.
+ */
+describe("posicoesDosRotulos", () => {
+  function ponto(id: string, cy: number, aEsquerda = false): PontoDoMapa {
+    return { id, nome: id, cx: 100, cy, raio: 8, aEsquerda, destaque: false };
+  }
+
+  it("deixa o rótulo no lugar quando ninguém disputa espaço", () => {
+    const posicoes = posicoesDosRotulos([ponto("a", 100), ponto("b", 300)]);
+
+    expect(posicoes.get("a")).toBe(100);
+    expect(posicoes.get("b")).toBe(300);
+  });
+
+  it("separa nomes que cairiam um sobre o outro, sem trocar a ordem", () => {
+    const posicoes = posicoesDosRotulos([
+      ponto("a", 200),
+      ponto("b", 202),
+      ponto("c", 204),
+    ]);
+
+    const [a, b, c] = ["a", "b", "c"].map((id) => posicoes.get(id)!);
+    expect(a).toBeLessThan(b);
+    expect(b).toBeLessThan(c);
+    expect(b - a).toBeGreaterThanOrEqual(19);
+    expect(c - b).toBeGreaterThanOrEqual(19);
+  });
+
+  it("trata cada lado como pilha própria: quem sai para lados opostos não colide", () => {
+    const posicoes = posicoesDosRotulos([ponto("esq", 200, true), ponto("dir", 200, false)]);
+
+    expect(posicoes.get("esq")).toBe(200);
+    expect(posicoes.get("dir")).toBe(200);
+  });
+
+  it("sobe a pilha inteira em vez de deixar rótulo fora do desenho", () => {
+    // Três pontos colados no fundo: empurrar para baixo jogaria o último fora
+    // da área, então o bloco sobe mantendo a separação.
+    const posicoes = posicoesDosRotulos([
+      ponto("a", 440),
+      ponto("b", 441),
+      ponto("c", 442),
+    ]);
+
+    const valores = ["a", "b", "c"].map((id) => posicoes.get(id)!);
+    expect(Math.max(...valores)).toBeLessThanOrEqual(444);
+    expect(valores[1] - valores[0]).toBeGreaterThanOrEqual(19);
+    expect(valores[2] - valores[1]).toBeGreaterThanOrEqual(19);
   });
 });

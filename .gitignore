@@ -54,3 +54,10 @@ desktop.ini
 /provas/*.pdf
 /provas/*.png
 /fontes/
+
+# Bancada do scrollcraft: arte bruta, protótipo HTML e capturas de scroll.
+# 233 MB de material de origem que já virou `src/modules/ui/landing/` e
+# `public/`. Fica no disco do operador, não no git.
+/scrollcraft/
+/docs/planos/
+/.claude/launch.json

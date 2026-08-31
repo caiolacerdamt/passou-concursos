@@ -538,26 +538,64 @@
 - **Date**: 2026-08-25
 - **Status**: active
 
+### AD-113
+- **Decision**: O Raio-X ganha um **segundo grão de projeção**: a tabela `raiox_projecoes_materia`,
+  escrita pela mesma `recalcula_raiox()`, com a mesma fórmula (decaimento por ano, amortecimento por
+  amostra, duas janelas de tendência) agrupada por `materia_id` e o **mesmo denominador** da leitura
+  por tópico. A tela `/app/raio-x` passa a abrir pela matéria e só revela tópico quando o aluno pede
+  — tanto na leitura do edital quanto no Mapa de Prioridade, que ganha duas visualizações à escolha
+  (tabela e gráfico peso × domínio). A **normalização para 100% é da borda de leitura**, não do
+  banco: `consultarRaioX` devolve `peso` cru e `fatia` normalizada, e a fatia de um tópico é a fatia
+  da matéria repartida entre os tópicos dela. A view `raiox_peso_topico` **não muda** — o motor do
+  plano (M4) continua raciocinando por tópico.
+- **Reason**: A tela mostrava os 86 tópicos do edital numa lista plana, que ninguém termina de ler; a
+  matéria é a unidade com que o aluno decide o que estudar. Somar as linhas de tópico para chegar à
+  matéria **dá número errado** e foi rejeitado: cada linha já foi amortecida contra a média, então a
+  soma acumula o viés uma vez por tópico e uma matéria com muitos tópicos sem questão fica
+  artificialmente pesada. Recalcular por matéria com o `n` da matéria inteira faz o amortecimento
+  praticamente desaparecer, que é o comportamento correto — uma matéria com 297 questões reais não
+  precisa ser puxada para a média. Calcular no `SELECT` (view) ou no front violaria o invariante 7,
+  "pré-computa primeiro".
+- **Trade-off**: `recalcula_raiox()` passa a varrer `questoes` duas vezes por perfil. O inteiro que
+  ela devolve **continua contando só o grão de tópico** — somar a matéria mudaria um contrato de
+  quem chama a função sem entregar informação nova, já que os dois grãos vivem na mesma transação.
+  Uma matéria fora do
+  `programa_edital` some das duas leituras — é o comportamento desejado, mas significa que corrigir o
+  programa é pré-requisito para a tela ficar certa. `RaioXTela` vira componente de cliente (abrir,
+  fechar e trocar de aba são estado local); nenhum dado pessoal a mais atravessa a fronteira, o DTO
+  continua montado no servidor.
+- **Scope**: `supabase/migrations/20260830120000_raiox_projecao_por_materia.sql`,
+  `src/modules/raiox/{index.ts,mapa-por-materia.ts,tela.tsx}`, `src/app/app/raio-x/page.tsx`.
+- **Date**: 2026-08-30
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Rodada de design do app (`/app`), pedida pelo dono (AD-111/AD-112) — a rodada própria
-  que o `DESIGN.md` já previa. Ajuste de superfície, fora da numeração de specs, sem ritual.
-- **Phase / Task**: concluído nesta rodada apenas a **superfície Hoje** (`/app`). As demais telas de
-  `/app/*` herdaram a barra nova com o conteúdo antigo dentro — combinado com o dono, ficam para a
-  próxima sessão.
-- **Completed**: barra lateral em breu com ícones SVG próprios (`navegacao.tsx`), colapsável com a
-  preferência em cookie lido no servidor (sem piscada), conta e reembolso no pé; rail flutuante quando
-  fechada, com o nome aparecendo por item no hover e no foco; barra do celular em duas peças (pílula
-  inferior para estudo, topo para conta/reembolso/sair); cabeçalho com o cartão do dia no lugar de
-  "Estado atual", em três estados (pendente / em andamento / cumprido); estudo de hoje com o próximo
-  bloco em breu; últimos 7 dias com as sete colunas reais e a contagem da prova ao lado; `porDia` no
-  `RelatorioSemanal`. O `<h1>` duplicado (cabeçalho + `PlanoTela`) virou um só.
-- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/ui`, `src/modules/aluno` e
-  `src/app/app`, `vitest --project unit` 843/843, `next build` exit 0 (as 15 rotas compilam).
-- **External checks**: nenhuma migration. `test:db` não rodado — a rodada não toca schema nem RPC.
-- **In-progress** (file:line): **verificação visual de `/app` não feita** — a rota exige matrícula
-  ativa e o agente não faz login. O que cobre a fronteira cliente/servidor é o `next build` e os
-  quatro testes de `app-shell.test.tsx`, incluindo o que prova que o estado da barra vem do servidor.
-  Falta olho humano em: hover do rail, `prefers-reduced-motion`, e a barra do celular a 390px.
-- **Next step**: as demais telas de `/app/*` (Plano, Raio-X, Sessão, Progresso, Conta, Reembolso), ou
-  seguir a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Feature**: Rodada de design do app (`/app/*`), continuação da AD-111/AD-112. Nesta sessão:
+  **`/app/raio-x`**. Ajuste de superfície fora da numeração de specs — mas com mudança de dados, por
+  isso fecha com a **AD-113**.
+- **Phase / Task**: concluída a tela do Raio-X, ponta a ponta (banco → módulo → tela). As demais
+  telas de `/app/*` (Plano, Sessão, Progresso, Conta, Reembolso) continuam com o conteúdo antigo
+  dentro da barra nova.
+- **Completed**: `raiox_projecoes_materia` + segundo bloco em `recalcula_raiox()` com a mesma fórmula
+  agrupada por matéria e o mesmo denominador; `consultarRaioX` devolve `materias` com os tópicos
+  aninhados, `peso` cru e `fatia` normalizada (a fatia do tópico reparte a da matéria);
+  `agruparMapaPorMateria` cruza o mapa por tópico com a projeção agregada — domínio ponderado pelo
+  peso do tópico (média simples deixava um tópico irrelevante mascarar o que carrega a matéria),
+  cobertura como "x de y" e contagem de revisões devidas; tela reescrita no padrão do `/app`
+  (cabeçalho de duas colunas, um cartão breu, tabela de matérias que abre nos tópicos, Mapa de
+  Prioridade com abas Tabela/Gráfico), usando a coluna cheia do shell em vez do `max-w-3xl`.
+  Corrigidos dois guardas do teste da tela que passavam por acidente: o regex de largura em px
+  atravessava o atributo `style`, e o de `bg-breu` casava com `bg-breu-verde`/`bg-breu-tinta`.
+- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/raiox` e `src/app/app/raio-x`,
+  `vitest --project unit` 901/901, `next build` exit 0 (31 rotas).
+- **External checks**: **a migration não foi aplicada** — o acesso ao banco está bloqueado nesta
+  sessão. `test:db` não rodado pelo mesmo motivo. Antes de olhar a tela é preciso aplicar
+  `20260830120000_raiox_projecao_por_materia.sql` e rodar `select public.recalcula_raiox();`.
+- **In-progress** (file:line): **verificação visual não feita** (a rota exige matrícula ativa). Falta
+  olho humano em: a tabela de matérias a 390px (as colunas empilham por `grid-cols-[...]`), o gráfico
+  do mapa com rótulo longo de matéria, e o cartão breu quando o mapa pessoal falha. Falta também
+  conferir se `raiox_projecoes` tem linha hoje e se `perfil_concurso.programa_edital` está preenchido
+  — sem isso a tela nasce vazia por dado, não por código.
+- **Next step**: aplicar a migration e conferir a tela com conta autenticada; depois, as demais telas
+  de `/app/*`, ou seguir a `.specs/ROADMAP.md` a partir da SPEC 16.

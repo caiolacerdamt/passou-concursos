@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 
 import { sair } from "@/app/entrar/acoes";
 
+import { PontoDeCarga } from "./ponto-de-carga";
+
 import {
   ITENS_DE_ACOMPANHAMENTO,
   ITENS_DE_CONTA,
@@ -82,12 +84,13 @@ export function BarraDoCelular() {
               key={item.href}
               href={item.href}
               aria-current={ativo ? "page" : undefined}
-              className={`flex min-h-12 flex-1 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[0.625rem] leading-tight transition-colors duration-150 ${
+              className={`relative flex min-h-12 flex-1 flex-col items-center gap-1 rounded-2xl px-1 py-2 text-[0.625rem] leading-tight transition-colors duration-150 ${
                 ativo ? "text-breu-verde" : "text-breu-suave"
               }`}
             >
               {item.icone}
               <span className="w-full truncate text-center">{item.nome}</span>
+              <PontoDeCarga className="absolute right-2 top-2" />
             </Link>
           );
         })}

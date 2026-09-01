@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 
 import { sair } from "@/app/entrar/acoes";
 
+import { PontoDeCarga } from "./ponto-de-carga";
+
 import {
   ITENS_DE_ACOMPANHAMENTO,
   ITENS_DE_CONTA,
@@ -48,6 +50,7 @@ function Item({ item, ativo }: { item: ItemDaNavegacao; ativo: boolean }) {
       ) : null}
       {item.icone}
       <span className="min-w-0 truncate">{item.nome}</span>
+      <PontoDeCarga className="ml-auto" />
     </Link>
   );
 }
@@ -98,6 +101,7 @@ function BotaoDoRail({ item, ativo }: { item: ItemDaNavegacao; ativo: boolean })
       }`}
     >
       {item.icone}
+      <PontoDeCarga className="absolute bottom-1 right-1" />
       <span
         className="pointer-events-none absolute left-full z-10 ml-1.5 hidden whitespace-nowrap rounded-[13px] bg-breu-alto px-4 py-2.5 text-sm text-breu-tinta shadow-[0_18px_36px_-20px_rgb(27_29_26/0.7)] group-hover:block group-focus-visible:block"
       >

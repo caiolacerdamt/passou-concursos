@@ -10,6 +10,8 @@ import {
   type LinhaCaderno,
   type RelatorioSemanal,
 } from "./progresso";
+import type { Trajetoria } from "./trajetoria";
+import { consultarTrajetoriaOpcional } from "./trajetoria-opcional";
 
 /** Quantos erros do caderno cabem no atalho de recuperação do painel. */
 export const TETO_DE_ERROS_NO_PAINEL = 3;
@@ -91,6 +93,8 @@ export async function consultarGamificacaoOpcional(
 export type PainelDoDia = {
   contagem: ContagemDaProva;
   gamificacao: DadosGamificacao | null;
+  /** `null` com a flag desligada ou leitura falha — nunca derruba a tela. */
+  trajetoria: Trajetoria | null;
   relatorioSemanal: RelatorioSemanal | null;
   recuperacao: readonly LinhaCaderno[];
   /** `true` quando a leitura de acompanhamento falhou e o aluno precisa saber. */
@@ -109,14 +113,16 @@ export async function consultarPainelDoDia(
   const agora = opcoes.agora ?? new Date();
   const contagem = contarDiasParaProva(opcoes.dataProva, agora);
 
-  const [gamificacao, acompanhamento] = await Promise.all([
+  const [gamificacao, acompanhamento, trajetoria] = await Promise.all([
     consultarGamificacaoOpcional(cliente),
     lerAcompanhamento(cliente, agora),
+    consultarTrajetoriaOpcional(cliente, { dataProva: opcoes.dataProva, agora }),
   ]);
 
   return {
     contagem,
     gamificacao,
+    trajetoria,
     relatorioSemanal: acompanhamento.relatorioSemanal,
     recuperacao: acompanhamento.recuperacao,
     acompanhamentoIndisponivel: acompanhamento.indisponivel,

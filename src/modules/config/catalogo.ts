@@ -306,6 +306,13 @@ export const CATALOGO = {
     moduloDono: "m4",
     descricao: "Simulado semanal. P3, nasce desligada.",
   }),
+  "flag.m4.trajetoria": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m4",
+    descricao:
+      "Cobertura do edital e previsao de termino no Progresso e em Hoje. Nasce desligada: e evolucao, nao uma das 4 superficies do lancamento (AD-076).",
+  }),
   "flag.m4.caderno_erros": chave({
     tipo: z.boolean(),
     padrao: true,

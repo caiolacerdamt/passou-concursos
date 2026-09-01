@@ -4,21 +4,45 @@ import { consultarResumoDaSessao } from "./resumo-sessao";
 
 type Resposta = { data: unknown; error: { message: string } | null };
 
+// O falso precisa obedecer à lista de colunas do `select`: um falso que devolve
+// o fixture inteiro esconde exatamente a classe de bug que derrubou o resumo —
+// campo declarado no tipo, ausente da consulta.
+function apenasAsColunas(dado: unknown, colunas: string): unknown {
+  const pedidas = colunas.split(",").map((coluna) => coluna.trim()).filter(Boolean);
+  const projetar = (linha: unknown): unknown => {
+    if (linha === null || typeof linha !== "object") return linha;
+    const origem = linha as Record<string, unknown>;
+    const destino: Record<string, unknown> = {};
+    for (const coluna of pedidas) {
+      if (coluna in origem) destino[coluna] = origem[coluna];
+    }
+    return destino;
+  };
+  return Array.isArray(dado) ? dado.map(projetar) : projetar(dado);
+}
+
 function clienteCom(respostas: Record<string, Resposta>) {
   const from = vi.fn((tabela: string) => {
     const resposta = respostas[tabela] ?? { data: [], error: null };
-    const consulta = {
-      eq: vi.fn(() => consulta),
-      in: vi.fn(() => consulta),
-      not: vi.fn(() => consulta),
-      order: vi.fn(() => consulta),
-      maybeSingle: vi.fn(async () => resposta),
-      then: (
-        resolve: (valor: Resposta) => unknown,
-        reject: (erro: unknown) => unknown,
-      ) => Promise.resolve(resposta).then(resolve, reject),
-    };
-    return { select: vi.fn(() => consulta) };
+    const select = vi.fn((colunas: string) => {
+      const projetada: Resposta = {
+        data: apenasAsColunas(resposta.data, colunas),
+        error: resposta.error,
+      };
+      const consulta = {
+        eq: vi.fn(() => consulta),
+        in: vi.fn(() => consulta),
+        not: vi.fn(() => consulta),
+        order: vi.fn(() => consulta),
+        maybeSingle: vi.fn(async () => projetada),
+        then: (
+          resolve: (valor: Resposta) => unknown,
+          reject: (erro: unknown) => unknown,
+        ) => Promise.resolve(projetada).then(resolve, reject),
+      };
+      return consulta;
+    });
+    return { select };
   });
 
   const rpc = vi.fn(async () => ({ data: [], error: null }));

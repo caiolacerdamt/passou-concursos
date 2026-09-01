@@ -89,7 +89,7 @@ export async function consultarResumoDaSessao(
 
   const tentativasConsulta = await cliente
     .from("tentativas")
-    .select("questao_id, questao_versao, ordem_na_sessao, resposta_dada, correta")
+    .select("questao_id, questao_versao, topico_id, ordem_na_sessao, resposta_dada, correta")
     .eq("sessao_id", sessao.id)
     .order("ordem_na_sessao", { ascending: true });
 
@@ -101,7 +101,16 @@ export async function consultarResumoDaSessao(
 
   let proximaRevisao: string | null = null;
   const agendaRelevante = sessao.contexto === "plano" || sessao.contexto === "treino" || sessao.contexto === "revisao";
-  const topicos = [...new Set(tentativas.map((tentativa) => tentativa.topico_id))];
+  // Filtra antes do `.in()`: coluna ausente na consulta vira `undefined`, e o
+  // supabase-js serializa isso como a string "undefined" — que o Postgres recusa
+  // ao castar para uuid. Lista vazia pula a consulta em vez de estourar.
+  const topicos = [
+    ...new Set(
+      tentativas
+        .map((tentativa) => tentativa.topico_id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0),
+    ),
+  ];
   if (agendaRelevante && topicos.length > 0) {
     const agendaConsulta = await cliente
       .from("revisao_agenda")

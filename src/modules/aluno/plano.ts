@@ -159,6 +159,36 @@ async function conclusoesDosBlocos(
   );
 }
 
+/**
+ * O gerador grava o mesmo bloco de revisão duas vezes — uma no piso, uma na
+ * meta cheia — porque os dois níveis têm contadores próprios no SQL. Para o
+ * aluno é uma tarefa só: fazer uma das linhas fecha as duas. Sem isso a gêmea
+ * pendente vira "próximo bloco" e manda ele refazer o que acabou de fazer.
+ *
+ * `topicoId === null` nunca pareia: é o caso do simulado, que não tem tópico e
+ * não tem gêmea. A chave é única porque o gerador não repete tópico no dia.
+ */
+function propagarConclusaoEntreGemeas(blocos: BlocoDoPlano[]): void {
+  const chave = (bloco: BlocoDoPlano) =>
+    bloco.topicoId === null ? null : `${bloco.tipo}|${bloco.topicoId}`;
+
+  const feitas = new Map<string, ConclusaoDoBloco>();
+  for (const bloco of blocos) {
+    const k = chave(bloco);
+    if (k !== null && bloco.conclusao !== null && !feitas.has(k)) {
+      feitas.set(k, bloco.conclusao);
+    }
+  }
+
+  for (const bloco of blocos) {
+    if (bloco.conclusao !== null) continue;
+    const k = chave(bloco);
+    if (k === null) continue;
+    const conclusao = feitas.get(k);
+    if (conclusao !== undefined) bloco.conclusao = conclusao;
+  }
+}
+
 export async function consultarPlanoDoDia(
   cliente: SupabaseClient,
   data = dataHojeDoProduto(),
@@ -191,6 +221,7 @@ export async function consultarPlanoDoDia(
   const blocos = ((blocosConsulta.data ?? []) as BlocoBanco[]).map(mapearBloco);
   const conclusoes = await conclusoesDosBlocos(cliente, blocos);
   for (const bloco of blocos) bloco.conclusao = conclusoes.get(bloco.id) ?? null;
+  propagarConclusaoEntreGemeas(blocos);
 
   return {
     id: plano.id,

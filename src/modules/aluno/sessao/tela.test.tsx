@@ -93,6 +93,58 @@ describe("tela da sessão", () => {
     expect(html).not.toContain("Explicação");
   });
 
+  it("marca a alternativa errada como \"Sua resposta\" ao lado do gabarito", () => {
+    const estado: Extract<EstadoDaResposta, { status: "respondida" }> = {
+      status: "respondida",
+      sessaoId: "sessao-1",
+      itemId: "item-1",
+      correta: false,
+      duplicada: false,
+      respostaCorreta: "B",
+      sessaoConcluida: false,
+    };
+
+    const html = renderToStaticMarkup(
+      <FeedbackDaResposta
+        estado={estado}
+        ultima={false}
+        aoAvancar={() => undefined}
+        hrefResumo="/app/sessao/sessao-1/resumo"
+        questao={sessao.itens[0].questao}
+        respostaDada="A"
+      />,
+    );
+
+    expect(html).toContain("Sua resposta");
+    expect(html).toContain("Primeira alternativa");
+    expect(html).toContain("Segunda alternativa");
+  });
+
+  it("não mostra \"Sua resposta\" quando o aluno acertou", () => {
+    const estado: Extract<EstadoDaResposta, { status: "respondida" }> = {
+      status: "respondida",
+      sessaoId: "sessao-1",
+      itemId: "item-1",
+      correta: true,
+      duplicada: false,
+      respostaCorreta: "B",
+      sessaoConcluida: false,
+    };
+
+    const html = renderToStaticMarkup(
+      <FeedbackDaResposta
+        estado={estado}
+        ultima={false}
+        aoAvancar={() => undefined}
+        hrefResumo="/app/sessao/sessao-1/resumo"
+        questao={sessao.itens[0].questao}
+        respostaDada="B"
+      />,
+    );
+
+    expect(html).not.toContain("Sua resposta");
+  });
+
   it("retoma na primeira pendência e mantém as anteriores navegáveis", () => {
     const retomada: SessaoDaTela = {
       ...sessao,

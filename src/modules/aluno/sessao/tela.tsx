@@ -600,7 +600,9 @@ export function FeedbackDaResposta({
 }) {
   const correta = estado.correta;
   const alternativas =
-    questao?.alternativas ?? OPCOES_CERTO_ERRADO.map(([letra, texto]) => ({ letra, texto }));
+    questao === undefined
+      ? OPCOES_CERTO_ERRADO.map(([letra, texto]) => ({ letra, texto }))
+      : alternativasDaQuestao(questao);
   const gabarito = alternativas.find((alternativa) => alternativa.letra === estado.respostaCorreta) ?? null;
   const escolhida =
     respostaDada !== null && respostaDada !== estado.respostaCorreta

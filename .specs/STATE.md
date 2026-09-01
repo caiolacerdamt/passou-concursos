@@ -683,47 +683,153 @@
 - **Date**: 2026-08-31
 - **Status**: active
 
+### AD-118
+- **Decision**: A causa do erro passa a ser exigida também no contexto **`revisao`**. A lista vive
+  num lugar só, `PEDE_CAUSA` em `tentativas/registrar.ts`: `["treino", "plano", "revisao"]`.
+  `simulado` e `diagnostico` ficam de fora. **Sem migração**: o `CHECK` da tabela e a
+  `public.registrar_tentativa` só *exigem* a causa em `treino`/`plano`, mas nenhum dos dois a
+  **proíbe** em `revisao` — a coluna aceita, e para esse contexto o gate do cliente passa a ser a
+  única exigência.
+- **Reason**: O ALUNO-03 AC1 fala em "treino"; a migração do grupo 2 estendeu para "plano". Mas
+  `contextoDoBloco` mapeia bloco `revisar` → contexto `revisao`, e o **piso do dia é feito só de
+  blocos `revisar`**. Resultado: o aluno que cumpre o mínimo nunca caía no caminho que pede a causa,
+  e o caderno de erros nascia vazio — um dia com nove erros e nenhum registrado. Sem causa não há
+  caderno, sem caderno não há refação, e a espinha do método fica sem entrada.
+- **Trade-off**: Regra declarada num requisito passa a valer mais largamente do que o texto do
+  requisito diz — quem ler só o M4 não descobre. E a exigência em `revisao` é assimétrica: o cliente
+  cobra, o banco não. Quem gravasse por outro caminho gravaria erro de revisão sem causa. Alinhar o
+  SQL é migração de outra rodada; o lugar de alinhar está marcado no jsdoc de `validarResposta`.
+  `simulado` fora é decisão, não esquecimento: prova curta cronometrada não para a cada erro.
+- **Scope**: `src/modules/aluno/tentativas/registrar.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-119
+- **Decision**: O gerador do plano continua gravando o bloco de revisão **duas vezes** (uma em
+  `piso`, uma em `meta_cheia`), e a correção da duplicidade é **no app**: depois de carregar as
+  conclusões, `propagarConclusaoEntreGemeas` casa blocos por `tipo|topicoId` e copia a conclusão para
+  a gêmea vazia, nos dois sentidos. `topicoId === null` nunca pareia (é o simulado).
+- **Reason**: Terminar o bloco do MÍNIMO deixava o cartão do piso verde e o da META ainda "Em foco ·
+  Revisar", com o mesmo assunto — mandando o aluno refazer o que acabou de fazer. As duas linhas são
+  **intencionais** no modelo: a gamificação conta a missão do dia pelo piso e o gerador calcula a
+  capacidade do dia pela meta cheia. O erro estava na leitura, que casa sessão com bloco por
+  `plano_bloco.id`.
+- **Trade-off**: O app passa a saber de um detalhe do modelo do SQL — se um dia o gerador parar de
+  duplicar, esta função vira código morto silencioso. Foi preferida a mexer no gerador, que é grande,
+  arriscado (os dois níveis têm contadores próprios) e não é o que o sintoma pede. A chave
+  `tipo|topicoId` só é única porque o gerador guarda `v_usados_topicos` e não repete tópico no dia:
+  se essa garantia cair, a propagação passa a casar blocos que não são gêmeos.
+- **Scope**: `src/modules/aluno/plano.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-120
+- **Decision**: Toda rota de `/app/*` ganha fronteira de suspense. `src/modules/ui/esqueleto.tsx`
+  traz as primitivas (`Bloco`, `CartaoEsqueleto`, `CabecalhoEsqueleto`, `Carregando`), oito
+  `loading.tsx` espelham a forma da sua tela, e `PontoDeCarga` (`useLinkStatus`) acende dentro do
+  `<Link>` enquanto a navegação não respondeu. Um `role="status"` por tela, com o nome da tela como
+  rótulo. Nenhuma cor nova: `bg-linha`, que o DESIGN.md já define como preenchimento decorativo.
+- **Reason**: A navegação parecia travada — clicar numa aba não trocava nada de tela até o servidor
+  terminar. Não era lentidão de query: o projeto não tinha **nenhum** `loading.tsx`, e toda rota de
+  `/app/*` é `force-dynamic`. A doc do Next 16 instalado é explícita: em rota dinâmica o prefetch é
+  pulado a menos que exista `loading.tsx`, que é o que habilita prefetch parcial e navegação imediata.
+- **Trade-off**: O esqueleto copia a forma da tela real, então **ele desatualiza junto com ela**: uma
+  tela redesenhada e um esqueleto esquecido produzem salto de layout. Foi preferido a um esqueleto
+  genérico centralizado, que é pior que spinner — mente sobre o que vai aparecer. O `AppShell` faz
+  `await cookies()` no layout, e a doc avisa que dado de runtime no layout impede o fallback; na
+  prática isso só pesa no primeiro carregamento, mas **isso não foi conferido no navegador**. Se não
+  aparecer, a saída é `<Suspense>` dentro do `AppShell` ou tirar o cookie do layout.
+- **Scope**: `src/modules/ui/esqueleto.tsx`, `src/modules/ui/ponto-de-carga.tsx`, oito
+  `src/app/app/**/loading.tsx`, `barra-lateral.tsx`, `barra-do-celular.tsx`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-121
+- **Decision**: No celular, o topo fica **só com a marca** e a conta vira a **sexta aba** da barra de
+  baixo — um `<button>` que abre uma folha de baixo para cima com Preferências · Conta · Reembolso ·
+  Sair. `ItemDaNavegacao` ganha `nomeCurto`, lido **só** pelo celular; a barra lateral continua em
+  `nome`. A área segura do aparelho entra como `mb-`, não `pb-`, porque a barra flutua a 1rem do pé.
+  O fechamento por mudança de rota é ajuste de estado **durante o render**, não `useEffect`.
+- **Reason**: Em 375px o topo renderizava inline os três itens de conta com os nomes inteiros mais o
+  formulário de sair: os itens se espremiam, o texto cortava e a marca perdia espaço. E a barra de
+  baixo usava `item.nome`, com "Questões e revisões" truncado numa aba de ~60px — truncado ele não
+  diz nada. Conta é assunto ocasional, não tarefa diária: não disputa o topo com a marca.
+- **Trade-off**: Seis abas em 360px dão ~53px cada; se na tela ficar espremido, a saída registrada é
+  mover **Progresso** para dentro da folha e ficar com cinco. A folha é modal desenhada à mão (sem
+  `<dialog>`): trava scroll, fecha com `Escape`, com toque no fundo e ao mudar de rota, e devolve o
+  foco — mas **não tem captura de foco em ciclo**, então o `Tab` sai dela. Sem jsdom (AD-083) o
+  clique não tem teste: o que se afirma é o primeiro quadro.
+- **Scope**: `src/modules/ui/navegacao.tsx`, `src/modules/ui/barra-do-celular.tsx`,
+  `src/modules/ui/app-shell.tsx`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-122
+- **Decision**: Feature nova **Trajetória** — cobertura do edital e previsão de término —, atrás de
+  `flag.m4.trajetoria`, que nasce **desligada**. Sem tabela nova: universo = o mesmo do gerador
+  (tópico ativo, matéria ativa, com questão publicada/vigente/não anulada); tocado e dominado de
+  `dominio_topico` com a faixa do Raio-X; peso de `raiox_projecoes` e `raiox_projecoes_materia`;
+  prazo de `perfil_estudo.data_prova`; ritmo das tentativas das últimas 4 semanas. Acervo e projeção
+  pela chave de serviço, dado do aluno pelo cliente da sessão. **A flag é registrada no catálogo**
+  (`src/modules/config/catalogo.ts`), não numa migração de seed: é ali que a chave passa a existir, e
+  o default `false` já é a flag desligada num banco sem linha.
+- **Reason**: "Como eu sei que estou terminando o edital?" não tinha resposta em tela nenhuma. O
+  Progresso mostra domínio por tópico, o Raio-X mostra o que mais cai; nenhum dos dois cruza quanto
+  do edital já foi tocado com quanto tempo falta.
+- **Trade-off**: Três regras duras seguram o número. (1) **Cobertura ponderada manda** — cobrir 40%
+  vale mais se forem os que mais caem; sem projeção do Raio-X ainda, ela cai na fração simples em vez
+  de dividir 0 por 0. (2) **Nunca inventar data** — menos de 2 semanas de histórico ou ritmo zero
+  devolve `null`, e o ritmo conta tópicos **novos**, derivados de comparar a contagem na janela com o
+  `n_respostas` acumulado; contar tópico revisitado faria quem revisa os mesmos vinte assuntos
+  aparecer terminando o edital amanhã. (3) **Tocado ≠ dominado**, duas faixas no mesmo traço. O
+  custo: a leitura são cinco consultas na abertura de tela (exceção do AD-071, a mesma do anel do
+  dia), e uma delas varre `topico_id` de todas as questões publicadas — hoje 205 linhas, mas cresce
+  com o acervo. Se ficar lenta vira projeção materializada; não vira laço. A previsão é linear e
+  ignora a dificuldade do que resta: é estimativa de ritmo, não promessa.
+- **Scope**: `src/modules/aluno/trajetoria.ts`, `trajetoria-tela.tsx`, `trajetoria-opcional.ts`,
+  `painel-do-dia.ts`, `painel-do-dia-tela.tsx`, `src/app/app/progresso/page.tsx`,
+  `src/modules/config/catalogo.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Refatoração de `/app/sessao` — a rota vira **tela de prática** e para de listar bloco
-  do plano. Ajuste fora da numeração de specs, pedido direto; fecha com a **AD-115**.
-- **Phase / Task**: concluída na branch `feat/sessao-tela-de-pratica`.
-- **Completed**: (1) `sessao/pratica.ts` — leitura das quatro peças (sessão aberta com a trilha
-  item a item, revisão vencida fora do plano, caderno, histórico agregado por sessão). (2)
-  `sessao/pratica-tela.tsx` substitui `indice-tela.tsx`, no vocabulário do resto do app: olho
-  `font-utilitaria` de 11px, título de 34px, cartão sem sombra, **sem breu** (AD-111). (3)
-  `prepararSessaoDeRevisao` em `sessao.ts`, com a agenda como porteiro e `revisao_indisponivel` novo
-  em `SessaoRecusada`. (4) `page.tsx` ganha a entrada `?revisao=<topico>` e passa a excluir da lista
-  os tópicos **pendentes** do plano de hoje. (5) Migration só de comentário: `refacao_chave` passa a
-  documentar o formato `tópico|qualificador`. (6) **AD-116**: a sessão aberta mostra a idade, e
-  acima de 24 h troca de rótulo, perde o destaque e ganha `Descartar` — que carimba `encerrada_em`,
-  nunca apaga. (7) **AD-117**, acabamento pedido em uso: fundo tingido no cartão da sessão (verde de
-  hoje / ouro da que esfriou), `Descartar` vira link dentro da frase em vez de segunda pílula, e
-  `lista-com-teto.tsx` (novo, `"use client"`) corta Memória e Recuperar erro em 4 com lotes de 8,
-  rodapé `sticky` e saída para `/app/progresso` quando o teto da consulta cortou antes. A consulta
-  ganhou `limit(24)` + `count: "exact"` nas duas tabelas e leva o filtro do plano para o banco.
-- **Gates**: `tsc --noEmit` limpo, `eslint` limpo em `src/modules/aluno/sessao/`, `next build`
-  compila as 31 rotas, `vitest --project unit` **963/963** (era 905/905 na `main`; +58 testes).
-  Sensores conferidos por mutação: o porteiro da agenda, o descarte da revisão que já está no plano,
-  a contagem de questões distintas do histórico, o envelhecimento da sessão aberta, o carimbo do
-  `Descartar` (trocado por DELETE) e, na AD-117, o `limit` do bloco (24 → 9999), a peneira de uuid do
-  filtro do plano, o `sticky` do rodapé, a cor do cartão que envelheceu e a guarda que segura a saída
-  para a tela dona enquanto ainda há lote a abrir — todos falham quando invertidos.
-- **External checks**: `test:db` **410/411**. A falha é `spec14-sequencia` esperando `fora_agenda` e
-  recebendo `plano_indisponivel`, **reproduzida na `main`** com o mesmo comando — é herdada, não
-  desta branch. A migration desta rodada é comentário puro e **não foi aplicada** no projeto de
-  desenvolvimento. O `test:db` **não foi rodado de novo depois da AD-117**: ela não toca migration
-  nem contrato de tabela, só `select`.
-- **In-progress** (file:line): falta a **verificação visual** de `/app/sessao` com conta autenticada
-  (a rota exige matrícula ativa) — a trilha da sessão aberta a 390px, a coluna dupla revisões ×
-  caderno no ponto de quebra `lg`, e agora o rodapé `sticky` no celular (é onde ele mais importa e
-  onde barra de navegação do navegador pode disputar o pé da tela). O `Descartar`
-  **não foi exercido contra o banco**: só tem teste de unidade com cliente falso, e agora mudou de
-  casca — o `<form>` é o mesmo, mas o botão é outro elemento. **O clique de abrir/fechar não tem
-  teste**: sem jsdom (AD-083) os testes afirmam o primeiro quadro de cada estado, não a transição.
-  Segue pendente a verificação visual do `/app/raio-x`, e as duas
-  correções do W2-A sem teste (reserva do simulado, porteiro da cobertura) continuam sem sensor.
-- **Next step**: PR desta branch. Depois, a dívida que esta rodada expôs e não resolveu: `/app` e
-  `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
-  numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
-  deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Feature**: Correções da plataforma, rodada 1 — seis pontos levantados no uso real, do plano
+  `docs/planos/CORRECOES-PLATAFORMA-rodada-1.md`. Fora da numeração de specs, sem ritual. Fecha com
+  **AD-118** a **AD-122**.
+- **Phase / Task**: concluída na branch `fix/plataforma-ajustes-ui`, seis commits atômicos.
+- **Completed**: (1) **Resumo da sessão** parava com `invalid input syntax for type uuid:
+  "undefined"` — a consulta de `tentativas` não pedia `topico_id` mas o resultado era convertido com
+  `as TentativaBanco[]`. Entra a coluna, entra um filtro de string não-vazia antes do `.in()`, e o
+  cliente falso do teste passa a **respeitar a lista de colunas do `select`** (antes devolvia o
+  fixture inteiro, e o teste passava contra um banco que não existe). Varredura irmã feita nos 27
+  sítios de `as *Banco[]`: nenhum outro diverge. (2) **AD-119** — bloco feito no piso deixa de
+  aparecer pendente na META. (3) **AD-118** — errar numa revisão passa a pedir a causa; junto foi
+  fechado o buraco vizinho, `FeedbackDaResposta` repetia inline a lógica de `alternativasDaQuestao` e
+  a linha "Sua resposta" não tinha teste nenhum. (4) **AD-120** — oito `loading.tsx` + primitivas de
+  esqueleto + `PontoDeCarga`. (5) **AD-121** — navegação do celular com aba Conta e folha de baixo.
+  (6) **AD-122** — Trajetória (cobertura do edital + previsão), atrás de `flag.m4.trajetoria`
+  desligada, com módulo, tela, guarda opcional e a linha única em Hoje.
+- **Gates**: `vitest --project unit` **1010/1010** (era 963/963 na `main`). `eslint src` limpo,
+  `tsc --noEmit` limpo, `next build` compila as 31 rotas. Sensores conferidos por mutação: tirar
+  `topico_id` do `select` reprova o teste do resumo; comentar `propagarConclusaoEntreGemeas` reprova
+  os dois testes de gêmea; tirar `"revisao"` de `PEDE_CAUSA` reprova o teste da unidade **e** o do
+  fluxo em `acoes.test.ts` (que roda o validador real via `vi.importActual`); contar tópico
+  revisitado como novo reprova o teste do ritmo da trajetória.
+- **External checks**: `test:db` **não foi rodado** — nenhum item desta rodada toca SQL, migration
+  ou contrato de tabela. A única mudança de contrato é de leitura (`select` com uma coluna a mais).
+- **In-progress** (file:line): falta a **verificação visual com conta autenticada**, que é onde
+  quatro dos seis itens se provam. (a) Navegar entre as cinco abas com throttle de rede e ver o
+  esqueleto aparecer — se não aparecer, é o `await cookies()` do `AppShell` bloqueando o fallback
+  (AD-120), e a saída é `<Suspense>` dentro do shell. (b) Abrir em 375px: topo só com a marca, seis
+  abas embaixo, folha da Conta abrindo e fechando — se as abas ficarem espremidas, mover Progresso
+  para dentro da folha (AD-121). (c) Terminar um bloco do MÍNIMO e ver o gêmeo da META ficar verde.
+  (d) Errar numa questão de bloco de **revisão** e ver as sete causas. (e) Ligar
+  `flag.m4.trajetoria` na configuração e conferir a seção no Progresso e a linha em Hoje — a
+  trajetória **nunca rodou contra o banco**, só contra cliente falso. Seguem pendentes, da rodada
+  anterior: a verificação visual de `/app/sessao` e de `/app/raio-x`, o `Descartar` nunca exercido
+  contra o banco, e as duas correções do W2-A sem sensor.
+- **Next step**: PR desta branch. Depois, a dívida que a rodada anterior expôs e esta não resolveu:
+  `/app` e `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do
+  edital" numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou
+  se deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.

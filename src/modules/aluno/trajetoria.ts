@@ -68,7 +68,7 @@ type TopicoBanco = {
   materia_id: string;
   materias?: { nome?: unknown; ordem?: unknown; ativa?: unknown } | null;
 };
-type QuestaoPublicadaBanco = { topico_id: string | null };
+type InventarioBanco = { topico_id: string | null; aptas_sessao: number | string | null };
 type PerfilConcursoBanco = { id: string };
 type ProjecaoTopicoBanco = { topico_id: string; peso: number | string };
 type ProjecaoMateriaBanco = { materia_id: string; peso: number | string };
@@ -213,19 +213,23 @@ export async function consultarTrajetoria(
   const publico = opcoes.clientePublico ?? clienteDeServico();
   const inicioDaJanela = new Date(agora.getTime() - JANELA_DE_RITMO_EM_DIAS * 86_400_000);
 
-  const [questoesConsulta, topicosConsulta, perfilConsulta] = await Promise.all([
-    publico
-      .from("questoes")
-      .select("topico_id")
-      .eq("status", "publicada")
-      .eq("vigente", true)
-      .eq("anulada", false),
+  const [inventarioConsulta, topicosConsulta, perfilConsulta] = await Promise.all([
+    // `inventario_acervo` e não `questoes`: a contagem já vem agregada por
+    // tópico, em SQL. Varrer `questoes` daqui lia **uma linha por questão** e
+    // batia no teto de linhas do PostgREST (1000): com 1375 publicadas a
+    // resposta já voltava `206 Partial Content`, e o supabase-js não trata 206
+    // como erro — `error` vem `null`. O tópico cujas questões caíssem na parte
+    // cortada sumia do universo, encolhendo o edital e deixando a cobertura e a
+    // previsão **otimistas, em silêncio**. Isso contradiz a regra que sustenta
+    // esta feature (AD-122: nunca inventar data), e o acervo só cresce — ele é
+    // o fosso. A view é uma linha por tópico e não tem esse teto.
+    publico.from("inventario_acervo").select("topico_id, aptas_sessao"),
     publico.from("topicos").select("id, materia_id, materias(nome, ordem, ativa)").eq("ativo", true),
     publico.from("perfil_concurso").select("id").eq("ativo", true).maybeSingle(),
   ]);
 
-  if (questoesConsulta.error) {
-    throw falhaAoLer("questões publicadas", questoesConsulta.error.message);
+  if (inventarioConsulta.error) {
+    throw falhaAoLer("inventario_acervo", inventarioConsulta.error.message);
   }
   if (topicosConsulta.error) {
     throw falhaAoLer("tópicos do edital", topicosConsulta.error.message);
@@ -237,8 +241,11 @@ export async function consultarTrajetoria(
   // O universo é o mesmo do gerador do plano: tópico ativo, de matéria ativa,
   // que tenha ao menos uma questão publicada, vigente e não anulada. Tópico sem
   // questão não é edital coberto nem descoberto — ele não é estudável.
+  // `aptas_sessao` conta exatamente o mesmo recorte que a consulta anterior
+  // filtrava linha a linha: publicada, vigente e não anulada.
   const comQuestao = new Set(
-    ((questoesConsulta.data ?? []) as QuestaoPublicadaBanco[])
+    ((inventarioConsulta.data ?? []) as InventarioBanco[])
+      .filter((linha) => numero(linha.aptas_sessao) > 0)
       .map((linha) => linha.topico_id)
       .filter((id): id is string => typeof id === "string" && id.length > 0),
   );

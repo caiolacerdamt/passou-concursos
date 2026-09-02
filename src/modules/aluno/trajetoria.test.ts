@@ -31,6 +31,18 @@ function topico(id: string, materiaId: string, nome: string, ordem: number) {
   return { id, materia_id: materiaId, materias: { nome, ordem, ativa: true } };
 }
 
+/**
+ * A forma de `inventario_acervo`: **uma linha por tópico**, com a contagem já
+ * agregada — e não uma linha por questão. Ler questão a questão daqui batia no
+ * teto de 1000 linhas do PostgREST e encolhia o edital em silêncio.
+ */
+function acervo(...topicoIds: string[]) {
+  return {
+    data: topicoIds.map((topico_id) => ({ topico_id, aptas_sessao: 1 })),
+    error: null,
+  };
+}
+
 /** Uma tentativa por dia, para dar span de história ao cálculo do ritmo. */
 function tentativa(topicoId: string, dia: string) {
   return { topico_id: topicoId, respondida_em: `${dia}T12:00:00.000Z` };
@@ -39,10 +51,7 @@ function tentativa(topicoId: string, dia: string) {
 describe("consultarTrajetoria", () => {
   it("conta só tópico ativo, de matéria ativa e com questão publicada", async () => {
     const publico = clienteCom({
-      questoes: {
-        data: [{ topico_id: "t1" }, { topico_id: "t2" }, { topico_id: "t1" }],
-        error: null,
-      },
+      inventario_acervo: acervo("t1", "t2"),
       topicos: {
         data: [
           topico("t1", "m1", "Matemática Financeira", 1),
@@ -69,7 +78,7 @@ describe("consultarTrajetoria", () => {
 
   it("separa tocado de dominado: uma resposta não é domínio", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }, { topico_id: "t2" }, { topico_id: "t3" }], error: null },
+      inventario_acervo: acervo("t1", "t2", "t3"),
       topicos: {
         data: [
           topico("t1", "m1", "Matemática", 1),
@@ -101,7 +110,7 @@ describe("consultarTrajetoria", () => {
 
   it("a cobertura ponderada difere da simples quando os pesos diferem", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }, { topico_id: "t2" }], error: null },
+      inventario_acervo: acervo("t1", "t2"),
       topicos: {
         data: [topico("t1", "m1", "Matemática", 1), topico("t2", "m1", "Matemática", 1)],
         error: null,
@@ -133,7 +142,7 @@ describe("consultarTrajetoria", () => {
 
   it("sem projeção do Raio-X a ponderada cai na fração simples, não em zero", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }, { topico_id: "t2" }], error: null },
+      inventario_acervo: acervo("t1", "t2"),
       topicos: {
         data: [topico("t1", "m1", "Matemática", 1), topico("t2", "m1", "Matemática", 1)],
         error: null,
@@ -154,7 +163,7 @@ describe("consultarTrajetoria", () => {
 
   it("histórico curto não vira data: previsão sai nula e não confiável", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }, { topico_id: "t2" }], error: null },
+      inventario_acervo: acervo("t1", "t2"),
       topicos: {
         data: [topico("t1", "m1", "Matemática", 1), topico("t2", "m1", "Matemática", 1)],
         error: null,
@@ -190,7 +199,7 @@ describe("consultarTrajetoria", () => {
 
   it("ritmo zero não divide por zero", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }, { topico_id: "t2" }], error: null },
+      inventario_acervo: acervo("t1", "t2"),
       topicos: {
         data: [topico("t1", "m1", "Matemática", 1), topico("t2", "m1", "Matemática", 1)],
         error: null,
@@ -210,10 +219,7 @@ describe("consultarTrajetoria", () => {
 
   it("tópico revisitado não conta como novo — senão a projeção mente", async () => {
     const publico = clienteCom({
-      questoes: {
-        data: [{ topico_id: "t1" }, { topico_id: "t2" }, { topico_id: "t3" }, { topico_id: "t4" }],
-        error: null,
-      },
+      inventario_acervo: acervo("t1", "t2", "t3", "t4"),
       topicos: {
         data: [
           topico("t1", "m1", "Matemática", 1),
@@ -265,7 +271,7 @@ describe("consultarTrajetoria", () => {
 
   it("sem data de prova mostra a cobertura e não promete folga", async () => {
     const publico = clienteCom({
-      questoes: { data: [{ topico_id: "t1" }], error: null },
+      inventario_acervo: acervo("t1"),
       topicos: { data: [topico("t1", "m1", "Matemática", 1)], error: null },
       perfil_concurso: { data: null, error: null },
     });
@@ -291,13 +297,44 @@ describe("consultarTrajetoria", () => {
     });
   });
 
+  it("lê o acervo agregado e nunca questão a questão", async () => {
+    // Sensor do teto de 1000 linhas do PostgREST. Varrer `questoes` daqui volta
+    // a truncar o edital em silêncio assim que o acervo passa de mil publicadas
+    // — e ele já passou. `aptas_sessao: 0` é o tópico sem questão apta: existe
+    // na view, mas não é edital estudável.
+    const publico = clienteCom({
+      inventario_acervo: {
+        data: [
+          { topico_id: "t1", aptas_sessao: 400 },
+          { topico_id: "t2", aptas_sessao: 0 },
+        ],
+        error: null,
+      },
+      topicos: {
+        data: [topico("t1", "m1", "Matemática", 1), topico("t2", "m1", "Estatística", 1)],
+        error: null,
+      },
+      perfil_concurso: { data: null, error: null },
+    });
+
+    const trajetoria = await consultarTrajetoria(clienteCom({}), {
+      agora: AGORA,
+      clientePublico: publico,
+    });
+
+    expect(trajetoria.total.nTopicos).toBe(1);
+    const tabelasLidas = (publico as unknown as { from: { mock: { calls: string[][] } } }).from.mock
+      .calls;
+    expect(tabelasLidas.map((chamada) => chamada[0])).not.toContain("questoes");
+  });
+
   it("nomeia a fonte quando a leitura do acervo falha", async () => {
     const publico = clienteCom({
-      questoes: { data: null, error: { message: "indisponível" } },
+      inventario_acervo: { data: null, error: { message: "indisponível" } },
     });
 
     await expect(
       consultarTrajetoria(clienteCom({}), { agora: AGORA, clientePublico: publico }),
-    ).rejects.toThrow("falha ao ler questões publicadas: indisponível");
+    ).rejects.toThrow("falha ao ler inventario_acervo: indisponível");
   });
 });

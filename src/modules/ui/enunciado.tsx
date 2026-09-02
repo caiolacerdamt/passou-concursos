@@ -168,8 +168,8 @@ function Inline({ texto }: { texto: string }) {
   let chave = 0;
 
   while (resto !== "") {
-    const negrito = resto.match(/\*\*(.+?)\*\*/s);
-    const italico = resto.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/s);
+    const negrito = resto.match(/\*\*([\s\S]+?)\*\*/);
+    const italico = resto.match(/(?<!\*)\*(?!\*)([\s\S]+?)(?<!\*)\*(?!\*)/);
     const inicio = (marca: RegExpMatchArray | null): number =>
       marca === null || marca.index === undefined ? Number.POSITIVE_INFINITY : marca.index;
     const eNegrito = inicio(negrito) <= inicio(italico);

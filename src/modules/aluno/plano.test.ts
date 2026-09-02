@@ -31,6 +31,24 @@ function clienteCom(respostas: Record<string, unknown>) {
   };
 }
 
+function blocoBanco(sobrescrever: Record<string, unknown>) {
+  return {
+    id: "bloco",
+    tipo: "revisar",
+    nivel: "piso",
+    ordem: 1,
+    topico_id: "topico-1",
+    n_questoes: 10,
+    n_questoes_cheias: 10,
+    minutos_estimados: 20,
+    minutos_estimados_cheios: 20,
+    motivo: null,
+    ajuste_usuario: false,
+    adiado_de: null,
+    ...sobrescrever,
+  };
+}
+
 describe("dataHojeDoProduto", () => {
   it("usa o dia de São Paulo, não o fuso do processo", () => {
     expect(dataHojeDoProduto(new Date("2026-08-22T02:00:00.000Z"))).toBe(
@@ -194,6 +212,134 @@ describe("consultarPlanoDoDia", () => {
       nAcertos: 1,
       encerradaEm: "2026-08-23T21:00:00.000Z",
     });
+    expect(plano?.metaCheia[1].conclusao).toBeNull();
+  });
+
+  it("fecha a gêmea da meta quando o bloco do piso foi feito", async () => {
+    const cliente = clienteCom({
+      plano_dia: { data: { id: "plano-1", data: "2026-08-23", frase: null }, error: null },
+      plano_bloco: {
+        data: [
+          blocoBanco({ id: "piso-1", nivel: "piso", topico_id: "topico-1" }),
+          blocoBanco({ id: "meta-1", nivel: "meta_cheia", topico_id: "topico-1" }),
+        ],
+        error: null,
+      },
+      sessoes: {
+        data: [
+          {
+            id: "sessao-1",
+            plano_bloco_id: "piso-1",
+            encerrada_em: "2026-08-23T21:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      tentativas: { data: [{ sessao_id: "sessao-1", correta: true }], error: null },
+    });
+
+    const plano = await consultarPlanoDoDia(cliente as never, "2026-08-23");
+
+    expect(plano?.piso[0].conclusao?.sessaoId).toBe("sessao-1");
+    expect(plano?.metaCheia[0].conclusao?.sessaoId).toBe("sessao-1");
+    expect(plano?.metaCheia[0].conclusao).toEqual(plano?.piso[0].conclusao);
+  });
+
+  it("fecha a gêmea do piso quando o bloco da meta foi feito", async () => {
+    const cliente = clienteCom({
+      plano_dia: { data: { id: "plano-1", data: "2026-08-23", frase: null }, error: null },
+      plano_bloco: {
+        data: [
+          blocoBanco({ id: "piso-1", nivel: "piso", topico_id: "topico-1" }),
+          blocoBanco({ id: "meta-1", nivel: "meta_cheia", topico_id: "topico-1" }),
+        ],
+        error: null,
+      },
+      sessoes: {
+        data: [
+          {
+            id: "sessao-2",
+            plano_bloco_id: "meta-1",
+            encerrada_em: "2026-08-23T21:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      tentativas: { data: [{ sessao_id: "sessao-2", correta: false }], error: null },
+    });
+
+    const plano = await consultarPlanoDoDia(cliente as never, "2026-08-23");
+
+    expect(plano?.piso[0].conclusao?.sessaoId).toBe("sessao-2");
+    expect(plano?.metaCheia[0].conclusao?.sessaoId).toBe("sessao-2");
+  });
+
+  it("não pareia blocos de revisão de tópicos diferentes", async () => {
+    const cliente = clienteCom({
+      plano_dia: { data: { id: "plano-1", data: "2026-08-23", frase: null }, error: null },
+      plano_bloco: {
+        data: [
+          blocoBanco({ id: "piso-1", nivel: "piso", topico_id: "topico-1" }),
+          blocoBanco({ id: "piso-2", nivel: "piso", topico_id: "topico-2", ordem: 2 }),
+        ],
+        error: null,
+      },
+      sessoes: {
+        data: [
+          {
+            id: "sessao-1",
+            plano_bloco_id: "piso-1",
+            encerrada_em: "2026-08-23T21:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      tentativas: { data: [{ sessao_id: "sessao-1", correta: true }], error: null },
+    });
+
+    const plano = await consultarPlanoDoDia(cliente as never, "2026-08-23");
+
+    expect(plano?.piso[0].conclusao?.sessaoId).toBe("sessao-1");
+    expect(plano?.piso[1].conclusao).toBeNull();
+  });
+
+  it("bloco sem tópico não contamina outro bloco sem tópico", async () => {
+    const cliente = clienteCom({
+      plano_dia: { data: { id: "plano-1", data: "2026-08-23", frase: null }, error: null },
+      plano_bloco: {
+        data: [
+          blocoBanco({
+            id: "simulado-1",
+            tipo: "simulado",
+            nivel: "meta_cheia",
+            topico_id: null,
+          }),
+          blocoBanco({
+            id: "simulado-2",
+            tipo: "simulado",
+            nivel: "meta_cheia",
+            topico_id: null,
+            ordem: 2,
+          }),
+        ],
+        error: null,
+      },
+      sessoes: {
+        data: [
+          {
+            id: "sessao-1",
+            plano_bloco_id: "simulado-1",
+            encerrada_em: "2026-08-23T21:00:00.000Z",
+          },
+        ],
+        error: null,
+      },
+      tentativas: { data: [{ sessao_id: "sessao-1", correta: true }], error: null },
+    });
+
+    const plano = await consultarPlanoDoDia(cliente as never, "2026-08-23");
+
+    expect(plano?.metaCheia[0].conclusao?.sessaoId).toBe("sessao-1");
     expect(plano?.metaCheia[1].conclusao).toBeNull();
   });
 

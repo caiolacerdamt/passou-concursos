@@ -15,6 +15,12 @@ import type { ReactNode } from "react";
 export type ItemDaNavegacao = {
   href: string;
   nome: string;
+  /**
+   * O rótulo da aba do celular. Numa aba de ~55px "Questões e revisões" só
+   * cabe truncado, e truncado ele não diz nada. A barra lateral continua
+   * usando `nome`; só o celular lê `nomeCurto ?? nome`.
+   */
+  nomeCurto?: string;
   descricao: string;
   icone: ReactNode;
 };
@@ -40,6 +46,7 @@ export const ITENS_DE_ESTUDO: ItemDaNavegacao[] = [
   {
     href: "/app",
     nome: "Hoje",
+    nomeCurto: "Hoje",
     descricao: "O que estudar agora",
     icone: (
       <Traco>
@@ -52,6 +59,7 @@ export const ITENS_DE_ESTUDO: ItemDaNavegacao[] = [
   {
     href: "/app/plano",
     nome: "Plano",
+    nomeCurto: "Plano",
     descricao: "Ciclo do edital",
     icone: (
       <Traco>
@@ -64,6 +72,7 @@ export const ITENS_DE_ESTUDO: ItemDaNavegacao[] = [
   {
     href: "/app/raio-x",
     nome: "Raio-X",
+    nomeCurto: "Raio-X",
     descricao: "O que mais cai",
     icone: (
       <Traco>
@@ -76,6 +85,7 @@ export const ITENS_DE_ESTUDO: ItemDaNavegacao[] = [
   {
     href: "/app/sessao",
     nome: "Questões e revisões",
+    nomeCurto: "Questões",
     descricao: "Praticar e consolidar",
     icone: (
       <Traco>
@@ -90,6 +100,7 @@ export const ITENS_DE_ACOMPANHAMENTO: ItemDaNavegacao[] = [
   {
     href: "/app/progresso",
     nome: "Progresso",
+    nomeCurto: "Progresso",
     descricao: "Seu histórico de estudo",
     icone: (
       <Traco>
@@ -145,6 +156,14 @@ export const TODOS_OS_ITENS: ItemDaNavegacao[] = [
   ...ITENS_DE_ACOMPANHAMENTO,
   ...ITENS_DE_CONTA,
 ];
+
+/** O mesmo traço do item `/app/conta` — a aba da folha reusa a identidade dele. */
+export const IconeDeConta = (
+  <Traco>
+    <circle cx="12" cy="9.2" r="3.4" />
+    <path d="M5.6 19.4a6.6 6.6 0 0 1 12.8 0" />
+  </Traco>
+);
 
 export const IconeDeSair = (
   <Traco>

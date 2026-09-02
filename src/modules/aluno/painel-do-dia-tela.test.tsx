@@ -58,6 +58,7 @@ const gamificacao: DadosGamificacao = {
 const painel: PainelDoDia = {
   contagem: { dataProva: "2026-09-10", dias: 17, estado: "futura" },
   gamificacao,
+  trajetoria: null,
   relatorioSemanal: {
     inicio: "2026-08-17T12:00:00.000Z",
     fim: "2026-08-24T12:00:00.000Z",

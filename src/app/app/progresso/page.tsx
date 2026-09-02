@@ -2,6 +2,9 @@ import { clienteDaSessao } from "@/lib/db/sessao";
 import { isFlagOn } from "@/modules/config";
 import { consultarProgresso } from "@/modules/aluno/progresso";
 import { consultarGamificacaoOpcional } from "@/modules/aluno/painel-do-dia";
+import { consultarPerfilEstudo } from "@/modules/aluno/onboarding";
+import { consultarTrajetoriaOpcional } from "@/modules/aluno/trajetoria-opcional";
+import { TrajetoriaTela } from "@/modules/aluno/trajetoria-tela";
 import { ProgressoTela } from "@/modules/aluno/progresso-tela";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { reportarErro } from "@/modules/observabilidade/reporte";
@@ -48,9 +51,24 @@ export default async function Progresso({ searchParams }: Props) {
     return <Estado tipo="erro" />;
   }
 
-  // A gamificação é opcional: flag desligada ou leitura falha não impedem o
-  // aluno de ver o próprio progresso.
-  const gamificacao = await consultarGamificacaoOpcional(supabase);
+  // Gamificação e trajetória são opcionais: flag desligada ou leitura falha não
+  // impedem o aluno de ver o próprio progresso.
+  // A data da prova mora no perfil de estudo; a trajetória não a inventa.
+  const perfil = await consultarPerfilEstudo(supabase).catch(() => null);
+  const [gamificacao, trajetoria] = await Promise.all([
+    consultarGamificacaoOpcional(supabase),
+    consultarTrajetoriaOpcional(supabase, { dataProva: perfil?.dataProva ?? null }),
+  ]);
 
-  return <ProgressoTela dados={resultado.dados} gamificacao={gamificacao} />;
+  return (
+    <div className="space-y-8">
+      {/*
+        A trajetória vem **acima** do histórico por tópico: ela é o
+        enquadramento — quanto do edital falta e quanto tempo resta —, e o
+        histórico é o detalhe dentro dele.
+      */}
+      {trajetoria ? <TrajetoriaTela trajetoria={trajetoria} /> : null}
+      <ProgressoTela dados={resultado.dados} gamificacao={gamificacao} />
+    </div>
+  );
 }

@@ -12,6 +12,7 @@ import {
   type LinhaCaderno,
   type RelatorioSemanal,
 } from "./progresso";
+import { TrajetoriaEmUmaLinha } from "./trajetoria-tela";
 
 const TENDENCIA_EM_TEXTO = {
   subindo: "Subindo",
@@ -501,6 +502,12 @@ export function AcompanhamentoDoDia({ painel }: { painel: PainelDoDia }) {
         {painel.relatorioSemanal ? <ResumoDaSemana relatorio={painel.relatorioSemanal} /> : null}
         <ContagemDaProvaCartao contagem={painel.contagem} />
       </div>
+
+      {/*
+        Uma linha só, clicável, e nada mais: Hoje é a tela do próximo bloco e
+        não pode virar painel. O desenho inteiro da cobertura vive no Progresso.
+      */}
+      {painel.trajetoria ? <TrajetoriaEmUmaLinha trajetoria={painel.trajetoria} /> : null}
 
       {painel.recuperacao.length > 0 ? <Recuperacao erros={painel.recuperacao} /> : null}
 

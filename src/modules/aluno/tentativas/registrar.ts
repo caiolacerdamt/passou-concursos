@@ -6,6 +6,7 @@ import {
   CAUSAS_DO_TREINO,
   CONTEXTOS,
   type CausaDoTreino,
+  type Contexto,
   type EntradaTentativa,
   LETRAS_POR_TIPO,
   type ResultadoTentativa,
@@ -122,6 +123,9 @@ export function validar(entrada: EntradaTentativa): void {
   }
 }
 
+/** Contextos em que errar obriga a declarar a causa antes de avancar. */
+const PEDE_CAUSA: readonly Contexto[] = ["treino", "plano", "revisao"];
+
 /**
  * Checagem **otimista** da tela, antes de mandar a resposta ao servidor.
  *
@@ -133,6 +137,12 @@ export function validar(entrada: EntradaTentativa): void {
  * INSERT e a propria `public.registrar_tentativa`, que levanta
  * `causa_obrigatoria` no instante seguinte a calcular se acertou. Chamar esta
  * funcao poupa uma ida ao servidor; nao chamar nao abre buraco nenhum.
+ *
+ * Uma excecao a registrar: em `revisao` este gate e a **unica** exigencia. O
+ * CHECK da tabela e a funcao SQL so cobram a causa em `treino` e `plano` — mas
+ * nenhum dos dois a proibe em `revisao`, entao a coluna aceita e a tela sabe
+ * renderizar o passo. Ampliar o alcance so aqui evita migracao; quando o SQL
+ * for mexido, o lugar de alinhar e a lista abaixo.
  */
 export function validarResposta(
   entrada: EntradaTentativa,
@@ -150,12 +160,12 @@ export function validarResposta(
 
   const causa = entrada.causaErro ?? null;
 
-  // ALUNO-03 AC1: errou no treino ou no plano, tem de dizer por que **antes** de avancar.
-  if (
-    (entrada.contexto === "treino" || entrada.contexto === "plano") &&
-    !contexto.acertou &&
-    causa === null
-  ) {
+  // ALUNO-03 AC1: errou, tem de dizer por que **antes** de avancar.
+  // `revisao` entra porque o piso do dia e feito so de blocos de revisao: sem
+  // ele, quem cumpre o minimo nunca declara causa e o caderno de erros nasce
+  // vazio. `simulado` fica de fora de proposito — prova curta cronometrada nao
+  // para a cada erro.
+  if (PEDE_CAUSA.includes(entrada.contexto) && !contexto.acertou && causa === null) {
     throw new TentativaRecusada(
       "causa_obrigatoria",
       "Diga por que errou antes de seguir. 'Nao sei dizer' vale como resposta.",

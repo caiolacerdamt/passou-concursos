@@ -31,8 +31,11 @@ descreveComBanco("tentativas — particionamento (INFRA-04)", () => {
         partition_interval: string;
         partition_type: string;
         premake: number;
+        automatic_maintenance: string;
+        infinite_time_partitions: boolean;
       }>(
-        `select control, partition_interval, partition_type, premake
+        `select control, partition_interval, partition_type, premake,
+                automatic_maintenance, infinite_time_partitions
            from partman.part_config where parent_table = 'public.tentativas'`,
       );
       expect(rows).toHaveLength(1);
@@ -40,6 +43,13 @@ descreveComBanco("tentativas — particionamento (INFRA-04)", () => {
       expect(rows[0].partition_type).toBe("range");
       expect(rows[0].partition_interval).toBe("1 mon");
       expect(rows[0].premake).toBe(3);
+      expect(rows[0].automatic_maintenance).toBe("on");
+      // AD-123. Os dois de cima descrevem a intencao; este e o que a cumpre.
+      // Com `false` — o default do partman — a criacao de particao futura anda a
+      // reboque do INSERT, e nao do calendario: o job das 05:17 roda, termina
+      // limpo e nao cria nada. Foi assim que a folga do AC3 sumiu sem ninguem
+      // ver, porque `jobs_falhados` vigia job que falha e este tem sucesso.
+      expect(rows[0].infinite_time_partitions).toBe(true);
     });
   });
 

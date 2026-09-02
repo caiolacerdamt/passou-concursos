@@ -32,7 +32,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
         <div className="min-w-0 flex-1">
           <main
             id="conteudo"
-            className="mx-auto w-full max-w-painel px-4 pb-28 pt-24 sm:px-6 lg:px-14 lg:pb-20 lg:pt-11"
+            className="mx-auto w-full max-w-painel px-4 pb-28 pt-16 sm:px-6 lg:px-14 lg:pb-20 lg:pt-11"
           >
             {children}
           </main>

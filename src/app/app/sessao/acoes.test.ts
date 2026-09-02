@@ -212,6 +212,31 @@ describe("responderQuestao", () => {
     expect(dependencias.registrar).not.toHaveBeenCalled();
   });
 
+  it("erro em sessão de revisão também para para pedir a causa", async () => {
+    // Aqui o validador **real** roda: o resto do arquivo o substitui por um
+    // duplo, e um duplo não sabe dizer quais contextos pedem causa. Sem isso a
+    // regra do piso do dia (blocos de revisão) ficaria sem cobertura de ponta
+    // a ponta.
+    const real = await vi.importActual<typeof import("@/modules/aluno/tentativas")>(
+      "@/modules/aluno/tentativas",
+    );
+    const { cliente } = clienteDaResposta();
+    dependencias.cliente.mockResolvedValue(cliente);
+    dependencias.validar.mockImplementation(real.validarResposta);
+    dependencias.obterItem.mockResolvedValue({
+      ...alvo,
+      sessao: { ...alvo.sessao, contexto: "revisao" as const },
+    });
+
+    const estado = await responderQuestao(
+      ESTADO_INICIAL_DA_RESPOSTA,
+      formulario({ resposta: "A", chute: false }),
+    );
+
+    expect(estado).toMatchObject({ status: "causa_necessaria", respostaDada: "A" });
+    expect(dependencias.registrar).not.toHaveBeenCalled();
+  });
+
   it("no duplo-clique não revalida nem cria nova tentativa", async () => {
     const { cliente, pendingBuilder } = clienteDaResposta({ pendente: false });
     dependencias.cliente.mockResolvedValue(cliente);

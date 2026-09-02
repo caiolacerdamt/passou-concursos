@@ -115,6 +115,27 @@ describe("validarResposta — o que e recusado antes de gravar", () => {
     ).not.toThrow();
   });
 
+  it("errar na revisao sem causa e recusado — o piso do dia e feito de revisao", () => {
+    try {
+      validarResposta(entrada({ contexto: "revisao" }), {
+        tipoQuestao: "multipla_escolha",
+        acertou: false,
+      });
+      expect.unreachable("deveria ter recusado");
+    } catch (erro) {
+      expect((erro as TentativaRecusada).motivo).toBe("causa_obrigatoria");
+    }
+  });
+
+  it("errar na revisao com causa passa", () => {
+    expect(() =>
+      validarResposta(entrada({ contexto: "revisao", causaErro: "nao_sabia_conteudo" }), {
+        tipoQuestao: "multipla_escolha",
+        acertou: false,
+      }),
+    ).not.toThrow();
+  });
+
   it("causa em resposta certa e recusada", () => {
     try {
       validarResposta(entrada({ causaErro: "chutei" }), {

@@ -40,6 +40,7 @@ describe("catalogo de chaves", () => {
     const flags: ChaveFlag[] = [
       "flag.m4.diagnostico_adaptativo",
       "flag.m4.simulado_semanal",
+      "flag.m4.trajetoria",
       "flag.m4.caderno_erros",
       "flag.m5.raiox",
       "flag.m6.gamificacao",

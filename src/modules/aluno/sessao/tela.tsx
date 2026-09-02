@@ -8,6 +8,7 @@ import type { EstadoDaResposta } from "@/app/app/sessao/acoes";
 import { responderQuestao } from "@/app/app/sessao/acoes";
 import type { ItemDaSessao, ImagemDaSessao, QuestaoDaSessao, SessaoDaTela } from "@/modules/aluno/sessao";
 import type { Contexto } from "@/modules/aluno/tentativas";
+import { TextoFormatado, separarEnunciado } from "@/modules/ui/enunciado";
 
 const CAUSAS = [
   ["confundi_conceitos", "Confundi conceitos"],
@@ -152,10 +153,16 @@ function CabecalhoDaSessao({ contexto, blocoId }: { contexto: Contexto; blocoId:
 }
 
 /**
- * A trilha substitui o "QUESTÃO 1 / 10" solto: a mesma informação, mas com o
- * quanto falta visível de relance. Cada segmento é uma questão desta sessão —
- * feito, errado, atual, pendente. Os segmentos já respondidos são botões de
- * revisão; os pendentes continuam sem gabarito e sem navegação para trás.
+ * A trilha de tracinhos virou quadrado numerado — AD-125.
+ *
+ * O tracinho dizia "quanto falta" e nada mais: para pular da questão 1 para a 7
+ * era preciso acertar um alvo de 1px de altura sem saber qual era qual. O
+ * quadrado carrega o número, o estado (feito, errado, atual, pendente) e um
+ * alvo de toque de verdade. As setas nas pontas andam de uma em uma; o
+ * quadrado é o atalho.
+ *
+ * Cor aqui é estado, não decoração: verde é acerto, vermelho é erro registrado,
+ * anel é onde o aluno está. Questão pendente continua sem gabarito.
  */
 function TrilhaDaSessao({
   itens,
@@ -172,6 +179,8 @@ function TrilhaDaSessao({
   erros: readonly number[];
   aoSelecionar: (indice: number) => void;
 }) {
+  const ultimo = itens.length - 1;
+
   return (
     <div className="mt-6.5">
       <div className="flex items-center justify-between gap-4">
@@ -184,38 +193,147 @@ function TrilhaDaSessao({
           </p>
         ) : null}
       </div>
-      <div
-        className="mt-2.5 grid gap-1"
-        style={{ gridTemplateColumns: `repeat(${Math.max(total, 1)}, minmax(0, 1fr))` }}
-        aria-label="Navegação das questões"
-      >
-        {itens.map((item, indice) => {
-          const respondidaAntes = item.somenteLeitura;
-          const erro = respondidaAntes ? !item.correta : erros.includes(indice);
-          const classe = `h-1 rounded-full ${
-            indice === posicao
-              ? "bg-marca"
-              : erro
-                ? "bg-erro"
-                : respondidaAntes || indice < posicao
-                  ? "bg-marca-viva"
-                  : "bg-linha"
-          }`;
 
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => aoSelecionar(indice)}
-              className="block min-w-0 rounded-full focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marca"
-              aria-label={`${respondidaAntes ? "Rever" : "Abrir"} questão ${indice + 1}`}
-              aria-current={indice === posicao ? "step" : undefined}
-            >
-              <span className={`block w-full ${classe}`} />
-            </button>
-          );
-        })}
+      <div className="mt-2.5 flex items-center gap-2.5">
+        <SetaDaTrilha
+          rotulo="Questão anterior"
+          desabilitada={posicao === 0}
+          aoClicar={() => aoSelecionar(Math.max(posicao - 1, 0))}
+          sentido="anterior"
+        />
+
+        <div
+          className="grid min-w-0 flex-1 gap-1.5"
+          style={{ gridTemplateColumns: `repeat(${Math.max(itens.length, 1)}, minmax(0, 1fr))` }}
+          aria-label="Navegação das questões"
+        >
+          {itens.map((item, indice) => {
+            const respondidaAntes = item.somenteLeitura;
+            const erro = respondidaAntes ? !item.correta : erros.includes(indice);
+            const feita = respondidaAntes || erros.includes(indice) || indice < posicao;
+            const materia = erro
+              ? "border-erro/55 bg-erro-fundo text-erro"
+              : feita
+                ? "border-marca-viva bg-marca-suave text-marca"
+                : "border-linha bg-painel text-suave";
+            const atual =
+              indice === posicao
+                ? erro
+                  ? "border-erro outline-2 outline-offset-2 outline-erro/25"
+                  : "border-marca outline-2 outline-offset-2 outline-marca/25"
+                : "";
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => aoSelecionar(indice)}
+                className={`grid h-9.5 min-w-0 place-items-center rounded-lg border font-utilitaria text-[0.8125rem] font-semibold transition-colors duration-150 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marca ${materia} ${atual}`}
+                aria-label={`${respondidaAntes ? "Rever" : "Abrir"} questão ${indice + 1}`}
+                aria-current={indice === posicao ? "step" : undefined}
+              >
+                {indice + 1}
+              </button>
+            );
+          })}
+        </div>
+
+        <SetaDaTrilha
+          rotulo="Próxima questão"
+          desabilitada={posicao >= ultimo}
+          aoClicar={() => aoSelecionar(Math.min(posicao + 1, ultimo))}
+          sentido="proxima"
+        />
       </div>
+    </div>
+  );
+}
+
+function SetaDaTrilha({
+  rotulo,
+  desabilitada,
+  aoClicar,
+  sentido,
+}: {
+  rotulo: string;
+  desabilitada: boolean;
+  aoClicar: () => void;
+  sentido: "anterior" | "proxima";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={aoClicar}
+      disabled={desabilitada}
+      aria-label={rotulo}
+      className="grid size-10 shrink-0 place-items-center rounded-full border border-linha bg-painel text-suave transition-colors duration-150 hover:border-marca/50 hover:text-marca disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-linha disabled:hover:text-suave focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-marca"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="size-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        {sentido === "anterior" ? (
+          <path d="M19 12H6m0 0 4.6-4.6M6 12l4.6 4.6" />
+        ) : (
+          <path d="M5 12h13m0 0-4.6-4.6M18 12l-4.6 4.6" />
+        )}
+      </svg>
+    </button>
+  );
+}
+
+/**
+ * O enunciado que o acervo entrega é o texto de apoio e o comando no mesmo
+ * campo. Imprimir tudo de uma vez é o scroll infinito que a tela tinha: numa
+ * questão de interpretação o comando some 40 linhas abaixo. O apoio entra
+ * recolhido e o comando fica sempre visível, que é a ordem em que a questão se
+ * responde.
+ */
+function EnunciadoDaQuestao({ enunciado }: { enunciado: string }) {
+  const { apoio, comando } = separarEnunciado(enunciado);
+  const [aberto, setAberto] = useState(false);
+  const textoDeApoio = apoio.join("\n\n");
+  const longo = textoDeApoio.length > 420;
+
+  return (
+    <div>
+      {apoio.length > 0 ? (
+        <div className="mt-5 border-l-2 border-linha pl-5">
+          <div className={`relative ${longo && !aberto ? "max-h-44 overflow-hidden" : ""}`}>
+            <TextoFormatado
+              texto={textoDeApoio}
+              className="grid gap-3 text-[0.9375rem] leading-[1.7] text-suave"
+            />
+            {longo && !aberto ? (
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-painel"
+              />
+            ) : null}
+          </div>
+          {longo ? (
+            <button
+              type="button"
+              onClick={() => setAberto((atual) => !atual)}
+              className="mt-2.5 font-semibold text-[0.8125rem] text-marca underline underline-offset-[3px]"
+              aria-expanded={aberto}
+            >
+              {aberto ? "Recolher o texto de apoio" : "Ler o texto de apoio completo"}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+
+      <TextoFormatado
+        texto={comando}
+        className="mt-5.5 grid max-w-[62ch] gap-3 text-[1.1875rem] leading-[1.65] tracking-[-0.005em] sm:text-xl"
+      />
     </div>
   );
 }
@@ -238,9 +356,9 @@ function QuestaoAtual({
   const [estado, action, pendente] = useActionState(responderQuestao, ESTADO_INICIAL);
   const [inicio] = useState(() => Date.now());
   const [decorridoMs, setDecorridoMs] = useState(0);
-  const [marcouChute, setMarcouChute] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const contada = useRef(false);
+  const [viuGabarito, setViuGabarito] = useState(false);
   const respondida = estado.status === "respondida" && estado.itemId === item.id;
   const pedindoCausa = estado.status === "causa_necessaria" && estado.itemId === item.id;
 
@@ -251,14 +369,19 @@ function QuestaoAtual({
 
   // O placar da sessão conta uma vez por questão: `duplicada` é duplo clique
   // no servidor, não uma segunda resposta.
+  //
+  // Quem errou já viu o gabarito na tela da causa (AD-126). Repetir o mesmo
+  // gabarito numa terceira tela seria pedir dois cliques para dizer a mesma
+  // coisa, então o registro da causa leva direto à próxima questão.
   useEffect(() => {
     if (!respondida || contada.current) return;
     if (estado.status !== "respondida") return;
     contada.current = true;
     aoRegistrar(estado.correta);
-  }, [respondida, estado, aoRegistrar]);
+    if (viuGabarito) aoAvancar();
+  }, [respondida, estado, viuGabarito, aoRegistrar, aoAvancar]);
 
-  if (respondida && estado.status === "respondida") {
+  if (respondida && estado.status === "respondida" && !viuGabarito) {
     return (
       <FeedbackDaResposta
         estado={estado}
@@ -267,6 +390,32 @@ function QuestaoAtual({
         hrefResumo={hrefResumo}
         questao={item.questao}
         respostaDada={escolhida}
+      />
+    );
+  }
+
+  // Passo entre o registro da causa e a próxima questão: o efeito acima já
+  // pediu para avançar. Mostrar a questão de novo aqui seria um piscar.
+  if (respondida) {
+    return (
+      <p className="mt-8 text-center text-[0.9375rem] text-suave" aria-live="polite">
+        Resposta registrada. Indo para a próxima questão…
+      </p>
+    );
+  }
+
+  if (pedindoCausa && estado.status === "causa_necessaria") {
+    return (
+      <ErroComCausa
+        estado={estado}
+        questao={item.questao}
+        sessaoId={sessaoId}
+        itemId={item.id}
+        decorridoMs={decorridoMs}
+        aoConfirmar={() => setViuGabarito(true)}
+        action={action}
+        pendente={pendente}
+        ultima={ultima}
       />
     );
   }
@@ -287,9 +436,7 @@ function QuestaoAtual({
           </p>
         </div>
 
-        <h2 className="mt-5.5 max-w-[62ch] text-[1.1875rem] leading-[1.65] tracking-[-0.005em] sm:text-xl">
-          {item.questao.enunciado}
-        </h2>
+        <EnunciadoDaQuestao enunciado={item.questao.enunciado} />
         <Imagens imagens={item.questao.imagens.filter((imagem) => imagem.posicao === "enunciado")} />
 
         <form action={action} className="mt-6.5">
@@ -297,41 +444,19 @@ function QuestaoAtual({
           <input type="hidden" name="itemId" value={item.id} />
           <input type="hidden" name="tempoMs" value={decorridoMs} />
 
-          {pedindoCausa ? (
-            <CausaDoErro estado={estado} itemId={item.id} />
-          ) : (
-            <Alternativas
-              questao={item.questao}
-              escolhida={escolhida}
-              aoEscolher={(letra) => setEscolhida(letra)}
-            />
-          )}
+          <Alternativas
+            questao={item.questao}
+            escolhida={escolhida}
+            aoEscolher={(letra) => setEscolhida(letra)}
+          />
 
-          <div className="mt-6.5 flex flex-wrap items-center justify-between gap-4 border-t border-linha pt-5">
-            {pedindoCausa ? (
-              <p className="max-w-[46ch] text-[0.8125rem] leading-6 text-suave">
-                A causa fica no seu caderno de erros e orienta a próxima revisão.
-              </p>
-            ) : (
-              <label className="flex max-w-[46ch] items-start gap-2.5 text-sm leading-6 text-suave">
-                <input
-                  type="checkbox"
-                  name="marcouChute"
-                  value="true"
-                  checked={marcouChute}
-                  onChange={(evento) => setMarcouChute(evento.target.checked)}
-                  className="mt-1.5 size-4 shrink-0 accent-[var(--color-marca)]"
-                />
-                <span>Marcar como chute — mesmo acertando, isso volta na revisão.</span>
-              </label>
-            )}
-
+          <div className="mt-6.5 flex flex-wrap items-center justify-end gap-4 border-t border-linha pt-5">
             <button
               type="submit"
               disabled={pendente}
               className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-8 font-semibold text-painel transition-colors duration-150 hover:bg-marca-apoio disabled:cursor-wait disabled:opacity-60"
             >
-              {pendente ? "Registrando…" : pedindoCausa ? "Registrar e continuar" : "Responder"}
+              {pendente ? "Registrando…" : "Responder"}
               {pendente ? null : (
                 <svg
                   viewBox="0 0 24 24"
@@ -371,9 +496,7 @@ function QuestaoRespondida({
         <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
           Questão já respondida · somente leitura
         </p>
-        <h2 className="mt-3 max-w-[62ch] text-[1.1875rem] leading-[1.65] tracking-[-0.005em] sm:text-xl">
-          {item.questao.enunciado}
-        </h2>
+        <EnunciadoDaQuestao enunciado={item.questao.enunciado} />
         <Imagens imagens={item.questao.imagens.filter((imagem) => imagem.posicao === "enunciado")} />
       </header>
 
@@ -416,46 +539,176 @@ function QuestaoRespondida({
 }
 
 /**
+ * Errou: gabarito e causa na mesma tela — AD-126.
+ *
+ * Antes eram dois passos. O primeiro perguntava a causa **sem** mostrar o
+ * gabarito, e só o segundo revelava a alternativa certa — ou seja, o aluno
+ * dizia por que errou antes de saber o que era certo, e depois clicava de novo
+ * para ver a mesma questão. Agora a tela mostra o gabarito ao lado da resposta
+ * dada e pergunta a causa embaixo; um clique fecha a questão.
+ *
+ * Nada foi gravado quando esta tela aparece: a função SQL recusou o INSERT sem
+ * causa (`causa_obrigatoria`), e é o `Registrar e continuar` que grava a linha
+ * única no log. Invariante 1 continua de pé — não existe UPDATE de tentativa.
+ *
  * A causa não é um `<select>` escondido numa caixa de alerta: são sete opções
  * curtas, e vê-las todas é o que faz o aluno escolher a verdadeira em vez da
  * primeira.
  */
-function CausaDoErro({
+export function ErroComCausa({
   estado,
+  questao,
+  sessaoId,
   itemId,
+  decorridoMs,
+  aoConfirmar,
+  action,
+  pendente,
+  ultima,
 }: {
   estado: Extract<EstadoDaResposta, { status: "causa_necessaria" }>;
+  questao: QuestaoDaSessao;
+  sessaoId: string;
   itemId: string;
+  decorridoMs: number;
+  /** Avisa a tela que o gabarito já foi visto aqui — evita repeti-lo depois. */
+  aoConfirmar: () => void;
+  action: (formulario: FormData) => void;
+  pendente: boolean;
+  ultima: boolean;
 }) {
+  const alternativas = alternativasDaQuestao(questao);
+  const gabarito = alternativas.find((alternativa) => alternativa.letra === estado.respostaCorreta);
+  const escolhida = alternativas.find((alternativa) => alternativa.letra === estado.respostaDada);
+  const outras = alternativas.filter(
+    (alternativa) =>
+      alternativa.letra !== estado.respostaCorreta && alternativa.letra !== estado.respostaDada,
+  );
+  const { comando } = separarEnunciado(questao.enunciado);
+
   return (
-    <fieldset>
-      <legend className="text-base font-semibold">O que explica este erro?</legend>
-      <p className="mt-1.5 max-w-[56ch] text-sm leading-6 text-suave">
-        {estado.mensagem} É isto que separa o assunto que você não sabe do assunto que você sabe e escorregou.
-      </p>
+    <article className="mt-5">
+      <header>
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-erro">
+          Resposta para revisar
+        </p>
+        <h2 className="mt-3 max-w-[22ch] text-3xl font-semibold leading-[1.08] tracking-[-0.032em]">
+          Este é um ponto para entender melhor.
+        </h2>
+      </header>
 
-      <div className="mt-3.5 flex flex-wrap gap-2">
-        {CAUSAS.map(([valor, rotulo]) => (
-          <label
-            key={valor}
-            className="inline-flex min-h-10 cursor-pointer items-center rounded-full border border-linha bg-painel px-4 text-sm transition-colors duration-150 hover:border-marca/50 has-[:checked]:border-marca has-[:checked]:bg-marca-suave has-[:checked]:font-semibold has-[:checked]:text-marca has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marca"
-          >
-            <input
-              type="radio"
-              id={valor === CAUSAS[0][0] ? `causa-${itemId}` : undefined}
-              name="causaErro"
-              value={valor}
-              required
-              className="sr-only"
-            />
-            {rotulo}
-          </label>
-        ))}
-      </div>
+      <section className="mt-5 rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5 sm:px-8">
+        <TextoFormatado
+          texto={comando}
+          className="grid max-w-[62ch] gap-3 text-[0.9375rem] leading-[1.6] text-suave"
+        />
 
-      <input type="hidden" name="respostaDada" value={estado.respostaDada} />
-      <input type="hidden" name="marcouChute" value={String(estado.marcouChute)} />
-    </fieldset>
+        <div className="mt-5 grid gap-2">
+          <div className="flex min-h-14 items-start gap-3.5 rounded-xl border border-ok/45 bg-marca-suave px-5 py-3.5 leading-[1.55]">
+            <LetraDaAlternativa letra={estado.respostaCorreta} tom="certo" />
+            <span className="min-w-0 flex-1 pt-0.5 font-medium">
+              {gabarito ? gabarito.texto : `Alternativa ${estado.respostaCorreta}`}
+            </span>
+            <span className="shrink-0 self-center font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] text-ok">
+              Gabarito
+            </span>
+          </div>
+
+          <div className="flex min-h-14 items-start gap-3.5 rounded-xl border border-erro/45 bg-erro-fundo px-5 py-3.5 leading-[1.55]">
+            <LetraDaAlternativa letra={estado.respostaDada} tom="errado" />
+            <span className="min-w-0 flex-1 pt-0.5">
+              {escolhida ? escolhida.texto : `Alternativa ${estado.respostaDada}`}
+            </span>
+            <span className="shrink-0 self-center font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] text-erro">
+              Sua resposta
+            </span>
+          </div>
+        </div>
+
+        {outras.length > 0 ? (
+          <details className="mt-3">
+            <summary className="cursor-pointer text-[0.8125rem] font-semibold text-marca">
+              Ver as outras alternativas
+            </summary>
+            <div className="mt-2.5 grid gap-2">
+              {outras.map((alternativa) => (
+                <div
+                  key={alternativa.letra}
+                  className="flex min-h-14 items-start gap-3.5 rounded-xl border border-linha bg-painel px-5 py-3.5 leading-[1.55]"
+                >
+                  <LetraDaAlternativa letra={alternativa.letra} />
+                  <span className="min-w-0 flex-1 pt-0.5">{alternativa.texto}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+
+        <form action={action} onSubmit={aoConfirmar} className="mt-6 border-t border-linha pt-5">
+          <input type="hidden" name="sessaoId" value={sessaoId} />
+          <input type="hidden" name="itemId" value={itemId} />
+          <input type="hidden" name="tempoMs" value={decorridoMs} />
+          <input type="hidden" name="respostaDada" value={estado.respostaDada} />
+          <input type="hidden" name="marcouChute" value={String(estado.marcouChute)} />
+
+          <fieldset>
+            <legend className="text-base font-semibold">O que explica este erro?</legend>
+            <p className="mt-1.5 max-w-[56ch] text-sm leading-6 text-suave">
+              {estado.mensagem} É isto que separa o assunto que você não sabe do assunto que você sabe e escorregou.
+            </p>
+
+            <div className="mt-3.5 flex flex-wrap gap-2">
+              {CAUSAS.map(([valor, rotulo]) => (
+                <label
+                  key={valor}
+                  className="inline-flex min-h-10 cursor-pointer items-center rounded-full border border-linha bg-painel px-4 text-sm transition-colors duration-150 hover:border-marca/50 has-[:checked]:border-marca has-[:checked]:bg-marca-suave has-[:checked]:font-semibold has-[:checked]:text-marca has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marca"
+                >
+                  <input
+                    type="radio"
+                    id={valor === CAUSAS[0][0] ? `causa-${itemId}` : undefined}
+                    name="causaErro"
+                    value={valor}
+                    required
+                    className="sr-only"
+                  />
+                  {rotulo}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <p className="font-utilitaria text-xs text-suave">
+              {questao.fonteCitacao
+                ? `${questao.fonteCitacao.banca} · ${questao.fonteCitacao.ano} · ${questao.fonteCitacao.orgao} · questão ${questao.fonteCitacao.numero}`
+                : "A causa fica no seu caderno de erros e orienta a próxima revisão."}
+            </p>
+
+            <button
+              type="submit"
+              disabled={pendente}
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-marca px-7 font-semibold text-painel transition-colors duration-150 hover:bg-marca-apoio disabled:cursor-wait disabled:opacity-60"
+            >
+              {pendente ? "Registrando…" : ultima ? "Registrar e concluir" : "Registrar e continuar"}
+              {pendente ? null : (
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h13m0 0-4.6-4.6M18 12l-4.6 4.6" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </form>
+      </section>
+    </article>
   );
 }
 

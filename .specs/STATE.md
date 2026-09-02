@@ -786,9 +786,60 @@
   dia), e uma delas varre `topico_id` de todas as questões publicadas — hoje 205 linhas, mas cresce
   com o acervo. Se ficar lenta vira projeção materializada; não vira laço. A previsão é linear e
   ignora a dificuldade do que resta: é estimativa de ritmo, não promessa.
+  **Corrigido pelo AD-124**: o número "205" estava errado (são 1375) e a varredura de `questoes`
+  batia no teto de 1000 linhas do PostgREST, encolhendo o edital em silêncio. A leitura passou para
+  `inventario_acervo`.
 - **Scope**: `src/modules/aluno/trajetoria.ts`, `trajetoria-tela.tsx`, `trajetoria-opcional.ts`,
   `painel-do-dia.ts`, `painel-do-dia-tela.tsx`, `src/app/app/progresso/page.tsx`,
   `src/modules/config/catalogo.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-123
+- **Decision**: `partman.part_config.infinite_time_partitions = true` para `public.tentativas`. A
+  folga de três meses do INFRA-04 AC3 passa a andar pelo **calendário**, não pelo fluxo de INSERT.
+  O teste do `part_config` passa a afirmar `infinite_time_partitions` e `automatic_maintenance`
+  junto de `premake` — os dois primeiros descrevem a intenção, o terceiro sozinho não a cumpre.
+- **Reason**: em 2026-09-01 o `tentativas-particao.test.ts` reprovou pedindo
+  `tentativas_p20261201`: o conjunto de partições estava exatamente como o `create_parent` de
+  2026-08-17 o deixou, sem avançar um mês em quinze dias. **Não era o job.** O log do Postgres
+  mostra o job das 05:17 UTC terminando limpo (`COMMAND completed: CALL`); a correção do
+  `invalid transaction termination` (migração `20260822190000`) funcionou. A causa é o default do
+  pg_partman: com `infinite_time_partitions = false` a criação de partição futura anda a reboque do
+  dado que chega, e num banco onde quase todo teste roda em transação revertida o dado não chega.
+- **Trade-off**: ~12 tabelas vazias por ano. Pelo AD-067 partição nunca é dropada, então não há
+  interação com retenção. O que se compra: o modo de falha antigo era silencioso dos dois lados —
+  a `jobs_falhados` (SPEC 03) vigia job que **falha**, e este tinha sucesso sem fazer nada, então
+  qualquer período quieto (pré-lançamento, feriado, queda na virada do mês) consumia a folga sem
+  acender alerta, até o Postgres recusar o INSERT de um aluno. Pelo invariante 1 essa resposta não
+  tem reenvio. Fica registrado o que **não** foi feito: a `jobs_falhados` continua sem enxergar job
+  que teve sucesso e não trabalhou.
+- **Scope**: `supabase/migrations/20260901150000_particao_folga_incondicional.sql`,
+  `tests/db/tentativas-particao.test.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-124
+- **Decision**: A trajetória lê o universo do edital pela view `public.inventario_acervo`
+  (uma linha por tópico, `aptas_sessao` já agregado em SQL), **nunca varrendo `questoes`**. O teste
+  afirma que `questoes` não é lida — a mutação que volta a varrer reprova 4 testes.
+- **Reason**: a consulta que o AD-122 descreveu como "varre `topico_id` de todas as questões
+  publicadas — hoje 205 linhas" estava errada em dois pontos, e o segundo é bug. O número real hoje
+  é **1375**, e o PostgREST corta em **1000 linhas**: a chamada exata da trajetória responde
+  `206 Partial Content`, `Content-Range: 0-999/1375`. O supabase-js **não trata 206 como erro** —
+  `error` vem `null` —, então o `try/catch` do `consultarTrajetoriaOpcional` nunca dispara. Tópico
+  cujas questões caíssem no pedaço cortado sumia do universo: edital menor, cobertura e previsão
+  **otimistas, em silêncio**. Isso contradiz a regra que sustenta a própria feature (AD-122: nunca
+  inventar data). Medido pela API com a chave de serviço: `questoes` → 206, 1000/1375;
+  `inventario_acervo` → 200, 98/98.
+- **Trade-off**: o AD-122 previa "se ficar lenta vira projeção materializada". O risco real não era
+  lentidão, era resposta errada — e a view já existia desde a W6-A, concedida ao `service_role`.
+  Fica registrado o que **não** foi varrido: as outras leituras sem `.range()` do módulo. As de
+  acervo são limitadas pelo edital (98 tópicos) e estão longe do teto; a de `tentativas` na janela
+  de 28 dias pode passar de 1000 num aluno intenso e truncar o **ritmo** — o erro ali é conservador
+  (data mais tarde, não mais cedo) e nenhum aluno tem esse volume hoje, então fica como dívida
+  anotada, não corrigida às cegas.
+- **Scope**: `src/modules/aluno/trajetoria.ts`, `src/modules/aluno/trajetoria.test.ts`.
 - **Date**: 2026-09-01
 - **Status**: active
 
@@ -816,8 +867,11 @@
   os dois testes de gêmea; tirar `"revisao"` de `PEDE_CAUSA` reprova o teste da unidade **e** o do
   fluxo em `acoes.test.ts` (que roda o validador real via `vi.importActual`); contar tópico
   revisitado como novo reprova o teste do ritmo da trajetória.
-- **External checks**: `test:db` **não foi rodado** — nenhum item desta rodada toca SQL, migration
-  ou contrato de tabela. A única mudança de contrato é de leitura (`select` com uma coluna a mais).
+- **External checks**: `test:db` rodado e verde. Ele reprovou primeiro, por um motivo **alheio aos
+  seis itens**: a folga de partição de `tentativas` tinha parado de avançar desde 2026-08-17 e o mês
+  virou. Diagnóstico e correção em **AD-123** (`infinite_time_partitions`), com migração e sensor no
+  `part_config`. Confirmado que as partições novas nascem endurecidas (RLS ligada, sem `SELECT` para
+  `authenticated`, gatilho de TRUNCATE presente) — AD-091 vale para `tentativas_p20261201`.
 - **In-progress** (file:line): falta a **verificação visual com conta autenticada**, que é onde
   quatro dos seis itens se provam. (a) Navegar entre as cinco abas com throttle de rede e ver o
   esqueleto aparecer — se não aparecer, é o `await cookies()` do `AppShell` bloqueando o fallback

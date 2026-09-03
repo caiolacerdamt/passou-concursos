@@ -910,38 +910,138 @@
 - **Date**: 2026-09-01
 - **Status**: active
 
+### AD-129
+- **Decision**: O filtro de `/app/progresso` deixa de ser aplicado **no banco** e passa a ser recorte
+  em memória. `dominio_topico` e `caderno_erros` são lidos **sem filtro**; `caderno_erros` ganha
+  `.range(0, 799)` com `count: "exact"`, e `DadosProgresso.cadernoTruncado` diz quando o corte pegou.
+  Toda linha do progresso passa a carregar `materiaId`/`materia` (uma consulta nova a `materias`, por
+  ids, depois de `topicos`), e o contrato ganha `historicoPorMateria`, `cadernoPorAssunto` (grão
+  tópico, com as causas dentro), `materias` e `filtros.materiaId`. `RelatorioSemanal` ganha
+  `percentualAnterior`. `historico` e `caderno` (grão `tópico × causa`, filtrado) **continuam** no
+  contrato: `painel-do-dia.ts` consome o segundo.
+- **Reason**: Três defeitos de uma origem só. (1) `filtros.topicoId` era aplicado também em
+  `dominio_topico`, então filtrar um erro encolhia "Progresso por assunto" para um item — o filtro
+  mora dentro da seção do caderno e reescrevia a seção de cima. (2) As opções do `<select>` de
+  assunto nasciam do resultado **já filtrado**: escolher "Câmbio" deixava o dropdown com só "Câmbio",
+  e não havia como trocar sem limpar. (3) `topicos_nome_unico_na_materia` permite o mesmo nome de
+  tópico em matérias diferentes, e a tela lia só `nome`: dois cartões "Geral" e duas opções "Geral"
+  indistinguíveis. Não existia filtro por matéria porque `materia_id` nunca era consultado aqui.
+- **Trade-off**: A tela passa a trazer o caderno inteiro do titular (grão `tópico × causa`) para
+  filtrar em memória. O teto real é `tópicos da taxonomia × 8 causas`; 800 fica abaixo do corte de
+  1000 linhas do PostgREST, e o `count` denuncia o excesso — é o oposto do que a AD-124 pegou, que
+  era truncar em silêncio. Se um dia passar de 800, a saída registrada é filtrar a **lista** no banco
+  e manter uma segunda consulta só de `topico_id` para as opções; não é voltar a filtrar as duas.
+  Segundo custo: `consultarProgresso` faz uma consulta a mais (`materias`), sequencial depois de
+  `topicos` porque depende dos ids dela. A tendência da matéria é maioria simples entre os tópicos e
+  **não** é recalculada das tentativas: o número que a linha fechada resume e o que o tópico mostra
+  aberto têm que sair da mesma conta, senão abrir a matéria contradiz o que ela dizia. Empate vira
+  `sem_base`.
+- **Scope**: `src/modules/aluno/progresso.ts` e as fixtures que montam `DadosProgresso`.
+- **Date**: 2026-09-03
+- **Status**: active
+
+### AD-130
+- **Decision**: `consultar_gamificacao_do_dia` passa a devolver **`pontos.discriminacao_total`** (a
+  mesma discriminação, sem filtro de data, somada de `gamificacao_ponto_evento`) e
+  **`progresso_conquistas`** (progresso e meta das quatro conquistas do catálogo; as duas binárias
+  saem com meta 1 para a tela tratar as quatro igual). Sem tabela nova e sem escrita nova. No
+  contrato TS os dois blocos são **opcionais**: ausente vira `null`, nunca zero.
+- **Reason**: A tela mostrava "300 no total" com quatro zeros embaixo, e isso foi lido como defeito
+  de cálculo. Não era: a `materializar_gamificacao` grava em `gamificacao_pontos_dia` a discriminação
+  **do dia** (filtro `e.data = v_data`) e em `gamificacao_pontos` o acumulado de sempre — as duas
+  certas. A RPC devolvia as duas no mesmo objeto sem nomear a janela de nenhuma, e `pontos.dia`, que
+  existia no contrato, não era exibido em lugar nenhum. As metas das conquistas já eram calculadas
+  para decidir o desbloqueio e não saíam, por isso a tela só sabia dizer "Ainda não".
+- **Trade-off**: A leitura ganha duas varreduras por abertura de tela — os eventos do titular e um
+  `count(*)` em `tentativas`, que é particionada. Ambas já aconteciam dentro da
+  `materializar_gamificacao`, que a mesma RPC chama uma linha antes, então o custo é uma repetição,
+  não uma novidade; se pesar, a saída é materializar a discriminação vitalícia junto do acumulado em
+  `gamificacao_pontos`. `null` em vez de zero é deliberado: zero afirmaria que o aluno não andou
+  nada, que é a mesma mentira pequena que esta rodada existe para tirar da tela. E os valores por
+  origem ("10 / bloco") vivem **no componente**, não em consulta: se a configuração mudar sem a
+  lista mudar junto, o que fica errado é a explicação, nunca o placar.
+- **Scope**: `supabase/migrations/20260903120000_gamificacao_leitura_vitalicia.sql`,
+  `src/modules/aluno/gamificacao/contrato.ts`, `tests/db/gamificacao.test.ts`.
+- **Date**: 2026-09-03
+- **Status**: active
+
+### AD-131
+- **Decision**: `prepararSessaoDeRefacao` aceita o qualificador **`todas`** no lugar da causa. A
+  chave vira `topico|todas`, no mesmo campo `refacao_chave` que já carrega `topico|causa` e
+  `topico|revisao_avulsa` (AD-115). **Sem migração.**
+- **Reason**: O caderno agrupado por assunto precisa de uma ação que valha o assunto inteiro; quatro
+  cartões "Interpretação" com quatro botões eram exatamente o que o agrupamento desfaz.
+- **Trade-off**: Uma terceira família de chave no mesmo campo de texto. `todas` não colide com
+  nenhum valor de `causa_erro` nem com `revisao_avulsa`, e o teste afirma isso — mas a garantia é um
+  teste, não um `CHECK`: uma causa nova chamada `todas` quebraria as duas famílias em silêncio. A
+  função já carregava **todas** as tentativas erradas do tópico e só depois filtrava pela causa, e a
+  leitura de `tentativa_causa_simulado` deixa de acontecer nesse ramo porque não serve mais a nada.
+- **Scope**: `src/modules/aluno/sessao.ts`, `src/app/app/sessao/page.tsx`.
+- **Date**: 2026-09-03
+- **Status**: active
+
+### AD-132
+- **Decision**: Redesenho de `/app/progresso`. (a) O cartão da sequência e o relatório semanal viram
+  **um** cartão, "Últimos 7 dias", e ele é o **cartão breu desta tela** — a cota que a AD-111
+  raciona, gasta aqui como o Raio-X gasta a dele no maior ganho. É o único lugar que lê o `porDia` da
+  AD-112. (b) Os **dois** grids de quatro cartões de métrica saem: o do relatório vira linha de
+  fatos, o dos pontos vira tabela de duas colunas nomeadas (Hoje × Total). (c) "Progresso por
+  assunto" vira lista de matérias com `<details>`, na anatomia de linha do Raio-X — **sem** componente
+  cliente. (d) O caderno vira um cartão por assunto com as causas como chips, filtro de três campos
+  (matéria, assunto em `<optgroup>` por matéria, causa) e paginação por `mostrar` na query string,
+  limitada pela rota a 60. (e) Aluno sem histórico recebe **uma** tela, não cinco caixas vazias.
+- **Reason**: Sete seções-cartão com o mesmo raio, a mesma sombra e um eyebrow cada faziam uma página
+  onde nada era importante, e duas delas eram o "grid automático de 3–4 cards de métrica" que o
+  anti-slop do `DESIGN.md` proíbe e que a AD-111 já tinha arrancado do `/app`. O desenho foi aprovado
+  antes do código, no canvas
+  https://claude.ai/code/artifact/59d60e8f-54ee-468a-a87a-ae5babadf446 (fontes em
+  `.temp/design/progresso/`).
+- **Trade-off**: `<details>` no lugar de estado de cliente custa o controle sobre a animação e sobre
+  "abrir todas", e o estado aberto não sobrevive à navegação — aceito para não trazer o primeiro
+  `"use client"` para esta tela. A paginação por query string recarrega a página a cada lote, ao
+  contrário do `ListaComTeto` da `/app/sessao` (AD-117): aqui é o certo, porque esta é a tela dona da
+  lista longa e o filtro já é um `<form method="get">` — dois mecanismos de recorte na mesma tela
+  seria pior. `ASSUNTOS_POR_PAGINA = 5` e o teto de 60 são calibração, não medida: vivem no código.
+  E o `loading.tsx` foi refeito junto — pelo trade-off da AD-120 ele desatualiza com a tela, e esta
+  rodada é a prova de que isso é trabalho recorrente.
+- **Scope**: `src/modules/aluno/progresso-tela.tsx`, `src/modules/aluno/painel-do-dia-tela.tsx`
+  (`GamificacaoNoProgresso`), `src/app/app/progresso/{page.tsx,loading.tsx}`.
+- **Date**: 2026-09-03
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Correções da plataforma, rodada 2 — sessão e resumo de questões, levantados no uso
-  real: resumo empilhava as dez questões, enunciado saía com a marcação crua, resumo não mostrava
-  alternativa nenhuma, e errar custava duas telas. Fora da numeração de specs, sem ritual. Fecha com
-  **AD-125** a **AD-128**.
-- **Phase / Task**: concluída na branch `feat/m4-sessao-navegacao-e-enunciado`, três commits
-  atômicos. Desenho aprovado antes do código, no canvas
-  https://claude.ai/code/artifact/57aab7fe-f96f-48fb-bc07-37987298224b (fontes em
-  `.temp/design/sessao-navegacao/`).
-- **Completed**: (1) **AD-128** — `src/modules/ui/enunciado.tsx`: parser fechado de marcas e a
-  separação apoio/comando, com nove testes, incluindo os dois que importam — HTML do acervo sai
-  escapado e asterisco solto não engole o resto do enunciado. (2) **AD-125** — quadrado numerado com
-  seta, na sessão e no resumo. (3) **AD-126** — tela única do erro (`ErroComCausa`), checkbox de
-  chute fora, `marcou_chute` derivado da causa, e a `causa_necessaria` da server action passa a
-  carregar o gabarito. (4) **AD-127** — resumo abre uma questão por vez, com alternativas e causa; a
-  consulta cresceu duas colunas e os rótulos de causa saíram para `causas.ts`.
-- **Gates**: `vitest --project unit` **1028/1028** (era 1024/1024 na `main`). `eslint src` limpo,
-  `tsc --noEmit` limpo, `next build` compila as 31 rotas. **`test:db` não foi rodado nesta rodada** —
-  nenhuma migração, nenhuma consulta nova além de duas colunas em `select` já existentes; rodar antes
-  do merge continua sendo o certo.
-- **In-progress** (file:line): a **verificação visual com conta autenticada** é o que falta, e aqui
-  ela pesa mais que de costume, porque três dos quatro itens são de interação: (a) responder errado
-  numa questão e conferir que o gabarito e as sete causas aparecem juntos, que `Registrar e
-  continuar` vai direto para a próxima e que a questão não pisca no meio
-  (`src/modules/aluno/sessao/tela.tsx:379`); (b) abrir um resumo de bloco **com texto de apoio
-  longo** e conferir o recolhido — o limiar de 420 caracteres foi escolhido no olho, não medido
-  (`src/modules/aluno/resumo-tela.tsx:277`); (c) conferir uma questão de **certo-errado** no resumo,
-  onde `alternativas` é `null` e a tela cai no par C/E; (d) 375px: dez quadrados numa faixa só.
-  Seguem pendentes, da rodada anterior: as cinco alíneas de verificação visual do AD-120/121/122, o
-  `Descartar` nunca exercido contra o banco, e as duas correções do W2-A sem sensor.
-- **Next step**: PR desta branch. Depois, a dívida que segue aberta há duas rodadas: `/app` e
+- **Feature**: Correcoes da plataforma, rodada 3 — a tela `/app/progresso`, a unica das cinco
+  principais que nunca passou por redesenho nem por revisao de logica. Fora da numeracao de specs,
+  sem ritual. Fecha com **AD-129** a **AD-132**.
+- **Phase / Task**: concluida na branch `feat/m4-progresso-redesenho`, cinco commits atomicos.
+  Desenho aprovado antes do codigo, no canvas
+  https://claude.ai/code/artifact/59d60e8f-54ee-468a-a87a-ae5babadf446 (fontes em
+  `.temp/design/progresso/`).
+- **Completed**: (1) **AD-129** — o filtro parou de reescrever o historico e de encolher as proprias
+  opcoes; materia entrou em toda linha; `historicoPorMateria`, `cadernoPorAssunto`,
+  `cadernoTruncado` e `percentualAnterior` no contrato. (2) **AD-130** — migracao
+  `20260903120000_gamificacao_leitura_vitalicia.sql`: `discriminacao_total` e
+  `progresso_conquistas` na RPC de leitura, com teste de banco que reproduz o defeito (`dia` 0,
+  `total` 80). (3) **AD-131** — refacao de todas as causas de um assunto, chave `topico|todas`, sem
+  migracao. (4) **AD-132** — a tela: cartao breu unico da semana, listas com divisor no lugar dos
+  dois grids de quatro metricas, caderno por assunto com paginacao, e uma tela so para o aluno sem
+  historico. `loading.tsx` refeito junto.
+- **Gates**: `vitest --project unit` **1046/1046** (era 1032/1032 na `main`). `test:db`
+  **411/411 + 1 novo**, contra o Supabase de dev, com a migracao ja aplicada por `npm run db:push`.
+  `eslint src` limpo, `tsc --noEmit` limpo, `next build` compila as 31 rotas.
+- **In-progress** (file:line): a **verificacao visual com conta autenticada** e o que falta, e desta
+  vez ela pesa em quatro pontos que nenhum teste alcanca. (a) A regua de sete dias com um aluno de
+  volume alto e outro de volume baixo: a altura sai do dia mais cheio da propria janela, entao a
+  escala e relativa e nunca foi vista com dado real (`src/modules/aluno/progresso-tela.tsx:123`).
+  (b) O `<details>` da materia em 375px, onde a linha tem quatro colunas no desktop e duas no
+  celular (`progresso-tela.tsx:246`). (c) O `<optgroup>` do filtro de assunto no Safari e no
+  celular, que e o que desambigua dois topicos "Geral". (d) Clicar `Refazer os N` de verdade e
+  conferir que a sessao abre com as questoes das varias causas — o caminho `todas` so tem teste de
+  unidade contra mock (`src/modules/aluno/sessao.ts:460`). Seguem pendentes, das rodadas anteriores:
+  as quatro alineas de verificacao visual do AD-125/126/127, as cinco do AD-120/121/122, o
+  `Descartar` nunca exercido contra o banco, e as duas correcoes do W2-A sem sensor.
+- **Next step**: PR desta branch. Depois, a divida que segue aberta ha tres rodadas: `/app` e
   `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
   numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
   deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.

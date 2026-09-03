@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type {
+  ConquistaPessoal,
   DadosGamificacao,
   DimensaoDoAnel,
   MissaoDoDia,
@@ -525,59 +526,221 @@ export function AcompanhamentoDoDia({ painel }: { painel: PainelDoDia }) {
  * Recorte da gamificação que pertence ao Progresso: de onde vieram os pontos e
  * quais conquistas pessoais já foram desbloqueadas.
  */
+/**
+ * De onde vem cada ponto, com o valor que a configuração dá a ele.
+ *
+ * Os valores são os defaults de `param.m6.pontos_*`. Ficam no cliente de
+ * propósito: a seção precisava responder "como eu ganho ponto", e essa
+ * resposta não vale uma consulta a mais na abertura de tela. Se a
+ * configuração mudar sem esta lista mudar junto, o que sai errado é a
+ * explicação, nunca o placar — todo número do placar vem do servidor.
+ */
+const ORIGENS_DO_PONTO = [
+  {
+    chave: "estudoPrioritario",
+    rotulo: "Estudar o que mais pesa no plano",
+    valor: "10 / bloco",
+  },
+  { chave: "conclusao", rotulo: "Concluir um bloco inteiro", valor: "20 / bloco" },
+  {
+    chave: "revisaoNoPrazo",
+    rotulo: "Fazer a revisão no dia em que ela vence",
+    valor: "15 / revisão",
+  },
+  {
+    chave: "recuperacaoErro",
+    rotulo: "Acertar uma questão que você já errou",
+    valor: "25 / erro",
+  },
+] as const;
+
+function dataDaConquista(valor: string): string {
+  const data = new Date(valor);
+  if (Number.isNaN(data.getTime())) return "Desbloqueada";
+  return data.toLocaleDateString("pt-BR", { dateStyle: "medium" });
+}
+
+/** O selo: preenchido quando desbloqueada, apagado quando ainda não. */
+function SeloDaConquista({ desbloqueada }: { desbloqueada: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={desbloqueada ? "" : "text-linha"}
+    >
+      <circle cx="12" cy="9" r="6" />
+      <path d="M8.5 14.5L7 22l5-2.5L17 22l-1.5-7.5" />
+    </svg>
+  );
+}
+
+function CartaoDaConquista({ conquista }: { conquista: ConquistaPessoal }) {
+  if (conquista.desbloqueada) {
+    return (
+      <li className="rounded-xl border border-ouro/45 bg-conquista-fundo p-4 text-conquista">
+        <SeloDaConquista desbloqueada />
+        <p className="mt-3 font-semibold">{conquista.titulo}</p>
+        <p className="mt-1.5 font-utilitaria text-xs">
+          {conquista.desbloqueadaEm
+            ? dataDaConquista(conquista.desbloqueadaEm)
+            : "Desbloqueada"}
+        </p>
+      </li>
+    );
+  }
+
+  const { progresso, meta } = conquista;
+  const medida = progresso !== null && meta !== null && meta > 0;
+
+  return (
+    <li className="rounded-xl border border-linha bg-fundo p-4">
+      <SeloDaConquista desbloqueada={false} />
+      <p className="mt-3 font-semibold text-suave">{conquista.titulo}</p>
+      {medida ? (
+        <>
+          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-linha" aria-hidden="true">
+            <div
+              style={{ width: `${Math.round((progresso / meta) * 100)}%` }}
+              className="h-full rounded-full bg-marca-viva"
+            />
+          </div>
+          <p className="mt-2 font-utilitaria text-xs text-suave">
+            {progresso} de {meta}
+            {meta > progresso ? ` · faltam ${meta - progresso}` : ""}
+          </p>
+        </>
+      ) : (
+        <p className="mt-1.5 text-sm text-suave">{conquista.descricao}</p>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Pontos e conquistas na tela de progresso.
+ *
+ * O defeito desta seção nunca foi de cálculo: ela mostrava `pontos.total` (de
+ * sempre) ao lado de `pontos.discriminacao` (só de hoje) sem nomear a janela
+ * de nenhum dos dois, e por isso "300 no total" aparecia com quatro zeros
+ * embaixo. As duas janelas viram colunas com nome, e `pontos.dia` — que já
+ * existia no contrato e não era exibido em lugar nenhum — vira a notícia do
+ * dia. Sem `discriminacaoTotal` a coluna do total some, em vez de desenhar
+ * zero ao lado de um total positivo.
+ */
 export function GamificacaoNoProgresso({ dados }: { dados: DadosGamificacao }) {
-  const discriminacao = [
-    { rotulo: "Estudo prioritário", valor: dados.pontos.discriminacao.estudoPrioritario },
-    { rotulo: "Conclusão de bloco", valor: dados.pontos.discriminacao.conclusao },
-    { rotulo: "Revisão no prazo", valor: dados.pontos.discriminacao.revisaoNoPrazo },
-    { rotulo: "Recuperação de erro", valor: dados.pontos.discriminacao.recuperacaoErro },
-  ];
+  const { discriminacao, discriminacaoTotal } = dados.pontos;
+  const colunas = discriminacaoTotal
+    ? "grid-cols-[minmax(0,1fr)_5.5rem_4rem]"
+    : "grid-cols-[minmax(0,1fr)_5.5rem]";
+  const proxima = dados.conquistas.find(
+    (conquista) =>
+      !conquista.desbloqueada &&
+      conquista.progresso !== null &&
+      conquista.meta !== null &&
+      conquista.meta > conquista.progresso,
+  );
+  const desbloqueadas = dados.conquistas.filter((c) => c.desbloqueada).length;
 
   return (
     <section
       aria-labelledby="titulo-gamificacao-progresso"
-      className="rounded-2xl border border-linha bg-painel px-7 pb-7 pt-6"
+      className="rounded-2xl border border-linha bg-painel px-6 pb-7 pt-6 sm:px-7"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-conquista">
+        Esforço reconhecido
+      </p>
+
+      <div className="mt-3.5 flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div>
-          <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-evolucao">
-            Seu esforço reconhecido
-          </p>
-          <h2 id="titulo-gamificacao-progresso" className="mt-2.5 text-[1.375rem] font-semibold">
-            Pontos e conquistas
+          <h2 id="titulo-gamificacao-progresso" className="flex flex-wrap items-baseline gap-x-3">
+            <span className="font-utilitaria text-[3rem] font-semibold leading-none tracking-[-0.03em]">
+              {dados.pontos.total.toLocaleString("pt-BR")}
+            </span>
+            <span className="text-[1.1875rem] font-medium text-suave">
+              {dados.pontos.total === 1 ? "ponto acumulado" : "pontos acumulados"}
+            </span>
           </h2>
-          <p className="mt-2 max-w-2xl leading-7 text-suave">
-            Ponto vem de estudo prioritário, conclusão, revisão no prazo e erro recuperado. Não existe ranking nem
-            comparação.
+          <p className="mt-2.5 max-w-[52ch] text-[0.96875rem] leading-relaxed text-suave">
+            {dados.pontos.dia === 0
+              ? "Hoje você ainda não somou nenhum. Concluir um bloco do plano vale 20."
+              : "Ponto vem de estudo prioritário, conclusão, revisão no prazo e erro recuperado. Não existe ranking nem comparação."}
           </p>
         </div>
-        <span className="shrink-0 rounded-lg bg-marca-suave px-2.5 py-1.5 text-xs font-semibold text-marca">
-          {dados.pontos.total} no total
-        </span>
+
+        <p className="text-right">
+          <span className="block font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] text-suave">
+            Hoje
+          </span>
+          <span className="mt-1.5 block font-utilitaria text-[1.625rem] font-semibold text-suave">
+            +{dados.pontos.dia.toLocaleString("pt-BR")}
+          </span>
+        </p>
       </div>
 
-      <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {discriminacao.map((linha) => (
-          <div key={linha.rotulo} className="rounded-xl border border-linha bg-fundo p-3">
-            <dt className="text-sm text-suave">{linha.rotulo}</dt>
-            <dd className="mt-1 font-utilitaria text-2xl font-semibold">{linha.valor}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <ul className="mt-5 grid gap-3 sm:grid-cols-2" aria-label="Conquistas pessoais">
-        {dados.conquistas.map((conquista) => (
-          <li key={conquista.id} className="rounded-xl border border-linha bg-fundo p-3">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold">{conquista.titulo}</h3>
-              <span className="shrink-0 text-xs font-semibold text-suave">
-                {conquista.desbloqueada ? "Desbloqueada" : "Ainda não"}
-              </span>
+      <div className="mt-6 overflow-hidden rounded-xl border border-linha">
+        <div
+          className={`grid gap-5 bg-fundo-suave px-4 py-2.5 font-utilitaria text-[0.65625rem] uppercase tracking-[0.14em] text-suave sm:px-5 ${colunas}`}
+        >
+          <span>De onde vem</span>
+          <span className="text-right">Hoje</span>
+          {discriminacaoTotal ? <span className="text-right">Total</span> : null}
+        </div>
+        <dl>
+          {ORIGENS_DO_PONTO.map((origem) => (
+            <div
+              key={origem.chave}
+              className={`grid items-center gap-5 border-t border-linha px-4 py-3 sm:px-5 ${colunas}`}
+            >
+              <dt className="min-w-0">
+                <span className="block text-[0.9375rem]">{origem.rotulo}</span>
+                <span className="mt-0.5 block font-utilitaria text-xs text-suave">
+                  {origem.valor}
+                </span>
+              </dt>
+              <dd className="text-right font-utilitaria text-sm text-suave">
+                {discriminacao[origem.chave].toLocaleString("pt-BR")}
+              </dd>
+              {discriminacaoTotal ? (
+                <dd className="text-right font-utilitaria text-[0.9375rem] font-semibold">
+                  {discriminacaoTotal[origem.chave].toLocaleString("pt-BR")}
+                </dd>
+              ) : null}
             </div>
-            <p className="mt-1 text-sm text-suave">{conquista.descricao}</p>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </dl>
+      </div>
+
+      <div className="mt-7">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h3 className="text-[1.0625rem] font-semibold">Conquistas</h3>
+          <p className="text-sm text-suave">
+            {desbloqueadas} de {dados.conquistas.length} · sem ranking, sem comparação
+          </p>
+        </div>
+
+        {proxima ? (
+          <p className="mt-2 text-[0.9375rem] text-suave">
+            Próxima: <strong className="font-semibold text-texto">{proxima.titulo}</strong> — faltam{" "}
+            {proxima.meta! - proxima.progresso!}.
+          </p>
+        ) : null}
+
+        <ul
+          className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          aria-label="Conquistas pessoais"
+        >
+          {dados.conquistas.map((conquista) => (
+            <CartaoDaConquista key={conquista.id} conquista={conquista} />
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

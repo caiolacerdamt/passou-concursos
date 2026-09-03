@@ -45,12 +45,21 @@ vi.mock("../../entrar/acoes", () => ({ sair: dependencias.sair }));
 
 const { default: Progresso } = await import("./page");
 
+const TOPICO = "11111111-1111-4111-8111-111111111111";
+const MATERIA = "22222222-2222-4222-8222-222222222222";
+
+const topico = {
+  topicoId: TOPICO,
+  topico: "Juros compostos",
+  materiaId: MATERIA,
+  materia: "Matemática",
+};
+
 const dados = {
-  filtros: { causa: "errei_a_conta" as const, topicoId: "11111111-1111-4111-8111-111111111111" },
+  filtros: { causa: "errei_a_conta" as const, topicoId: TOPICO, materiaId: null },
   historico: [
     {
-      topicoId: "11111111-1111-4111-8111-111111111111",
-      topico: "Matemática",
+      ...topico,
       nRespostas: 10,
       nAcertos: 7,
       score: 0.7,
@@ -58,10 +67,42 @@ const dados = {
       tendencia: "sem_base" as const,
     },
   ],
-  caderno: [
-    { topicoId: "11111111-1111-4111-8111-111111111111", topico: "Matemática", causa: "errei_a_conta" as const, nErros: 2, ultimoErroEm: "2026-08-21T20:00:00Z" },
+  historicoPorMateria: [
+    {
+      materiaId: MATERIA,
+      materia: "Matemática",
+      nTopicos: 1,
+      nRespostas: 10,
+      nAcertos: 7,
+      tendencia: "sem_base" as const,
+      topicos: [
+        {
+          ...topico,
+          nRespostas: 10,
+          nAcertos: 7,
+          score: 0.7,
+          dominio: "em_desenvolvimento" as const,
+          tendencia: "sem_base" as const,
+        },
+      ],
+    },
   ],
-  topicos: [{ id: "11111111-1111-4111-8111-111111111111", nome: "Matemática" }],
+  caderno: [
+    { ...topico, causa: "errei_a_conta" as const, nErros: 2, ultimoErroEm: "2026-08-21T20:00:00Z" },
+  ],
+  cadernoPorAssunto: [
+    {
+      ...topico,
+      nErros: 2,
+      ultimoErroEm: "2026-08-21T20:00:00Z",
+      causas: [
+        { causa: "errei_a_conta" as const, nErros: 2, ultimoErroEm: "2026-08-21T20:00:00Z" },
+      ],
+    },
+  ],
+  cadernoTruncado: false,
+  materias: [{ id: MATERIA, nome: "Matemática" }],
+  topicos: [{ id: TOPICO, nome: "Juros compostos", materiaId: MATERIA, materia: "Matemática" }],
   sequencia: {
     data: "2026-08-22",
     sequencia: 4,
@@ -77,9 +118,19 @@ const dados = {
     questoesRespondidas: 10,
     acertos: 7,
     percentualAcertos: 0.7,
+    percentualAnterior: null,
     topicosTocados: 1,
     revisoesConcluidas: 2,
     tendencia: "sem_base" as const,
+    porDia: [
+      { data: "2026-08-16", questoes: 0, acertos: 0 },
+      { data: "2026-08-17", questoes: 2, acertos: 2 },
+      { data: "2026-08-18", questoes: 0, acertos: 0 },
+      { data: "2026-08-19", questoes: 3, acertos: 2 },
+      { data: "2026-08-20", questoes: 0, acertos: 0 },
+      { data: "2026-08-21", questoes: 4, acertos: 2 },
+      { data: "2026-08-22", questoes: 1, acertos: 1 },
+    ],
   },
 };
 
@@ -108,10 +159,11 @@ describe("/app/progresso", () => {
       { causa: "errei_a_conta", topico: dados.filtros.topicoId },
     );
     expect(html).toContain("Seu progresso");
-    expect(html).toContain("Relatório semanal");
+    expect(html).toContain("Últimos 7 dias");
     expect(html).toContain("Caderno de erros");
     expect(html).toContain("Por que errei");
     expect(html).toContain("name=\"topico\"");
+    expect(html).toContain("name=\"materia\"");
     const texto = html.toLowerCase();
     for (const palavra of ["ranking", "liga", "placar", "percentil", "posição"]) {
       expect(texto).not.toContain(palavra);
@@ -121,17 +173,18 @@ describe("/app/progresso", () => {
   it("mostra começo explícito para aluno sem histórico", async () => {
     dependencias.progresso.mockResolvedValue({
       ...dados,
-      filtros: { causa: null, topicoId: null },
+      filtros: { causa: null, topicoId: null, materiaId: null },
       historico: [],
+      historicoPorMateria: [],
       caderno: [],
+      cadernoPorAssunto: [],
       sequencia: null,
       estadoInicial: true,
     });
 
     const html = renderToStaticMarkup(await renderPage());
-    expect(html).toContain("Seu ponto de partida");
-    expect(html).toContain("Seu histórico começa com a primeira questão");
-    expect(html).toContain("Seu caderno ainda está vazio");
+    expect(html).toContain("Esta tela começa a existir na sua primeira questão");
+    expect(html).toContain("Começar o plano de hoje");
   });
 
   it("integra pontos e conquistas quando a gamificação está ligada", async () => {
@@ -145,6 +198,12 @@ describe("/app/progresso", () => {
           revisaoNoPrazo: 20,
           recuperacaoErro: 25,
         },
+        discriminacaoTotal: {
+          estudoPrioritario: 60,
+          conclusao: 60,
+          revisaoNoPrazo: 20,
+          recuperacaoErro: 5,
+        },
       },
       conquistas: [
         {
@@ -153,22 +212,33 @@ describe("/app/progresso", () => {
           descricao: "Concluiu o primeiro bloco.",
           desbloqueada: true,
           desbloqueadaEm: "2026-08-20T12:00:00.000Z",
+          progresso: 1,
+          meta: 1,
         },
       ],
     });
 
     const html = renderToStaticMarkup(await renderPage());
 
-    expect(html).toContain("Pontos e conquistas");
-    expect(html).toContain("145 no total");
+    expect(html).toContain("Esforço reconhecido");
+    expect(html).toContain("pontos acumulados");
     expect(html).toContain("Primeiro bloco");
   });
 
   it("mantém o progresso de pé com a gamificação ausente", async () => {
     const html = renderToStaticMarkup(await renderPage());
 
-    expect(html).toContain("Relatório semanal");
-    expect(html).not.toContain("Pontos e conquistas");
+    expect(html).toContain("Últimos 7 dias");
+    expect(html).not.toContain("Esforço reconhecido");
+  });
+
+  it("limita a altura da lista pedida pela query string", async () => {
+    const html = renderToStaticMarkup(await renderPage({ mostrar: "999999" }));
+
+    // O pedido absurdo não vira lista infinita: só um assunto existe, e a
+    // tela nem chega a oferecer outro lote.
+    expect(html).toContain("Caderno de erros");
+    expect(html).not.toContain("Mostrar mais");
   });
 
   it("respeita flag desligada sem consultar progresso", async () => {

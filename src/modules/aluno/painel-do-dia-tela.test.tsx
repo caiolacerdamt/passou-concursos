@@ -31,6 +31,12 @@ const gamificacao: DadosGamificacao = {
       revisaoNoPrazo: 20,
       recuperacaoErro: 25,
     },
+    discriminacaoTotal: {
+      estudoPrioritario: 60,
+      conclusao: 60,
+      revisaoNoPrazo: 20,
+      recuperacaoErro: 5,
+    },
   },
   missao: {
     id: "missao-1",
@@ -52,6 +58,8 @@ const gamificacao: DadosGamificacao = {
     ...conquista,
     desbloqueada: indice === 0,
     desbloqueadaEm: indice === 0 ? "2026-08-20T12:00:00.000Z" : null,
+    progresso: indice === 0 ? 1 : 38,
+    meta: indice === 0 ? 1 : 100,
   })),
 };
 
@@ -65,6 +73,7 @@ const painel: PainelDoDia = {
     questoesRespondidas: 12,
     acertos: 9,
     percentualAcertos: 0.75,
+    percentualAnterior: 0.5,
     topicosTocados: 3,
     revisoesConcluidas: 2,
     tendencia: "subindo",
@@ -82,6 +91,8 @@ const painel: PainelDoDia = {
     {
       topicoId: "11111111-1111-4111-8111-111111111111",
       topico: "Concordância verbal",
+      materiaId: "22222222-2222-4222-8222-222222222222",
+      materia: "Língua Portuguesa",
       causa: "errei_a_conta",
       nErros: 3,
       ultimoErroEm: "2026-08-23T10:00:00.000Z",
@@ -271,14 +282,49 @@ describe("AcompanhamentoDoDia", () => {
 });
 
 describe("GamificacaoNoProgresso", () => {
-  it("abre a origem dos pontos e o estado das conquistas", () => {
+  it("nomeia as duas janelas em vez de misturar total de sempre com placar de hoje", () => {
     const html = renderToStaticMarkup(<GamificacaoNoProgresso dados={gamificacao} />);
 
-    expect(html).toContain("Pontos e conquistas");
-    expect(html).toContain("145 no total");
-    expect(html).toContain("Recuperação de erro");
+    expect(html).toContain("145");
+    expect(html).toContain("pontos acumulados");
+    // As duas colunas ficam rotuladas; era a ausência disso que fazia o total
+    // de sempre parecer contradizer a discriminação do dia.
+    expect(html).toContain(">Hoje<");
+    expect(html).toContain(">Total<");
+    expect(html).toContain("+30");
+    // E a seção passa a dizer de onde vem cada ponto.
+    expect(html).toContain("Acertar uma questão que você já errou");
+    expect(html).toContain("25 / erro");
+  });
+
+  it("mede a conquista travada em vez de só dizer que ela não veio", () => {
+    const html = renderToStaticMarkup(<GamificacaoNoProgresso dados={gamificacao} />);
+
     expect(html).toContain("Primeiro bloco");
-    expect(html).toContain("Desbloqueada");
-    expect(html).toContain("Ainda não");
+    expect(html).toContain("38 de 100");
+    expect(html).toContain("faltam 62");
+    expect(html).toContain("Próxima:");
+  });
+
+  it("esconde a coluna do total quando o servidor não a informa", () => {
+    const html = renderToStaticMarkup(
+      <GamificacaoNoProgresso
+        dados={{
+          ...gamificacao,
+          pontos: { ...gamificacao.pontos, discriminacaoTotal: null },
+          conquistas: gamificacao.conquistas.map((conquista) => ({
+            ...conquista,
+            progresso: null,
+            meta: null,
+          })),
+        }}
+      />,
+    );
+
+    // Melhor não mostrar a coluna do que desenhar zero ao lado de um total
+    // positivo — que é exatamente o defeito que esta seção veio corrigir.
+    expect(html).not.toContain(">Total<");
+    expect(html).toContain(">Hoje<");
+    expect(html).not.toContain("faltam");
   });
 });

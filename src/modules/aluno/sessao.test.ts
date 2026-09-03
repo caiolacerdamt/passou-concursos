@@ -22,7 +22,9 @@ import {
   prepararSessao,
   prepararSessaoDeRefacao,
   selecionarQuestoesDisponiveis,
+  TODAS_AS_CAUSAS,
 } from "./sessao";
+import { CAUSAS_DO_CADERNO } from "./causas";
 
 function linha(sobrescreve: Partial<Record<string, unknown>> = {}) {
   return {
@@ -401,6 +403,60 @@ describe("sessão de estudo", () => {
       constructor: SessaoRecusada,
       motivo: "acervo_vazio",
     });
+  });
+
+  it("refaz o assunto inteiro juntando causas diferentes sob uma chave própria", async () => {
+    const topicoId = "11111111-1111-4111-8111-111111111111";
+    const { cliente, insercoes } = clienteParaRefacao({
+      tentativas: [
+        {
+          id: "tentativa-1",
+          questao_id: "questao-1",
+          questao_versao: 1,
+          topico_id: topicoId,
+          causa_erro: "chutei",
+          respondida_em: "2026-09-01T12:00:00Z",
+        },
+        {
+          id: "tentativa-2",
+          questao_id: "questao-2",
+          questao_versao: 1,
+          topico_id: topicoId,
+          causa_erro: "confundi_conceitos",
+          respondida_em: "2026-09-02T12:00:00Z",
+        },
+      ],
+      questoes: [
+        linha({ id: "questao-1", questao_versao: 1, topico_id: topicoId, status: "publicada", vigente: true, anulada: false }),
+        linha({ id: "questao-2", questao_versao: 1, topico_id: topicoId, status: "publicada", vigente: true, anulada: false }),
+      ],
+    });
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId,
+        causa: TODAS_AS_CAUSAS,
+      }),
+    ).resolves.toMatchObject({ id: "sessao-refacao" });
+
+    // As duas causas entram na mesma sessão...
+    expect(insercoes[1]).toHaveLength(2);
+    // ...sob uma chave que não colide com nenhuma causa do domínio.
+    expect(insercoes[0]).toMatchObject({ refacao_chave: `${topicoId}|todas` });
+    expect(CAUSAS_DO_CADERNO as readonly string[]).not.toContain(TODAS_AS_CAUSAS);
+    // Sem filtro por causa, a leitura do simulado nem acontece.
+    expect(cliente.from).not.toHaveBeenCalledWith("tentativa_causa_simulado");
+  });
+
+  it("recusa qualificador desconhecido no lugar da causa", async () => {
+    const { cliente } = clienteParaRefacao();
+
+    await expect(
+      prepararSessaoDeRefacao(cliente as never, {
+        topicoId: "11111111-1111-4111-8111-111111111111",
+        causa: "todas_as_causas" as never,
+      }),
+    ).rejects.toMatchObject({ motivo: "refacao_indisponivel" });
   });
 
   it("monta refação somente com erros do titular e versões publicadas", async () => {

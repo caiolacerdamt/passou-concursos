@@ -74,7 +74,16 @@ export type DiscriminacaoDePontos = {
 export type PontosDaGamificacao = {
   dia: number;
   total: number;
+  /** A discriminação **do dia** — a mesma janela de `dia`, nunca a de `total`. */
   discriminacao: DiscriminacaoDePontos;
+  /**
+   * A discriminação de **sempre** — a mesma janela de `total`.
+   *
+   * `null` num banco que ainda não tem a migração do AD-130: a tela esconde a
+   * coluna em vez de desenhar quatro zeros ao lado de um total positivo, que
+   * era exatamente o defeito que esta adição existe para tirar.
+   */
+  discriminacaoTotal: DiscriminacaoDePontos | null;
 };
 
 export type MissaoDoDia = {
@@ -107,6 +116,13 @@ export type ConquistaPessoal = {
   descricao: string;
   desbloqueada: boolean;
   desbloqueadaEm: string | null;
+  /**
+   * Quanto do caminho já foi andado, e o quanto é o caminho. `null` quando o
+   * servidor não informa — a tela volta a dizer só "Ainda não", em vez de
+   * inventar uma barra.
+   */
+  progresso: number | null;
+  meta: number | null;
 };
 
 export type EstadoDaGamificacao = "ok" | "desligada";
@@ -167,7 +183,14 @@ type LinhaDaResposta = {
       revisao_no_prazo?: unknown;
       recuperacao_erro?: unknown;
     };
+    discriminacao_total?: {
+      estudo_prioritario?: unknown;
+      conclusao?: unknown;
+      revisao_no_prazo?: unknown;
+      recuperacao_erro?: unknown;
+    };
   };
+  progresso_conquistas?: unknown;
   missao?: {
     id?: unknown;
     tipo?: unknown;
@@ -288,7 +311,10 @@ function mapearSequencia(valor: unknown): SequenciaVigente | null {
   };
 }
 
-function mapearConquistas(valor: unknown): ConquistaPessoal[] {
+function mapearConquistas(
+  valor: unknown,
+  progressos: unknown,
+): ConquistaPessoal[] {
   if (!Array.isArray(valor)) {
     throw new GamificacaoRecusada("resposta_invalida", "conquistas inválidas");
   }
@@ -307,6 +333,7 @@ function mapearConquistas(valor: unknown): ConquistaPessoal[] {
     ...conquista,
     desbloqueada: desbloqueios.has(conquista.id),
     desbloqueadaEm: desbloqueios.get(conquista.id) ?? null,
+    ...mapearProgressoDaConquista(progressos, conquista.id),
   }));
 }
 
@@ -333,6 +360,58 @@ function vaziosDePontos(): PontosDaGamificacao {
       revisaoNoPrazo: 0,
       recuperacaoErro: 0,
     },
+    discriminacaoTotal: null,
+  };
+}
+
+type LinhaDaDiscriminacao = {
+  estudo_prioritario?: unknown;
+  conclusao?: unknown;
+  revisao_no_prazo?: unknown;
+  recuperacao_erro?: unknown;
+};
+
+function mapearDiscriminacao(
+  linha: LinhaDaDiscriminacao | undefined,
+  campo: string,
+): DiscriminacaoDePontos {
+  return {
+    estudoPrioritario: numero(linha?.estudo_prioritario, `${campo}.estudo_prioritario`),
+    conclusao: numero(linha?.conclusao, `${campo}.conclusao`),
+    revisaoNoPrazo: numero(linha?.revisao_no_prazo, `${campo}.revisao_no_prazo`),
+    recuperacaoErro: numero(linha?.recuperacao_erro, `${campo}.recuperacao_erro`),
+  };
+}
+
+/**
+ * Lê o progresso de uma conquista, tolerando a ausência do bloco inteiro.
+ *
+ * Ausência é o banco antes da migração do AD-130, e vira `null` — não zero.
+ * Zero afirmaria que o aluno não andou nada, que é o tipo de mentira pequena
+ * que esta rodada existe para tirar da tela.
+ */
+function mapearProgressoDaConquista(
+  valor: unknown,
+  id: string,
+): { progresso: number | null; meta: number | null } {
+  if (typeof valor !== "object" || valor === null || Array.isArray(valor)) {
+    return { progresso: null, meta: null };
+  }
+  const entrada = (valor as Record<string, unknown>)[id];
+  if (typeof entrada !== "object" || entrada === null || Array.isArray(entrada)) {
+    return { progresso: null, meta: null };
+  }
+  const linha = entrada as { progresso?: unknown; meta?: unknown };
+  const meta = numero(linha.meta, `progresso_conquistas.${id}.meta`);
+  if (meta <= 0) {
+    throw new GamificacaoRecusada(
+      "resposta_invalida",
+      `progresso_conquistas.${id}.meta precisa ser positiva`,
+    );
+  }
+  return {
+    progresso: Math.min(numero(linha.progresso, `progresso_conquistas.${id}.progresso`), meta),
+    meta,
   };
 }
 
@@ -376,27 +455,15 @@ export function mapearGamificacao(valor: unknown): DadosGamificacao {
   const pontos = habilitada
     ? (() => {
         const discriminacao = linha.pontos?.discriminacao;
+        const vitalicio = linha.pontos?.discriminacao_total;
         return {
           dia: numero(linha.pontos?.dia, "pontos.dia"),
           total: numero(linha.pontos?.total, "pontos.total"),
-          discriminacao: {
-            estudoPrioritario: numero(
-              discriminacao?.estudo_prioritario,
-              "pontos.discriminacao.estudo_prioritario",
-            ),
-            conclusao: numero(
-              discriminacao?.conclusao,
-              "pontos.discriminacao.conclusao",
-            ),
-            revisaoNoPrazo: numero(
-              discriminacao?.revisao_no_prazo,
-              "pontos.discriminacao.revisao_no_prazo",
-            ),
-            recuperacaoErro: numero(
-              discriminacao?.recuperacao_erro,
-              "pontos.discriminacao.recuperacao_erro",
-            ),
-          },
+          discriminacao: mapearDiscriminacao(discriminacao, "pontos.discriminacao"),
+          discriminacaoTotal:
+            vitalicio === undefined
+              ? null
+              : mapearDiscriminacao(vitalicio, "pontos.discriminacao_total"),
         };
       })()
     : vaziosDePontos();
@@ -432,11 +499,15 @@ export function mapearGamificacao(valor: unknown): DadosGamificacao {
     pontos,
     missao,
     sequencia: mapearSequencia(linha.sequencia),
-    conquistas: habilitada ? mapearConquistas(linha.conquistas) : CATALOGO_DE_CONQUISTAS.map((conquista) => ({
-      ...conquista,
-      desbloqueada: false,
-      desbloqueadaEm: null,
-    })),
+    conquistas: habilitada
+      ? mapearConquistas(linha.conquistas, linha.progresso_conquistas)
+      : CATALOGO_DE_CONQUISTAS.map((conquista) => ({
+          ...conquista,
+          desbloqueada: false,
+          desbloqueadaEm: null,
+          progresso: null,
+          meta: null,
+        })),
   };
 }
 

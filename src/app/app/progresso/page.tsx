@@ -5,7 +5,7 @@ import { consultarGamificacaoOpcional } from "@/modules/aluno/painel-do-dia";
 import { consultarPerfilEstudo } from "@/modules/aluno/onboarding";
 import { consultarTrajetoriaOpcional } from "@/modules/aluno/trajetoria-opcional";
 import { TrajetoriaTela } from "@/modules/aluno/trajetoria-tela";
-import { ProgressoTela } from "@/modules/aluno/progresso-tela";
+import { ASSUNTOS_POR_PAGINA, ProgressoTela } from "@/modules/aluno/progresso-tela";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { Estado } from "@/modules/ui/estado";
@@ -61,14 +61,36 @@ export default async function Progresso({ searchParams }: Props) {
   ]);
 
   return (
-    <div className="space-y-8">
-      {/*
-        A trajetória vem **acima** do histórico por tópico: ela é o
-        enquadramento — quanto do edital falta e quanto tempo resta —, e o
-        histórico é o detalhe dentro dele.
-      */}
-      {trajetoria ? <TrajetoriaTela trajetoria={trajetoria} /> : null}
-      <ProgressoTela dados={resultado.dados} gamificacao={gamificacao} />
-    </div>
+    <ProgressoTela
+      dados={resultado.dados}
+      gamificacao={gamificacao}
+      /*
+        A trajetória entra **entre** a leitura da semana e os pontos: a semana
+        responde "como eu fui", ela responde "quanto falta", e o histórico é o
+        detalhe dentro desse enquadramento. Vem montada daqui porque a rota é
+        quem sabe se a flag está ligada.
+      */
+      trajetoria={trajetoria ? <TrajetoriaTela trajetoria={trajetoria} /> : null}
+      mostrar={quantosAssuntosMostrar(parametros.mostrar)}
+    />
   );
 }
+
+/**
+ * Quantos assuntos do caderno a tela abre.
+ *
+ * Query string é entrada não confiável e aqui ela vira altura de lista: um
+ * `mostrar=999999` renderizaria a lista inteira, que é justamente o rolo que
+ * a paginação evita. Valor ilegível volta ao primeiro lote.
+ */
+function quantosAssuntosMostrar(valor: string | string[] | undefined): number {
+  const bruto = Array.isArray(valor) ? valor[0] : valor;
+  const numero = Number(bruto);
+  if (!Number.isInteger(numero) || numero < ASSUNTOS_POR_PAGINA) {
+    return ASSUNTOS_POR_PAGINA;
+  }
+  return Math.min(numero, TETO_DE_ASSUNTOS_NA_TELA);
+}
+
+/** Teto duro da lista: acima disso a tela vira rolo, com ou sem pedido. */
+const TETO_DE_ASSUNTOS_NA_TELA = 60;

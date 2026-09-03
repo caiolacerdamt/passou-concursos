@@ -71,6 +71,11 @@ const respostaBase = {
   ],
 };
 
+/** A resposta válida com um recorte trocado — o resto vem da base. */
+function respostaValida(troca: Record<string, unknown> = {}) {
+  return { ...respostaBase, ...troca };
+}
+
 describe("contrato da gamificação", () => {
   it("separa o anel, preserva o bruto e limita o visual à meta", () => {
     const dados = mapearGamificacao(respostaBase);
@@ -89,6 +94,7 @@ describe("contrato da gamificação", () => {
         revisaoNoPrazo: 15,
         recuperacaoErro: 0,
       },
+      discriminacaoTotal: null,
     });
     expect(dados.missao?.progresso).toBe(2);
     expect(dados.missao?.progressoBruto).toBe(3);
@@ -169,5 +175,67 @@ describe("contrato da gamificação", () => {
         },
       }),
     ).toThrow(/piso_meta ultrapassa meta/);
+  });
+});
+
+describe("discriminação vitalícia e progresso das conquistas", () => {
+  it("separa a janela do dia da janela de sempre", () => {
+    const dados = mapearGamificacao(
+      respostaValida({
+        pontos: {
+          dia: 0,
+          total: 300,
+          discriminacao: {
+            estudo_prioritario: 0,
+            conclusao: 0,
+            revisao_no_prazo: 0,
+            recuperacao_erro: 0,
+          },
+          discriminacao_total: {
+            estudo_prioritario: 120,
+            conclusao: 100,
+            revisao_no_prazo: 30,
+            recuperacao_erro: 50,
+          },
+        },
+      }),
+    );
+
+    // O zero de hoje continua zero — o defeito nunca foi o número, foi a
+    // ausência de um total por categoria ao lado dele.
+    expect(dados.pontos.dia).toBe(0);
+    expect(dados.pontos.discriminacao.conclusao).toBe(0);
+    expect(dados.pontos.total).toBe(300);
+    expect(dados.pontos.discriminacaoTotal).toEqual({
+      estudoPrioritario: 120,
+      conclusao: 100,
+      revisaoNoPrazo: 30,
+      recuperacaoErro: 50,
+    });
+  });
+
+  it("lê quanto falta para cada conquista e limita o progresso à meta", () => {
+    const dados = mapearGamificacao(
+      respostaValida({
+        progresso_conquistas: {
+          primeiro_bloco: { progresso: 1, meta: 1 },
+          cem_questoes: { progresso: 38, meta: 100 },
+          sequencia_pessoal: { progresso: 99, meta: 7 },
+        },
+      }),
+    );
+
+    const porId = new Map(dados.conquistas.map((c) => [c.id, c]));
+    expect(porId.get("cem_questoes")).toMatchObject({ progresso: 38, meta: 100 });
+    expect(porId.get("sequencia_pessoal")).toMatchObject({ progresso: 7, meta: 7 });
+    // Conquista fora do bloco não vira zero: vira ausência declarada.
+    expect(porId.get("primeira_revisao")).toMatchObject({ progresso: null, meta: null });
+  });
+
+  it("degrada para ausência quando o servidor ainda não devolve os blocos novos", () => {
+    const dados = mapearGamificacao(respostaValida());
+
+    expect(dados.pontos.discriminacaoTotal).toBeNull();
+    expect(dados.conquistas.every((c) => c.progresso === null)).toBe(true);
   });
 });

@@ -31,6 +31,12 @@ const gamificacao: DadosGamificacao = {
       revisaoNoPrazo: 20,
       recuperacaoErro: 25,
     },
+    discriminacaoTotal: {
+      estudoPrioritario: 60,
+      conclusao: 60,
+      revisaoNoPrazo: 20,
+      recuperacaoErro: 5,
+    },
   },
   missao: {
     id: "missao-1",
@@ -52,6 +58,8 @@ const gamificacao: DadosGamificacao = {
     ...conquista,
     desbloqueada: indice === 0,
     desbloqueadaEm: indice === 0 ? "2026-08-20T12:00:00.000Z" : null,
+    progresso: indice === 0 ? 1 : 38,
+    meta: indice === 0 ? 1 : 100,
   })),
 };
 

@@ -5,11 +5,13 @@ import { ProgressoTela } from "./progresso-tela";
 import type { DadosProgresso } from "./progresso";
 
 const base: DadosProgresso = {
-  filtros: { causa: null, topicoId: null },
+  filtros: { causa: null, topicoId: null, materiaId: null },
   historico: [
     {
       topicoId: "topico-1",
       topico: "Matemática",
+      materiaId: "materia-1",
+      materia: "Exatas",
       nRespostas: 4,
       nAcertos: 3,
       score: 0.75,
@@ -18,9 +20,13 @@ const base: DadosProgresso = {
     },
   ],
   caderno: [
-    { topicoId: "topico-1", topico: "Matemática", causa: "errei_a_conta", nErros: 1, ultimoErroEm: "2026-08-21" },
+    { topicoId: "topico-1", topico: "Matemática", materiaId: "materia-1", materia: "Exatas", causa: "errei_a_conta", nErros: 1, ultimoErroEm: "2026-08-21" },
   ],
-  topicos: [{ id: "topico-1", nome: "Matemática" }],
+  historicoPorMateria: [],
+  cadernoPorAssunto: [],
+  cadernoTruncado: false,
+  materias: [{ id: "materia-1", nome: "Exatas" }],
+  topicos: [{ id: "topico-1", nome: "Matemática", materiaId: "materia-1", materia: "Exatas" }],
   sequencia: {
     data: "2026-08-22",
     sequencia: 2,
@@ -36,6 +42,7 @@ const base: DadosProgresso = {
     questoesRespondidas: 4,
     acertos: 3,
     percentualAcertos: 0.75,
+    percentualAnterior: 0.5,
     topicosTocados: 1,
     revisoesConcluidas: 1,
     tendencia: "subindo",
@@ -71,7 +78,7 @@ describe("ProgressoTela", () => {
       <ProgressoTela
         dados={{
           ...base,
-          filtros: { causa: "chutei", topicoId: "topico-1" },
+          filtros: { causa: "chutei", materiaId: null, topicoId: "topico-1" },
           caderno: [],
         }}
       />,
@@ -105,9 +112,9 @@ describe("ProgressoTela", () => {
         dados={{
           ...base,
           caderno: [
-            { topicoId: "topico-1", topico: "Matemática", causa: "errei_a_conta", nErros: 2, ultimoErroEm: "2026-08-21" },
-            { topicoId: "topico-1", topico: "Matemática", causa: "chutei", nErros: 1, ultimoErroEm: "2026-08-20" },
-            { topicoId: "topico-1", topico: "Matemática", causa: "faltou_tempo", nErros: 1, ultimoErroEm: "2026-08-19" },
+            { topicoId: "topico-1", topico: "Matemática", materiaId: "materia-1", materia: "Exatas", causa: "errei_a_conta", nErros: 2, ultimoErroEm: "2026-08-21" },
+            { topicoId: "topico-1", topico: "Matemática", materiaId: "materia-1", materia: "Exatas", causa: "chutei", nErros: 1, ultimoErroEm: "2026-08-20" },
+            { topicoId: "topico-1", topico: "Matemática", materiaId: "materia-1", materia: "Exatas", causa: "faltou_tempo", nErros: 1, ultimoErroEm: "2026-08-19" },
           ],
         }}
       />,

@@ -65,6 +65,7 @@ const painel: PainelDoDia = {
     questoesRespondidas: 12,
     acertos: 9,
     percentualAcertos: 0.75,
+    percentualAnterior: 0.5,
     topicosTocados: 3,
     revisoesConcluidas: 2,
     tendencia: "subindo",
@@ -82,6 +83,8 @@ const painel: PainelDoDia = {
     {
       topicoId: "11111111-1111-4111-8111-111111111111",
       topico: "Concordância verbal",
+      materiaId: "22222222-2222-4222-8222-222222222222",
+      materia: "Língua Portuguesa",
       causa: "errei_a_conta",
       nErros: 3,
       ultimoErroEm: "2026-08-23T10:00:00.000Z",

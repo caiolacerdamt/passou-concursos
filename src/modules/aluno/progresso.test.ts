@@ -16,7 +16,7 @@ import {
   normalizarFiltrosProgresso,
 } from "./progresso";
 
-type Resposta = { data: unknown; error: { message: string } | null };
+type Resposta = { data: unknown; error: { message: string } | null; count?: number };
 
 function cadeia(resposta: Resposta) {
   const api = {
@@ -25,6 +25,7 @@ function cadeia(resposta: Resposta) {
     in: vi.fn(() => api),
     gte: vi.fn(() => api),
     lte: vi.fn(() => api),
+    range: vi.fn(() => api),
     order: vi.fn(() => api),
     then: (
       resolve: (valor: Resposta) => unknown,
@@ -56,6 +57,8 @@ function clienteFalso(
   };
 }
 
+const MATERIA_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const MATERIA_B = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const UUID_A = "11111111-1111-4111-8111-111111111111";
 const UUID_B = "22222222-2222-4222-8222-222222222222";
 
@@ -63,13 +66,13 @@ describe("normalizarFiltrosProgresso", () => {
   it("mantém causa e tópico válidos para o filtro combinado", () => {
     expect(
       normalizarFiltrosProgresso({ causa: "errei_a_conta", topico: UUID_A }),
-    ).toEqual({ causa: "errei_a_conta", topicoId: UUID_A });
+    ).toEqual({ causa: "errei_a_conta", topicoId: UUID_A, materiaId: null });
   });
 
   it("descarta causa desconhecida, UUID inválido e valor repetido em array", () => {
     expect(
       normalizarFiltrosProgresso({ causa: "sql_injection", topico: [UUID_B, UUID_A] }),
-    ).toEqual({ causa: null, topicoId: UUID_B });
+    ).toEqual({ causa: null, topicoId: UUID_B, materiaId: null });
   });
 
   it("mantém a allowlist fechada de causas do banco", () => {
@@ -99,7 +102,8 @@ describe("consultarProgresso", () => {
           ],
           error: null,
         },
-        topicos: { data: [{ id: UUID_A, nome: "Matemática Financeira" }], error: null },
+        topicos: { data: [{ id: UUID_A, nome: "Matemática Financeira", materia_id: MATERIA_A }], error: null },
+        materias: { data: [{ id: MATERIA_A, nome: "Matemática" }], error: null },
       },
       {
         data: [
@@ -124,6 +128,8 @@ describe("consultarProgresso", () => {
     expect(resultado.historico[0]).toEqual({
       topicoId: UUID_A,
       topico: "Matemática Financeira",
+      materiaId: MATERIA_A,
+      materia: "Matemática",
       nRespostas: 10,
       nAcertos: 6,
       score: 0.6,
@@ -134,11 +140,167 @@ describe("consultarProgresso", () => {
     expect(resultado.sequencia?.sequencia).toBe(4);
     expect(resultado.estadoInicial).toBe(false);
     expect(falso.chamadas).toContain("tentativas");
-    expect(falso.cadeias.caderno_erros.eq).toHaveBeenCalledWith(
-      "causa_erro",
-      "errei_a_conta",
+    // O recorte é em memória: nem a causa nem o tópico viram `.eq()`, porque a
+    // consulta filtrada era quem encolhia as opções do próprio filtro.
+    expect(falso.cadeias.caderno_erros.eq).not.toHaveBeenCalled();
+    expect(falso.cadeias.dominio_topico.eq).not.toHaveBeenCalled();
+    expect(falso.cadeias.caderno_erros.range).toHaveBeenCalledWith(0, 799);
+  });
+
+  it("não deixa o filtro do caderno encolher o histórico nem a lista de opções", async () => {
+    const falso = clienteFalso(
+      {
+        dominio_topico: {
+          data: [
+            { topico_id: UUID_A, n_respostas: 10, n_acertos: 6, score: 0.6 },
+            { topico_id: UUID_B, n_respostas: 4, n_acertos: 1, score: 0.25 },
+          ],
+          error: null,
+        },
+        caderno_erros: {
+          data: [
+            { topico_id: UUID_A, causa_erro: "chutei", n_erros: 2, ultimo_erro_em: "2026-08-21T20:00:00Z" },
+            { topico_id: UUID_B, causa_erro: "errei_a_conta", n_erros: 5, ultimo_erro_em: "2026-08-22T20:00:00Z" },
+          ],
+          error: null,
+        },
+        topicos: {
+          data: [
+            { id: UUID_A, nome: "Geral", materia_id: MATERIA_A },
+            { id: UUID_B, nome: "Geral", materia_id: MATERIA_B },
+          ],
+          error: null,
+        },
+        materias: {
+          data: [
+            { id: MATERIA_A, nome: "Matemática" },
+            { id: MATERIA_B, nome: "Vendas e Negociação" },
+          ],
+          error: null,
+        },
+      },
+      { data: [], error: null },
     );
-    expect(falso.cadeias.caderno_erros.eq).toHaveBeenCalledWith("topico_id", UUID_A);
+
+    const resultado = await consultarProgresso(falso.cliente as never, {
+      topico: UUID_A,
+    });
+
+    // O caderno obedece ao filtro...
+    expect(resultado.caderno).toHaveLength(1);
+    expect(resultado.caderno[0].topicoId).toBe(UUID_A);
+    // ...e mais nada obedece: histórico inteiro, opções inteiras.
+    expect(resultado.historico).toHaveLength(2);
+    expect(resultado.topicos).toHaveLength(2);
+    expect(resultado.materias).toHaveLength(2);
+    // Dois tópicos "Geral": é a matéria que os separa na opção do filtro.
+    expect(resultado.topicos.map((topico) => topico.materia)).toEqual([
+      "Matemática",
+      "Vendas e Negociação",
+    ]);
+  });
+
+  it("filtra por matéria e agrupa o caderno por assunto, com as causas dentro", async () => {
+    const falso = clienteFalso(
+      {
+        dominio_topico: { data: [], error: null },
+        caderno_erros: {
+          data: [
+            { topico_id: UUID_A, causa_erro: "chutei", n_erros: 4, ultimo_erro_em: "2026-09-01T20:00:00Z" },
+            { topico_id: UUID_A, causa_erro: "confundi_conceitos", n_erros: 4, ultimo_erro_em: "2026-09-02T20:00:00Z" },
+            { topico_id: UUID_A, causa_erro: "nao_sei_dizer", n_erros: 3, ultimo_erro_em: "2026-08-30T20:00:00Z" },
+            { topico_id: UUID_B, causa_erro: "chutei", n_erros: 9, ultimo_erro_em: "2026-08-26T20:00:00Z" },
+          ],
+          error: null,
+        },
+        topicos: {
+          data: [
+            { id: UUID_A, nome: "Interpretação", materia_id: MATERIA_A },
+            { id: UUID_B, nome: "Probabilidade", materia_id: MATERIA_B },
+          ],
+          error: null,
+        },
+        materias: {
+          data: [
+            { id: MATERIA_A, nome: "Língua Portuguesa" },
+            { id: MATERIA_B, nome: "Matemática" },
+          ],
+          error: null,
+        },
+      },
+      { data: [], error: null },
+    );
+
+    const resultado = await consultarProgresso(falso.cliente as never, {
+      materia: MATERIA_A,
+    });
+
+    expect(resultado.filtros.materiaId).toBe(MATERIA_A);
+    expect(resultado.cadernoPorAssunto).toHaveLength(1);
+    const assunto = resultado.cadernoPorAssunto[0];
+    expect(assunto.topico).toBe("Interpretação");
+    expect(assunto.materia).toBe("Língua Portuguesa");
+    expect(assunto.nErros).toBe(11);
+    // O último erro do assunto é o mais recente entre as causas dele.
+    expect(assunto.ultimoErroEm).toBe("2026-09-02T20:00:00Z");
+    expect(assunto.causas.map((causa) => causa.nErros)).toEqual([4, 4, 3]);
+  });
+
+  it("denuncia o corte quando o caderno passa do teto da consulta", async () => {
+    const falso = clienteFalso(
+      {
+        dominio_topico: { data: [], error: null },
+        caderno_erros: {
+          data: [
+            { topico_id: UUID_A, causa_erro: "chutei", n_erros: 1, ultimo_erro_em: "2026-08-21T20:00:00Z" },
+          ],
+          error: null,
+          count: 900,
+        },
+        topicos: { data: [{ id: UUID_A, nome: "Interpretação", materia_id: MATERIA_A }], error: null },
+        materias: { data: [{ id: MATERIA_A, nome: "Língua Portuguesa" }], error: null },
+      },
+      { data: [], error: null },
+    );
+
+    await expect(consultarProgresso(falso.cliente as never)).resolves.toMatchObject({
+      cadernoTruncado: true,
+    });
+  });
+
+  it("agrupa o histórico por matéria somando respostas, não fazendo média de taxas", async () => {
+    const falso = clienteFalso(
+      {
+        dominio_topico: {
+          data: [
+            { topico_id: UUID_A, n_respostas: 30, n_acertos: 6, score: 0.2 },
+            { topico_id: UUID_B, n_respostas: 2, n_acertos: 2, score: 1 },
+          ],
+          error: null,
+        },
+        caderno_erros: { data: [], error: null },
+        topicos: {
+          data: [
+            { id: UUID_A, nome: "Interpretação", materia_id: MATERIA_A },
+            { id: UUID_B, nome: "Ortografia", materia_id: MATERIA_A },
+          ],
+          error: null,
+        },
+        materias: { data: [{ id: MATERIA_A, nome: "Língua Portuguesa" }], error: null },
+      },
+      { data: [], error: null },
+    );
+
+    const resultado = await consultarProgresso(falso.cliente as never);
+
+    expect(resultado.historicoPorMateria).toHaveLength(1);
+    const materia = resultado.historicoPorMateria[0];
+    expect(materia.materia).toBe("Língua Portuguesa");
+    expect(materia.nTopicos).toBe(2);
+    // 8 de 32, e não a média entre 20% e 100%.
+    expect(materia.nRespostas).toBe(32);
+    expect(materia.nAcertos).toBe(8);
+    expect(materia.topicos[0].topico).toBe("Interpretação");
   });
 
   it("devolve estado inicial claro e não busca tópicos quando não há projeção", async () => {
@@ -203,7 +365,8 @@ describe("consultarProgresso", () => {
         data: [{ topico_id: UUID_A, causa_erro: "outra", n_erros: 1, ultimo_erro_em: "2026-08-21" }],
         error: null,
       },
-      topicos: { data: [{ id: UUID_A, nome: "Tópico" }], error: null },
+      topicos: { data: [{ id: UUID_A, nome: "Tópico", materia_id: MATERIA_A }], error: null },
+      materias: { data: [{ id: MATERIA_A, nome: "Matemática" }], error: null },
     });
 
     await expect(consultarProgresso(falso.cliente as never)).rejects.toThrow(
@@ -292,7 +455,8 @@ describe("consultarProgresso", () => {
           error: null,
         },
         caderno_erros: { data: [], error: null },
-        topicos: { data: [{ id: UUID_A, nome: "Matemática" }], error: null },
+        topicos: { data: [{ id: UUID_A, nome: "Matemática", materia_id: MATERIA_A }], error: null },
+        materias: { data: [{ id: MATERIA_A, nome: "Matemática" }], error: null },
         tentativas: {
           data: [
             { topico_id: UUID_A, correta: true, respondida_em: "2026-08-12T12:00:00Z" },
@@ -319,6 +483,7 @@ describe("consultarProgresso", () => {
       questoesRespondidas: 2,
       acertos: 1,
       percentualAcertos: 0.5,
+      percentualAnterior: 1,
       topicosTocados: 1,
       revisoesConcluidas: 1,
       tendencia: "caindo",

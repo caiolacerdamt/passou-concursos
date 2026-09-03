@@ -16,11 +16,14 @@ export { CAUSAS_DO_CADERNO, NOMES_DAS_CAUSAS, type CausaDoCaderno };
 export type FiltrosProgresso = {
   causa: CausaDoCaderno | null;
   topicoId: string | null;
+  materiaId: string | null;
 };
 
 export type LinhaHistorico = {
   topicoId: string;
   topico: string;
+  materiaId: string;
+  materia: string;
   nRespostas: number;
   nAcertos: number;
   score: number;
@@ -28,14 +31,67 @@ export type LinhaHistorico = {
   tendencia: TendenciaProgresso;
 };
 
+/**
+ * O histórico agrupado pelo nível 1 da taxonomia.
+ *
+ * Existe porque o mesmo nome de tópico é permitido em matérias diferentes
+ * (`topicos_nome_unico_na_materia`): a tela antiga mostrava dois cartões
+ * "Geral" sem dizer de qual matéria era cada um. A matéria é o rótulo que
+ * desambigua, e é também a unidade em que o aluno pensa o edital.
+ */
+export type MateriaDoHistorico = {
+  materiaId: string;
+  materia: string;
+  nTopicos: number;
+  nRespostas: number;
+  nAcertos: number;
+  tendencia: TendenciaProgresso;
+  topicos: readonly LinhaHistorico[];
+};
+
 export type TendenciaProgresso = "subindo" | "estavel" | "caindo" | "sem_base";
 
 export type LinhaCaderno = {
   topicoId: string;
   topico: string;
+  materiaId: string;
+  materia: string;
   causa: CausaDoCaderno;
   nErros: number;
   ultimoErroEm: string;
+};
+
+/** Uma causa dentro de um assunto, já com a contagem que o cartão mostra. */
+export type CausaDoAssunto = {
+  causa: CausaDoCaderno;
+  nErros: number;
+  ultimoErroEm: string;
+};
+
+/**
+ * O caderno agrupado por assunto, com as causas dentro.
+ *
+ * A projeção tem grão `(tópico, causa)`, e a tela antiga desenhava um cartão
+ * por linha: quatro cartões "Interpretação" seguidos, cada um com um botão de
+ * refazer. Agrupar é leitura, não perda — cada causa continua sendo uma
+ * entrada própria com a contagem dela.
+ */
+export type AssuntoDoCaderno = {
+  topicoId: string;
+  topico: string;
+  materiaId: string;
+  materia: string;
+  nErros: number;
+  ultimoErroEm: string;
+  causas: readonly CausaDoAssunto[];
+};
+
+/** Uma opção do filtro de assunto, com a matéria que a desambigua. */
+export type OpcaoDeTopico = {
+  id: string;
+  nome: string;
+  materiaId: string;
+  materia: string;
 };
 
 export type EstadoDaSequencia = {
@@ -54,13 +110,37 @@ export type EstadoDaSequencia = {
 
 export type DadosProgresso = {
   filtros: FiltrosProgresso;
+  /** Uma linha por tópico praticado, sem filtro. O agrupado sai daqui. */
   historico: LinhaHistorico[];
+  historicoPorMateria: MateriaDoHistorico[];
+  /** Grão `(tópico, causa)` já filtrado — é o que o painel do dia consome. */
   caderno: LinhaCaderno[];
-  topicos: Array<{ id: string; nome: string }>;
+  cadernoPorAssunto: AssuntoDoCaderno[];
+  /**
+   * `true` quando `caderno_erros` tem mais linhas do que {@link TETO_DO_CADERNO}.
+   * A lição do AD-124 é que truncar em silêncio é pior que truncar: o corte é
+   * explícito na consulta e a tela pode dizer que a lista não está inteira.
+   */
+  cadernoTruncado: boolean;
+  /**
+   * O universo das opções do filtro, **nunca** o resultado já filtrado: era
+   * daqui que vinha o filtro que se autodestruía.
+   */
+  topicos: OpcaoDeTopico[];
+  materias: Array<{ id: string; nome: string }>;
   sequencia: EstadoDaSequencia | null;
   relatorioSemanal: RelatorioSemanal;
   estadoInicial: boolean;
 };
+
+/**
+ * Quantas linhas de `caderno_erros` a consulta traz.
+ *
+ * O teto real é `tópicos da taxonomia × 8 causas`; 800 fica abaixo do corte de
+ * 1000 linhas do PostgREST, que é justamente o que o AD-124 pegou truncando em
+ * silêncio. O corte é pedido de propósito para que `count` denuncie o excesso.
+ */
+export const TETO_DO_CADERNO = 800;
 
 /**
  * Um dia da janela de sete, no calendário do produto (America/Sao_Paulo) — o
@@ -84,6 +164,14 @@ export type RelatorioSemanal = {
   questoesRespondidas: number;
   acertos: number;
   percentualAcertos: number | null;
+  /**
+   * A taxa da janela ANTERIOR, para a tela dizer o número em vez do adjetivo.
+   *
+   * Já era calculada — `calcularTendencia` compara as duas janelas —, só não
+   * saía. `null` quando não há resposta na janela anterior, o mesmo caso que
+   * produz `tendencia: "sem_base"`.
+   */
+  percentualAnterior: number | null;
   topicosTocados: number;
   revisoesConcluidas: number;
   tendencia: TendenciaProgresso;
@@ -103,6 +191,8 @@ type EntradaDeFiltro = {
   causa?: unknown;
   topico?: unknown;
   topicoId?: unknown;
+  materia?: unknown;
+  materiaId?: unknown;
 };
 
 type DominioBanco = {
@@ -119,7 +209,9 @@ type CadernoBanco = {
   ultimo_erro_em: string;
 };
 
-type TopicoBanco = { id: string; nome: string };
+type TopicoBanco = { id: string; nome: string; materia_id: string };
+
+type MateriaBanco = { id: string; nome: string };
 
 type SequenciaBanco = {
   data: string;
@@ -177,10 +269,12 @@ export function normalizarFiltrosProgresso(entrada: unknown): FiltrosProgresso {
       ? (entrada as EntradaDeFiltro)
       : {};
   const topico = texto(objeto.topicoId ?? objeto.topico);
+  const materia = texto(objeto.materiaId ?? objeto.materia);
 
   return {
     causa: causaValida(objeto.causa),
     topicoId: topico && UUID.test(topico) ? topico : null,
+    materiaId: materia && UUID.test(materia) ? materia : null,
   };
 }
 
@@ -307,6 +401,7 @@ function criarRelatorioSemanal(
     questoesRespondidas: dadosAtuais.nRespostas,
     acertos: dadosAtuais.nAcertos,
     percentualAcertos: dadosAtuais.percentual,
+    percentualAnterior: desempenho(anterior).percentual,
     topicosTocados: new Set(atual.map((linha) => linha.topico_id)).size,
     revisoesConcluidas: revisoesAtuais.length,
     tendencia: calcularTendencia(atual, anterior),
@@ -455,16 +550,21 @@ export async function consultarProgresso(
   const referencia = referenciaTemporal(agora);
   const inicioAnterior = new Date(referencia.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-  let dominioBuilder = cliente
+  // Nenhum dos dois recebe filtro.
+  //
+  // `dominio_topico` porque o filtro é do caderno: aplicá-lo aqui encolhia
+  // "Progresso por assunto" a um item quando o aluno filtrava um erro.
+  // `caderno_erros` porque é dele que sai o universo das opções do filtro —
+  // filtrar no banco fazia a lista de assuntos ficar com o único assunto já
+  // escolhido, e não havia como trocar sem limpar. O recorte é em memória.
+  const dominioBuilder = cliente
     .from("dominio_topico")
     .select("topico_id, n_respostas, n_acertos, score");
-  if (filtros.topicoId) dominioBuilder = dominioBuilder.eq("topico_id", filtros.topicoId);
 
-  let cadernoBuilder = cliente
+  const cadernoBuilder = cliente
     .from("caderno_erros")
-    .select("topico_id, causa_erro, n_erros, ultimo_erro_em");
-  if (filtros.causa) cadernoBuilder = cadernoBuilder.eq("causa_erro", filtros.causa);
-  if (filtros.topicoId) cadernoBuilder = cadernoBuilder.eq("topico_id", filtros.topicoId);
+    .select("topico_id, causa_erro, n_erros, ultimo_erro_em", { count: "exact" })
+    .range(0, TETO_DO_CADERNO - 1);
 
   const tentativasBuilder = cliente
     .from("tentativas")
@@ -521,10 +621,11 @@ export async function consultarProgresso(
   ];
 
   let topicos: TopicoBanco[] = [];
+  let materias: MateriaBanco[] = [];
   if (ids.length > 0) {
     const topicosConsulta = await cliente
       .from("topicos")
-      .select("id, nome")
+      .select("id, nome, materia_id")
       .in("id", ids);
 
     if (topicosConsulta.error) {
@@ -535,9 +636,38 @@ export async function consultarProgresso(
     if (topicos.length !== ids.length) {
       throw new Error("projeção de progresso aponta para tópico que não existe");
     }
+
+    const idsDasMaterias = [...new Set(topicos.map((topico) => topico.materia_id))];
+    const materiasConsulta = await cliente
+      .from("materias")
+      .select("id, nome")
+      .in("id", idsDasMaterias);
+
+    if (materiasConsulta.error) {
+      throw falhaAoLer("matérias", materiasConsulta.error.message);
+    }
+    materias = (materiasConsulta.data ?? []) as MateriaBanco[];
+
+    if (materias.length !== idsDasMaterias.length) {
+      throw new Error("tópico do progresso aponta para matéria que não existe");
+    }
   }
 
   const nomes = new Map(topicos.map((topico) => [topico.id, topico.nome]));
+  const nomesDasMaterias = new Map(materias.map((materia) => [materia.id, materia.nome]));
+  const materiaDoTopico = new Map(
+    topicos.map((topico) => [topico.id, topico.materia_id]),
+  );
+
+  /** O par matéria/tópico que todo item do progresso carrega. */
+  const etiqueta = (topicoId: string) => {
+    const materiaId = materiaDoTopico.get(topicoId)!;
+    return {
+      topico: nomes.get(topicoId)!,
+      materiaId,
+      materia: nomesDasMaterias.get(materiaId)!,
+    };
+  };
   const inicioSemana = new Date(referencia.getTime() - 7 * 24 * 60 * 60 * 1000);
   const inicioQuinzena = new Date(referencia.getTime() - 14 * 24 * 60 * 60 * 1000);
   const tentativasAtuais = janelaAtual(tentativas, inicioSemana, referencia);
@@ -556,7 +686,7 @@ export async function consultarProgresso(
   }
   const historico: LinhaHistorico[] = dominioLinhas.map((linha) => ({
     topicoId: linha.topico_id,
-    topico: nomes.get(linha.topico_id)!,
+    ...etiqueta(linha.topico_id),
     nRespostas: numero(linha.n_respostas, "dominio_topico.n_respostas"),
     nAcertos: numero(linha.n_acertos, "dominio_topico.n_acertos"),
     score: numero(linha.score, "dominio_topico.score"),
@@ -570,36 +700,161 @@ export async function consultarProgresso(
     ),
   }));
 
-  const cadernoMapeado: LinhaCaderno[] = cadernoLinhas.map((linha) => {
+  const cadernoInteiro: LinhaCaderno[] = cadernoLinhas.map((linha) => {
     if (!(CAUSAS_DO_CADERNO as readonly string[]).includes(linha.causa_erro)) {
       throw new Error("caderno_erros contém causa inválida");
     }
 
     return {
       topicoId: linha.topico_id,
-      topico: nomes.get(linha.topico_id)!,
+      ...etiqueta(linha.topico_id),
       causa: linha.causa_erro as CausaDoCaderno,
       nErros: numero(linha.n_erros, "caderno_erros.n_erros"),
       ultimoErroEm: linha.ultimo_erro_em,
     };
   });
 
+  const cadernoMapeado = cadernoInteiro.filter(
+    (linha) =>
+      (filtros.causa === null || linha.causa === filtros.causa) &&
+      (filtros.topicoId === null || linha.topicoId === filtros.topicoId) &&
+      (filtros.materiaId === null || linha.materiaId === filtros.materiaId),
+  );
+
   const sequencia = mapearSequencia(
     ((sequenciaConsulta.data ?? []) as SequenciaBanco[])[0],
   );
   const temHistorico =
     sequencia?.temHistorico ??
-    (historico.length > 0 || cadernoMapeado.length > 0 || tentativas.length > 0 || revisoes.length > 0);
+    (historico.length > 0 || cadernoInteiro.length > 0 || tentativas.length > 0 || revisoes.length > 0);
+  const totalNoCaderno = cadernoConsulta.count ?? cadernoLinhas.length;
 
   return {
     filtros,
     historico,
+    historicoPorMateria: agruparHistoricoPorMateria(historico),
     caderno: cadernoMapeado,
+    cadernoPorAssunto: agruparCadernoPorAssunto(cadernoMapeado),
+    cadernoTruncado: totalNoCaderno > cadernoLinhas.length,
     topicos: topicos
+      .map(({ id, nome, materia_id }) => ({
+        id,
+        nome,
+        materiaId: materia_id,
+        materia: nomesDasMaterias.get(materia_id)!,
+      }))
+      .sort(
+        (a, b) =>
+          a.materia.localeCompare(b.materia, "pt-BR") ||
+          a.nome.localeCompare(b.nome, "pt-BR"),
+      ),
+    materias: materias
       .map(({ id, nome }) => ({ id, nome }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR")),
     sequencia,
     relatorioSemanal: criarRelatorioSemanal(tentativas, revisoes, referencia),
     estadoInicial: !temHistorico,
   };
+}
+
+/**
+ * Agrupa o histórico pela matéria, na ordem em que a tela abre: matéria com
+ * mais respostas primeiro, e dentro dela o tópico mais respondido primeiro.
+ *
+ * A taxa da matéria sai da soma das respostas, não da média das taxas dos
+ * tópicos: um tópico com duas respostas não pode pesar o mesmo que um com
+ * trinta.
+ */
+export function agruparHistoricoPorMateria(
+  linhas: readonly LinhaHistorico[],
+): MateriaDoHistorico[] {
+  const porMateria = new Map<string, LinhaHistorico[]>();
+  for (const linha of linhas) {
+    const grupo = porMateria.get(linha.materiaId) ?? [];
+    grupo.push(linha);
+    porMateria.set(linha.materiaId, grupo);
+  }
+
+  return [...porMateria.values()]
+    .map((topicos) => {
+      const ordenados = [...topicos].sort(
+        (a, b) => b.nRespostas - a.nRespostas || a.topico.localeCompare(b.topico, "pt-BR"),
+      );
+      return {
+        materiaId: ordenados[0].materiaId,
+        materia: ordenados[0].materia,
+        nTopicos: ordenados.length,
+        nRespostas: ordenados.reduce((soma, linha) => soma + linha.nRespostas, 0),
+        nAcertos: ordenados.reduce((soma, linha) => soma + linha.nAcertos, 0),
+        tendencia: tendenciaDaMateria(ordenados),
+        topicos: ordenados,
+      };
+    })
+    .sort(
+      (a, b) => b.nRespostas - a.nRespostas || a.materia.localeCompare(b.materia, "pt-BR"),
+    );
+}
+
+/**
+ * A tendência da matéria é a dos tópicos dela, por maioria simples.
+ *
+ * Não é recalculada das tentativas de propósito: o número que a linha do
+ * tópico mostra e o que a matéria resume têm que sair da mesma conta, senão
+ * abrir a matéria contradiz o que ela dizia fechada. Empate e ausência de
+ * base viram `sem_base` — a matéria não afirma direção que os tópicos não
+ * sustentam.
+ */
+function tendenciaDaMateria(
+  topicos: readonly LinhaHistorico[],
+): TendenciaProgresso {
+  const votos = new Map<TendenciaProgresso, number>();
+  for (const topico of topicos) {
+    if (topico.tendencia === "sem_base") continue;
+    votos.set(topico.tendencia, (votos.get(topico.tendencia) ?? 0) + 1);
+  }
+  if (votos.size === 0) return "sem_base";
+
+  const ordenados = [...votos.entries()].sort((a, b) => b[1] - a[1]);
+  if (ordenados.length > 1 && ordenados[0][1] === ordenados[1][1]) return "sem_base";
+  return ordenados[0][0];
+}
+
+/** Agrupa o caderno por assunto, do assunto com mais erros para o com menos. */
+export function agruparCadernoPorAssunto(
+  linhas: readonly LinhaCaderno[],
+): AssuntoDoCaderno[] {
+  const porTopico = new Map<string, LinhaCaderno[]>();
+  for (const linha of linhas) {
+    const grupo = porTopico.get(linha.topicoId) ?? [];
+    grupo.push(linha);
+    porTopico.set(linha.topicoId, grupo);
+  }
+
+  return [...porTopico.values()]
+    .map((causas) => {
+      const ordenadas = [...causas].sort(
+        (a, b) => b.nErros - a.nErros || a.causa.localeCompare(b.causa),
+      );
+      return {
+        topicoId: ordenadas[0].topicoId,
+        topico: ordenadas[0].topico,
+        materiaId: ordenadas[0].materiaId,
+        materia: ordenadas[0].materia,
+        nErros: ordenadas.reduce((soma, linha) => soma + linha.nErros, 0),
+        ultimoErroEm: ordenadas
+          .map((linha) => linha.ultimoErroEm)
+          .reduce((maior, atual) => (atual > maior ? atual : maior)),
+        causas: ordenadas.map(({ causa, nErros, ultimoErroEm }) => ({
+          causa,
+          nErros,
+          ultimoErroEm,
+        })),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.nErros - a.nErros ||
+        b.ultimoErroEm.localeCompare(a.ultimoErroEm) ||
+        a.topico.localeCompare(b.topico, "pt-BR"),
+    );
 }

@@ -843,47 +843,105 @@
 - **Date**: 2026-09-01
 - **Status**: active
 
+### AD-125
+- **Decision**: A trilha da sessão deixa de ser dez tracinhos e passa a ser **quadrado numerado**,
+  com seta nas pontas para andar de uma em uma. Cor continua sendo estado — verde acertou, vermelho
+  para revisar, anel onde o aluno está —, e o resumo usa exatamente o mesmo componente visual.
+- **Reason**: o tracinho dizia "quanto falta" e mais nada. Para ir da questão 1 para a 7 era preciso
+  acertar um alvo de 1px de altura sem saber qual era qual: navegação que existia no código e não
+  existia na tela. O número é o que torna o atalho utilizável, e o alvo passa a ter 38px.
+- **Trade-off**: com 20+ questões numa sessão os quadrados ficam estreitos. Hoje o bloco é de 10 e
+  não há caso maior; se aparecer, a saída é rolagem horizontal na faixa, não voltar ao tracinho.
+- **Scope**: `src/modules/aluno/sessao/tela.tsx`, `src/modules/aluno/resumo-tela.tsx`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-126
+- **Decision**: Errar passa a ter **uma tela só**: gabarito, resposta dada e as sete causas juntos, e
+  o `Registrar e continuar` leva direto à próxima questão. O checkbox "marcar como chute" **sai** da
+  tela de responder; `marcou_chute` passa a ser derivado da causa `chutei` na server action.
+- **Reason**: eram dois passos para fechar uma questão errada, e o primeiro pedia a causa **antes**
+  de revelar o gabarito — o aluno dizia por que errou sem saber ainda o que era certo. O checkbox
+  perguntava, antes de responder, a mesma coisa que a tela seguinte pergunta depois.
+- **Trade-off**: perde-se o sinal "acertei mas chutei", que só o checkbox capturava — a causa só é
+  pedida no erro. Aceito: era um checkbox que quase ninguém marcava e que cobrava do aluno uma
+  confissão antes da correção. Segundo ponto: mostrar o gabarito antes de gravar abre a janela de
+  editar o `respostaDada` do formulário e registrar acerto. Não é vantagem para ninguém — não há
+  ranking (invariante 15) e o plano se ajusta ao que o aluno registra —, então não entra assinatura
+  de campo. O log não muda: a função SQL continua recusando o INSERT sem causa e a linha é gravada
+  uma vez só (invariante 1).
+- **Scope**: `src/modules/aluno/sessao/tela.tsx`, `src/app/app/sessao/acoes.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-127
+- **Decision**: O resumo da sessão mostra **uma questão por vez** e passa a trazer o enunciado
+  inteiro (com o texto de apoio recolhido), **todas as alternativas** com gabarito e resposta dada
+  marcados, e a causa que o aluno registrou. A consulta busca `alternativas` e `causa_erro`.
+- **Reason**: dez cartões empilhados faziam uma página que não acabava, e cada cartão trazia só duas
+  letras — "Sua resposta D · Gabarito E" não lembra nada uma semana depois, que é justamente quando
+  a revisão traz o assunto de volta.
+- **Trade-off**: `alternativas` inválida no resumo **derruba a tela** em vez de degradar, mesmo
+  sendo tela de leitura. É o mesmo padrão da sessão e o mesmo CHECK do banco: questão de múltipla
+  escolha sem lista válida é dado quebrado, não caso de uso. Os rótulos das causas saíram de
+  `progresso.ts` para `causas.ts` porque a tela virou cliente e `progresso.ts` carrega o cliente
+  Supabase de serviço; `progresso.ts` reexporta, então nenhum import existente mudou.
+- **Scope**: `src/modules/aluno/resumo-sessao.ts`, `src/modules/aluno/resumo-tela.tsx`,
+  `src/modules/aluno/causas.ts`, `src/modules/aluno/progresso.ts`.
+- **Date**: 2026-09-01
+- **Status**: active
+
+### AD-128
+- **Decision**: Enunciado é renderizado com um **conjunto fechado** de marcas
+  (`**negrito**`, `*itálico*`, parágrafo por linha em branco, lista com `- ` e lista numerada), por
+  parser próprio em `src/modules/ui/enunciado.tsx`. Sem biblioteca de markdown, sem
+  `dangerouslySetInnerHTML`. O que estiver fora da lista sai como texto literal. O mesmo módulo
+  separa o texto de apoio do comando: o comando é o último bloco, que é como a ingestão grava.
+- **Reason**: a tela imprimia a marcação crua ("**Povos da floresta.**") porque o acervo guarda o
+  texto original da banca com marcação e ninguém interpretava. Enunciado atravessa PDF, OCR e IA:
+  liberar HTML aí seria injeção numa superfície que o aluno lê logado.
+- **Trade-off**: tabela e fórmula que a ingestão grava como texto (`Tabela:
+…`) continuam saindo
+  como parágrafo — formatá-las é outra rodada. E a separação apoio/comando depende do formato do
+  `enunciadoComBlocos`; questão importada por outro caminho, sem linha em branco, cai no caso de um
+  bloco só e aparece inteira, que é o comportamento antigo.
+- **Scope**: `src/modules/ui/enunciado.tsx`, `src/modules/aluno/sessao/tela.tsx`,
+  `src/modules/aluno/resumo-tela.tsx`.
+- **Date**: 2026-09-01
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Correções da plataforma, rodada 1 — seis pontos levantados no uso real, do plano
-  `docs/planos/CORRECOES-PLATAFORMA-rodada-1.md`. Fora da numeração de specs, sem ritual. Fecha com
-  **AD-118** a **AD-122**.
-- **Phase / Task**: concluída na branch `fix/plataforma-ajustes-ui`, seis commits atômicos.
-- **Completed**: (1) **Resumo da sessão** parava com `invalid input syntax for type uuid:
-  "undefined"` — a consulta de `tentativas` não pedia `topico_id` mas o resultado era convertido com
-  `as TentativaBanco[]`. Entra a coluna, entra um filtro de string não-vazia antes do `.in()`, e o
-  cliente falso do teste passa a **respeitar a lista de colunas do `select`** (antes devolvia o
-  fixture inteiro, e o teste passava contra um banco que não existe). Varredura irmã feita nos 27
-  sítios de `as *Banco[]`: nenhum outro diverge. (2) **AD-119** — bloco feito no piso deixa de
-  aparecer pendente na META. (3) **AD-118** — errar numa revisão passa a pedir a causa; junto foi
-  fechado o buraco vizinho, `FeedbackDaResposta` repetia inline a lógica de `alternativasDaQuestao` e
-  a linha "Sua resposta" não tinha teste nenhum. (4) **AD-120** — oito `loading.tsx` + primitivas de
-  esqueleto + `PontoDeCarga`. (5) **AD-121** — navegação do celular com aba Conta e folha de baixo.
-  (6) **AD-122** — Trajetória (cobertura do edital + previsão), atrás de `flag.m4.trajetoria`
-  desligada, com módulo, tela, guarda opcional e a linha única em Hoje.
-- **Gates**: `vitest --project unit` **1010/1010** (era 963/963 na `main`). `eslint src` limpo,
-  `tsc --noEmit` limpo, `next build` compila as 31 rotas. Sensores conferidos por mutação: tirar
-  `topico_id` do `select` reprova o teste do resumo; comentar `propagarConclusaoEntreGemeas` reprova
-  os dois testes de gêmea; tirar `"revisao"` de `PEDE_CAUSA` reprova o teste da unidade **e** o do
-  fluxo em `acoes.test.ts` (que roda o validador real via `vi.importActual`); contar tópico
-  revisitado como novo reprova o teste do ritmo da trajetória.
-- **External checks**: `test:db` rodado e verde. Ele reprovou primeiro, por um motivo **alheio aos
-  seis itens**: a folga de partição de `tentativas` tinha parado de avançar desde 2026-08-17 e o mês
-  virou. Diagnóstico e correção em **AD-123** (`infinite_time_partitions`), com migração e sensor no
-  `part_config`. Confirmado que as partições novas nascem endurecidas (RLS ligada, sem `SELECT` para
-  `authenticated`, gatilho de TRUNCATE presente) — AD-091 vale para `tentativas_p20261201`.
-- **In-progress** (file:line): falta a **verificação visual com conta autenticada**, que é onde
-  quatro dos seis itens se provam. (a) Navegar entre as cinco abas com throttle de rede e ver o
-  esqueleto aparecer — se não aparecer, é o `await cookies()` do `AppShell` bloqueando o fallback
-  (AD-120), e a saída é `<Suspense>` dentro do shell. (b) Abrir em 375px: topo só com a marca, seis
-  abas embaixo, folha da Conta abrindo e fechando — se as abas ficarem espremidas, mover Progresso
-  para dentro da folha (AD-121). (c) Terminar um bloco do MÍNIMO e ver o gêmeo da META ficar verde.
-  (d) Errar numa questão de bloco de **revisão** e ver as sete causas. (e) Ligar
-  `flag.m4.trajetoria` na configuração e conferir a seção no Progresso e a linha em Hoje — a
-  trajetória **nunca rodou contra o banco**, só contra cliente falso. Seguem pendentes, da rodada
-  anterior: a verificação visual de `/app/sessao` e de `/app/raio-x`, o `Descartar` nunca exercido
-  contra o banco, e as duas correções do W2-A sem sensor.
-- **Next step**: PR desta branch. Depois, a dívida que a rodada anterior expôs e esta não resolveu:
-  `/app` e `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do
-  edital" numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou
-  se deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Feature**: Correções da plataforma, rodada 2 — sessão e resumo de questões, levantados no uso
+  real: resumo empilhava as dez questões, enunciado saía com a marcação crua, resumo não mostrava
+  alternativa nenhuma, e errar custava duas telas. Fora da numeração de specs, sem ritual. Fecha com
+  **AD-125** a **AD-128**.
+- **Phase / Task**: concluída na branch `feat/m4-sessao-navegacao-e-enunciado`, três commits
+  atômicos. Desenho aprovado antes do código, no canvas
+  https://claude.ai/code/artifact/57aab7fe-f96f-48fb-bc07-37987298224b (fontes em
+  `.temp/design/sessao-navegacao/`).
+- **Completed**: (1) **AD-128** — `src/modules/ui/enunciado.tsx`: parser fechado de marcas e a
+  separação apoio/comando, com nove testes, incluindo os dois que importam — HTML do acervo sai
+  escapado e asterisco solto não engole o resto do enunciado. (2) **AD-125** — quadrado numerado com
+  seta, na sessão e no resumo. (3) **AD-126** — tela única do erro (`ErroComCausa`), checkbox de
+  chute fora, `marcou_chute` derivado da causa, e a `causa_necessaria` da server action passa a
+  carregar o gabarito. (4) **AD-127** — resumo abre uma questão por vez, com alternativas e causa; a
+  consulta cresceu duas colunas e os rótulos de causa saíram para `causas.ts`.
+- **Gates**: `vitest --project unit` **1028/1028** (era 1024/1024 na `main`). `eslint src` limpo,
+  `tsc --noEmit` limpo, `next build` compila as 31 rotas. **`test:db` não foi rodado nesta rodada** —
+  nenhuma migração, nenhuma consulta nova além de duas colunas em `select` já existentes; rodar antes
+  do merge continua sendo o certo.
+- **In-progress** (file:line): a **verificação visual com conta autenticada** é o que falta, e aqui
+  ela pesa mais que de costume, porque três dos quatro itens são de interação: (a) responder errado
+  numa questão e conferir que o gabarito e as sete causas aparecem juntos, que `Registrar e
+  continuar` vai direto para a próxima e que a questão não pisca no meio
+  (`src/modules/aluno/sessao/tela.tsx:379`); (b) abrir um resumo de bloco **com texto de apoio
+  longo** e conferir o recolhido — o limiar de 420 caracteres foi escolhido no olho, não medido
+  (`src/modules/aluno/resumo-tela.tsx:277`); (c) conferir uma questão de **certo-errado** no resumo,
+  onde `alternativas` é `null` e a tela cai no par C/E; (d) 375px: dez quadrados numa faixa só.
+  Seguem pendentes, da rodada anterior: as cinco alíneas de verificação visual do AD-120/121/122, o
+  `Descartar` nunca exercido contra o banco, e as duas correções do W2-A sem sensor.
+- **Next step**: PR desta branch. Depois, a dívida que segue aberta há duas rodadas: `/app` e
+  `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
+  numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
+  deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.

@@ -1,11 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
+  alternativasSchema,
   fonteCitacaoSchema,
+  type Alternativa,
   type FonteCitacao,
   type OrigemQuestao,
   type TipoQuestao,
 } from "@/modules/acervo";
+import type { CausaDoCaderno } from "@/modules/aluno/progresso";
 
 export type QuestaoDoResumo = {
   id: string;
@@ -13,6 +16,8 @@ export type QuestaoDoResumo = {
   origem: OrigemQuestao;
   tipoQuestao: TipoQuestao;
   enunciado: string;
+  /** `null` em certo-errado, como no resto do app. */
+  alternativas: readonly Alternativa[] | null;
   fonteCitacao: FonteCitacao | null;
   respostaCorreta: string;
 };
@@ -21,6 +26,8 @@ export type ItemDoResumo = {
   ordem: number;
   respostaDada: string;
   correta: boolean;
+  /** O que o aluno disse na hora do erro. Acerto não tem causa. */
+  causaErro: CausaDoCaderno | null;
   questao: QuestaoDoResumo;
 };
 
@@ -47,6 +54,7 @@ type TentativaBanco = {
   ordem_na_sessao: number;
   resposta_dada: string;
   correta: boolean;
+  causa_erro: string | null;
 };
 type QuestaoBanco = {
   id: string;
@@ -54,6 +62,7 @@ type QuestaoBanco = {
   origem: OrigemQuestao;
   tipo_questao: TipoQuestao;
   enunciado: string;
+  alternativas: unknown;
   fonte_citacao: unknown;
   resposta_correta: string | null;
 };
@@ -61,6 +70,20 @@ type RevisaoBanco = { topico_id: string; due: string | null };
 
 function falhaAoLer(recurso: string, mensagem: string): Error {
   return new Error(`falha ao ler ${recurso}: ${mensagem}`);
+}
+
+/**
+ * As alternativas passaram a viajar para o resumo — AD-127.
+ *
+ * Sem elas o resumo mostrava "Sua resposta D / Gabarito E" e nada mais: duas
+ * letras que não lembram nada uma semana depois. A validação é a mesma da
+ * sessão, e questão certo-errado continua sem lista.
+ */
+function alternativasDaQuestao(linha: QuestaoBanco): readonly Alternativa[] | null {
+  if (linha.tipo_questao === "certo_errado") return null;
+  const alternativas = alternativasSchema.safeParse(linha.alternativas);
+  if (!alternativas.success) throw new Error("resumo aponta para alternativas inválidas");
+  return alternativas.data;
 }
 
 function fonteDaQuestao(linha: QuestaoBanco): FonteCitacao | null {
@@ -89,7 +112,7 @@ export async function consultarResumoDaSessao(
 
   const tentativasConsulta = await cliente
     .from("tentativas")
-    .select("questao_id, questao_versao, topico_id, ordem_na_sessao, resposta_dada, correta")
+    .select("questao_id, questao_versao, topico_id, ordem_na_sessao, resposta_dada, correta, causa_erro")
     .eq("sessao_id", sessao.id)
     .order("ordem_na_sessao", { ascending: true });
 
@@ -131,7 +154,7 @@ export async function consultarResumoDaSessao(
 
   const questoesConsulta = await cliente
     .from("questoes")
-    .select("id, questao_versao, origem, tipo_questao, enunciado, fonte_citacao, resposta_correta")
+    .select("id, questao_versao, origem, tipo_questao, enunciado, alternativas, fonte_citacao, resposta_correta")
     .in("id", [...new Set(tentativas.map((tentativa) => tentativa.questao_id))]);
 
   if (questoesConsulta.error) {
@@ -156,6 +179,7 @@ export async function consultarResumoDaSessao(
       origem: linha.origem,
       tipoQuestao: linha.tipo_questao,
       enunciado: linha.enunciado,
+      alternativas: alternativasDaQuestao(linha),
       fonteCitacao: fonteDaQuestao(linha),
       respostaCorreta: linha.resposta_correta,
     };
@@ -164,6 +188,7 @@ export async function consultarResumoDaSessao(
       ordem: Number(tentativa.ordem_na_sessao),
       respostaDada: tentativa.resposta_dada,
       correta: tentativa.correta,
+      causaErro: (tentativa.causa_erro as CausaDoCaderno | null) ?? null,
       questao,
     };
   });

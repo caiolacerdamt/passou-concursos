@@ -25,6 +25,16 @@ export type EstadoDaResposta =
       sessaoId: string;
       itemId: string;
       respostaDada: string;
+      /**
+       * O gabarito viaja junto porque a tela do erro agora e uma so: mostrar a
+       * alternativa certa e perguntar a causa no mesmo passo. Nada foi gravado
+       * ainda — a funcao SQL recusou o INSERT sem causa —, entao o aluno ainda
+       * pode mexer no `respostaDada` do formulario depois de ver o gabarito. O
+       * prejuizo seria dele: nao ha ranking (invariante 15) e o plano se ajusta
+       * ao que ele registra. Assinar o campo so faria sentido se houvesse
+       * premio em mentir.
+       */
+      respostaCorreta: string;
       tempoMs: number | null;
       marcouChute: boolean;
       mensagem: string;
@@ -79,8 +89,17 @@ export async function responderQuestao(
       mensagem: "O tempo desta resposta não pôde ser registrado. Tente novamente.",
     };
   }
-  const marcouChute = formulario.get("marcouChute") === "true" || formulario.get("marcouChute") === "on";
   const causaErro = (texto(formulario, "causaErro") || null) as CausaDoTreino | null;
+  // O checkbox "marcar como chute" saiu da tela de responder: perguntava antes
+  // o que a tela do erro pergunta depois, e "Chutei" ja e uma das causas. Quem
+  // marca a causa `chutei` marcou chute — o campo continua no contrato porque a
+  // coluna existe e o plano le ela.
+  const marcouChute =
+    formulario.get("marcouChute") === "true" ||
+    formulario.get("marcouChute") === "on" ||
+    causaErro === "chutei";
+
+  let respostaCorreta: string | null = null;
 
   try {
     await exigirMatriculaAtiva();
@@ -99,6 +118,7 @@ export async function responderQuestao(
     }
 
     const alvo = await obterItemParaResposta(supabase, sessaoId, itemId);
+    respostaCorreta = alvo.questao.respostaCorreta;
     const primeiraResposta = alvo.item.respondidoEm === null;
 
     // No duplo-clique o SQL devolve o resultado já gravado. Não revalide a
@@ -157,12 +177,13 @@ export async function responderQuestao(
     if (ehRedirecionamentoDoNext(erro)) throw erro;
 
     if (erro instanceof TentativaRecusada) {
-      if (erro.motivo === "causa_obrigatoria") {
+      if (erro.motivo === "causa_obrigatoria" && respostaCorreta !== null) {
         return {
           status: "causa_necessaria",
           sessaoId,
           itemId,
           respostaDada,
+          respostaCorreta,
           tempoMs,
           marcouChute,
           mensagem: erro.message,

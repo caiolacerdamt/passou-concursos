@@ -7,7 +7,7 @@ vi.mock("@/app/app/sessao/acoes", () => ({
 
 import type { EstadoDaResposta } from "@/app/app/sessao/acoes";
 
-import { FeedbackDaResposta, SessaoTela } from "./tela";
+import { ErroComCausa, FeedbackDaResposta, SessaoTela } from "./tela";
 import type { SessaoDaTela } from "../sessao";
 
 const sessao: SessaoDaTela = {
@@ -186,6 +186,89 @@ describe("tela da sessão", () => {
     expect(html).toContain("2 de 3 respondidas");
     expect(html).toContain('aria-label="Rever questão 1"');
     expect(html).toContain('aria-label="Rever questão 3"');
+  });
+
+  it("não pergunta chute antes de responder: quem chuta diz isso na causa (AD-126)", () => {
+    const html = renderToStaticMarkup(<SessaoTela sessao={sessao} />);
+
+    expect(html).not.toContain("Marcar como chute");
+    expect(html).not.toContain('type="checkbox"');
+  });
+
+  it("navega por quadrado numerado, com seta para andar de uma em uma (AD-125)", () => {
+    const tres: SessaoDaTela = {
+      ...sessao,
+      totalItens: 3,
+      itens: [
+        sessao.itens[0],
+        { ...sessao.itens[0], id: "item-2", ordem: 2 },
+        { ...sessao.itens[0], id: "item-3", ordem: 3 },
+      ],
+    };
+
+    const html = renderToStaticMarkup(<SessaoTela sessao={tres} />);
+
+    expect(html).toContain('aria-label="Abrir questão 3"');
+    // O número tem que estar no botão: era isso que o tracinho não dava.
+    expect(html).toMatch(/aria-current="step"[^>]*>1</);
+    expect(html).toContain('aria-label="Questão anterior"');
+    expect(html).toContain('aria-label="Próxima questão"');
+  });
+
+  it("formata a marcação do enunciado em vez de imprimir os asteriscos", () => {
+    const comNegrito: SessaoDaTela = {
+      ...sessao,
+      itens: [
+        {
+          ...sessao.itens[0],
+          questao: {
+            ...sessao.itens[0].questao,
+            enunciado: "**Povos da floresta.**\n\nQual alternativa está correta?",
+          },
+        } as SessaoDaTela["itens"][number],
+      ],
+    };
+
+    const html = renderToStaticMarkup(<SessaoTela sessao={comNegrito} />);
+
+    expect(html).toContain("<strong");
+    expect(html).not.toContain("**Povos");
+  });
+
+  it("errou: gabarito e causa na mesma tela, e nada gravado ainda (AD-126)", () => {
+    const estado: Extract<EstadoDaResposta, { status: "causa_necessaria" }> = {
+      status: "causa_necessaria",
+      sessaoId: "sessao-1",
+      itemId: "item-1",
+      respostaDada: "A",
+      respostaCorreta: "B",
+      tempoMs: 8100,
+      marcouChute: false,
+      mensagem: "Diga por que errou antes de seguir.",
+    };
+
+    const html = renderToStaticMarkup(
+      <ErroComCausa
+        estado={estado}
+        questao={sessao.itens[0].questao}
+        sessaoId="sessao-1"
+        itemId="item-1"
+        decorridoMs={8100}
+        aoConfirmar={() => undefined}
+        action={() => undefined}
+        pendente={false}
+        ultima={false}
+      />,
+    );
+
+    expect(html).toContain("Gabarito");
+    expect(html).toContain("Segunda alternativa");
+    expect(html).toContain("Sua resposta");
+    expect(html).toContain("Primeira alternativa");
+    expect(html).toContain("O que explica este erro?");
+    expect(html).toContain('value="chutei"');
+    expect(html).toContain("Registrar e continuar");
+    expect(html).toContain('value="A"');
   });
 
   it("envia pausa para o estudo do bloco e refação para o progresso", () => {

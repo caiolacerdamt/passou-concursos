@@ -282,14 +282,49 @@ describe("AcompanhamentoDoDia", () => {
 });
 
 describe("GamificacaoNoProgresso", () => {
-  it("abre a origem dos pontos e o estado das conquistas", () => {
+  it("nomeia as duas janelas em vez de misturar total de sempre com placar de hoje", () => {
     const html = renderToStaticMarkup(<GamificacaoNoProgresso dados={gamificacao} />);
 
-    expect(html).toContain("Pontos e conquistas");
-    expect(html).toContain("145 no total");
-    expect(html).toContain("Recuperação de erro");
+    expect(html).toContain("145");
+    expect(html).toContain("pontos acumulados");
+    // As duas colunas ficam rotuladas; era a ausência disso que fazia o total
+    // de sempre parecer contradizer a discriminação do dia.
+    expect(html).toContain(">Hoje<");
+    expect(html).toContain(">Total<");
+    expect(html).toContain("+30");
+    // E a seção passa a dizer de onde vem cada ponto.
+    expect(html).toContain("Acertar uma questão que você já errou");
+    expect(html).toContain("25 / erro");
+  });
+
+  it("mede a conquista travada em vez de só dizer que ela não veio", () => {
+    const html = renderToStaticMarkup(<GamificacaoNoProgresso dados={gamificacao} />);
+
     expect(html).toContain("Primeiro bloco");
-    expect(html).toContain("Desbloqueada");
-    expect(html).toContain("Ainda não");
+    expect(html).toContain("38 de 100");
+    expect(html).toContain("faltam 62");
+    expect(html).toContain("Próxima:");
+  });
+
+  it("esconde a coluna do total quando o servidor não a informa", () => {
+    const html = renderToStaticMarkup(
+      <GamificacaoNoProgresso
+        dados={{
+          ...gamificacao,
+          pontos: { ...gamificacao.pontos, discriminacaoTotal: null },
+          conquistas: gamificacao.conquistas.map((conquista) => ({
+            ...conquista,
+            progresso: null,
+            meta: null,
+          })),
+        }}
+      />,
+    );
+
+    // Melhor não mostrar a coluna do que desenhar zero ao lado de um total
+    // positivo — que é exatamente o defeito que esta seção veio corrigir.
+    expect(html).not.toContain(">Total<");
+    expect(html).toContain(">Hoje<");
+    expect(html).not.toContain("faltam");
   });
 });

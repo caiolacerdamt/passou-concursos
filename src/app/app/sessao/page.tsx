@@ -14,10 +14,10 @@ import { reportarErro } from "@/modules/observabilidade/reporte";
 import {
   prepararSessao,
   prepararSessaoDeRefacao,
+  type EscolhaDaRefacao,
   prepararSessaoDeRevisao,
   SessaoRecusada,
 } from "@/modules/aluno/sessao";
-import type { CausaDoCaderno } from "@/modules/aluno/progresso";
 import { Estado } from "@/modules/ui/estado";
 
 /**
@@ -55,7 +55,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
     try {
       sessao = await prepararSessaoDeRefacao(supabase, {
         topicoId: topicoDaRefacao,
-        causa: causaDaRefacao as CausaDoCaderno,
+        causa: causaDaRefacao as EscolhaDaRefacao,
       });
     } catch (erro) {
       if (!(erro instanceof SessaoRecusada)) throw erro;

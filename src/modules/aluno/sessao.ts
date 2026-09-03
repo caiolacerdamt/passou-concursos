@@ -134,9 +134,21 @@ export type ResultadoDaSelecao = {
   gabarito_versao?: string | null;
 };
 
+/**
+ * O qualificador que refaz **todas** as causas de um assunto.
+ *
+ * Vive no mesmo campo de `refacao_chave` que a causa, depois da barra, como o
+ * `revisao_avulsa` do AD-115 — e não colide com nenhuma causa do domínio, que
+ * é o que mantém as três famílias de chave separadas sem coluna nova. Quem lê
+ * a chave continua tirando o tópico do primeiro campo.
+ */
+export const TODAS_AS_CAUSAS = "todas";
+
+export type EscolhaDaRefacao = CausaDoCaderno | typeof TODAS_AS_CAUSAS;
+
 export type OpcoesDaRefacao = {
   topicoId: string;
-  causa: CausaDoCaderno;
+  causa: EscolhaDaRefacao;
 };
 
 export class SessaoRecusada extends Error {
@@ -445,9 +457,10 @@ export async function prepararSessaoDeRefacao(
   cliente: SupabaseClient,
   opcoes: OpcoesDaRefacao,
 ): Promise<{ id: string; retomada: boolean }> {
+  const todasAsCausas = opcoes.causa === TODAS_AS_CAUSAS;
   if (
     !UUID.test(opcoes.topicoId) ||
-    !(CAUSAS_DO_CADERNO as readonly string[]).includes(opcoes.causa)
+    (!todasAsCausas && !(CAUSAS_DO_CADERNO as readonly string[]).includes(opcoes.causa))
   ) {
     throw new SessaoRecusada(
       "refacao_indisponivel",
@@ -486,8 +499,9 @@ export async function prepararSessaoDeRefacao(
   );
 
   const idsDasTentativas = tentativas.map((tentativa) => tentativa.id);
+  // Sem filtro por causa não há por que ler a causa do simulado.
   const causasSimulado =
-    idsDasTentativas.length === 0
+    todasAsCausas || idsDasTentativas.length === 0
       ? []
       : await lerLista<CausaSimuladoDaRefacao>(
           cliente
@@ -500,15 +514,21 @@ export async function prepararSessaoDeRefacao(
   const causaPorTentativa = new Map(
     causasSimulado.map((linha) => [linha.tentativa_id, linha.causa_erro]),
   );
-  const candidatos = tentativas.filter((tentativa) => {
-    const causa = tentativa.causa_erro ?? causaPorTentativa.get(tentativa.id) ?? null;
-    return causa === opcoes.causa;
-  });
+  // Com `todas`, o filtro por causa some — a consulta acima já traz só as
+  // tentativas erradas DESTE tópico, que é exatamente o conjunto pedido.
+  const candidatos = todasAsCausas
+    ? tentativas
+    : tentativas.filter((tentativa) => {
+        const causa = tentativa.causa_erro ?? causaPorTentativa.get(tentativa.id) ?? null;
+        return causa === opcoes.causa;
+      });
 
   if (candidatos.length === 0) {
     throw new SessaoRecusada(
       "acervo_vazio",
-      "Não há questões disponíveis para refazer neste erro.",
+      todasAsCausas
+        ? "Não há questões disponíveis para refazer neste assunto."
+        : "Não há questões disponíveis para refazer neste erro.",
     );
   }
 

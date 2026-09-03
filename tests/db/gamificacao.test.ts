@@ -673,4 +673,90 @@ descreveComBanco("W4-B — domínio de gamificação", () => {
       });
     });
   });
+
+  it("devolve a discriminacao do dia e a de sempre lado a lado", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      type Discriminacao = {
+        estudo_prioritario: number;
+        conclusao: number;
+        revisao_no_prazo: number;
+        recuperacao_erro: number;
+      };
+      type Resposta = {
+        pontos: {
+          dia: number;
+          total: number;
+          discriminacao: Discriminacao;
+          discriminacao_total: Discriminacao;
+        };
+        progresso_conquistas: Record<string, { progresso: number; meta: number }>;
+      };
+
+      const aluno = await criarUsuario(cliente);
+      const autor = await criarUsuario(cliente);
+      const hoje = dataDeHojeEmSaoPaulo();
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m6.gamificacao', 'true'::jsonb, 'm6', $1, 'teste discriminacao vitalicia')`,
+        [autor],
+      );
+      await cliente.query(
+        `insert into public.perfil_estudo
+           (user_id, minutos_por_dia, dias_estudo, onboarding_concluido)
+         values ($1, 60, array[0,1,2,3,4,5,6]::smallint[], true)`,
+        [aluno],
+      );
+
+      // Todos os eventos ficam no PASSADO: e a reproducao exata do que o aluno
+      // via — total positivo com a discriminacao do dia zerada.
+      const passado = [
+        ["estudo_prioritario", 10],
+        ["estudo_prioritario", 10],
+        ["conclusao", 20],
+        ["revisao_no_prazo", 15],
+        ["recuperacao_erro", 25],
+      ] as const;
+      for (const [indice, [tipo, pontos]] of passado.entries()) {
+        await cliente.query(
+          `insert into public.gamificacao_ponto_evento
+             (user_id, chave_evento, tipo, origem_id, data, pontos)
+           values ($1, $2, $3, $4, ($5::date - 3), $6)`,
+          [aluno, `evento-antigo-${indice}`, tipo, `origem-${indice}`, hoje, pontos],
+        );
+      }
+
+      await comoAluno(cliente, aluno, async () => {
+        const { rows } = await cliente.query<{ dados: Resposta }>(
+          "select public.consultar_gamificacao_do_dia() as dados",
+        );
+        const { pontos, progresso_conquistas: conquistas } = rows[0].dados;
+
+        // A janela do dia continua zerada — ela sempre esteve certa.
+        expect(pontos.dia).toBe(0);
+        expect(pontos.discriminacao).toEqual({
+          estudo_prioritario: 0,
+          conclusao: 0,
+          revisao_no_prazo: 0,
+          recuperacao_erro: 0,
+        });
+        // O que faltava era a outra metade, e ela fecha com o total.
+        expect(pontos.total).toBe(80);
+        expect(pontos.discriminacao_total).toEqual({
+          estudo_prioritario: 20,
+          conclusao: 20,
+          revisao_no_prazo: 15,
+          recuperacao_erro: 25,
+        });
+
+        // E a conquista travada passa a saber dizer quanto falta.
+        expect(conquistas.primeiro_bloco).toEqual({ progresso: 1, meta: 1 });
+        expect(conquistas.cem_questoes.meta).toBeGreaterThan(0);
+        expect(conquistas.cem_questoes.progresso).toBe(0);
+        expect(conquistas.sequencia_pessoal.progresso).toBeLessThanOrEqual(
+          conquistas.sequencia_pessoal.meta,
+        );
+      });
+    });
+  });
 });

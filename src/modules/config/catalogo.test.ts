@@ -44,6 +44,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.caderno_erros",
       "flag.m5.raiox",
       "flag.m6.gamificacao",
+      "flag.m8.trial_gratuito",
       "flag.m9.rota_de_erro_proposital",
       "flag.m9.analytics_logado",
     ];
@@ -96,6 +97,7 @@ describe("catalogo de chaves", () => {
       "param.m8.desconto_a_vista_percentual",
       "param.m8.garantia_dias",
       "param.m8.pagamento_pendente_expira_horas",
+      "param.m8.trial_questoes_por_dia",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 

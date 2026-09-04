@@ -486,6 +486,22 @@ export const CATALOGO = {
     descricao:
       "Quantidade de dias corridos da garantia contados a partir da confirmacao do pagamento.",
   }),
+  // Trial gratuito (AD-133). A flag nasce desligada: com ela assim, o produto
+  // e identico ao de hoje e o checkout continua sendo a unica porta.
+  "flag.m8.trial_gratuito": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m8",
+    descricao:
+      "Conta gratuita com trial de 7 dias, sem cartao (AD-133). Desligada, /criar-conta recusa e nenhuma matricula de trial nasce. O prazo NAO mora aqui: e produtos.dias_de_acesso.",
+  }),
+  "param.m8.trial_questoes_por_dia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m8",
+    descricao:
+      "Teto diario de questoes durante o trial. Vale so para matricula tipo='trial'; quem pagou nao tem teto. Provisorio: depende de contar o acervo publicado.",
+  }),
   "param.m8.pagamento_pendente_expira_horas": chave({
     tipo: z.number().int().positive(),
     padrao: 48,

@@ -75,7 +75,7 @@ function clienteParaRevisao({
       getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }),
     },
     // Sem teto: o aluno destes testes tem matricula paga (AD-133).
-    rpc: vi.fn(async () => ({ data: null, error: null })),
+    rpc: vi.fn(async (): Promise<{ data: number | null; error: null }> => ({ data: null, error: null })),
     from: vi.fn((tabela: string) => {
       const resposta =
         tabela === "revisao_agenda"

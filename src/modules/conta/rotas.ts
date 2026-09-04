@@ -16,6 +16,7 @@
 export const ROTAS_PUBLICAS = [
   "/", // marco publico; a pagina de vendas de verdade e da SPEC 12
   "/entrar",
+  "/criar-conta", // a conta gratuita (AD-133); rota nova nasce privada
   "/recuperar-senha",
   "/assinar", // o aviso do paywall precisa ser visivel para quem nao pagou
   "/auth", // callback do OAuth e troca de codigo por sessao

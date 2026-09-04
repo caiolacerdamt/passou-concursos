@@ -192,6 +192,24 @@ Não use `{{ .ConfirmationURL }}` nesse template: o link padrão devolve tokens
 em um fragmento (`#...`), e fragmentos não são enviados ao servidor. O handler
 `/auth/confirm` valida o token e encaminha o aluno para `/definir-senha`.
 
+### Template de confirmação de cadastro (conta gratuita — AD-133)
+
+Mesma disciplina, outro template. Em
+*Authentication → Email Templates → Confirm signup*:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup">
+  Confirmar e-mail e começar
+</a>
+```
+
+⚠️ **Sem esta troca a conta gratuita não funciona.** O `{{ .ConfirmationURL }}`
+padrão devolve os tokens num fragmento `#...` que nunca chega ao servidor: o
+aluno confirma o e-mail, cai na home **sem sessão**, e nenhuma matrícula de
+trial nasce. Foi exatamente o defeito da SPEC 12 com o template de recuperação;
+o handler `/auth/confirm` aceita `type=signup` e `type=email`, confirma pelo
+servidor e concede o trial antes de mandar para `/app`.
+
 Em *Authentication → Providers → Google*:
 
 1. Criar as credenciais OAuth no Google Cloud Console (tipo *Web application*).

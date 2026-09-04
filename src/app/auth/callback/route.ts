@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
+import { isFlagOn } from "@/modules/config";
 import { caminhoInternoOuRaiz } from "@/modules/conta/rotas";
+import { concederTrial } from "@/modules/conta/trial";
 
 /**
  * Onde o Google (e o link de "definir senha") devolve o aluno (PAG-07).
@@ -21,6 +23,19 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      /*
+       * O Google entrega o e-mail ja verificado pelo provedor, entao a conta
+       * criada por aqui pode receber o trial na hora (AD-133).
+       *
+       * `conceder_trial()` e idempotente: quem ja tem acesso recebe `null` e
+       * nada nasce; quem ja usou o trial e recusado. A flag e conferida antes
+       * so para nao gastar uma ida ao banco em todo login enquanto ela estiver
+       * desligada — a tranca de verdade continua sendo a da funcao.
+       */
+      if (await isFlagOn("flag.m8.trial_gratuito")) {
+        await concederTrial(supabase);
+      }
+
       // Atras do balanceador da Vercel, `origin` e o host interno. O
       // `x-forwarded-host` e quem sabe o dominio que o aluno digitou.
       const encaminhado = request.headers.get("x-forwarded-host");

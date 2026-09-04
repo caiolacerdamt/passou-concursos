@@ -32,6 +32,13 @@ tela do Raio-X, gamificação além da sequência, diagnóstico adaptativo, flyw
 superfície logada**) entra atrás de flag desligada. Superfície é **web responsivo só, sem app nativo
 nem PWA** no lançamento (AD-077).
 
+**O funil não é mais paga-primeiro puro** (AD-133). Existe **conta gratuita com trial de 7 dias, sem
+cartão**, atrás da flag `flag.m8.trial_gratuito`, que **nasce desligada** — com ela desligada o
+produto é idêntico ao de hoje e o checkout é a única porta. O trial **é uma matrícula** (produto
+`trial-7d`, `tipo='trial'`, prazo em dias): `tem_matricula_ativa()` continua sendo a única chave de
+liberação, e o que distingue trial de pago é `tipo_da_matricula_ativa()`, pergunta de **escopo**
+(teto diário, telas em prévia), nunca de liberação. Detalhe em `docs/planos/TRIAL-1-*`.
+
 ## Hierarquia da verdade
 
 Quando dois documentos discordam, **o de cima vence**:
@@ -97,6 +104,8 @@ e registrar o resultado desse segundo gate. Só investigar o código se o gate c
     o gabarito **e** com o texto. Falhou → refaz 1×, senão fila humana.
 12. **Extração e explicação são chamadas separadas** ao modelo. Nunca a mesma chamada.
 13. **Retenção.** Dado com nome vive conta ativa + 24 meses, depois apaga (não anonimiza in-place).
+    Lead que só teve trial e nunca pagou tem janela própria, mais curta (`param.m7.retencao_trial_meses`
+    — AD-133).
 14. **Notificação honesta.** Teto ~1 lembrete/dia + 1 aviso de sequência. Nunca mentir para criar urgência.
 15. **Sem ranking** entre alunos no lançamento.
 

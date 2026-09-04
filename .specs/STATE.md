@@ -1009,6 +1009,49 @@
 - **Date**: 2026-09-03
 - **Status**: active
 
+### AD-133
+- **Decision**: O funil deixa de ser **paga-primeiro puro** e passa a ter **conta gratuita com
+  trial de 7 dias, sem cartão**, atrás da flag `flag.m8.trial_gratuito` (nasce **desligada**). O
+  trial **é uma matrícula** de um produto `trial-7d` (`tipo='trial'`, prazo em dias): a função
+  `tem_matricula_ativa()` e as 7 policies que a usam **não mudam**, e o `m8 §P1 AC2` ("a matrícula
+  é a única chave, SHALL NOT haver segundo mecanismo de liberação") continua valendo ao pé da
+  letra. Uma conta recebe **um** trial na vida, garantido por índice único parcial, não só por
+  código. O trial entrega o **loop completo** (plano do dia, sessão, explicação) com **teto diário
+  de questões**; o valor acumulado (progresso, Raio-X, caderno de erros) fica em prévia com convite.
+  A **garantia de 7 dias continua existindo** depois do pagamento. O checkout direto continua
+  funcionando: quem quer pagar sem testar não passa pelo trial. O prazo do trial mora em
+  `produtos.dias_de_acesso`, não em parâmetro de configuração — trocar o prazo é um UPDATE numa
+  linha, sem deploy, e sem criar duas fontes de verdade para o mesmo número. Retenção do lead que
+  testou e nunca pagou passa a ser `param.m7.retencao_trial_meses` (proposta: 6), separada dos 24
+  meses do AD-045. Substitui a parte "paga-primeiro" do **AD-031**; não toca no AD-032 (plano
+  único, sem recorrência) nem no AD-033 (Asaas).
+- **Reason**: R$197 à vista, marca desconhecida, zero prova social e tráfego frio é a pior
+  combinação possível para um checkout; o produto vende método, e método só convence sendo usado.
+  O desenho "trial = matrícula" foi escolhido entre três porque é o único que não cria um segundo
+  caminho de liberação — o que a arquitetura de hoje proíbe explicitamente e o que, em três meses,
+  vira o caminho que ninguém lembra de fechar.
+- **Trade-off**: ⚠️ **A decisão é anterior ao dado**: o funil pago nunca rodou com tráfego real, e
+  é possível que estejamos adiando receita para resolver um problema que não existe. A flag
+  desligada é o seguro — lançar com paga-primeiro, medir, e ligar depois custa zero retrabalho.
+  Segundo: trial de 7 + garantia de 7 são **14 dias até o dinheiro ser nosso**, com taxa de estorno
+  e caixa mais lento. Terceiro: **o trial come o acervo**, que é o fosso — com teto de 10/dia são 70
+  questões em 7 dias, e o acervo real precisa ser contado antes de ligar a flag. Quarto: um trial
+  autenticado pode ler o acervo publicado por fora da tela, porque a RLS de `questoes` é booleana e
+  estreitá-la exigiria refatorar a montagem de sessão (um módulo de 1.100 linhas) sem abuso medido
+  que justifique — aceito, com a amostragem determinística (`param.m8.trial_fracao_do_acervo`) como
+  saída barata se o risco crescer. Quinto: **e-mail novo = trial novo** é um buraco que não se
+  fecha sem cartão nem captcha; o que limita o dano é o teto diário. Sexto: passa a existir uma
+  população de titulares LGPD que nunca pagou, com a rotina automática de retenção só na SPEC 18 —
+  até lá é procedimento manual, igual ao pedido de exclusão (AD-090). Caminho **não** seguido, e
+  registrado para não ser reinventado: amostra pública de 5–10 questões na landing, sem login —
+  mais barata, sem LGPD nova e sem abuso, mas prova bem menos porque não mostra o plano nem a
+  revisão espaçada, que é o que diferencia o produto.
+- **Scope**: `docs/planos/TRIAL-1-*` e `TRIAL-2-*` · `produtos`, `matriculas`,
+  `registrar_tentativa`, `sessao.ts`, `ativacao.ts`, `repositorio.ts`, `rotas.ts`, `/auth/confirm`,
+  catálogo de configuração, `/termos`, `/privacidade`.
+- **Date**: 2026-09-03
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Correcoes da plataforma, rodada 3 — a tela `/app/progresso`, a unica das cinco

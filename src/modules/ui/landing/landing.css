@@ -30,8 +30,8 @@
  *
  * Duas travas, as duas de negação, então nenhuma atrapalha o caminho feliz:
  *
- *   · `sc-armado` é escrito por um script inline no layout, durante o parse do
- *     HTML e antes da primeira pintura. Sem JS a classe nunca aparece e o texto
+ *   · `sc-armado` é escrito por um script inline no layout RAIZ, durante o parse
+ *     do HTML e antes da primeira pintura. Sem JS a classe nunca aparece e o texto
  *     nasce visível — que é o comportamento correto, não uma degradação.
  *   · `sc-falhou` é escrito pelo temporizador de `motor.tsx` quando o motor
  *     passou do prazo sem publicar `sc-ready`. É o conserto do caso "JS vivo,

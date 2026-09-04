@@ -34,8 +34,8 @@ export default async function Entrar({
       </h1>
       <p className="mt-3 leading-relaxed text-tinta-suave">
         Ainda não tem conta?{" "}
-        <Link href="/checkout" className="font-medium text-verde-texto underline hover:text-verde">
-          Comece pela matrícula
+        <Link href="/criar-conta" className="font-medium text-verde-texto underline hover:text-verde">
+          Criar conta
         </Link>
         .
       </p>

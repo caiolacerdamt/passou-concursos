@@ -1009,39 +1009,89 @@
 - **Date**: 2026-09-03
 - **Status**: active
 
+### AD-133
+- **Decision**: O funil deixa de ser **paga-primeiro puro** e passa a ter **conta gratuita com
+  trial de 7 dias, sem cartão**, atrás da flag `flag.m8.trial_gratuito` (nasce **desligada**). O
+  trial **é uma matrícula** de um produto `trial-7d` (`tipo='trial'`, prazo em dias): a função
+  `tem_matricula_ativa()` e as 7 policies que a usam **não mudam**, e o `m8 §P1 AC2` ("a matrícula
+  é a única chave, SHALL NOT haver segundo mecanismo de liberação") continua valendo ao pé da
+  letra. Uma conta recebe **um** trial na vida, garantido por índice único parcial, não só por
+  código. O trial entrega o **loop completo** (plano do dia, sessão, explicação) com **teto diário
+  de questões**; o valor acumulado (progresso, Raio-X, caderno de erros) fica em prévia com convite.
+  A **garantia de 7 dias continua existindo** depois do pagamento. O checkout direto continua
+  funcionando: quem quer pagar sem testar não passa pelo trial. O prazo do trial mora em
+  `produtos.dias_de_acesso`, não em parâmetro de configuração — trocar o prazo é um UPDATE numa
+  linha, sem deploy, e sem criar duas fontes de verdade para o mesmo número. Retenção do lead que
+  testou e nunca pagou passa a ser `param.m7.retencao_trial_meses` (proposta: 6), separada dos 24
+  meses do AD-045. Substitui a parte "paga-primeiro" do **AD-031**; não toca no AD-032 (plano
+  único, sem recorrência) nem no AD-033 (Asaas).
+- **Reason**: R$197 à vista, marca desconhecida, zero prova social e tráfego frio é a pior
+  combinação possível para um checkout; o produto vende método, e método só convence sendo usado.
+  O desenho "trial = matrícula" foi escolhido entre três porque é o único que não cria um segundo
+  caminho de liberação — o que a arquitetura de hoje proíbe explicitamente e o que, em três meses,
+  vira o caminho que ninguém lembra de fechar.
+- **Trade-off**: ⚠️ **A decisão é anterior ao dado**: o funil pago nunca rodou com tráfego real, e
+  é possível que estejamos adiando receita para resolver um problema que não existe. A flag
+  desligada é o seguro — lançar com paga-primeiro, medir, e ligar depois custa zero retrabalho.
+  Segundo: trial de 7 + garantia de 7 são **14 dias até o dinheiro ser nosso**, com taxa de estorno
+  e caixa mais lento. Terceiro: **o trial come o acervo**, que é o fosso — com teto de 10/dia são 70
+  questões em 7 dias, e o acervo real precisa ser contado antes de ligar a flag. Quarto: um trial
+  autenticado pode ler o acervo publicado por fora da tela, porque a RLS de `questoes` é booleana e
+  estreitá-la exigiria refatorar a montagem de sessão (um módulo de 1.100 linhas) sem abuso medido
+  que justifique — aceito, com a amostragem determinística (`param.m8.trial_fracao_do_acervo`) como
+  saída barata se o risco crescer. Quinto: **e-mail novo = trial novo** é um buraco que não se
+  fecha sem cartão nem captcha; o que limita o dano é o teto diário. Sexto: passa a existir uma
+  população de titulares LGPD que nunca pagou, com a rotina automática de retenção só na SPEC 18 —
+  até lá é procedimento manual, igual ao pedido de exclusão (AD-090). Caminho **não** seguido, e
+  registrado para não ser reinventado: amostra pública de 5–10 questões na landing, sem login —
+  mais barata, sem LGPD nova e sem abuso, mas prova bem menos porque não mostra o plano nem a
+  revisão espaçada, que é o que diferencia o produto.
+- **Scope**: `docs/planos/TRIAL-1-*` e `TRIAL-2-*` · `produtos`, `matriculas`,
+  `registrar_tentativa`, `sessao.ts`, `ativacao.ts`, `repositorio.ts`, `rotas.ts`, `/auth/confirm`,
+  catálogo de configuração, `/termos`, `/privacidade`.
+- **Date**: 2026-09-03
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Correcoes da plataforma, rodada 3 — a tela `/app/progresso`, a unica das cinco
-  principais que nunca passou por redesenho nem por revisao de logica. Fora da numeracao de specs,
-  sem ritual. Fecha com **AD-129** a **AD-132**.
-- **Phase / Task**: concluida na branch `feat/m4-progresso-redesenho`, cinco commits atomicos.
-  Desenho aprovado antes do codigo, no canvas
-  https://claude.ai/code/artifact/59d60e8f-54ee-468a-a87a-ae5babadf446 (fontes em
-  `.temp/design/progresso/`).
-- **Completed**: (1) **AD-129** — o filtro parou de reescrever o historico e de encolher as proprias
-  opcoes; materia entrou em toda linha; `historicoPorMateria`, `cadernoPorAssunto`,
-  `cadernoTruncado` e `percentualAnterior` no contrato. (2) **AD-130** — migracao
-  `20260903120000_gamificacao_leitura_vitalicia.sql`: `discriminacao_total` e
-  `progresso_conquistas` na RPC de leitura, com teste de banco que reproduz o defeito (`dia` 0,
-  `total` 80). (3) **AD-131** — refacao de todas as causas de um assunto, chave `topico|todas`, sem
-  migracao. (4) **AD-132** — a tela: cartao breu unico da semana, listas com divisor no lugar dos
-  dois grids de quatro metricas, caderno por assunto com paginacao, e uma tela so para o aluno sem
-  historico. `loading.tsx` refeito junto.
-- **Gates**: `vitest --project unit` **1046/1046** (era 1032/1032 na `main`). `test:db`
-  **411/411 + 1 novo**, contra o Supabase de dev, com a migracao ja aplicada por `npm run db:push`.
-  `eslint src` limpo, `tsc --noEmit` limpo, `next build` compila as 31 rotas.
-- **In-progress** (file:line): a **verificacao visual com conta autenticada** e o que falta, e desta
-  vez ela pesa em quatro pontos que nenhum teste alcanca. (a) A regua de sete dias com um aluno de
-  volume alto e outro de volume baixo: a altura sai do dia mais cheio da propria janela, entao a
-  escala e relativa e nunca foi vista com dado real (`src/modules/aluno/progresso-tela.tsx:123`).
-  (b) O `<details>` da materia em 375px, onde a linha tem quatro colunas no desktop e duas no
-  celular (`progresso-tela.tsx:246`). (c) O `<optgroup>` do filtro de assunto no Safari e no
-  celular, que e o que desambigua dois topicos "Geral". (d) Clicar `Refazer os N` de verdade e
-  conferir que a sessao abre com as questoes das varias causas — o caminho `todas` so tem teste de
-  unidade contra mock (`src/modules/aluno/sessao.ts:460`). Seguem pendentes, das rodadas anteriores:
-  as quatro alineas de verificacao visual do AD-125/126/127, as cinco do AD-120/121/122, o
-  `Descartar` nunca exercido contra o banco, e as duas correcoes do W2-A sem sensor.
-- **Next step**: PR desta branch. Depois, a divida que segue aberta ha tres rodadas: `/app` e
-  `/app/plano` renderizam o mesmo componente com os mesmos dados, e o menu promete "Ciclo do edital"
-  numa rota que entrega o plano do dia — decidir se `/app/plano` mostra o ciclo de verdade ou se
-  deixa de existir. Ou a `.specs/ROADMAP.md` a partir da SPEC 16.
+- **Feature**: Trial gratuito, parte 1 — o mecanismo e a conta gratuita
+  (`docs/planos/TRIAL-1-mecanismo-e-conta-gratuita.md`). **Sem ritual**: nao e spec numerada, nao
+  passou pela `tlc-spec-driven` e nao teve verificador independente; quem escreveu conferiu o
+  proprio trabalho pelos checks de cada item do plano. Fecha com **AD-133**.
+- **Phase / Task**: concluida na branch `feat/trial-mecanismo`, nove commits atomicos, um por item
+  do plano, na ordem que o plano exige (o item 4 antes do item 7).
+- **Completed**: (1) AD-133 no `STATE.md` e o funil corrigido no `AGENTS.md`. (2) `produtos.tipo` +
+  `produtos.dias_de_acesso` (exclusivo com `meses_de_acesso` por CHECK), `matriculas.tipo` copiado
+  do produto no INSERT e imutavel depois, produto `trial-7d`. (3) `conceder_trial()`,
+  `tipo_da_matricula_ativa()`, `trial_questoes_por_dia()` e o indice unico parcial
+  `matriculas_um_trial_por_aluno`. (4) **A correcao da ativacao**: `buscarMatriculaAtiva` filtra
+  `tipo='pago'`, `criarMatricula` passa pela RPC `encerrar_trial_e_matricular` (so `service_role`),
+  e o e-mail de definir senha so vai para quem ganhou conta por causa daquele pagamento.
+  (5) Teto diario dentro de `registrar_tentativa`, no dia do produto (America/Sao_Paulo).
+  (6) `trial_questoes_restantes_hoje()` dimensiona a sessao nos tres pontos de montagem, com recusa
+  `trial_teto_diario` propria. (7) `/criar-conta` (Google + e-mail), `/auth/confirm` aceitando
+  `signup`/`email` e concedendo o trial, `/auth/callback` idem, `/entrar` apontando para la, e o
+  template **Confirm signup** documentado em `docs/DEPLOY.md`. (8) Dominios descartaveis em
+  configuracao + os rate limits vigentes do Supabase Auth **lidos da Management API**, nao supostos.
+  (9) Teste de apagamento com titular que nunca pagou, `param.m7.retencao_trial_meses` e
+  `candidatos_a_retencao_do_trial()`.
+- **Gates**: `vitest --project unit` **1109/1109** (era 1083/1083 na `main`). `test:db`
+  **441/441** contra o Supabase de dev, com as seis migracoes ja aplicadas por `npm run db:push`.
+  `eslint` limpo, `next build` compila as 32 rotas (`/criar-conta` e a nova). O sensor do item 4 foi
+  exercido: sem o `.eq("tipo","pago")` o teste de banco cai, e foi visto caindo.
+  `git diff main...HEAD` **nao toca** `tem_matricula_ativa()` nem nenhuma das 7 policies que a usam.
+- **In-progress** (file:line): (a) **Nada foi verificado no navegador** — o cadastro por e-mail
+  depende do template *Confirm signup* apontar para `/auth/confirm` com `token_hash`, e essa troca e
+  **manual, no painel do Supabase** (`docs/DEPLOY.md`); ate ela acontecer o link do e-mail cai na
+  home sem sessao. (b) O **acervo publicado foi contado**: **1.375** questoes `origem='real'`,
+  `publicada`, `vigente`, nao anulada no projeto de dev — bem acima das ~205 que a memoria do
+  projeto dizia. O teto diario continua em `10` provisorio; a decisao e do dono, agora com o numero
+  na mao. (c) `rate_limit_email_sent` do Supabase e **30/hora por projeto** com o SMTP padrao: SMTP
+  proprio e pre-requisito de ligar a flag com trafego. (d) `/termos` e `/privacidade` ainda nao
+  falam da conta gratuita — e texto, e o plano 2 e dono dele. Seguem pendentes, das rodadas
+  anteriores: as quatro alineas de verificacao visual do AD-129/132, as do AD-125/126/127 e
+  AD-120/121/122, o `Descartar` nunca exercido contra o banco, e as duas correcoes do W2-A sem
+  sensor.
+- **Next step**: PR desta branch. Depois, `docs/planos/TRIAL-2-conversao-e-telas.md` — as telas, os
+  e-mails e a metrica. A flag `flag.m8.trial_gratuito` continua **desligada**, e a ordem recomendada
+  pelo proprio AD-133 e lancar com paga-primeiro, medir duas semanas, e so entao ligar.

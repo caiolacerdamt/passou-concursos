@@ -310,11 +310,18 @@ export function criarRepositorioDePagamentos(
       return data as ProdutoPagamento | null;
     },
 
+    /**
+     * A pergunta que esta consulta responde é "já ativei este aluno?", nunca
+     * "ele tem algum acesso?". Sem o filtro de tipo, um trial ativo faria a
+     * ativação reaproveitar uma matrícula de 7 dias para uma compra de 12
+     * meses — o aluno pagaria R$197 e ganharia uma semana (AD-133).
+     */
     async buscarMatriculaAtiva(userId: string): Promise<{ id: string } | null> {
       const { data, error } = await cliente
         .from("matriculas")
         .select("id")
         .eq("user_id", userId)
+        .eq("tipo", "pago")
         .eq("estado", "ativa")
         .gt("fim_em", new Date().toISOString())
         .maybeSingle();
@@ -349,14 +356,22 @@ export function criarRepositorioDePagamentos(
       if (error) throw error;
     },
 
+    /**
+     * Encerrar o trial e criar a matrícula paga é **uma** operação: o índice
+     * `matriculas_uma_ativa_por_aluno` recusa as duas ativas ao mesmo tempo, e
+     * o encerramento precisa acontecer antes do INSERT. Por isso RPC, e não
+     * dois `.from("matriculas")` seguidos (AD-133).
+     *
+     * Para quem nunca teve trial o UPDATE não acha linha e o caminho é o mesmo
+     * de sempre.
+     */
     async criarMatricula(userId: string, produtoId: string): Promise<{ id: string }> {
-      const { data, error } = await cliente
-        .from("matriculas")
-        .insert({ user_id: userId, produto_id: produtoId })
-        .select("id")
-        .single();
+      const { data, error } = await cliente.rpc("encerrar_trial_e_matricular", {
+        p_user_id: userId,
+        p_produto_id: produtoId,
+      });
       if (error || !data) throw error ?? new Error("matricula nao criada");
-      return data as { id: string };
+      return { id: data as string };
     },
 
     async vincularPagamento(

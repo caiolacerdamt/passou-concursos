@@ -464,6 +464,14 @@ export const CATALOGO = {
       "Acima disto o time e alertado uma vez no mes. SHALL NOT desligar nada sozinho (IA-12 / decisao de 2026-07-23).",
   }),
 
+  "param.m7.retencao_trial_meses": chave({
+    tipo: z.number().int().positive(),
+    padrao: 6,
+    moduloDono: "m7",
+    descricao:
+      "Janela de retencao do lead que teve trial e NUNCA pagou (AD-133). Separada dos 24 meses do AD-045: quem testou uma semana nao justifica o mesmo risco. Provisorio — falar com o advogado junto do resto da LGPD.",
+  }),
+
   // ── M8 · negocio e pagamentos ────────────────────────────────────────────
   "param.m8.preco_anual_centavos": chave({
     tipo: z.number().int().positive(),
@@ -485,6 +493,29 @@ export const CATALOGO = {
     moduloDono: "m8",
     descricao:
       "Quantidade de dias corridos da garantia contados a partir da confirmacao do pagamento.",
+  }),
+  // Trial gratuito (AD-133). A flag nasce desligada: com ela assim, o produto
+  // e identico ao de hoje e o checkout continua sendo a unica porta.
+  "flag.m8.trial_gratuito": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m8",
+    descricao:
+      "Conta gratuita com trial de 7 dias, sem cartao (AD-133). Desligada, /criar-conta recusa e nenhuma matricula de trial nasce. O prazo NAO mora aqui: e produtos.dias_de_acesso.",
+  }),
+  "param.m8.trial_questoes_por_dia": chave({
+    tipo: z.number().int().positive(),
+    padrao: 10,
+    moduloDono: "m8",
+    descricao:
+      "Teto diario de questoes durante o trial. Vale so para matricula tipo='trial'; quem pagou nao tem teto. Provisorio: depende de contar o acervo publicado.",
+  }),
+  "param.m8.dominios_bloqueados_no_trial": chave({
+    tipo: z.array(z.string().min(1)),
+    padrao: [],
+    moduloDono: "m8",
+    descricao:
+      "Dominios de e-mail descartavel recusados no cadastro gratuito. Minusculas, sem @. Vazia = nenhum bloqueio, que e o default: e lista de exclusao, e lista de exclusao vazia nao fecha nada por engano.",
   }),
   "param.m8.pagamento_pendente_expira_horas": chave({
     tipo: z.number().int().positive(),

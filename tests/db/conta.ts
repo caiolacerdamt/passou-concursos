@@ -26,16 +26,25 @@ export async function criarUsuario(
   return id;
 }
 
-export async function idDoProdutoUnico(cliente: Client): Promise<string> {
+export async function idDoProduto(
+  cliente: Client,
+  codigo: string,
+): Promise<string> {
   const { rows } = await cliente.query<{ id: string }>(
-    "select id from public.produtos where codigo = 'anual-unico'",
+    "select id from public.produtos where codigo = $1",
+    [codigo],
   );
   return rows[0].id;
+}
+
+export async function idDoProdutoUnico(cliente: Client): Promise<string> {
+  return idDoProduto(cliente, "anual-unico");
 }
 
 export type Matricula = {
   id: string;
   estado: string;
+  tipo: string;
   inicio_em: Date;
   fim_em: Date;
 };
@@ -43,16 +52,22 @@ export type Matricula = {
 export async function criarMatricula(
   cliente: Client,
   userId: string,
-  opcoes: { estado?: string; inicio_em?: string; fim_em?: string } = {},
+  opcoes: {
+    estado?: string;
+    inicio_em?: string;
+    fim_em?: string;
+    /** Codigo do produto. Default `anual-unico`; `trial-7d` para o trial (AD-133). */
+    produto?: string;
+  } = {},
 ): Promise<Matricula> {
   const { rows } = await cliente.query<Matricula>(
     `insert into public.matriculas (user_id, produto_id, estado, inicio_em, fim_em)
      values ($1, $2, coalesce($3::public.matricula_estado, 'ativa'),
              coalesce($4::timestamptz, now()), $5::timestamptz)
-     returning id, estado::text, inicio_em, fim_em`,
+     returning id, estado::text, tipo::text, inicio_em, fim_em`,
     [
       userId,
-      await idDoProdutoUnico(cliente),
+      await idDoProduto(cliente, opcoes.produto ?? "anual-unico"),
       opcoes.estado ?? null,
       opcoes.inicio_em ?? null,
       opcoes.fim_em ?? null,

@@ -176,21 +176,74 @@ Em *Authentication → URL Configuration*:
   `https://<domínio>/auth/confirm`, `http://localhost:3000/auth/callback` e
   `http://localhost:3000/auth/confirm`.
 
-### Template de recuperação de senha
+### Templates de e-mail — a fonte é `docs/emails/`, não o painel
 
-O fluxo de autenticação é SSR e guarda a sessão em cookies. Em
-*Authentication → Email Templates → Reset Password*, o link do template deve
-usar o `token_hash`, que o servidor consegue receber:
+O texto que o aluno recebe é produto, e produto mora no repositório. Os dois
+templates que este produto usa de verdade vivem em `docs/emails/`, e sobem por
+script:
 
-```html
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">
-  Redefinir senha
-</a>
+```bash
+node scripts/aplicar-emails-auth.mjs          # mostra o diff, não escreve
+node scripts/aplicar-emails-auth.mjs --sim    # aplica
 ```
 
-Não use `{{ .ConfirmationURL }}` nesse template: o link padrão devolve tokens
-em um fragmento (`#...`), e fragmentos não são enviados ao servidor. O handler
-`/auth/confirm` valida o token e encaminha o aluno para `/definir-senha`.
+O script grava o estado anterior em `.temp/auth-config-backup-<hora>.json`
+antes de tocar em qualquer coisa, e confere o que voltou. Editar direto no
+painel funciona, mas deixa o texto sem histórico e sem revisão — e a próxima
+pessoa que abrir a caixa não tem como saber se o que está lá é o que deveria.
+
+| Template | Arquivo | Quem dispara |
+| --- | --- | --- |
+| **Confirm signup** | `docs/emails/confirm-signup.html` | `/criar-conta` (conta gratuita, AD-133) |
+| **Reset Password** | `docs/emails/reset-password.html` | "defina sua senha" pós-pagamento **e** `/recuperar-senha` |
+
+Os outros — *Invite user*, *Magic Link*, *Change Email Address*,
+*Reauthentication* e as notificações de segurança — **não são disparados por
+nenhum caminho do produto hoje**. Link mágico é da SPEC 25; as notificações
+estão desligadas no painel. Traduzir e estilizar todos eles agora seria
+manutenção para e-mail que ninguém recebe. Quando um caminho novo acender um
+desses, o template dele entra em `docs/emails/` junto com o código que o
+dispara.
+
+⚠️ Os dois links usam `{{ .TokenHash }}`, e **nunca** `{{ .ConfirmationURL }}`:
+o padrão devolve os tokens num fragmento (`#...`), e fragmento não é enviado ao
+servidor. O aluno confirmaria e cairia na home sem sessão — foi o defeito da
+SPEC 12. O handler `/auth/confirm` valida o token no servidor e encaminha:
+`recovery` para `/definir-senha`, `signup`/`email` para `/app` com o trial já
+concedido.
+
+### Rate limits do Auth — os valores vigentes (AD-133)
+
+O cadastro gratuito depende deles, então eles ficam escritos aqui em vez de
+serem supostos. Lidos do projeto `kfpmetkmhjtmgwgaaerl` em **2026-09-04**, pela
+Management API (`GET /v1/projects/{ref}/config/auth`):
+
+| Chave | Valor | O que ela segura |
+| --- | --- | --- |
+| `rate_limit_email_sent` | 30 / hora | e-mails de confirmação e de recuperação, **por projeto** |
+| `rate_limit_verify` | 30 / 5 min por IP | validação de token (`/auth/confirm`) |
+| `rate_limit_otp` | 30 / hora | envio de OTP |
+| `rate_limit_anonymous_users` | 30 / hora por IP | contas anônimas (não usadas aqui) |
+| `rate_limit_token_refresh` | 150 / 5 min por IP | renovação de sessão |
+| `mailer_otp_exp` | 3600 s | validade do link de confirmação |
+| `mailer_autoconfirm` | `false` | "Confirm email" **ligado**, como o produto exige |
+| `security_captcha_enabled` | `false` | sem captcha — decisão registrada no AD-133 |
+
+**SMTP próprio já está configurado** — Resend (`smtp.resend.com:587`, remetente
+`no-reply@auth.passouconcursos.com`, nome "Passou Concursos"). Ou seja, o teto
+de e-mail **não** é mais o do SMTP compartilhado do Supabase.
+
+⚠️ Mas `rate_limit_email_sent` continua valendo, e é **por projeto, não por
+IP**: com SMTP próprio o Supabase ainda recusa acima de **30 e-mails por hora**
+no total. Qualquer campanha que traga mais de 30 cadastros numa hora derruba a
+confirmação de todo mundo — inclusive a recuperação de senha de quem já paga.
+**Antes de ligar a flag do trial com tráfego, subir esse número** em
+*Authentication → Rate Limits*, respeitando o teto do plano do Resend.
+
+Fora de escopo por decisão, e não por esquecimento: captcha/Turnstile,
+fingerprint de dispositivo e bloqueio por IP próprio. Se aparecer abuso medido,
+o primeiro passo é Turnstile no cadastro — e isso vira AD nova, com o número do
+abuso na mão.
 
 Em *Authentication → Providers → Google*:
 

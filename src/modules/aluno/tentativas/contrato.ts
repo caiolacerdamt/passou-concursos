@@ -70,7 +70,9 @@ export type MotivoDaRecusa =
   | "causa_obrigatoria"
   | "causa_so_com_erro"
   | "causa_invalida"
-  | "item_inexistente";
+  | "item_inexistente"
+  /** Teto diário do teste grátis, recusado pelo banco (AD-133). */
+  | "trial_teto_diario";
 
 /**
  * Recusa **antes** do INSERT (ALUNO-03 AC1: "o sistema SHALL exigir a causa

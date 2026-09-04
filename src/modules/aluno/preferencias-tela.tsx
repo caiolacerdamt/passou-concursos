@@ -178,10 +178,16 @@ export function PreferenciasTela({
                   max={1440}
                   required
                   value={Number.isFinite(atual.minutosPorDia) ? atual.minutosPorDia : ""}
+                  /*
+                   * Campo vazio vira `NaN`, e não 0: `Number("")` é 0, e com
+                   * 0 o campo se reescrevia sozinho como "0" no meio da
+                   * digitação de quem apagou para trocar o número.
+                   */
                   onChange={(evento) =>
                     setAtual((anterior) => ({
                       ...anterior,
-                      minutosPorDia: Number(evento.target.value),
+                      minutosPorDia:
+                        evento.target.value === "" ? Number.NaN : Number(evento.target.value),
                     }))
                   }
                   className="min-h-11 w-24 rounded-xl border border-linha bg-painel px-3 text-center font-utilitaria text-base"
@@ -205,9 +211,16 @@ export function PreferenciasTela({
                   {DIAS_DA_SEMANA.map((dia) => {
                     const marcado = atual.diasEstudo.includes(dia.valor);
                     return (
+                      /*
+                       * O checkbox é `sr-only` para o cartão inteiro virar o
+                       * alvo de clique — mas escondê-lo apaga o anel de foco
+                       * do teclado, e UI-03 AC1 não abre exceção. O
+                       * `has-[:focus-visible]` devolve o anel ao cartão, que é
+                       * o que o aluno enxerga no lugar do input.
+                       */
                       <label
                         key={dia.valor}
-                        className={`flex min-h-[4.25rem] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border text-sm transition-colors ${
+                        className={`flex min-h-[4.25rem] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border text-sm transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-marca ${
                           marcado
                             ? "border-marca/35 bg-marca-suave font-semibold text-marca"
                             : "border-linha bg-painel text-suave hover:border-marca/30"

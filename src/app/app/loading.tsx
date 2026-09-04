@@ -4,7 +4,7 @@ import { Bloco, CartaoEsqueleto, Carregando } from "@/modules/ui/esqueleto";
  * O esqueleto de Hoje — e o de toda rota de `/app/*` que não tenha o seu.
  *
  * Um `loading.tsx` aqui envolve `page.tsx` e todos os segmentos abaixo, o que
- * cobre de saída `conta`, `preferencias` e `reembolso`: telas de formulário,
+ * cobre de saída `conta` e `preferencias`: telas de formulário,
  * que não ganham nada com esqueleto próprio.
  *
  * A forma copia a de Hoje: título à esquerda, cartão do dia à direita, o

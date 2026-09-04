@@ -21,7 +21,8 @@
     "jobs:explicacoes": "tsx scripts/jobs/explicacoes.mts",
     "jobs:reconciliacao": "tsx scripts/jobs/reconciliacao-pagamentos.mts",
     "advisors": "node scripts/advisors.mjs",
-    "ia:matriz": "node scripts/matriz-de-modelos.mjs"
+    "ia:matriz": "node scripts/matriz-de-modelos.mjs",
+    "emails:auth": "node scripts/aplicar-emails-auth.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

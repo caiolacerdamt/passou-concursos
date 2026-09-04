@@ -262,9 +262,23 @@ mesma conta" (PAG-07 AC1): com a confirmação desligada, o Supabase cria um
 histórico sem nenhum erro aparecer. Nada no repositório acusa isso — é opção de
 painel, e o preço dela aparece semanas depois, no suporte.
 
-⚠️ Enquanto o provedor do Google não estiver ligado no painel, o botão "Entrar
-com Google" existe na tela e devolve o aviso de "não foi possível continuar com
-o Google". É o comportamento correto — a tela não some, ela degrada.
+⚠️ **Enquanto o provedor do Google não estiver ligado, o botão NÃO degrada** —
+ele leva o visitante a uma tela de JSON cru, no domínio do Supabase:
+
+```json
+{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}
+```
+
+`signInWithOAuth` devolve uma URL **com sucesso** mesmo com o provedor desligado;
+a recusa acontece depois, quando o navegador já saiu do nosso domínio, e o
+`if (error || !data?.url)` de `src/app/entrar/acoes.ts` nunca dispara. A mensagem
+amigável existe no código e nunca aparece.
+
+Esta página afirmava o contrário até 2026-09-04 — que "a tela não some, ela
+degrada". Era falso, e foi visto em uso. Vale para `/entrar` e para
+`/criar-conta`, que herdou o mesmo botão. O conserto é o item 9 de
+`docs/planos/TRIAL-2-conversao-e-telas.md`: ligar o provedor, ou esconder o
+botão até ligar.
 
 ## 5. O que continua fora
 

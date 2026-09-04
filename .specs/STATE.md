@@ -1112,6 +1112,17 @@
   da conta gratuita, e já existe titular de trial no banco. Item 8. Seguem pendentes, das rodadas
   anteriores: as alíneas de verificação visual do AD-129/132, AD-125/126/127 e AD-120/121/122, o
   `Descartar` nunca exercido contra o banco, e as duas correções do W2-A sem sensor.
+- **Regressão desta rodada, encontrada e consertada**: ligar a flag e mudar o teto no banco de
+  desenvolvimento — que é **o mesmo banco de produção** — quebrou 4 testes de banco na `main`
+  (execução `33916662534`). Dois eram meus e liam o estado global em vez de escrever o próprio
+  (`trial.test.ts`); dois eram alheios e contavam linhas de uma consulta global que só funcionava
+  enquanto nenhum aluno real tinha plano de hoje (`frase-do-plano-consulta.test.ts`) — a conta de
+  trial gerou um. É a mesma armadilha que `comTransacaoSemPerfilConcurso` documenta em `conexao.ts`.
+  Os quatro passaram a escrever o próprio estado ou a filtrar pelos próprios ids; o sensor foi
+  exercido (tirar `pd.frase is null` da consulta derruba o teste). **Perda de cobertura registrada,
+  não escondida:** o caminho "chave sem linha nenhuma ⇒ flag desligada" não é mais alcançável de um
+  teste de banco, porque `configuracoes` é append-only e o DELETE é bloqueado por gatilho (AD-081).
+  Quem segura essa metade agora é o `coalesce(..., 'false')` da função mais o default do catálogo.
 - **Next step**: `docs/planos/TRIAL-2-conversao-e-telas.md`, **na ordem do plano** — item 0 primeiro,
   porque sem ele os itens 1 a 7 melhoram a experiência de um público que não chega. Duas decisões de
   negócio esperam antes de escrever código: qual CTA vem primeiro no herói (item 0) e ligar ou

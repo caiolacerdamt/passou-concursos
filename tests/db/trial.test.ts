@@ -234,9 +234,26 @@ descreveComBanco("trial · conceder_trial e tipo_da_matricula_ativa", () => {
     });
   });
 
-  it("flag desligada recusa — e desligada e o default", async () => {
+  /**
+   * ⚠️ O valor e escrito **explicitamente** nesta transacao, em vez de contar
+   * com a ausencia de linha.
+   *
+   * Ate 2026-09-03 a chave nao existia no banco de desenvolvimento, e o teste
+   * provava as duas coisas de uma vez: que a flag desligada recusa, e que
+   * "sem linha" **e** desligada. O AD-134 ligou a flag em producao — e producao
+   * e o mesmo banco que os testes usam. Contar com a ausencia parou de ser
+   * possivel, e o teste virou vermelho sem nada ter mudado no codigo.
+   *
+   * O que se perde: o caminho "sem linha nenhuma" nao e mais alcancavel daqui,
+   * porque `configuracoes` e append-only e o DELETE e bloqueado por gatilho
+   * (AD-081). Quem segura essa metade agora e o `coalesce(..., 'false')` dentro
+   * de `conceder_trial()` mais o default declarado no catalogo, coberto por
+   * `src/modules/config/catalogo.test.ts`. Registrado, e nao escondido.
+   */
+  it("flag explicitamente desligada recusa", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const aluno = await alunoConfirmado(cliente);
+      await definirConfig(cliente, "flag.m8.trial_gratuito", false, "m8");
 
       await comoAluno(cliente, aluno, async () => {
         await cliente.query("savepoint desligado");
@@ -289,19 +306,25 @@ descreveComBanco("trial · conceder_trial e tipo_da_matricula_ativa", () => {
     });
   });
 
-  it("o teto diario sai da configuracao, e o default vale sem linha no banco", async () => {
+  /**
+   * Dois valores diferentes, e nao "default vs override": um `10` escrito a mao
+   * dentro da funcao passaria num teste que so confere o default. Trocar duas
+   * vezes prova que a funcao **le a configuracao**, que e a promessa do AD-078
+   * ("troca sem deploy").
+   */
+  it("o teto diario sai da configuracao, e muda sem deploy", async () => {
     await comTransacaoRevertida(async (cliente) => {
-      const antes = await cliente.query<{ n: number }>(
-        "select public.trial_questoes_por_dia() as n",
-      );
-      expect(antes.rows[0].n).toBe(10);
-
       await definirConfig(cliente, "param.m8.trial_questoes_por_dia", 3, "m8");
-
-      const depois = await cliente.query<{ n: number }>(
+      const baixo = await cliente.query<{ n: number }>(
         "select public.trial_questoes_por_dia() as n",
       );
-      expect(depois.rows[0].n).toBe(3);
+      expect(baixo.rows[0].n).toBe(3);
+
+      await definirConfig(cliente, "param.m8.trial_questoes_por_dia", 42, "m8");
+      const alto = await cliente.query<{ n: number }>(
+        "select public.trial_questoes_por_dia() as n",
+      );
+      expect(alto.rows[0].n).toBe(42);
     });
   });
 });

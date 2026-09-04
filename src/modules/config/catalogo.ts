@@ -502,6 +502,13 @@ export const CATALOGO = {
     descricao:
       "Teto diario de questoes durante o trial. Vale so para matricula tipo='trial'; quem pagou nao tem teto. Provisorio: depende de contar o acervo publicado.",
   }),
+  "param.m8.dominios_bloqueados_no_trial": chave({
+    tipo: z.array(z.string().min(1)),
+    padrao: [],
+    moduloDono: "m8",
+    descricao:
+      "Dominios de e-mail descartavel recusados no cadastro gratuito. Minusculas, sem @. Vazia = nenhum bloqueio, que e o default: e lista de exclusao, e lista de exclusao vazia nao fecha nada por engano.",
+  }),
   "param.m8.pagamento_pendente_expira_horas": chave({
     tipo: z.number().int().positive(),
     padrao: 48,

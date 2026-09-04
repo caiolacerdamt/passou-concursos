@@ -210,6 +210,35 @@ trial nasce. Foi exatamente o defeito da SPEC 12 com o template de recuperação
 o handler `/auth/confirm` aceita `type=signup` e `type=email`, confirma pelo
 servidor e concede o trial antes de mandar para `/app`.
 
+### Rate limits do Auth — os valores vigentes (AD-133)
+
+O cadastro gratuito depende deles, então eles ficam escritos aqui em vez de
+serem supostos. Lidos do projeto `kfpmetkmhjtmgwgaaerl` em **2026-09-04**, pela
+Management API (`GET /v1/projects/{ref}/config/auth`):
+
+| Chave | Valor | O que ela segura |
+| --- | --- | --- |
+| `rate_limit_email_sent` | 30 / hora | e-mails de confirmação e de recuperação, **por projeto** |
+| `rate_limit_verify` | 30 / 5 min por IP | validação de token (`/auth/confirm`) |
+| `rate_limit_otp` | 30 / hora | envio de OTP |
+| `rate_limit_anonymous_users` | 30 / hora por IP | contas anônimas (não usadas aqui) |
+| `rate_limit_token_refresh` | 150 / 5 min por IP | renovação de sessão |
+| `mailer_otp_exp` | 3600 s | validade do link de confirmação |
+| `mailer_autoconfirm` | `false` | "Confirm email" **ligado**, como o produto exige |
+| `security_captcha_enabled` | `false` | sem captcha — decisão registrada no AD-133 |
+
+⚠️ **`rate_limit_email_sent` é por projeto, não por IP.** Com o SMTP padrão do
+Supabase são 30 e-mails por hora no total: qualquer campanha que traga mais de
+30 cadastros numa hora derruba a confirmação de todo mundo, inclusive a
+recuperação de senha de quem já paga. **Antes de ligar a flag do trial com
+tráfego, configurar SMTP próprio** (*Authentication → SMTP Settings*) e subir
+esse limite.
+
+Fora de escopo por decisão, e não por esquecimento: captcha/Turnstile,
+fingerprint de dispositivo e bloqueio por IP próprio. Se aparecer abuso medido,
+o primeiro passo é Turnstile no cadastro — e isso vira AD nova, com o número do
+abuso na mão.
+
 Em *Authentication → Providers → Google*:
 
 1. Criar as credenciais OAuth no Google Cloud Console (tipo *Web application*).

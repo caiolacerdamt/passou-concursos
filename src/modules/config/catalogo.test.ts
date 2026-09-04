@@ -98,6 +98,7 @@ describe("catalogo de chaves", () => {
       "param.m8.garantia_dias",
       "param.m8.pagamento_pendente_expira_horas",
       "param.m8.trial_questoes_por_dia",
+      "param.m8.dominios_bloqueados_no_trial",
     ];
     expect([...flags, ...parametros].sort()).toEqual([...CHAVES].sort());
 

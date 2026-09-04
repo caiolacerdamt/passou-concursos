@@ -4,7 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
-import { isFlagOn } from "@/modules/config";
+import { getParam, isFlagOn } from "@/modules/config";
+import { ehDominioBloqueado } from "@/modules/conta/dominio-de-email";
 import { origemDoSite } from "@/modules/conta/origem";
 
 /**
@@ -28,6 +29,12 @@ export async function criarContaComSenha(formulario: FormData) {
 
   if (!(await isFlagOn("flag.m8.trial_gratuito"))) {
     redirect("/criar-conta?erro=desligado");
+  }
+
+  const bloqueados = await getParam("param.m8.dominios_bloqueados_no_trial");
+  if (ehDominioBloqueado(email, bloqueados)) {
+    // Recusa antes do provedor: não gasta um e-mail nem cria a conta.
+    redirect("/criar-conta?erro=dominio");
   }
 
   const supabase = await clienteDaSessao();

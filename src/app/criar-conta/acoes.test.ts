@@ -7,6 +7,7 @@ const deps = vi.hoisted(() => ({
     error: null,
   })),
   isFlagOn: vi.fn(async () => true),
+  getParam: vi.fn(async (): Promise<string[]> => []),
   redirect: vi.fn((destino: string): never => {
     throw new Error(`NEXT_REDIRECT:${destino}`);
   }),
@@ -24,7 +25,7 @@ vi.mock("@/lib/db/sessao", () => ({
   })),
 }));
 
-vi.mock("@/modules/config", () => ({ isFlagOn: deps.isFlagOn }));
+vi.mock("@/modules/config", () => ({ isFlagOn: deps.isFlagOn, getParam: deps.getParam }));
 
 const { criarContaComGoogle, criarContaComSenha } = await import("./acoes");
 
@@ -37,6 +38,7 @@ function formulario(campos: Record<string, string>): FormData {
 afterEach(() => {
   vi.clearAllMocks();
   deps.isFlagOn.mockResolvedValue(true);
+  deps.getParam.mockResolvedValue([]);
   deps.signUp.mockResolvedValue({ error: null });
 });
 
@@ -64,6 +66,16 @@ describe("cadastro por e-mail e senha (AD-133)", () => {
     await expect(
       criarContaComSenha(formulario({ email: "aluno@exemplo.com", senha: "segredo123" })),
     ).rejects.toThrow("NEXT_REDIRECT:/criar-conta?erro=desligado");
+
+    expect(deps.signUp).not.toHaveBeenCalled();
+  });
+
+  it("domínio descartável é recusado antes de gastar um e-mail", async () => {
+    deps.getParam.mockResolvedValue(["mailinator.com"]);
+
+    await expect(
+      criarContaComSenha(formulario({ email: "x@mailinator.com", senha: "segredo123" })),
+    ).rejects.toThrow("NEXT_REDIRECT:/criar-conta?erro=dominio");
 
     expect(deps.signUp).not.toHaveBeenCalled();
   });

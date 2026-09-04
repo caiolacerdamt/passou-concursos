@@ -1,94 +1,119 @@
-import Link from "next/link";
-
-import { clienteDaSessao } from "@/lib/db/sessao";
-import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
-import { Estado } from "@/modules/ui/estado";
-
-import { solicitarEsquecimento } from "./acoes";
 import { redirect } from "next/navigation";
 
+import { clienteDaSessao } from "@/lib/db/sessao";
+import { clienteDeServico } from "@/lib/db/servidor";
+import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { ContaTela, abaValida, type DadosDaConta } from "@/modules/conta/conta-tela";
+import { reportarErro } from "@/modules/observabilidade/reporte";
+import { dadosDaTelaDaGarantia } from "@/modules/pagamentos/garantia-tela";
+import { formatarBRL, obterPrecosPublicos } from "@/modules/pagamentos/preco";
+import { criarRepositorioDePagamentos } from "@/modules/pagamentos/repositorio";
+
+import { pedirReembolso, solicitarEsquecimento } from "./acoes";
+
 export const dynamic = "force-dynamic";
+
+function comoTexto(valor: string | string[] | undefined): string | undefined {
+  return Array.isArray(valor) ? valor[0] : valor;
+}
+
+/**
+ * Quanto do período contratado já correu, de 0 a 1.
+ *
+ * Sai da própria matrícula, e não de um "12 meses" fixo: se o produto vender
+ * outro período, a trilha acompanha sem ninguém lembrar de mudar isto.
+ */
+function progressoDoPeriodo(
+  confirmadoEm: string | null,
+  fimEm: string,
+  agora: Date,
+): number | null {
+  if (!confirmadoEm) return null;
+
+  const inicio = new Date(confirmadoEm).getTime();
+  const fim = new Date(fimEm).getTime();
+  if (Number.isNaN(inicio) || Number.isNaN(fim) || fim <= inicio) return null;
+
+  const fracao = (agora.getTime() - inicio) / (fim - inicio);
+  return Math.min(1, Math.max(0, fracao));
+}
+
+/**
+ * A parte da tela que depende de pagamento e configuração.
+ *
+ * Falhar aqui NÃO pode derrubar a conta inteira — e, principalmente, não pode
+ * abrir o botão de reembolso por engano: sem preço legível não há janela para
+ * conferir, então o bloco some em vez de aparecer liberado. Falha fechada.
+ */
+async function carregarAssinatura(
+  userId: string,
+  fimDoAcesso: string,
+  agora: Date,
+): Promise<Pick<DadosDaConta, "assinatura" | "garantia">> {
+  try {
+    const precos = await obterPrecosPublicos();
+    const pagamento = await criarRepositorioDePagamentos(
+      clienteDeServico(),
+    ).buscarUltimoPagamentoDoUsuario(userId);
+
+    if (!pagamento) return { assinatura: null, garantia: null };
+
+    return {
+      assinatura: {
+        valorFormatado: formatarBRL(Number(pagamento.valor_centavos)),
+        meio: pagamento.meio,
+        parcelas: Number(pagamento.parcelas ?? 1),
+        confirmadoEm: pagamento.confirmado_em,
+        estado: pagamento.estado,
+        progresso: progressoDoPeriodo(pagamento.confirmado_em, fimDoAcesso, agora),
+      },
+      garantia: {
+        tela: dadosDaTelaDaGarantia(
+          pagamento.estado,
+          pagamento.confirmado_em,
+          precos.garantiaDias,
+          agora,
+        ),
+        dias: precos.garantiaDias,
+      },
+    };
+  } catch (erro) {
+    reportarErro(erro, { modulo: "pagamentos", operacao: "carregar_assinatura_da_conta" });
+    return { assinatura: null, garantia: null };
+  }
+}
 
 export default async function Conta({
   searchParams,
 }: {
-  searchParams: Promise<{ resultado?: string }>;
+  searchParams: Promise<{ resultado?: string | string[]; aba?: string | string[] }>;
 }) {
-  await exigirMatriculaAtiva();
+  const matricula = await exigirMatriculaAtiva();
   const sessao = await clienteDaSessao();
   const {
     data: { user },
   } = await sessao.auth.getUser();
 
-  if (!user) {
+  if (!user?.email) {
     redirect("/entrar?proximo=%2Fapp%2Fconta");
   }
 
   const parametros = await searchParams;
+  const agora = new Date();
+  const assinatura = await carregarAssinatura(user.id, matricula.fim_em, agora);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-marca">Conta e privacidade</p>
-        <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight sm:text-5xl">
-          Você decide o que fica.
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-8 text-suave">
-          O pedido abaixo apaga seus dados de estudo e invalida sua conta. É uma ação definitiva.
-        </p>
-        <Link href="/app/progresso" className="mt-4 inline-flex text-sm font-semibold text-marca underline">
-          Voltar ao progresso
-        </Link>
-      </header>
-
-      {parametros.resultado === "confirmacao" ? (
-        <Estado
-          tipo="degradado"
-          oQueCaiu="A confirmação não foi reconhecida"
-        />
-      ) : null}
-      {parametros.resultado === "erro" ? <Estado tipo="erro" /> : null}
-
-      <section className="grid gap-4 sm:grid-cols-2" aria-label="Efeito do apagamento">
-        <div className="rounded-card border border-linha bg-painel p-5 shadow-card">
-          <h2 className="text-xl font-semibold">Será apagado</h2>
-          <p className="mt-2 text-sm leading-6 text-suave">
-            Respostas, sessões, plano, progresso, caderno de erros, sequência, folgas, matrícula e dados operacionais ligados à sua conta.
-          </p>
-        </div>
-        <div className="rounded-card border border-linha bg-painel p-5 shadow-card">
-          <h2 className="text-xl font-semibold">Pode permanecer</h2>
-          <p className="mt-2 text-sm leading-6 text-suave">
-            Faturas, aceite e o mínimo de registros financeiros necessários para cumprir obrigações fiscais e atender a reconciliação.
-          </p>
-        </div>
-      </section>
-
-      <section className="rounded-card border border-erro/40 bg-painel p-5 shadow-card sm:p-6" aria-labelledby="titulo-apagamento">
-        <h2 id="titulo-apagamento" className="text-2xl font-semibold">Apagar minha conta</h2>
-        <p className="mt-2 text-sm leading-6 text-suave">
-          O fluxo primeiro apaga os dados operacionais, depois tenta enviar uma confirmação para o seu e-mail e só então invalida o acesso. Se o envio falhar, a conta não é invalidada e o pedido pode ser retomado.
-        </p>
-        <form action={solicitarEsquecimento} className="mt-6 space-y-4">
-          <label className="grid gap-2 text-sm font-semibold" htmlFor="confirmacao">
-            Para confirmar, digite <span className="font-utilitaria text-erro">APAGAR</span>
-            <input
-              id="confirmacao"
-              name="confirmacao"
-              required
-              autoComplete="off"
-              className="min-h-11 rounded-lg border border-linha bg-fundo px-3 font-normal text-texto"
-            />
-          </label>
-          <input type="hidden" name="user_id" value="não usado" />
-          <button type="submit" className="min-h-11 rounded-full bg-erro px-5 py-3 font-semibold text-white transition hover:brightness-95">
-            Apagar dados e conta
-          </button>
-        </form>
-        <p className="mt-4 text-xs leading-5 text-suave">
-          Precisa exercer outro direito, como acesso ou correção? No lançamento, esse atendimento é feito manualmente pelo canal de privacidade informado na política.
-        </p>
-      </section>
-    </div>
+    <ContaTela
+      aba={abaValida(comoTexto(parametros.aba))}
+      resultado={comoTexto(parametros.resultado)}
+      agora={agora}
+      dados={{
+        email: user.email,
+        fimDoAcesso: matricula.fim_em,
+        ...assinatura,
+      }}
+      solicitarEsquecimento={solicitarEsquecimento}
+      pedirReembolso={pedirReembolso}
+    />
   );
 }

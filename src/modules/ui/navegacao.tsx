@@ -129,23 +129,11 @@ export const ITENS_DE_CONTA: ItemDaNavegacao[] = [
   {
     href: "/app/conta",
     nome: "Conta",
-    descricao: "Privacidade e acesso",
+    descricao: "Assinatura, garantia e privacidade",
     icone: (
       <Traco>
         <circle cx="12" cy="9.2" r="3.4" />
         <path d="M5.6 19.4a6.6 6.6 0 0 1 12.8 0" />
-      </Traco>
-    ),
-  },
-  {
-    href: "/app/reembolso",
-    nome: "Reembolso",
-    descricao: "Garantia do pagamento",
-    icone: (
-      <Traco>
-        <path d="M4.4 12a7.6 7.6 0 1 0 2.5-5.6" />
-        <path d="M4.2 5.2v3.6h3.6" />
-        <path d="M12 9.4v5.2M10.2 11h2.6a1.3 1.3 0 0 1 0 2.6h-1.5" />
       </Traco>
     ),
   },

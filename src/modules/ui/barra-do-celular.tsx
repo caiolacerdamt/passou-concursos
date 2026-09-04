@@ -30,7 +30,7 @@ function estaAtivo(caminho: string, href: string): boolean {
  * estudo mais a Conta, no alcance do polegar. Em cima, só a marca.
  *
  * O topo carregava os três itens de conta com os nomes inteiros ("Preferências
- * de estudo", "Conta", "Reembolso") e mais o botão de sair. Em 375px isso não
+ * de estudo" e "Conta") e mais o botão de sair. Em 375px isso não
  * cabe: os itens se espremem, o texto corta e a marca perde espaço. Conta é
  * assunto ocasional, não tarefa diária — por isso vira uma aba que abre uma
  * folha de baixo para cima, e o topo volta a ser só a marca.

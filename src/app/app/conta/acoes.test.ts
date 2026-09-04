@@ -5,6 +5,11 @@ const dependencias = vi.hoisted(() => ({
   cliente: vi.fn(),
   executar: vi.fn(),
   reportar: vi.fn(),
+  servico: vi.fn(),
+  precos: vi.fn(),
+  repositorio: vi.fn(),
+  gateway: vi.fn(),
+  reembolso: vi.fn(),
   redirect: vi.fn((destino: string): never => {
     throw new Error(`NEXT_REDIRECT:${destino}`);
   }),
@@ -13,10 +18,21 @@ const dependencias = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({ redirect: dependencias.redirect }));
 vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias.matricula }));
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
+vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
 vi.mock("@/modules/lgpd/esquecimento", () => ({ executarEsquecimento: dependencias.executar }));
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
+vi.mock("@/modules/pagamentos/preco", () => ({ obterPrecosPublicos: dependencias.precos }));
+vi.mock("@/modules/pagamentos/asaas", () => ({
+  gatewayAsaasDoAmbiente: dependencias.gateway,
+}));
+vi.mock("@/modules/pagamentos/garantia", () => ({
+  solicitarReembolso: dependencias.reembolso,
+}));
+vi.mock("@/modules/pagamentos/repositorio", () => ({
+  criarRepositorioDePagamentos: dependencias.repositorio,
+}));
 
-const { solicitarEsquecimento } = await import("./acoes");
+const { pedirReembolso, solicitarEsquecimento } = await import("./acoes");
 
 function formulario(confirmacao = "APAGAR", userId = "tentativa-do-form") {
   const form = new FormData();
@@ -40,7 +56,7 @@ describe("action de esquecimento", () => {
 
   it("exige a confirmação textual antes de abrir a sessão", async () => {
     await expect(solicitarEsquecimento(formulario("apagar minha conta"))).rejects.toThrow(
-      "NEXT_REDIRECT:/app/conta?resultado=confirmacao",
+      "NEXT_REDIRECT:/app/conta?aba=privacidade&resultado=confirmacao",
     );
     expect(dependencias.cliente).not.toHaveBeenCalled();
   });
@@ -75,11 +91,83 @@ describe("action de esquecimento", () => {
     dependencias.executar.mockRejectedValue(erro);
 
     await expect(solicitarEsquecimento(formulario())).rejects.toThrow(
-      "NEXT_REDIRECT:/app/conta?resultado=erro",
+      "NEXT_REDIRECT:/app/conta?aba=privacidade&resultado=erro",
     );
     expect(dependencias.reportar).toHaveBeenCalledWith(
       erro,
       expect.objectContaining({ operacao: "solicitar_esquecimento" }),
+    );
+  });
+});
+
+describe("action de reembolso", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    dependencias.precos.mockResolvedValue({ garantiaDias: 7 });
+    dependencias.servico.mockReturnValue({});
+    dependencias.repositorio.mockReturnValue({
+      buscarUltimoPagamentoDoUsuario: vi.fn(),
+      registrarPedidoDeReembolso: vi.fn(),
+      confirmarReembolsoLocal: vi.fn(),
+      buscarFatura: vi.fn(),
+      registrarResultadoCancelamentoFatura: vi.fn(),
+      abrirPendencia: vi.fn(),
+    });
+    dependencias.gateway.mockReturnValue({
+      estornarCobranca: vi.fn(),
+      cancelarNotaFiscal: vi.fn(),
+    });
+  });
+
+  it("exige sessão antes de tocar em preço, repositório ou gateway", async () => {
+    clienteComUsuario(null);
+
+    await expect(pedirReembolso()).rejects.toThrow(
+      "NEXT_REDIRECT:/entrar?proximo=%2Fapp%2Fconta",
+    );
+    expect(dependencias.precos).not.toHaveBeenCalled();
+    expect(dependencias.gateway).not.toHaveBeenCalled();
+    expect(dependencias.reembolso).not.toHaveBeenCalled();
+  });
+
+  it("usa o id da sessão para buscar o pagamento, e volta para a aba da assinatura", async () => {
+    clienteComUsuario({ id: "aluno-real", email: "real@exemplo.com" });
+    dependencias.reembolso.mockResolvedValue({ estado: "solicitado" });
+
+    await expect(pedirReembolso()).rejects.toThrow(
+      "NEXT_REDIRECT:/app/conta?aba=assinatura&resultado=solicitado",
+    );
+    expect(dependencias.reembolso).toHaveBeenCalledWith(
+      "aluno-real",
+      7,
+      expect.any(Date),
+      expect.anything(),
+    );
+  });
+
+  it("não emite estorno nem promete análise quando o gateway não está configurado", async () => {
+    clienteComUsuario({ id: "aluno-real", email: "real@exemplo.com" });
+    const erro = new Error("sem chave do Asaas");
+    dependencias.gateway.mockImplementation(() => {
+      throw erro;
+    });
+
+    await expect(pedirReembolso()).rejects.toThrow(
+      "NEXT_REDIRECT:/app/conta?aba=assinatura&resultado=indisponivel",
+    );
+    expect(dependencias.reembolso).not.toHaveBeenCalled();
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      erro,
+      expect.objectContaining({ operacao: "pedir_reembolso" }),
+    );
+  });
+
+  it("devolve o pedido recusado sem prometer estorno", async () => {
+    clienteComUsuario({ id: "aluno-real", email: "real@exemplo.com" });
+    dependencias.reembolso.mockResolvedValue({ estado: "recusado" });
+
+    await expect(pedirReembolso()).rejects.toThrow(
+      "NEXT_REDIRECT:/app/conta?aba=assinatura&resultado=recusado",
     );
   });
 });

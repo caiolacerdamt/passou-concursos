@@ -36,7 +36,6 @@ describe("AppShell", () => {
     expect(html).toContain('href="/app/progresso"');
     expect(html).toContain('href="/app/preferencias"');
     expect(html).toContain('href="/app/conta"');
-    expect(html).toContain('href="/app/reembolso"');
     expect(html).toContain("Hoje");
     expect(html).toContain("Questões e revisões");
     expect(html).toContain("Preferências de estudo");
@@ -67,13 +66,12 @@ describe("AppShell", () => {
     expect(fechada).not.toContain("Fechar a barra de navegação");
   });
 
-  it("mantém conta, reembolso e saída alcançáveis com a barra fechada", async () => {
+  it("mantém conta, preferências e saída alcançáveis com a barra fechada", async () => {
     cookieDaBarra.valor = "fechada";
     const html = await renderizar();
 
     expect(html).toContain('href="/app/conta"');
     expect(html).toContain('href="/app/preferencias"');
-    expect(html).toContain('href="/app/reembolso"');
     expect(html).toContain("Sair da conta");
   });
 });

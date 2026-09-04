@@ -25,7 +25,6 @@ describe("BarraDoCelular", () => {
     // Em 375px os três itens de conta com nome inteiro mais o botão de sair não
     // cabiam ao lado da marca: o texto cortava e a marca perdia espaço.
     expect(topo).toContain("Passou");
-    expect(topo).not.toContain("Reembolso");
     expect(topo).not.toContain("Preferências de estudo");
     expect(topo).not.toContain("Sair da conta");
   });
@@ -36,7 +35,7 @@ describe("BarraDoCelular", () => {
     expect(html).toContain('aria-expanded="false"');
     expect(html).not.toContain('role="dialog"');
     expect(html).not.toContain("Sair da conta");
-    expect(html).not.toContain('href="/app/reembolso"');
+    expect(html).not.toContain('href="/app/preferencias"');
   });
 
   it("a barra de baixo tem seis abas, e a Conta é botão porque não navega", () => {
@@ -64,7 +63,7 @@ describe("BarraDoCelular", () => {
   });
 
   it("a aba Conta fica marcada quando a rota é uma das telas de conta", () => {
-    const html = renderizar("/app/reembolso");
+    const html = renderizar("/app/preferencias");
     const barra = html.slice(html.indexOf("Navegação principal no celular"));
 
     expect(barra).toContain('aria-current="page"');

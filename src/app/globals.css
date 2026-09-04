@@ -316,6 +316,78 @@ body {
   }
 }
 
+/*
+ * Superfície de acesso e compra: `/entrar`, `/recuperar-senha`, `/checkout`.
+ *
+ * Nem `.lp` nem `.app-ui`. Estas três telas são o corredor entre a landing e o
+ * app: `DESIGN.md` coloca `/checkout` no modo Persuade junto da landing, e as
+ * duas de acesso chegam pelo mesmo caminho. Elas herdam a matéria da landing —
+ * papel quente, breu racionado, verde só em ação — sem o motor de scroll, que
+ * não tem o que revelar num formulário.
+ *
+ * É camada de superfície e não classe por componente pelo mesmo motivo de
+ * `.app-ui`: campo novo nasce com o acabamento certo sem ninguém lembrar de
+ * aplicá-lo. O que muda em relação ao `.app-ui` é só o que o modo Persuade pede
+ * — botão não é obrigatoriamente pill (o do checkout é um bloco de 16px) e o
+ * campo assenta em papel, não em painel.
+ */
+.acesso input:not([type="checkbox"]):not([type="radio"]),
+.acesso select,
+.acesso textarea {
+  width: 100%;
+  min-height: 3.125rem;
+  border: 1px solid var(--color-risco);
+  border-radius: 0.625rem;
+  background-color: var(--color-papel-alto);
+  padding: 0 0.95rem;
+  color: var(--color-tinta);
+  font: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.acesso input:not([type="checkbox"]):not([type="radio"]):focus,
+.acesso select:focus,
+.acesso textarea:focus {
+  border-color: var(--color-verde);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-verde) 16%, transparent);
+  outline: none;
+}
+
+/*
+ * Campo que divide a caixa com um botão sobreposto — hoje só o olho da senha.
+ *
+ * A folga tem que sair daqui e não de uma utilidade `pr-*`: as regras desta
+ * camada não moram em `@layer`, então vencem qualquer utilidade do Tailwind
+ * independentemente de especificidade. Uma classe `pr-12` no `<input>` seria
+ * silenciosamente ignorada e o texto passaria por baixo do botão.
+ */
+.acesso .campo-com-acessorio input {
+  padding-inline-end: 3.25rem;
+}
+
+.acesso input::placeholder,
+.acesso textarea::placeholder {
+  color: color-mix(in srgb, var(--color-tinta-suave) 72%, transparent);
+}
+
+/* O verde da marca no que o navegador desenha e nós não. */
+.acesso {
+  accent-color: var(--color-verde);
+  caret-color: var(--color-verde);
+}
+
+.acesso a {
+  text-underline-offset: 0.2em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acesso input:not([type="checkbox"]):not([type="radio"]),
+  .acesso select,
+  .acesso textarea {
+    transition: none;
+  }
+}
+
 ::selection {
   background-color: color-mix(in srgb, var(--color-marca) 22%, transparent);
 }

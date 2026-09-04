@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     /*
      * `suppressHydrationWarning` cobre UM caso e é o idiomático para ele: o
-     * layout da landing escreve `sc-armado` no `<html>` por script inline,
+     * o script abaixo escreve `sc-armado` no `<html>` por script inline,
      * durante o parse, para armar o esconde-esconde do motor antes da primeira
      * pintura. O servidor não emitiu essa classe, então o React acusa
      * divergência de atributo no `<html>` — barulho no console por um atributo
@@ -39,7 +39,31 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
      * os filhos.
      */
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${geist.variable} ${geistMono.variable}`}>{children}</body>
+      <body className={`${geist.variable} ${geistMono.variable}`}>
+        {/*
+         * Arma o esconde-esconde do motor da landing. `scrollcraft.css` zera a
+         * opacidade de todo `[data-sc-in]` e só o motor devolve; sem esta
+         * classe, `landing.css` mantém o texto visível, então JS ausente ou
+         * quebrado nunca apaga conteúdo. Inline e não `<Script>`: precisa rodar
+         * durante o parse, antes da primeira pintura — um script assíncrono
+         * chegaria depois do primeiro quadro e o texto piscaria.
+         *
+         * Mora no layout raiz e não no layout da landing porque o raiz é o
+         * único que o React nunca recria no cliente. Renderizado lá embaixo,
+         * ele deixava de existir em navegação client-side (React só executa
+         * script que veio no HTML do servidor) e o console acusava em dev.
+         *
+         * Estar em toda rota não vaza nada: as regras que leem `sc-armado`
+         * exigem `.lp` no seletor, e `.lp` só existe dentro do grupo
+         * `(landing)`.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.documentElement.classList.add("sc-armado")`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

@@ -36,26 +36,18 @@ const geistMono = Geist_Mono({
 
 export default function LayoutDaLanding({ children }: LayoutProps<"/">) {
   return (
-    <>
-      {/*
-        Arma o esconde-esconde do motor. `scrollcraft.css` zera a opacidade de
-        todo `[data-sc-in]` e só o motor devolve; sem esta classe, `landing.css`
-        mantém o texto visível, então JS ausente ou quebrado nunca apaga
-        conteúdo. Roda durante o parse, antes da primeira pintura, e por isso é
-        inline e não um `<Script>`: um script assíncrono chegaria depois do
-        primeiro quadro e o texto piscaria.
-      */}
-      <script
-        dangerouslySetInnerHTML={{
-          __html: `document.documentElement.classList.add("sc-armado")`,
-        }}
-      />
-
-      <div
-        className={`lp ${geist.variable} ${geistMono.variable} min-h-dvh bg-papel font-lp text-tinta`}
-      >
-        {children}
-      </div>
-    </>
+    /*
+     * O script que arma o esconde-esconde do motor (`sc-armado`) **não mora
+     * aqui** — ele está no layout raiz. Um `<script>` renderizado por este
+     * layout só executa no carregamento inteiro: numa navegação client-side
+     * (de `/entrar` para `/`, por exemplo) o React recria este layout no
+     * cliente, e script criado assim nunca roda. O React avisa isso no
+     * console em dev, e a classe simplesmente não chegava.
+     */
+    <div
+      className={`lp ${geist.variable} ${geistMono.variable} min-h-dvh bg-papel font-lp text-tinta`}
+    >
+      {children}
+    </div>
   );
 }

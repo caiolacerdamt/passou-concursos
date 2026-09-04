@@ -464,6 +464,14 @@ export const CATALOGO = {
       "Acima disto o time e alertado uma vez no mes. SHALL NOT desligar nada sozinho (IA-12 / decisao de 2026-07-23).",
   }),
 
+  "param.m7.retencao_trial_meses": chave({
+    tipo: z.number().int().positive(),
+    padrao: 6,
+    moduloDono: "m7",
+    descricao:
+      "Janela de retencao do lead que teve trial e NUNCA pagou (AD-133). Separada dos 24 meses do AD-045: quem testou uma semana nao justifica o mesmo risco. Provisorio — falar com o advogado junto do resto da LGPD.",
+  }),
+
   // ── M8 · negocio e pagamentos ────────────────────────────────────────────
   "param.m8.preco_anual_centavos": chave({
     tipo: z.number().int().positive(),

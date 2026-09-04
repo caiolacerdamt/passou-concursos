@@ -93,6 +93,7 @@ describe("catalogo de chaves", () => {
       "param.m2.matriz_de_modelos",
       "param.m2.precos_por_modelo",
       "param.m2.teto_gasto_mensal_usd",
+      "param.m7.retencao_trial_meses",
       "param.m8.preco_anual_centavos",
       "param.m8.desconto_a_vista_percentual",
       "param.m8.garantia_dias",

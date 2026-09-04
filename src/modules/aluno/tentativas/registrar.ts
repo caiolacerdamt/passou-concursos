@@ -61,6 +61,12 @@ export async function registrarTentativa(
         "Esta questao nao faz parte de uma sessao sua.",
       );
     }
+    if (error.message.includes("trial_teto_diario")) {
+      throw new TentativaRecusada(
+        "trial_teto_diario",
+        "Voce ja respondeu todas as questoes do teste gratis de hoje. Volte amanha.",
+      );
+    }
     throw new Error(
       `registrar_tentativa falhou: ${JSON.stringify({
         code: error.code,

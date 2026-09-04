@@ -163,6 +163,7 @@ export class SessaoRecusada extends Error {
     | "refacao_indisponivel"
     | "revisao_indisponivel"
     | "acervo_inconsistente"
+    | "trial_teto_diario"
     | "falha_imagem";
 
   constructor(motivo: SessaoRecusada["motivo"], mensagem: string) {
@@ -270,6 +271,53 @@ export function selecionarQuestoesDisponiveis(
     .slice(0, opcoes.quantidade);
 }
 
+/**
+ * Quantas questões ainda cabem hoje, ou `null` quando não há teto (AD-133).
+ *
+ * O teto real é o do banco, dentro de `registrar_tentativa`. Isto aqui é o que
+ * evita a experiência de receber um bloco de 10, responder 4 e travar — o que
+ * parece defeito, e não limite. Quem tem matrícula paga sai por `null` na
+ * primeira linha e nem paga a consulta seguinte.
+ */
+export async function tetoRestanteDoTrial(
+  cliente: SupabaseClient,
+): Promise<number | null> {
+  // Uma chamada só, e a conta mora no banco: é a **mesma** que
+  // `registrar_tentativa` faz antes do INSERT. Duas implementações do mesmo
+  // corte de dia divergem no primeiro fuso que alguém esquecer.
+  const { data, error } = await cliente.rpc("trial_questoes_restantes_hoje");
+
+  if (error) {
+    throw new SessaoRecusada(
+      "acervo_inconsistente",
+      `Não foi possível ler o teste grátis: ${error.message}`,
+    );
+  }
+  if (data === null || data === undefined) return null;
+  if (typeof data !== "number") return null;
+  return data;
+}
+
+/**
+ * O tamanho do bloco depois do teto do trial, ou a recusa quando não sobrou
+ * nada. A recusa tem motivo próprio: `acervo_vazio` mandaria alguém caçar um
+ * problema de acervo que não existe.
+ */
+async function quantidadeCabendoNoTeto(
+  cliente: SupabaseClient,
+  quantidade: number,
+): Promise<number> {
+  const restante = await tetoRestanteDoTrial(cliente);
+  if (restante === null) return quantidade;
+  if (restante <= 0) {
+    throw new SessaoRecusada(
+      "trial_teto_diario",
+      "Você já respondeu todas as questões do teste grátis de hoje.",
+    );
+  }
+  return Math.min(quantidade, restante);
+}
+
 /** Retomada visual: item respondido não volta para a fila de questões. */
 export function itensPendentes(
   itens: readonly Pick<ItemDaConsulta, "respondido_em">[],
@@ -375,12 +423,13 @@ export async function prepararSessao(
   );
   // A quantidade pertence ao snapshot do bloco. O fallback mantém a leitura
   // operável para planos legados que ainda não tinham a coluna nova.
-  const questoesPorBloco =
+  const questoesDoBloco =
     typeof bloco.n_questoes === "number" &&
     Number.isInteger(bloco.n_questoes) &&
     bloco.n_questoes > 0
       ? bloco.n_questoes
       : questoesPadrao;
+  const questoesPorBloco = await quantidadeCabendoNoTeto(cliente, questoesDoBloco);
   const contexto = contextoDoBloco(bloco.tipo);
   const idsRecentes =
     contexto === "treino"
@@ -532,7 +581,8 @@ export async function prepararSessaoDeRefacao(
     );
   }
 
-  const [questoesPorRefacao] = await getParams("param.m4.questoes_por_bloco");
+  const [questoesPadraoDaRefacao] = await getParams("param.m4.questoes_por_bloco");
+  const questoesPorRefacao = await quantidadeCabendoNoTeto(cliente, questoesPadraoDaRefacao);
   const candidatosLimitados: TentativaErradaDaRefacao[] = [];
   const versoesDosCandidatos = new Set<string>();
   for (const candidato of candidatos) {
@@ -672,7 +722,8 @@ export async function prepararSessaoDeRevisao(
     if (itensExistentes.length > 0) return { id: aberta.id, retomada: true };
   }
 
-  const [questoesPorBloco] = await getParams("param.m4.questoes_por_bloco");
+  const [questoesPadrao] = await getParams("param.m4.questoes_por_bloco");
+  const questoesPorBloco = await quantidadeCabendoNoTeto(cliente, questoesPadrao);
   const linhas = await lerLista<LinhaDeQuestao>(
     cliente
       .from("questoes")

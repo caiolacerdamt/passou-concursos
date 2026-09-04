@@ -131,6 +131,36 @@ descreveComBanco("trial · teto diario de questoes", () => {
     });
   });
 
+  it("trial_questoes_restantes_hoje dimensiona a sessao e some para quem pagou", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      await definirTeto(cliente, 3);
+
+      const trial = await cenario(cliente, "trial-7d", 1);
+      await comoAluno(cliente, trial.aluno, async () => {
+        const antes = await cliente.query<{ n: number | null }>(
+          "select public.trial_questoes_restantes_hoje() as n",
+        );
+        expect(antes.rows[0].n).toBe(3);
+
+        await responder(cliente, trial.aluno, trial.itens[0]);
+
+        const depois = await cliente.query<{ n: number | null }>(
+          "select public.trial_questoes_restantes_hoje() as n",
+        );
+        expect(depois.rows[0].n).toBe(2);
+      });
+
+      const pago = await cenario(cliente, "anual-unico", 0);
+      await comoAluno(cliente, pago.aluno, async () => {
+        const { rows } = await cliente.query<{ n: number | null }>(
+          "select public.trial_questoes_restantes_hoje() as n",
+        );
+        // `null` e "nao ha teto", que e diferente de "sobrou zero".
+        expect(rows[0].n).toBeNull();
+      });
+    });
+  });
+
   it("resposta de ontem nao conta para o teto de hoje", async () => {
     await comTransacaoRevertida(async (cliente) => {
       await definirTeto(cliente, 1);

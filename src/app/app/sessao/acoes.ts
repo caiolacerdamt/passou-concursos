@@ -316,6 +316,9 @@ function mensagemDaRecusa(motivo: TentativaRecusada["motivo"]): string {
   if (motivo === "causa_so_com_erro") return "A causa só é necessária quando a resposta está errada.";
   if (motivo === "causa_invalida") return "Escolha uma causa disponível para continuar.";
   if (motivo === "item_inexistente") return "Essa questão não está mais disponível nesta sessão.";
+  if (motivo === "trial_teto_diario") {
+    return "Você já respondeu todas as questões do teste grátis de hoje. Volte amanhã.";
+  }
   return "Não conseguimos validar esta resposta. Recarregue a questão.";
 }
 
@@ -324,6 +327,9 @@ function mensagemDaSessao(motivo: SessaoRecusada["motivo"]): string {
   if (motivo === "gabarito_ausente") return "Esta questão está em revisão e não pode receber resposta agora.";
   if (motivo === "item_inexistente" || motivo === "sessao_inexistente") {
     return "Essa questão não está mais disponível nesta sessão.";
+  }
+  if (motivo === "trial_teto_diario") {
+    return "Você já respondeu todas as questões do teste grátis de hoje. Volte amanhã.";
   }
   return "Não conseguimos carregar esta questão. Tente novamente.";
 }

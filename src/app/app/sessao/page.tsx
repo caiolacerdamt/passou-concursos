@@ -179,6 +179,23 @@ function EstadoDaFalha({ motivo, refacao = false }: { motivo: SessaoRecusada["mo
     );
   }
 
+  if (motivo === "trial_teto_diario") {
+    return (
+      <Estado
+        tipo="vazio"
+        titulo="Você já fez as questões de hoje no teste grátis"
+        acao={
+          <>
+            {"O plano de amanhã já está montado, e a revisão espaçada não perdeu a conta dos seus dias. "}
+            <Link href="/app" className="font-semibold text-marca underline">
+              Voltar ao plano
+            </Link>
+          </>
+        }
+      />
+    );
+  }
+
   if (motivo === "refacao_indisponivel") {
     return (
       <Estado

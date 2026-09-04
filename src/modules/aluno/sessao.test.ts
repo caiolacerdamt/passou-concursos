@@ -87,6 +87,8 @@ function clienteParaPreparar({
   const consultas: Record<string, ReturnType<typeof consulta>[]> = {};
   const cliente = {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }) },
+    // Sem teto: o aluno destes testes tem matricula paga (AD-133).
+    rpc: vi.fn(async () => ({ data: null, error: null })),
     from: vi.fn((tabela: string) => {
       const jaConsultadas = consultas[tabela] ?? [];
       const resposta =
@@ -139,6 +141,8 @@ function clienteParaRefacao({
   const insercoes: unknown[] = [];
   const cliente = {
     auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "aluno-1" } }, error: null }) },
+    // Sem teto: o aluno destes testes tem matrícula paga (AD-133).
+    rpc: vi.fn(async () => ({ data: null, error: null })),
     from: vi.fn((tabela: string) => {
       let resposta: { data: unknown; error: null | { message: string; code?: string } };
       if (tabela === "sessoes") {
@@ -384,6 +388,51 @@ describe("sessão de estudo", () => {
     await prepararSessao(cliente as never, "bloco-1");
 
     expect(consultas.questoes[0].limit).toHaveBeenCalledWith(3);
+  });
+
+  /**
+   * O teto do trial (AD-133). O teto de verdade é o do banco, dentro de
+   * `registrar_tentativa`; isto aqui evita a experiência de receber dez
+   * questões, responder quatro e travar — o que parece defeito, não limite.
+   */
+  it("no trial, o bloco encolhe para o que ainda cabe hoje", async () => {
+    const { cliente, consultas } = clienteParaPreparar();
+    cliente.rpc = vi.fn(async () => ({ data: 4, error: null }));
+
+    await prepararSessao(cliente as never, "bloco-1");
+
+    expect(cliente.rpc).toHaveBeenCalledWith("trial_questoes_restantes_hoje");
+    expect(consultas.questoes[0].limit).toHaveBeenCalledWith(4);
+  });
+
+  it("o teto não aumenta o bloco: o menor dos dois vence", async () => {
+    const { cliente, consultas } = clienteParaPreparar({
+      bloco: {
+        id: "bloco-1",
+        plano_dia_id: "plano-1",
+        tipo: "treinar",
+        topico_id: "topico-1",
+        n_questoes: 3,
+      },
+    });
+    cliente.rpc = vi.fn(async () => ({ data: 9, error: null }));
+
+    await prepararSessao(cliente as never, "bloco-1");
+
+    expect(consultas.questoes[0].limit).toHaveBeenCalledWith(3);
+  });
+
+  it("com o teto zerado a sessão recusa com motivo próprio, nunca acervo_vazio", async () => {
+    const { cliente } = clienteParaPreparar();
+    cliente.rpc = vi.fn(async () => ({ data: 0, error: null }));
+
+    await expect(prepararSessao(cliente as never, "bloco-1")).rejects.toMatchObject({
+      constructor: SessaoRecusada,
+      motivo: "trial_teto_diario",
+    });
+    // Nem chegou a olhar o acervo: mandar caçar problema de acervo que não
+    // existe é justamente o que o motivo próprio evita.
+    expect(cliente.from).not.toHaveBeenCalledWith("questoes");
   });
 
   it("retoma sessão aberta e não busca nem insere outro conjunto", async () => {

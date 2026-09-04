@@ -155,6 +155,13 @@ describe("/app/conta", () => {
     );
   });
 
+  it("manda tentar de novo quando o pedido nem chegou a sair", async () => {
+    const html = renderToStaticMarkup(await renderConta({ resultado: "indisponivel" }));
+
+    expect(html).toContain("nada foi enviado ao banco");
+    expect(html).not.toContain("ficou em análise");
+  });
+
   it("nunca ecoa o texto do parâmetro resultado na tela", async () => {
     const html = renderToStaticMarkup(
       await renderConta({ resultado: "<script>alert(1)</script>" }),

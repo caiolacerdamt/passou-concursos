@@ -75,8 +75,20 @@ export async function pedirReembolso(): Promise<never> {
   let gateway: ReturnType<typeof gatewayAsaasDoAmbiente>;
   try {
     gateway = gatewayAsaasDoAmbiente();
-  } catch {
-    redirect("/app/conta?aba=assinatura&resultado=pendente");
+  } catch (erro) {
+    /*
+     * Config do gateway ilegível: nada foi pedido, nada foi gravado, ninguém
+     * do outro lado ficou sabendo. Não é "em análise" — dizer isso, e ainda
+     * pedir para o aluno não tentar de novo, seria mentir para ele largar um
+     * pedido que não existe. É `indisponivel`, e o erro sobe para alguém
+     * consertar a configuração.
+     */
+    reportarErro(erro, {
+      modulo: "pagamentos",
+      operacao: "pedir_reembolso",
+      motivo: "gateway_nao_configurado",
+    });
+    redirect("/app/conta?aba=assinatura&resultado=indisponivel");
   }
 
   const resultado = await solicitarReembolso(user.id, precos.garantiaDias, new Date(), {

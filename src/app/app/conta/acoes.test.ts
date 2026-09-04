@@ -145,16 +145,21 @@ describe("action de reembolso", () => {
     );
   });
 
-  it("não emite estorno quando o gateway não está configurado", async () => {
+  it("não emite estorno nem promete análise quando o gateway não está configurado", async () => {
     clienteComUsuario({ id: "aluno-real", email: "real@exemplo.com" });
+    const erro = new Error("sem chave do Asaas");
     dependencias.gateway.mockImplementation(() => {
-      throw new Error("sem chave do Asaas");
+      throw erro;
     });
 
     await expect(pedirReembolso()).rejects.toThrow(
-      "NEXT_REDIRECT:/app/conta?aba=assinatura&resultado=pendente",
+      "NEXT_REDIRECT:/app/conta?aba=assinatura&resultado=indisponivel",
     );
     expect(dependencias.reembolso).not.toHaveBeenCalled();
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      erro,
+      expect.objectContaining({ operacao: "pedir_reembolso" }),
+    );
   });
 
   it("devolve o pedido recusado sem prometer estorno", async () => {

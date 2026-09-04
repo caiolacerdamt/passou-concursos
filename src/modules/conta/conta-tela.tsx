@@ -610,6 +610,19 @@ function Avisos({ resultado }: { resultado?: string }) {
     );
   }
 
+  if (resultado === "indisponivel") {
+    return (
+      <p
+        role="alert"
+        className="mt-6 rounded-card border border-erro/40 bg-erro-fundo px-4 py-3 text-sm leading-6 text-erro"
+      >
+        Não conseguimos abrir seu pedido agora, e nada foi enviado ao banco. Tente
+        de novo em alguns minutos — o prazo da garantia não é consumido por
+        tentativa que não saiu.
+      </p>
+    );
+  }
+
   if (resultado === "recusado") {
     return (
       <p

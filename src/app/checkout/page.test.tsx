@@ -30,6 +30,11 @@ describe("resumo público do checkout", () => {
     expect(html).toContain('value="PIX"');
     expect(html).toContain('href="/termos"');
     expect(html).toContain('href="/privacidade"');
-    expect(html).toContain("Continuar para pagamento");
+    /*
+     * O rótulo do botão segue o meio escolhido — quem marcou boleto não é
+     * levado para uma tela que promete cartão. `CREDIT_CARD` é o padrão, então
+     * é o rótulo dele que sai no primeiro render.
+     */
+    expect(html).toContain("Ir para o pagamento no cartão");
   });
 });

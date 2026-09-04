@@ -97,10 +97,39 @@ describe("ativação após pagamento confirmado", () => {
 
     expect(dependencias.criarUsuario).not.toHaveBeenCalled();
     expect(dependencias.criarMatricula).not.toHaveBeenCalled();
+    // Conta que já existia não recebe pedido de definir senha (AD-133).
+    expect(dependencias.enviarDefinicaoDeSenha).not.toHaveBeenCalled();
     expect(dependencias.vincularPagamento).toHaveBeenCalledWith(
       "pag_1",
       "user_existente",
       "mat_existente",
+    );
+  });
+
+  /**
+   * O aluno que veio do trial (AD-133). `buscarMatriculaAtiva` só enxerga
+   * matrícula **paga**: com um trial ativo ela devolve `null`, e a criação
+   * roda — que é onde o trial é encerrado e a de 12 meses nasce. Se alguém
+   * tirar o filtro de tipo do repositório, a consulta volta a achar o trial e
+   * este teste cai.
+   */
+  it("aluno vindo do trial recebe matrícula nova e nenhum e-mail de definir senha", async () => {
+    const { dependencias } = dependenciasBase({
+      usuario: { id: "user_do_trial" },
+      // O trial não é matrícula paga: a busca não o encontra.
+      matricula: null,
+      nota: true,
+    });
+
+    await ativarPagamentoConfirmado("pag_1", dependencias);
+
+    expect(dependencias.criarUsuario).not.toHaveBeenCalled();
+    expect(dependencias.enviarDefinicaoDeSenha).not.toHaveBeenCalled();
+    expect(dependencias.criarMatricula).toHaveBeenCalledWith("user_do_trial", "prod_1");
+    expect(dependencias.vincularPagamento).toHaveBeenCalledWith(
+      "pag_1",
+      "user_do_trial",
+      "mat_nova",
     );
   });
 

@@ -27,6 +27,13 @@ export function supabaseNaTransacao(cliente: Client): SupabaseClient {
           `select * from public.${nome}(${lista})`,
           chaves.map((c) => normalizar(args[c])),
         );
+        // Funcao que devolve escalar chega no `supabase-js` como o valor, nao
+        // como lista de uma linha de uma coluna. O `pg` nao distingue os dois
+        // casos sozinho; a coluna com o nome da funcao e o que os separa.
+        const unica = rows.length === 1 ? (rows[0] as Record<string, unknown>) : null;
+        if (unica && Object.keys(unica).length === 1 && nome in unica) {
+          return { data: unica[nome], error: null };
+        }
         return { data: rows, error: null };
       } catch (erro) {
         return { data: null, error: erro as { message: string } };
@@ -34,7 +41,7 @@ export function supabaseNaTransacao(cliente: Client): SupabaseClient {
     },
 
     from(tabela: string) {
-      const filtros: Array<[string, unknown]> = [];
+      const filtros: Array<[string, string, unknown]> = [];
       let colunas = "*";
 
       const construtor = {
@@ -43,17 +50,21 @@ export function supabaseNaTransacao(cliente: Client): SupabaseClient {
           return construtor;
         },
         eq(coluna: string, valor: unknown) {
-          filtros.push([coluna, valor]);
+          filtros.push([coluna, "=", valor]);
+          return construtor;
+        },
+        gt(coluna: string, valor: unknown) {
+          filtros.push([coluna, ">", valor]);
           return construtor;
         },
         async maybeSingle() {
           const onde = filtros
-            .map(([coluna], i) => `${coluna} = $${i + 1}`)
+            .map(([coluna, operador], i) => `${coluna} ${operador} $${i + 1}`)
             .join(" and ");
           try {
             const { rows } = await cliente.query(
               `select ${colunas} from public.${tabela}${onde ? ` where ${onde}` : ""} limit 1`,
-              filtros.map(([, valor]) => valor),
+              filtros.map(([, , valor]) => valor),
             );
             return { data: rows[0] ?? null, error: null };
           } catch (erro) {

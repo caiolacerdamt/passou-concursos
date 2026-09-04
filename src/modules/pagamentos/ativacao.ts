@@ -60,11 +60,18 @@ export async function ativarPagamentoConfirmado(
     const produto = await dependencias.buscarProduto(pagamento.produto_id);
     if (!produto) throw new Error("produto da matricula inexistente");
 
-    const usuario =
-      (pagamento.user_id ? { id: pagamento.user_id } : await dependencias.buscarUsuario(pagamento.email)) ??
-      (await dependencias.criarUsuario(pagamento.email));
+    const existente = pagamento.user_id
+      ? { id: pagamento.user_id }
+      : await dependencias.buscarUsuario(pagamento.email);
+    const usuario = existente ?? (await dependencias.criarUsuario(pagamento.email));
 
-    await dependencias.enviarDefinicaoDeSenha(pagamento.email);
+    // Só quem acabou de ganhar conta por causa **deste** pagamento recebe o
+    // convite para definir a senha. Quem veio do trial já definiu a dele, e
+    // um pedido de redefinição que ele não fez tem o formato exato de um
+    // phishing — pior: ensina o aluno a clicar nesse tipo de link (AD-133).
+    if (existente === null) {
+      await dependencias.enviarDefinicaoDeSenha(pagamento.email);
+    }
 
     const matricula =
       (pagamento.matricula_id ? { id: pagamento.matricula_id } : null) ??

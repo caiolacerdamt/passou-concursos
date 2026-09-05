@@ -47,6 +47,7 @@ describe("catalogo de chaves", () => {
       "flag.m8.trial_gratuito",
       "flag.m9.rota_de_erro_proposital",
       "flag.m9.analytics_logado",
+      "flag.m9.login_google",
     ];
     const parametros: ChaveParam[] = [
       "param.m1.teto_tokens_por_pedido",

@@ -540,6 +540,13 @@ export const CATALOGO = {
     descricao:
       "Analytics da superficie logada. Nasce desligada: o funil pre-login e a unica coleta desta spec.",
   }),
+  "flag.m9.login_google": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m9",
+    descricao:
+      "Mostra o botao 'Continuar com Google' em /entrar e /criar-conta. Nasce DESLIGADA porque signInWithOAuth devolve URL com sucesso mesmo com o provedor desligado no painel, e a recusa so acontece fora do nosso dominio, numa tela de JSON cru do Supabase. So ligar depois de o provedor estar de fato ligado no painel (docs/DEPLOY.md §4).",
+  }),
 } as const;
 
 /** Toda chave que existe. Ler chave fora daqui e erro de compilacao. */

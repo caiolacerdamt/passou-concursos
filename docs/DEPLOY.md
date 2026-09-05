@@ -240,6 +240,26 @@ confirmação de todo mundo — inclusive a recuperação de senha de quem já p
 **Antes de ligar a flag do trial com tráfego, subir esse número** em
 *Authentication → Rate Limits*, respeitando o teto do plano do Resend.
 
+### O número a usar, e o que ele NÃO cobre (item 10 do TRIAL-2)
+
+`rate_limit_email_sent` cobre só o que o **Supabase Auth** dispara: confirmação
+de cadastro e recuperação de senha. Os quatro e-mails do trial (dias 0, 3, 6 e 8)
+**não passam por ele** — eles saem pela API HTTP do Resend, direto do job
+`scripts/jobs/emails-do-trial.mts`, e o único teto que vale para eles é o do
+plano do Resend. Esse desenho é deliberado: pendurar o ciclo de vida do trial no
+mesmo balde da confirmação de cadastro faria uma campanha de tráfego derrubar a
+recuperação de senha de quem já paga.
+
+⚠️ **Número ainda não decidido.** Ele depende do plano contratado do Resend, que
+não foi conferido — os dois limites valem e o menor manda. Regra para escolher:
+com o teto do Resend na mão, `rate_limit_email_sent` = o menor entre (a) o teto
+por hora do plano do Resend e (b) o pico de cadastros por hora que se pretende
+sustentar, com folga. **Anotar aqui o valor escolhido e a data.**
+
+| Data | Valor de `rate_limit_email_sent` | Teto do plano Resend | Quem decidiu |
+| --- | --- | --- | --- |
+| 2026-09-04 | 30/hora (default do Supabase) | não conferido | — |
+
 Fora de escopo por decisão, e não por esquecimento: captcha/Turnstile,
 fingerprint de dispositivo e bloqueio por IP próprio. Se aparecer abuso medido,
 o primeiro passo é Turnstile no cadastro — e isso vira AD nova, com o número do
@@ -276,9 +296,32 @@ amigável existe no código e nunca aparece.
 
 Esta página afirmava o contrário até 2026-09-04 — que "a tela não some, ela
 degrada". Era falso, e foi visto em uso. Vale para `/entrar` e para
-`/criar-conta`, que herdou o mesmo botão. O conserto é o item 9 de
-`docs/planos/TRIAL-2-conversao-e-telas.md`: ligar o provedor, ou esconder o
-botão até ligar.
+`/criar-conta`, que herdou o mesmo botão.
+
+### Como isso ficou resolvido (item 9 do TRIAL-2)
+
+O botão passou a viver atrás de **`flag.m9.login_google`**, que **nasce
+desligada**. Com ela desligada o botão **não existe no HTML** das duas telas —
+não é `display:none`, que deixaria o botão alcançável por teclado e por leitor de
+tela e manteria o defeito no ar para quem navega sem mouse. O caminho de e-mail
+e senha continua inteiro, e o separador "ou com e-mail" some junto, porque sem o
+Google não há "ou".
+
+Não há como o código detectar sozinho se o provedor está ligado — é exatamente
+isso que `signInWithOAuth` esconde. Por isso o estado do provedor virou
+**configuração declarada** em vez de adivinhação.
+
+**Para ligar o login com Google, na ordem:**
+
+1. Criar as credenciais OAuth no Google Cloud Console e colar *Client ID* e
+   *Client Secret* no Supabase, ligando o provedor (os três passos acima).
+2. Conferir no navegador que o clique leva à tela de consentimento do Google e
+   volta autenticado.
+3. **Só então** ligar `flag.m9.login_google` na tabela de configuração
+   (`/operador/configuracao`). Sem deploy.
+
+Ligar a flag antes do passo 1 reproduz exatamente o defeito que ela existe para
+fechar.
 
 ## 5. O que continua fora
 

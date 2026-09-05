@@ -8,7 +8,7 @@ import { matriculaAtiva } from "./matricula";
 /** Cliente de mentira: so os dois caminhos que `matriculaAtiva` usa. */
 function leitor(opcoes: {
   user?: { id: string } | null;
-  linha?: { id: string; estado: string; fim_em: string } | null;
+  linha?: { id: string; estado: string; fim_em: string; tipo: "pago" | "trial" } | null;
   registro?: { coluna: string; valor: string }[];
 }) {
   const registro = opcoes.registro ?? [];
@@ -38,7 +38,7 @@ describe("matriculaAtiva", () => {
   });
 
   it("devolve a matricula ativa do aluno da sessao", async () => {
-    const linha = { id: "m1", estado: "ativa", fim_em: "2027-01-01T00:00:00Z" };
+    const linha = { id: "m1", estado: "ativa", fim_em: "2027-01-01T00:00:00Z", tipo: "pago" as const };
 
     expect(await matriculaAtiva(leitor({ user: { id: "a" }, linha }))).toEqual(linha);
   });
@@ -58,6 +58,31 @@ describe("matriculaAtiva", () => {
     await matriculaAtiva(leitor({ user: { id: "a" }, linha: null, registro }));
 
     expect(registro.map((f) => f.coluna)).toEqual(["estado", "fim_em"]);
+  });
+
+  /**
+   * O `tipo` vem da propria linha de `matriculas`, sem join: e a coluna que o
+   * gatilho copia do produto no INSERT. Sem ele na projecao, `contextoDaMatricula`
+   * leria `undefined` e todo aluno de trial seria tratado como pago — a trava
+   * some sem nenhum teste ficar vermelho.
+   */
+  it("traz o tipo da matricula na projecao", async () => {
+    const colunas: string[] = [];
+    const construtor = {
+      select: (lista: string) => {
+        colunas.push(lista);
+        return construtor;
+      },
+      eq: () => construtor,
+      gt: () => construtor,
+      maybeSingle: async () => ({ data: null }),
+    };
+    await matriculaAtiva({
+      auth: { getUser: async () => ({ data: { user: { id: "a" } } }) },
+      from: () => construtor,
+    } as unknown as Parameters<typeof matriculaAtiva>[0]);
+
+    expect(colunas[0]).toContain("tipo");
   });
 
   it("exige que a matricula ainda esteja no prazo", async () => {

@@ -1052,46 +1052,78 @@
 - **Date**: 2026-09-03
 - **Status**: active
 
+### AD-134
+- **Decision**: O lançamento é **com o trial ligado**, e não com paga-primeiro. `flag.m8.trial_gratuito`
+  passou a `true` em produção em 2026-09-04, e `param.m8.trial_questoes_por_dia` a **15**. Isso
+  substitui a recomendação de ordem do **AD-133** ("lançar com paga-primeiro, medir duas semanas, e
+  ligar depois"); o resto do AD-133 — o desenho trial-é-matrícula, a chave única de liberação, o
+  trial uma vez na vida — continua valendo inteiro. Consequência de escopo: os itens do
+  `docs/planos/TRIAL-2-conversao-e-telas.md` deixam de ser evolução e viram **pré-requisito de
+  lançamento**, com dois itens novos que o plano não previa (a porta na landing e o botão do Google),
+  acrescentados ao plano como itens 0 e 9.
+- **Reason**: O teto de 10 foi calibrado supondo ~205 questões no acervo. A contagem real, feita
+  antes de decidir, deu **1.375** questões `origem='real'`, publicadas, vigentes e não anuladas — o
+  risco "o trial come o fosso" registrado no AD-133 não se sustenta nessa escala (7 dias × 15 = 105,
+  ou 7,6% do acervo). E com teto 10 o aluno encostaria no limite **todo dia**, porque
+  `param.m4.questoes_por_bloco` também é 10: o produto se apresentaria como amostra em vez de
+  produto. Com 15 o dia é gasto como 10 + 5, então na maioria dos dias o teto nem aparece.
+- **Trade-off**: A decisão continua **anterior ao dado de conversão** — o funil pago nunca rodou com
+  tráfego, e agora não vai rodar sozinho para comparação. Perde-se o experimento limpo que o AD-133
+  desenhava. Segundo: ligar antes do plano 2 significa que existe, hoje, um trial que funciona, que
+  **ninguém encontra** (nenhuma tela pública leva a `/criar-conta`) e que termina numa porta na cara
+  (o `/assinar` genérico). Isso não é defeito do mecanismo; é a metade que falta. Terceiro: passa a
+  existir titular LGPD de trial no banco antes de `/termos` e `/privacidade` falarem da conta
+  gratuita. Quarto: `rate_limit_email_sent` continua em 30/hora por projeto, e o item 6 do plano 2
+  soma no mesmo balde.
+- **Scope**: `configuracoes` (duas linhas novas) · `docs/planos/TRIAL-2-conversao-e-telas.md`
+  (itens 0, 9, 10, 11) · `docs/DEPLOY.md`.
+- **Date**: 2026-09-04
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Trial gratuito, parte 1 — o mecanismo e a conta gratuita
-  (`docs/planos/TRIAL-1-mecanismo-e-conta-gratuita.md`). **Sem ritual**: nao e spec numerada, nao
-  passou pela `tlc-spec-driven` e nao teve verificador independente; quem escreveu conferiu o
-  proprio trabalho pelos checks de cada item do plano. Fecha com **AD-133**.
-- **Phase / Task**: concluida na branch `feat/trial-mecanismo`, nove commits atomicos, um por item
-  do plano, na ordem que o plano exige (o item 4 antes do item 7).
-- **Completed**: (1) AD-133 no `STATE.md` e o funil corrigido no `AGENTS.md`. (2) `produtos.tipo` +
-  `produtos.dias_de_acesso` (exclusivo com `meses_de_acesso` por CHECK), `matriculas.tipo` copiado
-  do produto no INSERT e imutavel depois, produto `trial-7d`. (3) `conceder_trial()`,
-  `tipo_da_matricula_ativa()`, `trial_questoes_por_dia()` e o indice unico parcial
-  `matriculas_um_trial_por_aluno`. (4) **A correcao da ativacao**: `buscarMatriculaAtiva` filtra
-  `tipo='pago'`, `criarMatricula` passa pela RPC `encerrar_trial_e_matricular` (so `service_role`),
-  e o e-mail de definir senha so vai para quem ganhou conta por causa daquele pagamento.
-  (5) Teto diario dentro de `registrar_tentativa`, no dia do produto (America/Sao_Paulo).
-  (6) `trial_questoes_restantes_hoje()` dimensiona a sessao nos tres pontos de montagem, com recusa
-  `trial_teto_diario` propria. (7) `/criar-conta` (Google + e-mail), `/auth/confirm` aceitando
-  `signup`/`email` e concedendo o trial, `/auth/callback` idem, `/entrar` apontando para la, e o
-  template **Confirm signup** documentado em `docs/DEPLOY.md`. (8) Dominios descartaveis em
-  configuracao + os rate limits vigentes do Supabase Auth **lidos da Management API**, nao supostos.
-  (9) Teste de apagamento com titular que nunca pagou, `param.m7.retencao_trial_meses` e
-  `candidatos_a_retencao_do_trial()`.
-- **Gates**: `vitest --project unit` **1109/1109** (era 1083/1083 na `main`). `test:db`
-  **441/441** contra o Supabase de dev, com as seis migracoes ja aplicadas por `npm run db:push`.
-  `eslint` limpo, `next build` compila as 32 rotas (`/criar-conta` e a nova). O sensor do item 4 foi
-  exercido: sem o `.eq("tipo","pago")` o teste de banco cai, e foi visto caindo.
-  `git diff main...HEAD` **nao toca** `tem_matricula_ativa()` nem nenhuma das 7 policies que a usam.
-- **In-progress** (file:line): (a) **Nada foi verificado no navegador** — o cadastro por e-mail
-  depende do template *Confirm signup* apontar para `/auth/confirm` com `token_hash`, e essa troca e
-  **manual, no painel do Supabase** (`docs/DEPLOY.md`); ate ela acontecer o link do e-mail cai na
-  home sem sessao. (b) O **acervo publicado foi contado**: **1.375** questoes `origem='real'`,
-  `publicada`, `vigente`, nao anulada no projeto de dev — bem acima das ~205 que a memoria do
-  projeto dizia. O teto diario continua em `10` provisorio; a decisao e do dono, agora com o numero
-  na mao. (c) `rate_limit_email_sent` do Supabase e **30/hora por projeto** com o SMTP padrao: SMTP
-  proprio e pre-requisito de ligar a flag com trafego. (d) `/termos` e `/privacidade` ainda nao
-  falam da conta gratuita — e texto, e o plano 2 e dono dele. Seguem pendentes, das rodadas
-  anteriores: as quatro alineas de verificacao visual do AD-129/132, as do AD-125/126/127 e
-  AD-120/121/122, o `Descartar` nunca exercido contra o banco, e as duas correcoes do W2-A sem
-  sensor.
-- **Next step**: PR desta branch. Depois, `docs/planos/TRIAL-2-conversao-e-telas.md` — as telas, os
-  e-mails e a metrica. A flag `flag.m8.trial_gratuito` continua **desligada**, e a ordem recomendada
-  pelo proprio AD-133 e lancar com paga-primeiro, medir duas semanas, e so entao ligar.
+- **Feature**: Trial gratuito. A **parte 1 está mergeada** (PR #40, merge `1af9492`) e **ligada em
+  produção**. Esta rodada fecha a parte 1 com uso real e prepara a parte 2. Fecha com **AD-134**.
+- **Phase / Task**: `docs/planos/TRIAL-1-mecanismo-e-conta-gratuita.md` **concluído** — os 9 itens,
+  nove commits atômicos, todos os checks do plano fechados. A rodada atual é de documento: AD-134,
+  quatro itens novos no `TRIAL-2` e a correção de uma afirmação falsa no `docs/DEPLOY.md`.
+- **Completed**: (1) O mecanismo do trial inteiro (ver AD-133), com o teto, a correção da ativação e
+  `/criar-conta`. (2) Os templates de e-mail do Supabase Auth versionados em `docs/emails/` e
+  aplicados por `scripts/aplicar-emails-auth.mjs` — *Confirm signup* e *Reset Password*, os dois
+  únicos que algum caminho do produto dispara. (3) **AD-134**: flag ligada e teto em 15.
+  (4) `TRIAL-2` ganhou os itens **0** (a porta na landing), **9** (o Google), **10** (o teto de
+  e-mail) e **11** (a tela de recusa).
+- **Gates**: `unit` 1109/1109 · `test:db` 441/441 · `eslint` limpo · `next build` 32 rotas. O sensor
+  do item 4 foi visto falhando com o código quebrado de propósito. `git diff` não tocou
+  `tem_matricula_ativa()` nem nenhuma das 7 policies.
+- **Verificação em uso real** (o que fecha a parte 1, e o que nenhum teste alcançava): conta criada
+  por `/criar-conta`, e-mail de confirmação recebido e clicado, `/app` aberto, onboarding preenchido,
+  bloco de **10** respondido, bloco de **5** respondido, e a 16ª questão recusada com
+  `trial_teto_diario` e a mensagem própria. No banco: 15 tentativas no dia, 2 sessões, 7 itens no
+  caderno de erros, 2 revisões agendadas, matrícula `tipo='trial'` com **7,00 dias** exatos. Conta:
+  `suporte.vektor.ia@gmail.com`, mantida viva de propósito para o dia 7 ser sentido.
+- **In-progress** (file:line): (a) 🔴 **Nenhuma tela pública leva a `/criar-conta`** — a landing tem
+  CTA para `#oferta` (`src/modules/ui/landing/secoes.tsx:99`) e `/checkout` (`:764`), e **nenhum link
+  de "Entrar"**. Com a flag ligada, o trial não é alcançável sem digitar a URL. É o item 0 do
+  `TRIAL-2`. (b) 🔴 **O botão do Google leva a JSON cru do Supabase** em `/entrar` e `/criar-conta`:
+  `signInWithOAuth` devolve URL mesmo com o provedor desligado (`src/app/entrar/acoes.ts`), e a
+  recusa acontece fora do nosso domínio. Item 9. (c) `rate_limit_email_sent` = **30/hora por
+  projeto** mesmo com o Resend configurado. Item 10. (d) `/termos` e `/privacidade` ainda não falam
+  da conta gratuita, e já existe titular de trial no banco. Item 8. Seguem pendentes, das rodadas
+  anteriores: as alíneas de verificação visual do AD-129/132, AD-125/126/127 e AD-120/121/122, o
+  `Descartar` nunca exercido contra o banco, e as duas correções do W2-A sem sensor.
+- **Regressão desta rodada, encontrada e consertada**: ligar a flag e mudar o teto no banco de
+  desenvolvimento — que é **o mesmo banco de produção** — quebrou 4 testes de banco na `main`
+  (execução `33916662534`). Dois eram meus e liam o estado global em vez de escrever o próprio
+  (`trial.test.ts`); dois eram alheios e contavam linhas de uma consulta global que só funcionava
+  enquanto nenhum aluno real tinha plano de hoje (`frase-do-plano-consulta.test.ts`) — a conta de
+  trial gerou um. É a mesma armadilha que `comTransacaoSemPerfilConcurso` documenta em `conexao.ts`.
+  Os quatro passaram a escrever o próprio estado ou a filtrar pelos próprios ids; o sensor foi
+  exercido (tirar `pd.frase is null` da consulta derruba o teste). **Perda de cobertura registrada,
+  não escondida:** o caminho "chave sem linha nenhuma ⇒ flag desligada" não é mais alcançável de um
+  teste de banco, porque `configuracoes` é append-only e o DELETE é bloqueado por gatilho (AD-081).
+  Quem segura essa metade agora é o `coalesce(..., 'false')` da função mais o default do catálogo.
+- **Next step**: `docs/planos/TRIAL-2-conversao-e-telas.md`, **na ordem do plano** — item 0 primeiro,
+  porque sem ele os itens 1 a 7 melhoram a experiência de um público que não chega. Duas decisões de
+  negócio esperam antes de escrever código: qual CTA vem primeiro no herói (item 0) e ligar ou
+  esconder o Google (item 9).

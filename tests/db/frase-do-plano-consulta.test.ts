@@ -25,6 +25,21 @@ import { descreveComBanco } from "./setup";
  * aparece na consulta não vira chamada de IA.
  */
 descreveComBanco("consulta do job da frase (SPEC 08, SC4)", () => {
+  /**
+   * ⚠️ As duas asserções abaixo olham **só as linhas que este teste criou**, e
+   * não a contagem total da consulta.
+   *
+   * `CONSULTA_DOS_PLANOS` é global por natureza — ela varre `plano_dia` inteiro,
+   * que é o que o job faz. Contar o resultado inteiro só funcionava enquanto o
+   * banco de desenvolvimento não tinha aluno nenhum com plano de hoje. Em
+   * 2026-09-04 passou a ter: a conta de trial do AD-134 gerou um plano real, e
+   * os dois testes viraram vermelho sem nada ter mudado no código do job.
+   *
+   * É a mesma armadilha que `comTransacaoSemPerfilConcurso` documenta em
+   * `conexao.ts`. Filtrar pelos próprios ids não enfraquece a prova: se
+   * `pd.frase is null` ou `pd.data = current_date` saírem do SQL, a linha que
+   * não devia aparecer aparece, e o teste cai igual.
+   */
   it("ignora o plano de hoje que **já tem** frase", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const { rows: criados } = await cliente.query<{ id: string }>(
@@ -36,23 +51,30 @@ descreveComBanco("consulta do job da frase (SPEC 08, SC4)", () => {
       expect(criados).toHaveLength(2);
 
       const { rows } = await cliente.query<{ id: string }>(CONSULTA_DOS_PLANOS);
+      const encontrados = new Set(rows.map((l) => l.id));
 
       // O plano com frase existe, é de hoje, e mesmo assim não pode aparecer.
-      expect(rows).toHaveLength(1);
-      expect(rows[0].id).toBe(criados[1].id);
+      expect(encontrados.has(criados[0].id)).toBe(false);
+      // O sem frase, do mesmo dia, precisa aparecer.
+      expect(encontrados.has(criados[1].id)).toBe(true);
     });
   });
 
   it("ignora o plano sem frase que **não é de hoje**", async () => {
     await comTransacaoRevertida(async (cliente) => {
-      await cliente.query(
+      const { rows: criados } = await cliente.query<{ id: string }>(
         `insert into public.plano_dia (user_id, data, frase)
          values (gen_random_uuid(), current_date - 1, null),
-                (gen_random_uuid(), current_date + 1, null)`,
+                (gen_random_uuid(), current_date + 1, null)
+         returning id`,
       );
 
-      const { rows } = await cliente.query(CONSULTA_DOS_PLANOS);
-      expect(rows).toHaveLength(0);
+      const { rows } = await cliente.query<{ id: string }>(CONSULTA_DOS_PLANOS);
+      const encontrados = new Set(rows.map((l) => l.id));
+
+      // Ontem e amanhã, os dois sem frase: nenhum dos dois é do dia do job.
+      expect(encontrados.has(criados[0].id)).toBe(false);
+      expect(encontrados.has(criados[1].id)).toBe(false);
     });
   });
 

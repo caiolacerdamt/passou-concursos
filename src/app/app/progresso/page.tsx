@@ -29,7 +29,13 @@ async function lerProgressoComFalha(
 }
 
 export default async function Progresso({ searchParams }: Props) {
-  await exigirMatriculaAtiva();
+  /*
+   * A guarda continua sendo a mesma, e continua sendo a unica: quem nao tem
+   * matricula nenhuma vai para /assinar. O tipo devolvido decide so o **escopo**
+   * da tela — previa ou completa (AD-133).
+   */
+  const matricula = await exigirMatriculaAtiva();
+  const trial = matricula.tipo === "trial";
 
   const ligado = await isFlagOn("flag.m4.caderno_erros");
   if (!ligado) {
@@ -72,6 +78,7 @@ export default async function Progresso({ searchParams }: Props) {
       */
       trajetoria={trajetoria ? <TrajetoriaTela trajetoria={trajetoria} /> : null}
       mostrar={quantosAssuntosMostrar(parametros.mostrar)}
+      trial={trial}
     />
   );
 }

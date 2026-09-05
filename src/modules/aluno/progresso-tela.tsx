@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { ConviteDeMatricula } from "@/modules/conta/convite-de-matricula";
 import { Estado } from "@/modules/ui/estado";
 
 import type { DadosGamificacao } from "./gamificacao";
@@ -327,6 +328,46 @@ function LinhaDaMateria({ materia }: { materia: MateriaDoHistorico }) {
   );
 }
 
+/**
+ * O historico completo por materia, travado no trial — mas travado **com o
+ * numero**, que e o argumento inteiro (AD-133 · item 3 do TRIAL-2).
+ *
+ * Travar sem dizer quanto tem e jogar fora a metade que convence: "abre com a
+ * matricula" nao move ninguem; "18 assuntos ja mapeados abrem com a matricula"
+ * move. O numero e sempre real, e o aluno acabou de produzi-lo.
+ */
+function HistoricoEmPrevia({ dados }: { dados: DadosProgresso }) {
+  const materias = dados.historicoPorMateria;
+  const nTopicos = dados.historico.length;
+
+  if (materias.length === 0) return null;
+
+  return (
+    <section aria-labelledby="titulo-historico">
+      <div className="max-w-[58ch]">
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca-apoio">
+          O que você já construiu
+        </p>
+        <h2 id="titulo-historico" className="mt-2.5 text-[1.375rem] font-semibold">
+          Progresso por assunto
+        </h2>
+      </div>
+
+      <div className="mt-4">
+        <ConviteDeMatricula
+          titulo={`${materias.length} ${materias.length === 1 ? "matéria" : "matérias"} e ${nTopicos} ${nTopicos === 1 ? "assunto" : "assuntos"} já mapeados pelo seu histórico.`}
+        >
+          <p>
+            O detalhe por assunto — o que já está forte, o que está fraco e para onde
+            cada um está indo — abre com a matrícula. Nada disso é apagado no fim do
+            teste: continua contando a partir da primeira resposta que você deu.
+          </p>
+        </ConviteDeMatricula>
+      </div>
+    </section>
+  );
+}
+
 function Historico({ dados }: { dados: DadosProgresso }) {
   const materias = dados.historicoPorMateria;
   const nTopicos = dados.historico.length;
@@ -498,7 +539,13 @@ function FiltrosDoCaderno({ dados }: { dados: DadosProgresso }) {
  * ação principal passa a valer o assunto inteiro; cada causa continua sendo
  * um caminho próprio, agora do tamanho do que ela é.
  */
-function AssuntoComErros({ assunto }: { assunto: AssuntoDoCaderno }) {
+function AssuntoComErros({
+  assunto,
+  travado = false,
+}: {
+  assunto: AssuntoDoCaderno;
+  travado?: boolean;
+}) {
   const refazer = (causa: string) =>
     `/app/sessao?refacao=1&topico=${encodeURIComponent(assunto.topicoId)}&causa=${encodeURIComponent(causa)}`;
 
@@ -526,12 +573,28 @@ function AssuntoComErros({ assunto }: { assunto: AssuntoDoCaderno }) {
               {assunto.nErros === 1 ? "erro" : "erros"}
             </span>
           </p>
-          <Link
-            href={refazer("todas")}
-            className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 text-sm font-semibold text-white transition hover:bg-marca-apoio"
-          >
-            {assunto.nErros === 1 ? "Refazer o erro" : `Refazer os ${assunto.nErros}`}
-          </Link>
+          {/* Travado, o botao continua **visivel e com o numero**: e a acao
+              mais valiosa do caderno e a mais facil de entender como "isso aqui
+              abre com a matricula". Escondida, o aluno nunca sabe o que perdeu.
+              `aria-disabled` + `tabIndex={-1}` porque `<a>` sem href some do
+              teclado sem dizer por que. */}
+          {travado ? (
+            <span
+              aria-disabled="true"
+              tabIndex={-1}
+              className="inline-flex min-h-11 cursor-not-allowed items-center gap-2 rounded-full border border-linha bg-fundo-suave px-5 text-sm font-semibold text-suave"
+            >
+              <CadeadoPequeno />
+              {assunto.nErros === 1 ? "Refazer o erro" : `Refazer os ${assunto.nErros}`}
+            </span>
+          ) : (
+            <Link
+              href={refazer("todas")}
+              className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 text-sm font-semibold text-white transition hover:bg-marca-apoio"
+            >
+              {assunto.nErros === 1 ? "Refazer o erro" : `Refazer os ${assunto.nErros}`}
+            </Link>
+          )}
         </div>
       </div>
 
@@ -542,13 +605,20 @@ function AssuntoComErros({ assunto }: { assunto: AssuntoDoCaderno }) {
         <ul className="mt-3 flex flex-wrap gap-2">
           {assunto.causas.map((causa) => (
             <li key={causa.causa}>
-              <Link
-                href={refazer(causa.causa)}
-                className="inline-flex min-h-10 items-center gap-2.5 rounded-lg border border-linha px-3.5 text-sm transition hover:bg-fundo-suave"
-              >
-                {NOMES_DAS_CAUSAS[causa.causa]}
-                <span className="font-utilitaria font-semibold text-erro">{causa.nErros}</span>
-              </Link>
+              {travado ? (
+                <span className="inline-flex min-h-10 items-center gap-2.5 rounded-lg border border-linha bg-fundo-suave px-3.5 text-sm text-suave">
+                  {NOMES_DAS_CAUSAS[causa.causa]}
+                  <span className="font-utilitaria font-semibold text-erro">{causa.nErros}</span>
+                </span>
+              ) : (
+                <Link
+                  href={refazer(causa.causa)}
+                  className="inline-flex min-h-10 items-center gap-2.5 rounded-lg border border-linha px-3.5 text-sm transition hover:bg-fundo-suave"
+                >
+                  {NOMES_DAS_CAUSAS[causa.causa]}
+                  <span className="font-utilitaria font-semibold text-erro">{causa.nErros}</span>
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -557,7 +627,15 @@ function AssuntoComErros({ assunto }: { assunto: AssuntoDoCaderno }) {
   );
 }
 
-function Caderno({ dados, mostrar }: { dados: DadosProgresso; mostrar: number }) {
+function Caderno({
+  dados,
+  mostrar,
+  trial = false,
+}: {
+  dados: DadosProgresso;
+  mostrar: number;
+  trial?: boolean;
+}) {
   const filtrado = Boolean(
     dados.filtros.causa || dados.filtros.topicoId || dados.filtros.materiaId,
   );
@@ -582,7 +660,7 @@ function Caderno({ dados, mostrar }: { dados: DadosProgresso; mostrar: number })
         </p>
       </div>
 
-      <FiltrosDoCaderno dados={dados} />
+      {trial ? null : <FiltrosDoCaderno dados={dados} />}
 
       {assuntos.length === 0 ? (
         <Estado
@@ -606,11 +684,30 @@ function Caderno({ dados, mostrar }: { dados: DadosProgresso; mostrar: number })
         <>
           <ul className="mt-4 grid gap-3" aria-label="Caderno de erros por assunto">
             {visiveis.map((assunto) => (
-              <AssuntoComErros key={assunto.topicoId} assunto={assunto} />
+              <AssuntoComErros key={assunto.topicoId} assunto={assunto} travado={trial} />
             ))}
           </ul>
 
-          {restantes > 0 || dados.cadernoTruncado ? (
+          {trial ? (
+            <div className="mt-4">
+              <ConviteDeMatricula
+                titulo={
+                  assuntos.length === 1
+                    ? "1 assunto no seu caderno de erros."
+                    : `${assuntos.length} assuntos no seu caderno de erros.`
+                }
+              >
+                <p>
+                  {restantes > 0
+                    ? `Você está vendo ${visiveis.length} deles. `
+                    : ""}
+                  Refazer os erros de um assunto, filtrar por causa e abrir o caderno
+                  inteiro fazem parte da matrícula. O caderno continua sendo montado
+                  enquanto o teste dura, e nada dele é apagado depois.
+                </p>
+              </ConviteDeMatricula>
+            </div>
+          ) : restantes > 0 || dados.cadernoTruncado ? (
             <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-linha pt-4">
               <p className="text-sm text-suave">
                 Mostrando {visiveis.length} de {assuntos.length}{" "}
@@ -672,12 +769,23 @@ export function ProgressoTela({
   gamificacao = null,
   trajetoria = null,
   mostrar = ASSUNTOS_POR_PAGINA,
+  trial = false,
 }: {
   dados: DadosProgresso;
   gamificacao?: DadosGamificacao | null;
   /** A cobertura do edital, montada pela rota — entra entre a semana e os pontos. */
   trajetoria?: ReactNode;
   mostrar?: number;
+  /**
+   * Prévia do trial (AD-133 · item 3 do TRIAL-2). **`false` por default, e é
+   * de propósito**: o erro mais provável deste item é a trava vazar para quem
+   * pagou, e um default `true` faria isso na primeira chamada esquecida.
+   *
+   * Fica a régua da semana, o total respondido e o percentual de acerto — tudo
+   * com o dado real. Trava o histórico completo, os filtros e a paginação do
+   * caderno, e a ação `Refazer os N`. O que trava mostra o número.
+   */
+  trial?: boolean;
 }) {
   if (dados.estadoInicial) {
     return <PrimeiroDia />;
@@ -700,8 +808,18 @@ export function ProgressoTela({
       <SuaSemana dados={dados} />
       {trajetoria}
       {gamificacao ? <GamificacaoNoProgresso dados={gamificacao} /> : null}
-      <Historico dados={dados} />
-      <Caderno dados={dados} mostrar={mostrar} />
+      {trial ? <HistoricoEmPrevia dados={dados} /> : <Historico dados={dados} />}
+      <Caderno dados={dados} mostrar={mostrar} trial={trial} />
     </div>
+  );
+}
+
+/** O cadeado da ação travada. Decorativo: quem diz o estado é `aria-disabled`. */
+function CadeadoPequeno() {
+  return (
+    <svg viewBox="0 0 16 16" className="size-3.5" fill="none" aria-hidden="true">
+      <rect x="3" y="7" width="10" height="6.5" rx="1.6" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M5.6 7V5.2a2.4 2.4 0 0 1 4.8 0V7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   );
 }

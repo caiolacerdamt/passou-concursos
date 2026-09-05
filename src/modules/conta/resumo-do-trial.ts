@@ -113,3 +113,59 @@ export async function consultarResumoDoTrial(
 export function temAlgoAContar(resumo: ResumoDoTrial | null): resumo is ResumoDoTrial {
   return resumo !== null && resumo.questoesRespondidas > 0;
 }
+
+/**
+ * O dia de hoje, para a tela de recusa do teto (item 11 do TRIAL-2).
+ *
+ * É o mesmo corte de dia que `trial_questoes_restantes_hoje()` usa — meia-noite
+ * em São Paulo. O corte é calculado aqui porque a leitura é do PostgREST e não
+ * da função; se um dia divergirem, o sintoma é a tela dizer "15 hoje" enquanto
+ * o banco conta 14, e é por isso que os dois cortes citam o mesmo fuso.
+ */
+export type DiaDoTrial = {
+  respondidasHoje: number;
+  acertosHoje: number;
+  assuntosMapeados: number;
+  revisoesAgendadas: number;
+};
+
+function inicioDoDiaEmSaoPaulo(agora: Date = new Date()): string {
+  const dia = agora.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  // -03:00 é o deslocamento fixo do horário de Brasília; o país não tem mais
+  // horário de verão desde 2019 (Decreto 9.772/2019).
+  return new Date(`${dia}T00:00:00-03:00`).toISOString();
+}
+
+export async function consultarDiaDoTrial(
+  cliente: unknown,
+): Promise<DiaDoTrial | null> {
+  const supabase = cliente as Leitor;
+
+  try {
+    const [hoje, dominio, revisoes] = await Promise.all([
+      supabase
+        .from("tentativas")
+        .select("correta")
+        .gte("respondida_em", inicioDoDiaEmSaoPaulo())
+        .limit(TETO_DE_TENTATIVAS)
+        .then((r) => r),
+      supabase.from("dominio_topico").select("topico_id").then((r) => r),
+      supabase.from("revisao_agenda").select("topico_id").then((r) => r),
+    ]);
+
+    const erro = hoje.error ?? dominio.error ?? revisoes.error;
+    if (erro) throw erro;
+
+    const linhas = (hoje.data ?? []) as { correta: boolean | null }[];
+
+    return {
+      respondidasHoje: linhas.length,
+      acertosHoje: linhas.filter((linha) => linha.correta === true).length,
+      assuntosMapeados: ((dominio.data ?? []) as unknown[]).length,
+      revisoesAgendadas: ((revisoes.data ?? []) as unknown[]).length,
+    };
+  } catch (erro) {
+    reportarErro(erro, { modulo: "conta", operacao: "dia_do_trial" });
+    return null;
+  }
+}

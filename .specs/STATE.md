@@ -1123,14 +1123,33 @@
 - **Date**: 2026-09-05
 - **Status**: active
 
+### AD-137
+- **Decision**: O `/app/raio-x` entra em **prévia** no trial: as **três** matérias de maior peso ficam
+  visíveis, com a frequência real calculada; a cauda da lista trava dizendo **quantas** matérias
+  ficaram; e o **Mapa de Prioridade** trava inteiro, mostrando só o tamanho do que existe.
+- **Reason**: `flag.m5.raiox` está **ligada** em produção — lida em 2026-09-05 —, então o item 4 do
+  `TRIAL-2` se aplica. Três matérias, e não uma: com uma só o aluno não vê o **contraste** de peso,
+  que é o argumento inteiro do Raio-X. O Mapa trava porque ele é o cruzamento do peso da banca com o
+  domínio do próprio aluno — a parte acionável —, e é o mesmo corte do item 3: trava profundidade e
+  ação, nunca a existência da tela.
+- **Trade-off**: O aluno de trial vê menos edital do que veria hoje (a flag está ligada e não havia
+  recorte por tipo de matrícula). É a mesma escolha do item 3 e vale a mesma ressalva: se a conversão
+  mostrar que travar o Mapa afasta mais do que converte, é um `trial={false}` de distância.
+- **Registro de erro de método**: o item foi dado como "não se aplica" numa primeira passada, sobre o
+  **default do catálogo** (`false`), porque a leitura do banco estava bloqueada. **Default de catálogo
+  não é valor vigente.** O plano já mandava conferir a flag antes de estimar o item.
+- **Scope**: `src/modules/raiox/tela.tsx` · `src/app/app/raio-x/page.tsx`.
+- **Date**: 2026-09-05
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: Trial gratuito, **parte 2** — conversão, telas, e-mails e métrica
   (`docs/planos/TRIAL-2-conversao-e-telas.md`). A parte 1 está mergeada (PR #40) e ligada em produção.
-  Esta rodada fecha **10 dos 11 itens** do plano. Fecha com **AD-135** e **AD-136**.
+  Esta rodada fecha **os 11 itens** do plano. Fecha com **AD-135**, **AD-136** e **AD-137**.
 - **Phase / Task**: Plano sem ritual, sem verificador independente — quem escreve confere pelos checks
   de cada item, como o próprio plano declara. Onze commits atômicos na `feat/trial-conversao`.
-- **Completed**: item **0** (a porta: CTA de trial no herói e saída secundária na oferta, com a
+- **Completed**: item **4** (`/app/raio-x` em prévia — AD-137) · item **0** (a porta: CTA de trial no herói e saída secundária na oferta, com a
   landing byte a byte idêntica com a flag desligada) · **1** (`matriculas.tipo` na aplicação,
   `contextoDaMatricula()`, `ConviteDeMatricula`) · **2** (faixa de dias restantes **e questões
   restantes hoje** no shell do `/app`) · **3** (`/app/progresso` em prévia) · **5** (`/assinar` com
@@ -1138,12 +1157,12 @@
   **7** (view `funil_trial` + `funil_trial_do_operador()`) · **8** (`/termos` e `/privacidade` falam
   da conta gratuita) · **9** (`flag.m9.login_google` — AD-135) · **10** (`docs/DEPLOY.md` com a ordem
   de ligar o Google e a tabela do `rate_limit_email_sent`) · **11** (a recusa do teto vira tela).
-- **Não feito, com motivo**: item **4** (`/app/raio-x` em prévia). `flag.m5.raiox` nasce desligada
-  (AD-100) e o próprio plano manda **não inventar tela** nesse caso. Não foi possível ler o valor
-  vigente no banco nesta sessão — o acesso foi negado pelo classificador —, então a decisão foi
-  tomada sobre o default declarado no catálogo. **Se a flag estiver ligada em produção, o item 4
-  continua aberto.**
-- **Gates**: `unit` 1167/1167 · `test:db` 454/454 · `eslint` limpo (0 erros; 2 warnings
+- **Erro de método desta rodada, e a correção**: o item 4 foi dado como "não se aplica" sobre o
+  **default do catálogo** (`flag.m5.raiox: false`), porque a leitura do banco estava bloqueada
+  naquele momento. O valor **vigente é `true`**. Default de catálogo não é valor vigente, e o próprio
+  plano mandava conferir a flag antes de estimar o item — a conferência não podia ser substituída por
+  leitura de código. O item foi feito depois, na mesma branch (AD-137).
+- **Gates**: `unit` 1172/1172 · `test:db` 454/454 · `eslint` limpo (0 erros; 2 warnings
   pré-existentes em `scripts/jobs/`) · `tsc --noEmit` limpo · `next build` compila, 33 rotas ·
   varredura de segredos limpa. `git diff` não tocou `tem_matricula_ativa()` nem nenhuma das 7
   policies.

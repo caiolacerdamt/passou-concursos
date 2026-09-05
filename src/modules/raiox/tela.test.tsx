@@ -256,3 +256,81 @@ describe("posicoesDosRotulos", () => {
     expect(valores[2] - valores[1]).toBeGreaterThanOrEqual(19);
   });
 });
+
+/**
+ * Item 4 do TRIAL-2. `flag.m5.raiox` esta LIGADA em producao — conferida no
+ * banco em 2026-09-05 —, entao a previa se aplica.
+ *
+ * O par de testes e proposital, igual ao do progresso: um prova que a trava
+ * aparece no trial, o outro que ela NAO aparece fora dele. Sozinho, o primeiro
+ * passaria tambem com a trava vazando para quem pagou.
+ */
+describe("RaioXTela em previa do trial", () => {
+  const outra = (id: string, nome: string): LinhaMateriaRaioX => ({
+    ...financeira,
+    materiaId: id,
+    materia: nome,
+    topicos: [],
+  });
+
+  const cinco: DadosRaioX = {
+    perfil,
+    linhas: [],
+    materias: [
+      bancarios,
+      financeira,
+      outra("m3", "Língua Portuguesa"),
+      outra("m4", "Atendimento"),
+      outra("m5", "Vendas e Negociação"),
+    ],
+  };
+
+  it("aluno pago ve a tela identica a de antes da previa existir", () => {
+    const pago = renderToStaticMarkup(<RaioXTela dados={cinco} />);
+    const explicito = renderToStaticMarkup(<RaioXTela dados={cinco} trial={false} />);
+
+    expect(pago).toBe(explicito);
+    expect(pago).toContain("Vendas e Negociação");
+    expect(pago).not.toContain("Fazer a matrícula");
+  });
+
+  it("no trial mostra as tres de maior peso, com a frequencia real", () => {
+    const html = renderToStaticMarkup(<RaioXTela dados={cinco} trial />);
+
+    expect(html).toContain("Conhecimentos Bancários");
+    expect(html).toContain("Matemática Financeira");
+    expect(html).toContain("Língua Portuguesa");
+    // O numero real continua na tela: previa nao e borrao de enfeite.
+    expect(html).toContain("80,0%");
+  });
+
+  it("no trial a cauda da lista trava, e trava dizendo quantas ficaram", () => {
+    const html = renderToStaticMarkup(<RaioXTela dados={cinco} trial />);
+
+    expect(html).toContain("Mais 2 matérias do seu edital");
+    expect(html).not.toContain("Vendas e Negociação");
+    expect(html).not.toContain("Atendimento");
+  });
+
+  it("no trial o Mapa de Prioridade existe e diz o tamanho, sem entregar o cruzamento", () => {
+    const mapa: DadosMapaPorMateria = {
+      linhas: [],
+      geradoEm: null,
+    } as unknown as DadosMapaPorMateria;
+
+    const html = renderToStaticMarkup(<RaioXTela dados={cinco} mapa={mapa} trial />);
+
+    expect(html).toContain("Mapa de Prioridade");
+    expect(html).toContain("Fazer a matrícula");
+    // A tabela e o grafico do mapa nao sao desenhados.
+    expect(html).not.toContain("Ver como gráfico");
+  });
+
+  /** Com uma lista curta nao ha cauda, e o convite da lista nao aparece. */
+  it("edital menor que a previa nao inventa trava", () => {
+    const html = renderToStaticMarkup(<RaioXTela dados={dados} trial />);
+
+    expect(html).not.toContain("Mais 0 matérias");
+    expect(html).not.toContain("matérias do seu edital");
+  });
+});

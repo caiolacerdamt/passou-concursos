@@ -125,3 +125,38 @@ describe("pagina de vendas", () => {
     expect(html).not.toContain("secao--amanha");
   });
 });
+
+/**
+ * Item 0 do TRIAL-2: sem esta porta, o trial ligado converte zero — nao por
+ * defeito, por falta de entrada. Nenhuma tela publica levava a `/criar-conta`.
+ *
+ * A segunda assercao e a que segura o desligamento: com a flag desligada a
+ * landing tem que ser **identica** a de hoje, byte a byte no HTML renderizado.
+ * E o mesmo criterio da parte 1, e e o que permite desligar sem susto.
+ */
+describe("a porta do trial na landing", () => {
+  it("com a flag ligada, existe caminho clicavel de / ate /criar-conta", async () => {
+    definirLeitorDeConfig(async () => ({ "flag.m8.trial_gratuito": true }));
+
+    const html = renderToStaticMarkup(await Home());
+
+    expect(html).toContain('href="/criar-conta"');
+    expect(html).toContain("Começar 7 dias grátis");
+    // O checkout nao sai da pagina: o trial e porta a mais, nunca porta trocada.
+    expect(html).toContain('href="/checkout"');
+    // E o link de volta, que o aluno de trial precisa no dia 2.
+    expect(html).toContain('href="/entrar"');
+  });
+
+  it("com a flag desligada, a landing e byte a byte a de hoje", async () => {
+    definirLeitorDeConfig(async () => ({ "flag.m8.trial_gratuito": false }));
+    const desligada = renderToStaticMarkup(await Home());
+
+    definirLeitorDeConfig(async () => ({}));
+    const semLinha = renderToStaticMarkup(await Home());
+
+    expect(desligada).toBe(semLinha);
+    expect(desligada).not.toContain("/criar-conta");
+    expect(desligada).toContain("Montar meu plano");
+  });
+});

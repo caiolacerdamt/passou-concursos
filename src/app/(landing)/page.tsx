@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { EventoDoFunilNaEntrada } from "@/modules/analytics/entrada";
+import { isFlagOn } from "@/modules/config";
 import { obterPrecosPublicos } from "@/modules/pagamentos/preco";
 import { DiaSeMonta } from "@/modules/ui/landing/dia";
 import { Barra, Rodape } from "@/modules/ui/landing/estrutura";
@@ -48,7 +49,15 @@ export const metadata: Metadata = {
  * há um ato extra depois dela.
  */
 export default async function Home() {
-  const precos = await obterPrecosPublicos();
+  /*
+   * A porta do trial (item 0 do TRIAL-2). A landing já é componente de servidor
+   * e já lê configuração — `precos` chega assim —, então a flag entra pelo mesmo
+   * caminho. Um segundo mecanismo aqui seria a chance de os dois discordarem.
+   */
+  const [precos, trial] = await Promise.all([
+    obterPrecosPublicos(),
+    isFlagOn("flag.m8.trial_gratuito"),
+  ]);
 
   return (
     <>
@@ -57,7 +66,7 @@ export default async function Home() {
       <Barra />
 
       <main id="topo">
-        <Heroi />
+        <Heroi trial={trial} />
         <PerguntaDeTerca />
         <AlguemContou />
         <DiaSeMonta />
@@ -66,7 +75,7 @@ export default async function Home() {
         <EvidenciaDaRevisao />
         <Comunidade />
         <PorQueAguenta />
-        <Oferta precos={precos} />
+        <Oferta precos={precos} trial={trial} />
       </main>
 
       <Rodape />

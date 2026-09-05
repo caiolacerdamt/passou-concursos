@@ -46,7 +46,20 @@ import { MARCOS_DA_REVISAO } from "./plano-do-dia";
    texto cobria metade do quadro e lia como painel colado sobre o vídeo. O
    corredor já é bege claro e o texto é tinta cheia, então o contraste vem do
    par escuro-sobre-creme, sem camada nenhuma no meio.  */
-export function Heroi() {
+/**
+ * A porta do trial (AD-133 · item 0 do TRIAL-2).
+ *
+ * Com a flag ligada, o CTA principal do herói é o teste grátis; com ela
+ * desligada, o herói é **exatamente** o de hoje — as duas âncoras internas,
+ * a mesma copy, o mesmo DOM. É o mesmo critério da parte 1, e é o que permite
+ * desligar sem susto.
+ *
+ * Por que o trial vem primeiro **aqui** e o checkout continua primeiro no
+ * bloco de oferta: no herói a pessoa ainda não confia em nada e a porta barata
+ * é a que ela cruza; no fim da página ela já leu tudo e está decidindo, e
+ * duas ofertas competindo no mesmo ponto só adiam a decisão.
+ */
+export function Heroi({ trial = false }: { trial?: boolean }) {
   return (
     <section
       className="secao secao--heroi"
@@ -96,12 +109,25 @@ export function Heroi() {
             precisa dominar.
           </p>
           <div className="heroi__acoes">
-            <a className="botao botao--grande" href="#oferta">
-              Montar meu plano
-            </a>
-            <a className="botao botao--grande botao--vazado" href="#plano">
-              Como funciona
-            </a>
+            {trial ? (
+              <>
+                <Link className="botao botao--grande" href="/criar-conta">
+                  Começar 7 dias grátis
+                </Link>
+                <a className="botao botao--grande botao--vazado" href="#plano">
+                  Saiba mais
+                </a>
+              </>
+            ) : (
+              <>
+                <a className="botao botao--grande" href="#oferta">
+                  Montar meu plano
+                </a>
+                <a className="botao botao--grande botao--vazado" href="#plano">
+                  Como funciona
+                </a>
+              </>
+            )}
           </div>
           <p className="micro">
             Raio-X da prova · Plano diário personalizado · Acompanhamento do progresso
@@ -694,7 +720,13 @@ function BeneficiosDoPlano({ garantiaDias }: { garantiaDias: number }) {
   );
 }
 
-export function Oferta({ precos }: { precos: PrecosPublicos }) {
+export function Oferta({
+  precos,
+  trial = false,
+}: {
+  precos: PrecosPublicos;
+  trial?: boolean;
+}) {
   /*
    * O selo é **calculado**, nunca escrito à mão: preço e desconto moram na
    * tabela de configuração e mudam sem deploy. Um "Economize R$ 19,70"
@@ -767,6 +799,18 @@ export function Oferta({ precos }: { precos: PrecosPublicos }) {
           <p className="oferta__microcopy">
             12 meses de acesso · {precos.garantiaDias} dias de garantia
           </p>
+          {/* Aqui o trial é a saída secundária, e não a principal: quem chegou
+              ao fim da página já leu o método e o preço. Ele entra DEPOIS do
+              CTA no DOM para não disputar a leitura com a decisão que a página
+              inteira preparou — e continua sendo um caminho clicável. */}
+          {trial ? (
+            <p className="oferta__microcopy">
+              Prefere ver antes de decidir?{" "}
+              <Link className="elo" href="/criar-conta">
+                Testar 7 dias grátis, sem cartão
+              </Link>
+            </p>
+          ) : null}
           <div className="garantia oferta__garantia">
             <h3 className="garantia__t">Garantia de {precos.garantiaDias} dias</h3>
             <p className="garantia__p">

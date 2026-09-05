@@ -144,4 +144,41 @@ descreveComBanco("trial · a fila dos quatro e-mails", () => {
       });
     });
   });
+
+  /**
+   * A fila guarda o e-mail do titular em coluna propria: ela e grupo 1, e o
+   * esquecimento tem de alcanca-la. O `on delete cascade` da FK cobriria a
+   * linha se o apagamento passasse por `auth.users`, mas ele varre por
+   * `user_id` tabela a tabela — o que a rotina nao conhece, ela nao apaga.
+   *
+   * Sensor: tirar o DELETE de `trial_emails_pendentes` da
+   * `apagar_dados_do_usuario` derruba este teste.
+   */
+  it("o esquecimento apaga a linha da fila", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await alunoDeTrial(cliente, 0);
+      await cliente.query("select public.enfileirar_emails_do_trial()");
+      expect(await filaDe(cliente, aluno)).toEqual(["dia_0"]);
+
+      await cliente.query("select public.apagar_dados_do_usuario($1)", [aluno]);
+
+      expect(await filaDe(cliente, aluno)).toEqual([]);
+    });
+  });
+
+  it("a contagem que prova o apagamento conhece a fila", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const aluno = await alunoDeTrial(cliente, 0);
+      await cliente.query("select public.enfileirar_emails_do_trial()");
+
+      const { rows } = await cliente.query<{ tabela: string; n: string }>(
+        "select tabela, n::text as n from public.contar_dados_grupo1_esquecimento($1)",
+        [aluno],
+      );
+      const fila = rows.find((linha) => linha.tabela === "trial_emails_pendentes");
+
+      expect(fila).toBeDefined();
+      expect(Number(fila!.n)).toBe(1);
+    });
+  });
 });

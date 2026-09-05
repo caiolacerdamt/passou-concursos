@@ -13,7 +13,18 @@ import { BarraDoCelular } from "./barra-do-celular";
  * `localStorage` a barra nasceria expandida e colapsaria depois que o JS
  * rodasse, com piscada visível em todo carregamento.
  */
-export async function AppShell({ children }: { children: ReactNode }) {
+export async function AppShell({
+  children,
+  faixa = null,
+}: {
+  children: ReactNode;
+  /**
+   * Uma faixa de aviso acima do conteúdo, montada pela rota. O shell não sabe
+   * o que ela diz nem consulta banco por ela: quem sabe do trial é
+   * `src/app/app/layout.tsx`, e o shell continua sendo só a moldura.
+   */
+  faixa?: ReactNode;
+}) {
   const armazem = await cookies();
   const fechada = armazem.get(COOKIE_DA_BARRA)?.value === "fechada";
 
@@ -30,6 +41,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
         <BarraLateral fechadaInicial={fechada} />
 
         <div className="min-w-0 flex-1">
+          {faixa}
           <main
             id="conteudo"
             className="mx-auto w-full max-w-painel px-4 pb-28 pt-16 sm:px-6 lg:px-14 lg:pb-20 lg:pt-11"

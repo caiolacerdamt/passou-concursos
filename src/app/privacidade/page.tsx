@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getParam } from "@/modules/config";
 import {
   CANAL_PRIVACIDADE_PADRAO,
   IDENTIFICACAO_PUBLICA_PADRAO,
@@ -7,7 +8,17 @@ import {
 } from "@/modules/pagamentos/contratos";
 import { Shell } from "@/modules/ui/shell";
 
-export default function Privacidade() {
+export const dynamic = "force-dynamic";
+
+export default async function Privacidade() {
+  /*
+   * A janela do lead que testou e nunca pagou mora na tabela de configuracao
+   * (AD-133), nao na copy: um numero digitado aqui viraria mentira no dia em
+   * que o advogado mudasse o prazo, e a politica de privacidade e o pior lugar
+   * do produto para uma frase desatualizada.
+   */
+  const retencaoDoTrial = await getParam("param.m7.retencao_trial_meses");
+
   return (
     <Shell acoes={<Link href="/" className="text-marca underline">Voltar para a oferta</Link>}>
       <article className="documento mx-auto max-w-3xl">
@@ -27,10 +38,13 @@ export default function Privacidade() {
         <section aria-labelledby="dados-coletados">
           <h2 id="dados-coletados" className="text-xl font-semibold">1. Dados usados no produto</h2>
           <p className="mt-2 text-suave">
-            A conta usa dados necessários para autenticação e acesso. A compra
-            registra e-mail, valor, meio, aceite e referências financeiras para
-            ativar a matrícula e cumprir obrigações fiscais. Não coletamos data de
-            nascimento para declarar maioridade.
+            A conta usa dados necessários para autenticação e acesso. No cadastro
+            da <strong>conta gratuita de 7 dias</strong> é pedido apenas o e-mail
+            (e uma senha, ou a autenticação por provedor externo) — nenhum dado de
+            pagamento, nome, CPF ou telefone. A compra registra e-mail, valor,
+            meio, aceite e referências financeiras para ativar a matrícula e
+            cumprir obrigações fiscais. Não coletamos data de nascimento para
+            declarar maioridade.
           </p>
         </section>
         <section aria-labelledby="provedores">
@@ -53,6 +67,16 @@ export default function Privacidade() {
             apagamento é tratada pelo fluxo autenticado e, para outros direitos,
             pelo procedimento manual disponível no lançamento.
           </p>
+          <p className="mt-2 text-suave">
+            <strong>Quem apenas testou e nunca pagou tem uma janela própria, mais
+            curta</strong>: os dados dessa conta são apagados após{" "}
+            {retencaoDoTrial}{" "}
+            {retencaoDoTrial === 1 ? "mês" : "meses"} do fim do teste gratuito.
+            Quem chegou a pagar segue a janela de conta ativa mais 24 meses, por
+            causa dos registros financeiros. Neste lançamento o apagamento é
+            executado por procedimento manual documentado, pelo canal da seção 5;
+            a rotina automática ainda não está no ar.
+          </p>
         </section>
         <section aria-labelledby="sem-consentimento-nucleo">
           <h2 id="sem-consentimento-nucleo" className="text-xl font-semibold">4. Operação e comunicações</h2>
@@ -67,7 +91,8 @@ export default function Privacidade() {
           <h2 id="revisao-privacidade" className="text-xl font-semibold">5. Canal provisório do titular</h2>
           <p className="mt-2 text-suave">
             Para este lançamento, o canal documentado para pedidos de privacidade
-            é <a className="text-marca underline" href={`mailto:${CANAL_PRIVACIDADE_PADRAO}`}>
+            — inclusive pedidos de exclusão de conta de teste — é{" "}
+            <a className="text-marca underline" href={`mailto:${CANAL_PRIVACIDADE_PADRAO}`}>
               {CANAL_PRIVACIDADE_PADRAO}
             </a>. Ele é um default operacional e deve ser substituído pelo canal
             ativo do controlador/encarregado antes da publicação comercial.

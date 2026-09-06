@@ -180,7 +180,12 @@ begin
     -- o cargo nao filtra: e o comportamento mais generoso possivel, e nunca
     -- transforma prova de outro orgao em prova propria.
     v_orgao := coalesce(v_perfil.concurso_orgao, v_perfil.orgao);
-    v_cargo := v_perfil.concurso_cargo;
+    -- `indefinido` e o default de `concursos.cargo` (SPEC 37) e o valor com que
+    -- o perfil vigente foi migrado — e um **sentinela**, exatamente como
+    -- `banca = 'indefinida'`, nao o nome de um cargo. Filtrar por ele deixaria o
+    -- concurso numero 1 sem nenhuma prova propria, todas as linhas no degrau 4 e
+    -- o plano do dia sem topico. Sentinela nao filtra.
+    v_cargo := nullif(v_perfil.concurso_cargo, 'indefinido');
 
     v_lista_bancas := case
       when v_perfil.banca = 'indefinida' then v_bancas

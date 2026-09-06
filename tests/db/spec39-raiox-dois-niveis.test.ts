@@ -568,6 +568,49 @@ descreveComBanco("SPEC 39 — degraus de lastro", () => {
     });
   });
 
+  it("o cargo 'indefinido' do concurso migrado nao filtra prova nenhuma", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 1);
+      const b = await criarMateria(cliente, 1);
+      const { perfilId, orgao } = await criarPerfil(cliente, [
+        ...a.topicos,
+        ...b.topicos,
+      ]);
+
+      // O concurso numero 1 nasceu da migracao da SPEC 37 com o sentinela
+      // `indefinido` no cargo, igual a `banca = 'indefinida'`. Filtrar por ele
+      // deixaria o concurso sem prova propria, tudo no degrau 4 e o plano do dia
+      // sem topico — que e o produto inteiro parando.
+      await cliente.query(
+        `insert into public.concursos (orgao, cargo, perfil_concurso_id)
+         values ($1, 'indefinido', $2)`,
+        [orgao, perfilId],
+      );
+
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        cargo: "Escriturario",
+        blocos: [
+          { materiaId: a.materiaId, itens: 6 },
+          { materiaId: b.materiaId, itens: 4 },
+        ],
+        etiquetas: Object.fromEntries([
+          ...Array.from({ length: 6 }, (_, i) => [i + 1, a.topicos[0]] as const),
+          ...Array.from({ length: 4 }, (_, i) => [i + 7, b.topicos[0]] as const),
+        ]),
+      });
+
+      await recalcular(cliente, "2026-01-15");
+      const materias = new Map(
+        (await lerMaterias(cliente, perfilId)).map((l) => [l.materia_id, l]),
+      );
+
+      expect(materias.get(a.materiaId)!.degrau).toBe(1);
+      expect(Number(materias.get(a.materiaId)!.peso)).toBeCloseTo(0.6, 7);
+    });
+  });
+
   it("degraus diferentes coexistem na mesma projecao", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const a = await criarMateria(cliente, 1);

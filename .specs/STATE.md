@@ -1255,6 +1255,42 @@
 - **Date**: 2026-09-06
 - **Status**: active
 
+### AD-142
+- **Decision**: As cinco decisões de forma que a SPEC 39 tomou dentro do espaço que o AD-138 deixou
+  aberto. **(a) O peso declarado pelo edital mora na matéria canônica**, não na matéria do edital:
+  nasce a tabela `concurso_peso_materia (concurso_id, materia_id, peso_declarado, base)`. Uma
+  `concurso_materia` pode mapear assuntos de mais de uma matéria canônica, e pôr o peso na camada de
+  fora obrigaria a **estimar** como reparti-lo — exatamente o que o nível 1 existe para não fazer.
+  **(b) O nível 1 é ou-ou, nunca misto**: havendo prova própria elegível, todas as matérias tiram o
+  peso das provas; não havendo nenhuma, todas tiram do edital. Misturar as duas fontes quebraria a
+  normalização, porque cada uma soma 1 no próprio universo. **(c) O degrau é o elo mais fraco**: 1 =
+  peso e distribuição do próprio concurso; 3 = distribuição emprestada de outro órgão da mesma banca;
+  2 = há peso oficial e **nenhuma** distribuição (partes iguais); 4 = não há peso oficial. Matéria com
+  prova própria mas sem nenhum item etiquetado é **degrau 2**, não 1 — a tela para nela. **(d)
+  `param.m5.peso_degrau_3` não toca no peso da matéria**: ele encolhe a **amostra efetiva**
+  (`n_ef = n_m × peso_degrau_3`), puxando a linha emprestada mais forte para a média da matéria. É o
+  único jeito de o parâmetro significar alguma coisa — um fator uniforme sobre a média ponderada se
+  cancelaria. **(e) `n_questoes` das duas projeções passa a contar etiqueta de item, não questão
+  publicada**; o nome fica, o significado está no `comment on column`. Junto: o `programa_edital` com
+  UUID que não existe em `topicos` deixa de derrubar o job — ele é casado com a taxonomia na entrada e
+  o órfão simplesmente não vira linha.
+- **Reason**: O AD-138 fixou a fórmula e a unidade de medida, não o schema nem a regra do degrau. As
+  cinco decisões acima só aparecem quando se escreve a conta, e cada uma tinha uma alternativa
+  plausível que produz número diferente — por isso viram AD em vez de comentário no SQL.
+- **Trade-off**: (a) e (b) cobram do operador um passo a mais na abertura de concurso: vincular o
+  bloco à matéria canônica (`prova_blocos.materia_id`, com a moda das etiquetas como via automática de
+  reserva) e declarar o peso do edital por matéria canônica — é trabalho da SPEC 40. (c) faz uma
+  matéria com prova própria e acervo zerado aparecer como "declarado no edital", o que é mais fraco do
+  que a evidência do peso: aceito, porque o degrau governa o **detalhe por assunto**, e detalhe é o
+  que não existe ali. (e) muda o significado de uma coluna sem mudar o nome — a alternativa era uma
+  migração de renomeação atravessando duas telas e o painel do operador, por um ganho de clareza que o
+  comentário já entrega. O `peso_degrau_3` continua sem calibração: 0,5 é palpite registrado.
+- **Scope**: M5 (`recalcula_raiox`, `raiox_projecoes`, `raiox_projecoes_materia`) · M1
+  (`prova_blocos.materia_id`) · `supabase/migrations/20260908120000_*`, `20260908121000_*` ·
+  `src/modules/raiox/`.
+- **Date**: 2026-09-06
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: **SPEC 38 — leitor de prova: grade declarada, itens e etiqueta barata**

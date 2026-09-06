@@ -131,13 +131,28 @@ begin
     return;
   end if;
 
-  insert into public.concursos (orgao, cargo, perfil_concurso_id)
-  values (v_orgao, 'indefinido', v_perfil)
-  on conflict (perfil_concurso_id) do nothing;
+  -- Duas chaves podem colidir aqui: o perfil (1:1) e a natural (orgao, cargo).
+  -- O `on conflict` so cobre uma, entao a guarda e explicita — uma migracao que
+  -- estoura por causa de dado de demonstracao nao ajuda ninguem.
+  if not exists (
+    select 1 from public.concursos c
+     where c.perfil_concurso_id = v_perfil
+        or (c.orgao = v_orgao and c.cargo = 'indefinido')
+  ) then
+    insert into public.concursos (orgao, cargo, perfil_concurso_id)
+    values (v_orgao, 'indefinido', v_perfil);
+  end if;
 
   select c.id into v_concurso
     from public.concursos c
    where c.perfil_concurso_id = v_perfil;
+
+  -- A guarda acima pode ter recusado a insercao por causa da chave natural de
+  -- OUTRO perfil. Sem concurso, nao ha edital a semear — e semear no concurso
+  -- errado seria pior do que nao semear.
+  if v_concurso is null then
+    return;
+  end if;
 
   insert into public.concurso_materias (concurso_id, nome, ordem)
   select v_concurso, m.nome, m.ordem

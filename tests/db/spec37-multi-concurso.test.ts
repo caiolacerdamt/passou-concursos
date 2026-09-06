@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 
 import { criarTopico, inserirQuestao, sufixo } from "./acervo";
 import { novoAluno } from "./aluno";
-import { criarUsuario } from "./conta";
+import { comoAluno, criarUsuario } from "./conta";
 import { comTransacaoSemPerfilConcurso } from "./conexao";
 import { descreveComBanco } from "./setup";
 
@@ -109,6 +109,8 @@ async function pesos(cliente: Client, aluno: string) {
   return rows;
 }
 
+const HOJE = "2026-09-06";
+
 descreveComBanco("SPEC 37 · multi-concurso", () => {
   it("dois alunos em concursos diferentes recebem o edital de cada um", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
@@ -159,6 +161,52 @@ descreveComBanco("SPEC 37 · multi-concurso", () => {
         [bb],
       );
       expect(nomes.map((linha) => linha.nome)).toEqual(["Vendas e Negociação"]);
+    });
+  });
+
+  it("o plano do dia de cada aluno é gerado sobre o edital do concurso dele", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const soDoBb = await criarTopico(cliente);
+      const soDaCaixa = await criarTopico(cliente);
+      // Sem acervo publicado não há bloco: o plano só serve o que existe.
+      for (let indice = 0; indice < 5; indice += 1) {
+        await inserirQuestao(cliente, { topico_id: soDoBb, status: "publicada" });
+        await inserirQuestao(cliente, { topico_id: soDaCaixa, status: "publicada" });
+      }
+
+      const perfilBb = await criarPerfilConcurso(cliente, [soDoBb], true);
+      const perfilCaixa = await criarPerfilConcurso(cliente, [soDaCaixa], false);
+      const bb = await criarConcurso(cliente, perfilBb);
+      const caixa = await criarConcurso(cliente, perfilCaixa);
+      await criarProjecao(cliente, perfilBb, soDoBb, 0.9);
+      await criarProjecao(cliente, perfilCaixa, soDaCaixa, 0.9);
+
+      const alunoBb = novoAluno();
+      const alunoCaixa = novoAluno();
+      await criarPerfilEstudo(cliente, alunoBb, bb);
+      await criarPerfilEstudo(cliente, alunoCaixa, caixa);
+      await ligarMultiConcurso(cliente, true);
+
+      for (const aluno of [alunoBb, alunoCaixa]) {
+        await cliente.query("select public.gera_plano_do_dia($1, $2::date)", [
+          aluno,
+          HOJE,
+        ]);
+      }
+
+      const topicosDoPlano = async (aluno: string) => {
+        const { rows } = await cliente.query<{ topico_id: string | null }>(
+          `select distinct b.topico_id
+             from public.plano_bloco b
+             join public.plano_dia p on p.id = b.plano_dia_id
+            where p.user_id = $1 and p.data = $2 and b.topico_id is not null`,
+          [aluno, HOJE],
+        );
+        return rows.map((linha) => linha.topico_id);
+      };
+
+      expect(await topicosDoPlano(alunoBb)).toEqual([soDoBb]);
+      expect(await topicosDoPlano(alunoCaixa)).toEqual([soDaCaixa]);
     });
   });
 
@@ -225,6 +273,41 @@ descreveComBanco("SPEC 37 · multi-concurso", () => {
     });
   });
 
+  it("config ilegível deixa a flag desligada, e não derruba o plano", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const doAtivo = await criarTopico(cliente);
+      const doOutro = await criarTopico(cliente);
+      const perfilAtivo = await criarPerfilConcurso(cliente, [doAtivo], true);
+      const perfilOutro = await criarPerfilConcurso(cliente, [doOutro], false);
+      const concursoAtivo = await criarConcurso(cliente, perfilAtivo);
+      const outro = await criarConcurso(cliente, perfilOutro);
+      await criarProjecao(cliente, perfilAtivo, doAtivo, 0.5);
+      await criarProjecao(cliente, perfilOutro, doOutro, 0.5);
+
+      const aluno = novoAluno();
+      await criarPerfilEstudo(cliente, aluno, outro);
+
+      // Valor de tipo errado na chave da flag. `concurso_do_aluno` roda dentro
+      // do cursor de `gera_plano_do_dia`: um erro aqui derrubaria a geração do
+      // plano de todos os alunos, não só a leitura da flag.
+      const autor = await criarUsuario(cliente);
+      await cliente.query(
+        `insert into public.configuracoes (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m5.multi_concurso', '"talvez"'::jsonb, 'm5', $1, 'config ilegível')`,
+        [autor],
+      );
+
+      const { rows } = await cliente.query<{ concurso: string }>(
+        "select public.concurso_do_aluno($1) as concurso",
+        [aluno],
+      );
+      expect(rows[0].concurso).toBe(concursoAtivo);
+      expect((await pesos(cliente, aluno)).map((linha) => linha.topico_id)).toEqual([
+        doAtivo,
+      ]);
+    });
+  });
+
   it("sem escolha, o aluno cai no concurso padrão e nunca fica sem projeção", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
@@ -281,18 +364,56 @@ descreveComBanco("SPEC 37 · multi-concurso", () => {
     });
   });
 
-  it("o aluno só escolhe concurso publicado", async () => {
+  it("o aluno só escolhe concurso publicado, e a sessão é quem diz quem ele é", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const topico = await criarTopico(cliente);
       const perfil = await criarPerfilConcurso(cliente, [topico], true);
       const oculto = await criarConcurso(cliente, perfil);
       await ligarMultiConcurso(cliente, true);
 
-      // `escolher_concurso` lê `auth.uid()`, que é nulo fora de uma sessão:
-      // a recusa esperada aqui é a de sessão, e nunca a escrita.
+      const aluno = await criarUsuario(cliente);
+      await criarPerfilEstudo(cliente, aluno, null);
+
+      await comoAluno(cliente, aluno, async () => {
+        await cliente.query("savepoint gate_visibilidade");
+        await expect(
+          cliente.query("select public.escolher_concurso($1)", [oculto]),
+        ).rejects.toThrow(/concurso_indisponivel/);
+        await cliente.query("rollback to savepoint gate_visibilidade");
+      });
+
+      // Publicado, o mesmo aluno escolhe.
+      const operador = await criarUsuario(cliente);
+      await cliente.query(
+        "insert into public.operadores (operador_id) values ($1)",
+        [operador],
+      );
+      await cliente.query(
+        "update public.concursos set visibilidade = 'elegivel' where id = $1",
+        [oculto],
+      );
+      await cliente.query("select public.publicar_concurso($1, $2, $3)", [
+        oculto,
+        operador,
+        "teste do gate",
+      ]);
+
+      await comoAluno(cliente, aluno, async () => {
+        await cliente.query("select public.escolher_concurso($1)", [oculto]);
+      });
+
+      const { rows } = await cliente.query<{ concurso_id: string }>(
+        "select concurso_id from public.perfil_estudo where user_id = $1",
+        [aluno],
+      );
+      expect(rows[0].concurso_id).toBe(oculto);
+
+      // Fora de sessão continua sendo recusa de sessão, nunca escrita.
+      await cliente.query("savepoint sem_sessao");
       await expect(
         cliente.query("select public.escolher_concurso($1)", [oculto]),
       ).rejects.toThrow(/sem_sessao/);
+      await cliente.query("rollback to savepoint sem_sessao");
     });
   });
 });

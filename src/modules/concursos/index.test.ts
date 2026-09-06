@@ -10,10 +10,13 @@ import {
 
 type Resposta = { data: unknown; error: { message: string } | null };
 
-function cadeia(resposta: Resposta) {
+function cadeia(resposta: Resposta, filtros: [string, unknown][]) {
   const api = {
     select: () => api,
-    eq: () => api,
+    eq: (coluna: string, valor: unknown) => {
+      filtros.push([coluna, valor]);
+      return api;
+    },
     order: () => api,
     then: (
       resolve: (valor: Resposta) => unknown,
@@ -25,10 +28,12 @@ function cadeia(resposta: Resposta) {
 
 function clienteFalso(respostas: Record<string, Resposta>, rpc?: Resposta) {
   const chamadasRpc: [string, unknown][] = [];
+  const filtros: [string, unknown][] = [];
   return {
     chamadasRpc,
+    filtros,
     cliente: {
-      from: (tabela: string) => cadeia(respostas[tabela]),
+      from: (tabela: string) => cadeia(respostas[tabela], filtros),
       rpc: async (nome: string, argumentos: unknown) => {
         chamadasRpc.push([nome, argumentos]);
         return rpc ?? { data: null, error: null };
@@ -55,6 +60,8 @@ describe("listarConcursosPublicados", () => {
       { id: "c-1", orgao: "Banco do Brasil", cargo: "Escriturário" },
       { id: "c-2", orgao: "CAIXA", cargo: "Técnico Bancário" },
     ]);
+    // Oculto e elegível não podem vazar para a escolha do aluno.
+    expect(falso.filtros).toEqual([["visibilidade", "publicado"]]);
   });
 
   it("estoura com o nome do recurso quando a leitura falha", async () => {
@@ -120,6 +127,7 @@ describe("editalDoConcurso", () => {
       },
       { id: "m-2", nome: "Probabilidade", ordem: 2, topicoIds: [] },
     ]);
+    expect(falso.filtros).toEqual([["concurso_id", "c-1"]]);
   });
 });
 

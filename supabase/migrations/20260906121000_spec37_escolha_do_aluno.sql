@@ -37,9 +37,16 @@ security definer
 set search_path = ''
 as $$
   with flag as (
-    select coalesce(
-      (select valor #>> '{}' from public.configuracoes_vigentes
-        where chave = 'flag.m5.multi_concurso'), 'false')::boolean as ligada
+    -- `jsonb_typeof` nao e zelo: sem ele, um valor nao-booleano na chave
+    -- levanta 22P02 aqui dentro e derruba a geracao do plano de TODOS os
+    -- alunos, porque esta funcao roda dentro do cursor de `gera_plano_do_dia`.
+    -- Config ilegivel deixa a flag desligada, nunca ligada, e nunca estoura.
+    select coalesce((
+      select (valor #>> '{}')::boolean
+        from public.configuracoes_vigentes
+       where chave = 'flag.m5.multi_concurso'
+         and jsonb_typeof(valor) = 'boolean'
+    ), false) as ligada
   ),
   padrao as (
     -- O concurso padrao e o do perfil marcado `ativo`: e o concurso numero 1 da
@@ -101,9 +108,13 @@ begin
     raise exception 'sem_sessao' using errcode = '28000';
   end if;
 
-  if not coalesce(
-       (select valor #>> '{}' from public.configuracoes_vigentes
-         where chave = 'flag.m5.multi_concurso'), 'false')::boolean
+  -- Mesma guarda de `concurso_do_aluno`: config ilegivel = desligada.
+  if not coalesce((
+       select (valor #>> '{}')::boolean
+         from public.configuracoes_vigentes
+        where chave = 'flag.m5.multi_concurso'
+          and jsonb_typeof(valor) = 'boolean'
+     ), false)
   then
     raise exception 'multi_concurso_desligado';
   end if;

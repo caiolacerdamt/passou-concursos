@@ -117,6 +117,22 @@ begin
   -- origem some no proximo recalculo, nao ha o que somar aqui.
   delete from public.raiox_projecoes where topico_id = p_origem;
 
+  -- `programa_edital` e o porteiro do plano (`raiox_peso_do_aluno`). Sem esta
+  -- troca, as questoes movidas sumiriam do plano em silencio em todo perfil
+  -- que tinha o origem no programa e nao tem o destino.
+  update public.perfil_concurso p
+     set programa_edital = (
+           select jsonb_agg(distinct item)
+             from jsonb_array_elements_text(p.programa_edital) programa(item0),
+                  lateral (select case when programa.item0 = p_origem::text
+                                       then p_destino::text else programa.item0 end) troca(item)
+         ),
+         atualizado_em = now()
+   where exists (
+     select 1 from jsonb_array_elements_text(p.programa_edital) edital(topico_id)
+      where edital.topico_id = p_origem::text
+   );
+
   -- ── O que NAO se move ────────────────────────────────────────────────────
   --
   -- `tentativas`. E o invariante 2 do projeto: cada tentativa carrega a

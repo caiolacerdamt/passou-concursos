@@ -34,6 +34,12 @@ export const TABELAS_GRUPO_1 = [
   "sessoes",
   "tentativa_causa_simulado",
   "tentativas",
+  // Fila dos e-mails do trial (AD-133). Ela guarda o e-mail do titular em
+  // coluna propria, alem do user_id — e dado identificado, e o apagamento tem
+  // de alcanca-la. O `on delete cascade` da FK ja cobriria a linha se o
+  // apagamento passasse por `auth.users`, mas a rotina varre por `user_id`
+  // tabela a tabela, e o que ela nao conhece ela nao apaga.
+  "trial_emails_pendentes",
 ] as const;
 
 /**

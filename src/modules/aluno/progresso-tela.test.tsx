@@ -240,3 +240,60 @@ describe("ProgressoTela", () => {
     }
   });
 });
+
+/**
+ * Item 3 do TRIAL-2. O check que pega o erro mais provavel do plano inteiro
+ * esta na primeira assercao: **aluno pago ve a tela exatamente como hoje**.
+ *
+ * O par de testes e proposital — um prova que a trava aparece no trial, o outro
+ * prova que ela NAO aparece fora dele. Sozinho, o primeiro passaria tambem com
+ * a trava vazando para todo mundo.
+ */
+describe("ProgressoTela em previa do trial", () => {
+  it("aluno pago ve a tela identica a de antes da previa existir", () => {
+    const pago = renderToStaticMarkup(<ProgressoTela dados={base} />);
+    const explicito = renderToStaticMarkup(<ProgressoTela dados={base} trial={false} />);
+
+    expect(pago).toBe(explicito);
+    expect(pago).toContain("Refazer os 7");
+    expect(pago).not.toContain("Fazer a matrícula");
+    expect(pago).not.toContain("Teste grátis");
+  });
+
+  it("no trial fica a semana com o dado real do proprio aluno", () => {
+    const html = renderToStaticMarkup(<ProgressoTela dados={base} trial />);
+
+    expect(html).toContain("38 questões, 32% de acerto");
+    expect(html).toContain("2 dias de sequência");
+  });
+
+  it("no trial o historico completo trava, e trava dizendo o numero", () => {
+    const html = renderToStaticMarkup(<ProgressoTela dados={base} trial />);
+
+    // 2 materias e 2 assuntos, contados do proprio historico do aluno.
+    expect(html).toContain("2 matérias e 2 assuntos já mapeados");
+    // O detalhe por assunto sai: a lista por materia nao e desenhada, e com ela
+    // somem dominio e tendencia POR ASSUNTO. A tendencia da SEMANA fica — ela e
+    // dado da propria previa, e "Subindo" ali vem do relatorio semanal.
+    expect(html).not.toContain('aria-label="Progresso por matéria"');
+    expect(html).not.toContain("Caindo");
+  });
+
+  it("no trial o Refazer continua visivel e com o numero, mas nao e link", () => {
+    const html = renderToStaticMarkup(<ProgressoTela dados={base} trial />);
+
+    // O numero e o argumento: escondida, a acao nao convence ninguem.
+    expect(html).toContain("Refazer os 7");
+    expect(html).toContain('aria-disabled="true"');
+    // E o que ela abriria nao esta clicavel em lugar nenhum da tela.
+    expect(html).not.toContain("refacao=1");
+  });
+
+  it("no trial o caderno diz quantos assuntos tem e convida uma vez so", () => {
+    const html = renderToStaticMarkup(<ProgressoTela dados={base} trial />);
+
+    expect(html).toContain("1 assunto no seu caderno de erros");
+    // Filtro e paginacao sao acao, e acao e o que trava.
+    expect(html).not.toContain("Mostrar mais");
+  });
+});

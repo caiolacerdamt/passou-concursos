@@ -15,10 +15,14 @@ import { clienteDaSessao } from "@/lib/db/sessao";
  * fica bonito e aberto.
  */
 
+/** Paga ou trial. E o mesmo enum `produto_tipo` do banco, sem traducao. */
+export type TipoDaMatricula = "pago" | "trial";
+
 export type Matricula = {
   id: string;
   estado: string;
   fim_em: string;
+  tipo: TipoDaMatricula;
 };
 
 type Leitor = {
@@ -60,7 +64,7 @@ export async function matriculaAtiva(
 
   const { data } = await supabase
     .from("matriculas")
-    .select("id, estado, fim_em")
+    .select("id, estado, fim_em, tipo")
     .eq("estado", "ativa")
     .gt("fim_em", new Date().toISOString())
     .maybeSingle();

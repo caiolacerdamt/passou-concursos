@@ -26,6 +26,14 @@ export default async function CriarConta({
   const ligado = await isFlagOn("flag.m8.trial_gratuito");
   const enviado = parametros.enviado !== undefined;
   const erro = comoTexto(parametros.erro);
+  /*
+   * O mesmo botao de /entrar, e o mesmo motivo para ele sumir (item 9 do
+   * TRIAL-2): com o provedor desligado no painel, `signInWithOAuth` devolve URL
+   * com sucesso e o visitante cai numa tela de JSON cru do Supabase. Esta tela
+   * herdou o botao, entao herdou o defeito — e a porta do item 0 dobra a
+   * exposicao dele.
+   */
+  const google = await isFlagOn("flag.m9.login_google");
 
   if (!ligado) {
     return (
@@ -63,12 +71,12 @@ export default async function CriarConta({
       titulo="Sete dias para ver o método funcionando."
       lede="Sem cartão. Plano do dia, questões reais com explicação e revisão espaçada desde a primeira sessão."
     >
-      {enviado ? <Confirmacao /> : <Cadastro erro={erro} />}
+      {enviado ? <Confirmacao /> : <Cadastro erro={erro} google={google} />}
     </MolduraDeAcesso>
   );
 }
 
-function Cadastro({ erro }: { erro: string | undefined }) {
+function Cadastro({ erro, google }: { erro: string | undefined; google: boolean }) {
   return (
     <>
       <h1 className="text-4xl leading-[1.08] font-medium tracking-[-0.032em]">
@@ -84,25 +92,30 @@ function Cadastro({ erro }: { erro: string | undefined }) {
 
       {erro ? <Aviso texto={mensagemDoErro(erro)} /> : null}
 
-      <form action={criarContaComGoogle} className="mt-7">
-        <button
-          type="submit"
-          className="flex min-h-13 w-full items-center justify-center gap-2.5 rounded-pill bg-papel-alto font-medium text-tinta shadow-[inset_0_0_0_1px_var(--color-risco)] transition hover:shadow-[inset_0_0_0_1px_var(--color-tinta-suave)]"
-        >
-          <LogoDoGoogle />
-          Continuar com Google
-        </button>
-      </form>
+      {google ? (
+        <>
+          <form action={criarContaComGoogle} className="mt-7">
+            <button
+              type="submit"
+              className="flex min-h-13 w-full items-center justify-center gap-2.5 rounded-pill bg-papel-alto font-medium text-tinta shadow-[inset_0_0_0_1px_var(--color-risco)] transition hover:shadow-[inset_0_0_0_1px_var(--color-tinta-suave)]"
+            >
+              <LogoDoGoogle />
+              Continuar com Google
+            </button>
+          </form>
 
-      <div className="my-6 flex items-center gap-4">
-        <span aria-hidden="true" className="h-px grow bg-risco" />
-        <span className="font-utilitaria text-[0.6875rem] tracking-[0.16em] text-tinta-suave uppercase">
-          ou com e-mail
-        </span>
-        <span aria-hidden="true" className="h-px grow bg-risco" />
-      </div>
+          {/* O "ou com e-mail" so faz sentido quando ha um "ou". */}
+          <div className="my-6 flex items-center gap-4">
+            <span aria-hidden="true" className="h-px grow bg-risco" />
+            <span className="font-utilitaria text-[0.6875rem] tracking-[0.16em] text-tinta-suave uppercase">
+              ou com e-mail
+            </span>
+            <span aria-hidden="true" className="h-px grow bg-risco" />
+          </div>
+        </>
+      ) : null}
 
-      <form action={criarContaComSenha} className="flex flex-col gap-5">
+      <form action={criarContaComSenha} className={`flex flex-col gap-5${google ? "" : " mt-7"}`}>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="email" className="text-[0.9375rem] font-medium">
             E-mail

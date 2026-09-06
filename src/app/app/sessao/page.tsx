@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { RecusaDoTetoDiario } from "@/modules/conta/recusa-do-teto";
 import { consultarPlanoDoDia, dataHojeDoProduto } from "@/modules/aluno/plano";
 import {
   consultarRotulosDosTopicosPorIds,
@@ -43,11 +44,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
 
   if (modoRefacao !== undefined && modoRefacao !== "") {
     if (topicoDaRefacao === undefined || causaDaRefacao === undefined) {
-      return (
-        <div className="mx-auto max-w-2xl">
-          <EstadoDaFalha motivo="refacao_indisponivel" refacao />
-        </div>
-      );
+      return telaDaFalha("refacao_indisponivel", true);
     }
 
     const supabase = await clienteDaSessao();
@@ -59,11 +56,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
       });
     } catch (erro) {
       if (!(erro instanceof SessaoRecusada)) throw erro;
-      return (
-        <div className="mx-auto max-w-2xl">
-          <EstadoDaFalha motivo={erro.motivo} refacao />
-        </div>
-      );
+      return telaDaFalha(erro.motivo, true);
     }
 
     redirect(`/app/sessao/${sessao.id}`);
@@ -76,11 +69,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
       sessao = await prepararSessaoDeRevisao(supabase, { topicoId: topicoDaRevisao });
     } catch (erro) {
       if (!(erro instanceof SessaoRecusada)) throw erro;
-      return (
-        <div className="mx-auto max-w-2xl">
-          <EstadoDaFalha motivo={erro.motivo} />
-        </div>
-      );
+      return telaDaFalha(erro.motivo);
     }
 
     redirect(`/app/sessao/${sessao.id}`);
@@ -96,11 +85,7 @@ export default async function AbrirSessao({ searchParams }: Props) {
     sessao = await prepararSessao(supabase, blocoId);
   } catch (erro) {
     if (!(erro instanceof SessaoRecusada)) throw erro;
-    return (
-      <div className="mx-auto max-w-2xl">
-        <EstadoDaFalha motivo={erro.motivo} />
-      </div>
-    );
+    return telaDaFalha(erro.motivo);
   }
 
   redirect(`/app/sessao/${sessao.id}`);
@@ -159,6 +144,24 @@ async function telaDaPratica() {
   return <PraticaTela dados={dados} rotulosDosTopicos={rotulosDosTopicos} hoje={hoje} />;
 }
 
+/**
+ * O envelope de toda recusa da sessao.
+ *
+ * `trial_teto_diario` sai por uma porta propria (item 11 do TRIAL-2): esgotar o
+ * teto nao e a mesma coisa que um bloco sem questao, e a caixinha de estado
+ * vazio tratava as duas iguais. As outras recusas continuam sendo a caixa —
+ * elas sao becos, e beco nao merece pagina.
+ */
+function telaDaFalha(motivo: SessaoRecusada["motivo"], refacao = false) {
+  if (motivo === "trial_teto_diario") return <RecusaDoTetoDiario />;
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <EstadoDaFalha motivo={motivo} refacao={refacao} />
+    </div>
+  );
+}
+
 function EstadoDaFalha({ motivo, refacao = false }: { motivo: SessaoRecusada["motivo"]; refacao?: boolean }) {
   if (motivo === "acervo_vazio") {
     return (
@@ -172,23 +175,6 @@ function EstadoDaFalha({ motivo, refacao = false }: { motivo: SessaoRecusada["mo
               : "O acervo precisa de uma questão publicada para começar. Seu plano continua salvo. "}
             <Link href={refacao ? "/app/progresso" : "/app"} className="font-semibold text-marca underline">
               {refacao ? "Voltar ao progresso" : "Voltar ao plano"}
-            </Link>
-          </>
-        }
-      />
-    );
-  }
-
-  if (motivo === "trial_teto_diario") {
-    return (
-      <Estado
-        tipo="vazio"
-        titulo="Você já fez as questões de hoje no teste grátis"
-        acao={
-          <>
-            {"O plano de amanhã já está montado, e a revisão espaçada não perdeu a conta dos seus dias. "}
-            <Link href="/app" className="font-semibold text-marca underline">
-              Voltar ao plano
             </Link>
           </>
         }

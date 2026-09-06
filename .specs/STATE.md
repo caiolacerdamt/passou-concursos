@@ -1080,50 +1080,111 @@
 - **Date**: 2026-09-04
 - **Status**: active
 
+### AD-135
+- **Decision**: O botão "Continuar com Google" passa a viver atrás de **`flag.m9.login_google`**, que
+  **nasce desligada**, e com ela desligada o botão **não existe no HTML** de `/entrar` nem de
+  `/criar-conta` — não é `display:none`. A ordem para ligá-lo é: provedor no Google Cloud Console +
+  Supabase primeiro, conferência no navegador depois, e só então a flag. Registrada em
+  `docs/DEPLOY.md` §4.
+- **Reason**: `signInWithOAuth` devolve uma URL **com sucesso** mesmo com o provedor desligado no
+  painel. A recusa acontece fora do nosso domínio, numa tela de JSON cru que expõe o `project ref` do
+  Supabase, e o `if (error || !data?.url)` que existe no código nunca dispara. **Não há como o código
+  detectar o estado do provedor** — é exatamente o que a chamada esconde —, então ele vira
+  configuração declarada em vez de adivinhação.
+- **Trade-off**: Perde-se o login social até alguém ligar o provedor, e ele é o caminho de um clique,
+  o de maior conversão dos dois. Aceito: o estado anterior expunha uma tela de erro do Supabase a
+  qualquer visitante, e o item 0 (a porta na landing) dobrava a exposição. `display:none` foi
+  recusado porque botão invisível continua alcançável por teclado e por leitor de tela.
+- **Scope**: `src/app/entrar/page.tsx` · `src/app/criar-conta/page.tsx` · catálogo de configuração ·
+  `docs/DEPLOY.md`.
+- **Date**: 2026-09-05
+- **Status**: active
+
+### AD-136
+- **Decision**: Os quatro e-mails do ciclo do trial saem pela **API HTTP do Resend**, chamada pelo
+  job `scripts/jobs/emails-do-trial.mts` no GitHub Actions — e **não** pelo Supabase Auth. `pg_cron`
+  só enfileira em `public.trial_emails_pendentes`. "Um de cada por conta, na vida" é o
+  `unique (user_id, tipo)` da tabela, não uma checagem no código. Os números do aluno vão
+  **congelados** no `contexto` da linha, no instante em que ela nasce.
+- **Reason**: `pg_cron` não fala HTTP, então mandar do banco não era opção. Entre Supabase Auth e
+  Resend direto: `rate_limit_email_sent` é **por projeto** (30/hora no valor atual) e cobre
+  confirmação de cadastro e recuperação de senha; pendurar o ciclo do trial no mesmo balde faria uma
+  campanha de tráfego derrubar a recuperação de senha de quem já paga. Congelar os números evita que
+  o e-mail do dia 3 conte o dia 4 quando o job atrasa. O `unique` na tabela é o que sobrevive a um
+  retry do cron — uma checagem no código não sobrevive.
+- **Trade-off**: Dois caminhos de e-mail no produto (Auth para autenticação, Resend direto para o
+  ciclo do trial), que é uma superfície a mais para manter. Aceito, porque o acoplamento que ele evita
+  é pior. Segundo: o teto do plano do Resend passa a ser um limite real e ainda **não foi conferido**
+  — anotado como pendência em `docs/DEPLOY.md`.
+- **Scope**: `supabase/migrations/20260905130000_trial_emails.sql` ·
+  `20260905140000_trial_emails_no_esquecimento.sql` · `src/modules/conta/emails-do-trial.ts` ·
+  `scripts/jobs/emails-do-trial.mts` · `.github/workflows/emails-do-trial.yml` ·
+  `src/modules/lgpd/grupo-1.ts` · `docs/DEPLOY.md` · `.env.example` · `docs/SEGREDOS.md`.
+- **Date**: 2026-09-05
+- **Status**: active
+
+### AD-137
+- **Decision**: O `/app/raio-x` entra em **prévia** no trial: as **três** matérias de maior peso ficam
+  visíveis, com a frequência real calculada; a cauda da lista trava dizendo **quantas** matérias
+  ficaram; e o **Mapa de Prioridade** trava inteiro, mostrando só o tamanho do que existe.
+- **Reason**: `flag.m5.raiox` está **ligada** em produção — lida em 2026-09-05 —, então o item 4 do
+  `TRIAL-2` se aplica. Três matérias, e não uma: com uma só o aluno não vê o **contraste** de peso,
+  que é o argumento inteiro do Raio-X. O Mapa trava porque ele é o cruzamento do peso da banca com o
+  domínio do próprio aluno — a parte acionável —, e é o mesmo corte do item 3: trava profundidade e
+  ação, nunca a existência da tela.
+- **Trade-off**: O aluno de trial vê menos edital do que veria hoje (a flag está ligada e não havia
+  recorte por tipo de matrícula). É a mesma escolha do item 3 e vale a mesma ressalva: se a conversão
+  mostrar que travar o Mapa afasta mais do que converte, é um `trial={false}` de distância.
+- **Registro de erro de método**: o item foi dado como "não se aplica" numa primeira passada, sobre o
+  **default do catálogo** (`false`), porque a leitura do banco estava bloqueada. **Default de catálogo
+  não é valor vigente.** O plano já mandava conferir a flag antes de estimar o item.
+- **Scope**: `src/modules/raiox/tela.tsx` · `src/app/app/raio-x/page.tsx`.
+- **Date**: 2026-09-05
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Trial gratuito. A **parte 1 está mergeada** (PR #40, merge `1af9492`) e **ligada em
-  produção**. Esta rodada fecha a parte 1 com uso real e prepara a parte 2. Fecha com **AD-134**.
-- **Phase / Task**: `docs/planos/TRIAL-1-mecanismo-e-conta-gratuita.md` **concluído** — os 9 itens,
-  nove commits atômicos, todos os checks do plano fechados. A rodada atual é de documento: AD-134,
-  quatro itens novos no `TRIAL-2` e a correção de uma afirmação falsa no `docs/DEPLOY.md`.
-- **Completed**: (1) O mecanismo do trial inteiro (ver AD-133), com o teto, a correção da ativação e
-  `/criar-conta`. (2) Os templates de e-mail do Supabase Auth versionados em `docs/emails/` e
-  aplicados por `scripts/aplicar-emails-auth.mjs` — *Confirm signup* e *Reset Password*, os dois
-  únicos que algum caminho do produto dispara. (3) **AD-134**: flag ligada e teto em 15.
-  (4) `TRIAL-2` ganhou os itens **0** (a porta na landing), **9** (o Google), **10** (o teto de
-  e-mail) e **11** (a tela de recusa).
-- **Gates**: `unit` 1109/1109 · `test:db` 441/441 · `eslint` limpo · `next build` 32 rotas. O sensor
-  do item 4 foi visto falhando com o código quebrado de propósito. `git diff` não tocou
-  `tem_matricula_ativa()` nem nenhuma das 7 policies.
-- **Verificação em uso real** (o que fecha a parte 1, e o que nenhum teste alcançava): conta criada
-  por `/criar-conta`, e-mail de confirmação recebido e clicado, `/app` aberto, onboarding preenchido,
-  bloco de **10** respondido, bloco de **5** respondido, e a 16ª questão recusada com
-  `trial_teto_diario` e a mensagem própria. No banco: 15 tentativas no dia, 2 sessões, 7 itens no
-  caderno de erros, 2 revisões agendadas, matrícula `tipo='trial'` com **7,00 dias** exatos. Conta:
-  `suporte.vektor.ia@gmail.com`, mantida viva de propósito para o dia 7 ser sentido.
-- **In-progress** (file:line): (a) 🔴 **Nenhuma tela pública leva a `/criar-conta`** — a landing tem
-  CTA para `#oferta` (`src/modules/ui/landing/secoes.tsx:99`) e `/checkout` (`:764`), e **nenhum link
-  de "Entrar"**. Com a flag ligada, o trial não é alcançável sem digitar a URL. É o item 0 do
-  `TRIAL-2`. (b) 🔴 **O botão do Google leva a JSON cru do Supabase** em `/entrar` e `/criar-conta`:
-  `signInWithOAuth` devolve URL mesmo com o provedor desligado (`src/app/entrar/acoes.ts`), e a
-  recusa acontece fora do nosso domínio. Item 9. (c) `rate_limit_email_sent` = **30/hora por
-  projeto** mesmo com o Resend configurado. Item 10. (d) `/termos` e `/privacidade` ainda não falam
-  da conta gratuita, e já existe titular de trial no banco. Item 8. Seguem pendentes, das rodadas
-  anteriores: as alíneas de verificação visual do AD-129/132, AD-125/126/127 e AD-120/121/122, o
-  `Descartar` nunca exercido contra o banco, e as duas correções do W2-A sem sensor.
-- **Regressão desta rodada, encontrada e consertada**: ligar a flag e mudar o teto no banco de
-  desenvolvimento — que é **o mesmo banco de produção** — quebrou 4 testes de banco na `main`
-  (execução `33916662534`). Dois eram meus e liam o estado global em vez de escrever o próprio
-  (`trial.test.ts`); dois eram alheios e contavam linhas de uma consulta global que só funcionava
-  enquanto nenhum aluno real tinha plano de hoje (`frase-do-plano-consulta.test.ts`) — a conta de
-  trial gerou um. É a mesma armadilha que `comTransacaoSemPerfilConcurso` documenta em `conexao.ts`.
-  Os quatro passaram a escrever o próprio estado ou a filtrar pelos próprios ids; o sensor foi
-  exercido (tirar `pd.frase is null` da consulta derruba o teste). **Perda de cobertura registrada,
-  não escondida:** o caminho "chave sem linha nenhuma ⇒ flag desligada" não é mais alcançável de um
-  teste de banco, porque `configuracoes` é append-only e o DELETE é bloqueado por gatilho (AD-081).
-  Quem segura essa metade agora é o `coalesce(..., 'false')` da função mais o default do catálogo.
-- **Next step**: `docs/planos/TRIAL-2-conversao-e-telas.md`, **na ordem do plano** — item 0 primeiro,
-  porque sem ele os itens 1 a 7 melhoram a experiência de um público que não chega. Duas decisões de
-  negócio esperam antes de escrever código: qual CTA vem primeiro no herói (item 0) e ligar ou
-  esconder o Google (item 9).
+- **Feature**: Trial gratuito, **parte 2** — conversão, telas, e-mails e métrica
+  (`docs/planos/TRIAL-2-conversao-e-telas.md`). A parte 1 está mergeada (PR #40) e ligada em produção.
+  Esta rodada fecha **os 11 itens** do plano. Fecha com **AD-135**, **AD-136** e **AD-137**.
+- **Phase / Task**: Plano sem ritual, sem verificador independente — quem escreve confere pelos checks
+  de cada item, como o próprio plano declara. Onze commits atômicos na `feat/trial-conversao`.
+- **Completed**: item **4** (`/app/raio-x` em prévia — AD-137) · item **0** (a porta: CTA de trial no herói e saída secundária na oferta, com a
+  landing byte a byte idêntica com a flag desligada) · **1** (`matriculas.tipo` na aplicação,
+  `contextoDaMatricula()`, `ConviteDeMatricula`) · **2** (faixa de dias restantes **e questões
+  restantes hoje** no shell do `/app`) · **3** (`/app/progresso` em prévia) · **5** (`/assinar` com
+  os dois estados) · **6** (os quatro e-mails: fila + `pg_cron` + job + workflow — AD-136) ·
+  **7** (view `funil_trial` + `funil_trial_do_operador()`) · **8** (`/termos` e `/privacidade` falam
+  da conta gratuita) · **9** (`flag.m9.login_google` — AD-135) · **10** (`docs/DEPLOY.md` com a ordem
+  de ligar o Google e a tabela do `rate_limit_email_sent`) · **11** (a recusa do teto vira tela).
+- **Erro de método desta rodada, e a correção**: o item 4 foi dado como "não se aplica" sobre o
+  **default do catálogo** (`flag.m5.raiox: false`), porque a leitura do banco estava bloqueada
+  naquele momento. O valor **vigente é `true`**. Default de catálogo não é valor vigente, e o próprio
+  plano mandava conferir a flag antes de estimar o item — a conferência não podia ser substituída por
+  leitura de código. O item foi feito depois, na mesma branch (AD-137).
+- **Gates**: `unit` 1172/1172 · `test:db` 454/454 · `eslint` limpo (0 erros; 2 warnings
+  pré-existentes em `scripts/jobs/`) · `tsc --noEmit` limpo · `next build` compila, 33 rotas ·
+  varredura de segredos limpa. `git diff` não tocou `tem_matricula_ativa()` nem nenhuma das 7
+  policies.
+- **Regressão encontrada e consertada nesta rodada**: `trial_emails_pendentes` nasceu com `user_id`
+  **e** com o e-mail do titular em coluna própria, e ficou fora do grupo 1 da LGPD. Quem pegou foi o
+  teste de inventário do contrato nº 9 — que é exatamente para o que ele existe. A tabela entrou em
+  `TABELAS_GRUPO_1`, no `apagar_dados_do_usuario` e na contagem que prova o apagamento ao titular.
+  **Sensor exercido**: tirando o DELETE da função, o teste de banco fica vermelho; com ele de volta,
+  verde.
+- **In-progress / pendente**: (a) **A verificação visual com conta autenticada, em 375px, nos dois
+  tipos de matrícula, NÃO foi feita** — é o check que o plano nomeia como o único capaz de pegar a
+  trava do item 3 vazando para quem pagou. O teste de unidade compara os dois HTML renderizados e
+  prova que não vaza no componente, mas o navegador continua devendo. É a mesma dívida que já se
+  arrasta desde o AD-129/132. (b) `flag.m9.login_google` está **desligada**: o botão do Google não
+  aparece até o provedor ser ligado no painel e a flag virar. (c) O teto do plano do Resend não foi
+  conferido, e o `rate_limit_email_sent` continua em 30/hora — os quatro e-mails **não** somam nesse
+  balde, mas os cadastros somam. (d) `RESEND_API_KEY`, `RESEND_FROM` e `NEXT_PUBLIC_SITE_URL`
+  precisam existir nos **secrets do GitHub Actions**, senão o job dos e-mails sai vermelho todo dia.
+  Seguem pendentes das rodadas anteriores: as alíneas de verificação visual do AD-129/132,
+  AD-125/126/127 e AD-120/121/122, o `Descartar` nunca exercido contra o banco, e as duas correções
+  do W2-A sem sensor.
+- **Next step**: fechar a verificação visual em 375px com as duas contas, ligar o provedor do Google
+  e a flag, conferir o teto do Resend e anotar o `rate_limit_email_sent` escolhido no `docs/DEPLOY.md`.
+  Depois disso o `TRIAL-2` está fechado, exceto o item 4, que só existe se o Raio-X estiver ligado.
+

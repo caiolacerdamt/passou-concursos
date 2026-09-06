@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
+import { ConviteDeMatricula } from "@/modules/conta/convite-de-matricula";
 import { Estado } from "@/modules/ui/estado";
 
 import type {
@@ -365,12 +366,29 @@ function LinhaDaMateria({
   );
 }
 
-function MateriasPorPeso({ materias }: { materias: LinhaMateriaRaioX[] }) {
+/**
+ * Quantas materias a previa do trial mostra (AD-133 · item 4 do TRIAL-2).
+ *
+ * Tres, e nao uma: com uma so o aluno nao ve o **contraste** de peso, que e o
+ * argumento inteiro do Raio-X. O que trava e a cauda da lista, e ela trava
+ * dizendo quantas ficaram — o numero e o argumento, igual ao item 3.
+ */
+const MATERIAS_NA_PREVIA = 3;
+
+function MateriasPorPeso({
+  materias,
+  trial = false,
+}: {
+  materias: LinhaMateriaRaioX[];
+  trial?: boolean;
+}) {
   const [aberta, setAberta] = useState<string | null>(
     materias[0]?.materiaId ?? null,
   );
   const teto = materias[0]?.fatia ?? 0;
   const nTopicos = materias.reduce((total, materia) => total + materia.nTopicos, 0);
+  const visiveis = trial ? materias.slice(0, MATERIAS_NA_PREVIA) : materias;
+  const escondidas = materias.length - visiveis.length;
 
   return (
     <section aria-labelledby="titulo-materias" id="materias-por-peso" className="scroll-mt-24">
@@ -401,7 +419,7 @@ function MateriasPorPeso({ materias }: { materias: LinhaMateriaRaioX[] }) {
         </div>
 
         <ul>
-          {materias.map((materia) => (
+          {visiveis.map((materia) => (
             <LinhaDaMateria
               key={materia.materiaId}
               materia={materia}
@@ -413,6 +431,69 @@ function MateriasPorPeso({ materias }: { materias: LinhaMateriaRaioX[] }) {
             />
           ))}
         </ul>
+      </div>
+
+      {trial && escondidas > 0 ? (
+        <div className="mt-4">
+          <ConviteDeMatricula
+            titulo={`Mais ${escondidas} ${escondidas === 1 ? "matéria" : "matérias"} do seu edital, com o peso já calculado.`}
+          >
+            <p>
+              A frequência que você está vendo é real: sai das provas oficiais já
+              ingeridas, questão por questão. O edital inteiro, com o peso de cada
+              matéria e de cada tópico, abre com a matrícula.
+            </p>
+          </ConviteDeMatricula>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * O Mapa de Prioridade no trial: existe, e diz o tamanho do que existe.
+ *
+ * Ele e o cruzamento do peso da banca com o dominio do proprio aluno — a parte
+ * acionavel do Raio-X, e por isso a que trava. Esconde-lo por inteiro faria o
+ * aluno nunca saber que ele existe; mostra-lo inteiro entregaria a
+ * personalizacao que a matricula paga.
+ */
+function MapaEmPrevia({ mapa }: { mapa: DadosMapaPorMateria | null }) {
+  const nLinhas = mapa?.linhas.length ?? 0;
+
+  return (
+    <section aria-labelledby="titulo-mapa" className="border-t border-linha pt-8">
+      <div className="border-b border-linha pb-4.5">
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-marca">
+          Sua atenção
+        </p>
+        <h2
+          id="titulo-mapa"
+          className="mt-3 text-[2.125rem] font-semibold leading-[1.1] tracking-[-0.03em]"
+        >
+          Mapa de Prioridade
+        </h2>
+        <p className="mt-3 max-w-[66ch] text-[1.0625rem] leading-relaxed text-suave">
+          O peso da banca é metade da história. A outra metade é o seu domínio, a parte
+          do edital que você já tocou e as revisões vencidas — e essa metade só existe
+          porque você respondeu.
+        </p>
+      </div>
+
+      <div className="mt-5">
+        <ConviteDeMatricula
+          titulo={
+            nLinhas > 0
+              ? `${nLinhas} ${nLinhas === 1 ? "matéria cruzada" : "matérias cruzadas"} com o que você já respondeu.`
+              : "Seu mapa começa a existir na primeira questão respondida."
+          }
+        >
+          <p>
+            O cruzamento entre o peso da banca e o seu desempenho — matéria por matéria,
+            tópico por tópico — faz parte da matrícula. O que você responder durante o
+            teste continua alimentando esse mapa, e ele não é zerado no fim dos 7 dias.
+          </p>
+        </ConviteDeMatricula>
       </div>
     </section>
   );
@@ -922,10 +1003,22 @@ function MapaDePrioridade({ mapa }: { mapa: DadosMapaPorMateria | null }) {
 export function RaioXTela({
   dados,
   mapa,
+  trial = false,
 }: {
   dados: DadosRaioX;
   /** Omitido nas chamadas antigas; `null` significa falha pessoal nomeada. */
   mapa?: DadosMapaPorMateria | null;
+  /**
+   * Prévia do trial (AD-133 · item 4 do TRIAL-2). **`false` por default**, pelo
+   * mesmo motivo do item 3: o erro caro aqui é a trava vazar para quem pagou.
+   *
+   * Fica o peso das matérias de maior frequência, com o número real calculado
+   * das provas oficiais. Trava a cauda da lista e o **Mapa de Prioridade** —
+   * que é o cruzamento do peso da banca com o domínio do próprio aluno, ou
+   * seja, a parte acionável. É o mesmo corte do progresso: o que trava é
+   * profundidade e ação, nunca a existência da tela.
+   */
+  trial?: boolean;
 }) {
   if (!dados.perfil) {
     return (
@@ -966,8 +1059,12 @@ export function RaioXTela({
         materia={destaque}
         doMapa={destaque.materiaId === primeiraDoMapa?.materiaId ? primeiraDoMapa : null}
       />
-      <MateriasPorPeso materias={dados.materias} />
-      {mapa !== undefined ? <MapaDePrioridade mapa={mapa} /> : null}
+      <MateriasPorPeso materias={dados.materias} trial={trial} />
+      {trial ? (
+        <MapaEmPrevia mapa={mapa ?? null} />
+      ) : mapa !== undefined ? (
+        <MapaDePrioridade mapa={mapa} />
+      ) : null}
     </div>
   );
 }

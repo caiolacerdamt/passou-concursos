@@ -16,7 +16,12 @@ import type { DadosMapaPorMateria } from "@/modules/raiox/mapa-por-materia";
  * interno dessa tela.
  */
 export default async function RaioX() {
-  await exigirMatriculaAtiva();
+  /*
+   * A guarda continua sendo a mesma e continua sendo a unica. O tipo devolvido
+   * decide so o **escopo** da tela — previa ou completa (AD-133 · item 4).
+   */
+  const matricula = await exigirMatriculaAtiva();
+  const trial = matricula.tipo === "trial";
 
   const ligado = await isFlagOn("flag.m5.raiox");
   if (!ligado) {
@@ -36,7 +41,13 @@ export default async function RaioX() {
     ? await lerMapaComFalha(dados)
     : { dados: null as DadosMapaPorMateria | null };
 
-  return <RaioXTela dados={dados} mapa={dados.perfil ? mapa.dados : undefined} />;
+  return (
+    <RaioXTela
+      dados={dados}
+      mapa={dados.perfil ? mapa.dados : undefined}
+      trial={trial}
+    />
+  );
 }
 
 async function lerMapaComFalha(

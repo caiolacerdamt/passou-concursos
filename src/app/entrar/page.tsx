@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { isFlagOn } from "@/modules/config";
 import { CampoDeSenha } from "@/modules/ui/campo-de-senha";
 import { MolduraDeAcesso } from "@/modules/ui/moldura-de-acesso";
 import { CREDENCIAL_INVALIDA } from "@/modules/conta/mensagens";
@@ -23,6 +24,20 @@ export default async function Entrar({
   const parametros = await searchParams;
   const proximo = caminhoInternoOuRaiz(comoTexto(parametros.proximo) ?? "/app");
   const erro = comoTexto(parametros.erro);
+
+  /*
+   * O botao do Google so existe se a flag disser que sim (item 9 do TRIAL-2).
+   *
+   * `signInWithOAuth` devolve uma URL **com sucesso** mesmo com o provedor
+   * desligado no painel: o `if (error || !data?.url)` de `acoes.ts` nunca
+   * dispara, e a recusa acontece fora do nosso dominio, numa tela de JSON cru
+   * que expoe o project ref do Supabase. Nao ha como detectar isso daqui — por
+   * isso o estado do provedor vira configuracao declarada, e nao adivinhacao.
+   *
+   * Ele some do HTML, e nao por `display:none`: botao invisivel continua
+   * alcancavel por teclado e por leitor de tela.
+   */
+  const google = await isFlagOn("flag.m9.login_google");
 
   return (
     <MolduraDeAcesso
@@ -64,26 +79,24 @@ export default async function Entrar({
         </p>
       ) : null}
 
-      <form action={entrarComGoogle} className="mt-7">
-        <input type="hidden" name="proximo" value={proximo} />
-        <button
-          type="submit"
-          className="flex min-h-13 w-full items-center justify-center gap-2.5 rounded-pill bg-papel-alto font-medium text-tinta shadow-[inset_0_0_0_1px_var(--color-risco)] transition hover:shadow-[inset_0_0_0_1px_var(--color-tinta-suave)]"
-        >
-          <LogoDoGoogle />
-          Continuar com Google
-        </button>
-      </form>
+      {google ? (
+        <>
+          <form action={entrarComGoogle} className="mt-7">
+            <input type="hidden" name="proximo" value={proximo} />
+            <button
+              type="submit"
+              className="flex min-h-13 w-full items-center justify-center gap-2.5 rounded-pill bg-papel-alto font-medium text-tinta shadow-[inset_0_0_0_1px_var(--color-risco)] transition hover:shadow-[inset_0_0_0_1px_var(--color-tinta-suave)]"
+            >
+              <LogoDoGoogle />
+              Continuar com Google
+            </button>
+          </form>
 
-      <div className="my-6 flex items-center gap-4">
-        <span aria-hidden="true" className="h-px grow bg-risco" />
-        <span className="font-utilitaria text-[0.6875rem] tracking-[0.16em] text-tinta-suave uppercase">
-          ou com e-mail
-        </span>
-        <span aria-hidden="true" className="h-px grow bg-risco" />
-      </div>
+          <SeparadorDeCaminhos />
+        </>
+      ) : null}
 
-      <form action={entrarComSenha} className="flex flex-col gap-5">
+      <form action={entrarComSenha} className={`flex flex-col gap-5${google ? "" : " mt-7"}`}>
         <input type="hidden" name="proximo" value={proximo} />
 
         <div className="flex flex-col gap-1.5">
@@ -138,6 +151,19 @@ function LogoDoGoogle() {
       <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z" />
       <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
     </svg>
+  );
+}
+
+/** O "ou com e-mail" so faz sentido quando ha um "ou" — sem o Google, ele some. */
+function SeparadorDeCaminhos() {
+  return (
+    <div className="my-6 flex items-center gap-4">
+      <span aria-hidden="true" className="h-px grow bg-risco" />
+      <span className="font-utilitaria text-[0.6875rem] tracking-[0.16em] text-tinta-suave uppercase">
+        ou com e-mail
+      </span>
+      <span aria-hidden="true" className="h-px grow bg-risco" />
+    </div>
   );
 }
 

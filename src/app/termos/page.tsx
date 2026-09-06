@@ -31,8 +31,29 @@ export default function Termos() {
             oferecidos, terão opção separada.
           </p>
         </section>
+        <section aria-labelledby="conta-gratuita">
+          <h2 id="conta-gratuita" className="text-xl font-semibold">
+            2. Conta gratuita de 7 dias
+          </h2>
+          <p className="mt-2 text-suave">
+            Quando o teste gratuito está aberto, é possível criar uma conta sem
+            cartão e usar o produto por 7 dias corridos, contados da criação da
+            conta. Durante esse período há um limite diário de questões e algumas
+            telas aparecem em prévia. <strong>Não há cobrança automática no fim
+            do teste</strong>: nenhum dado de pagamento é pedido para começar, e
+            o acesso simplesmente fecha no fim do prazo, sem renovação e sem
+            débito. Para continuar depois disso é preciso fazer a matrícula, por
+            decisão sua. Cada conta pode usar o teste uma vez.
+          </p>
+          <p className="mt-2 text-suave">
+            O histórico produzido durante o teste — respostas, caderno de erros e
+            agenda de revisão — continua guardado na conta depois que o acesso
+            fecha, e volta inteiro se houver matrícula. O que fecha é o acesso ao
+            acervo de questões, não o seu histórico.
+          </p>
+        </section>
         <section aria-labelledby="pagamento-e-garantia">
-          <h2 id="pagamento-e-garantia" className="text-xl font-semibold">2. Pagamento e garantia</h2>
+          <h2 id="pagamento-e-garantia" className="text-xl font-semibold">3. Pagamento e garantia</h2>
           <p className="mt-2 text-suave">
             O pagamento é processado pelo Asaas. A garantia de sete dias corridos
             começa na confirmação do pagamento; o pedido e a resposta do reembolso
@@ -40,7 +61,7 @@ export default function Termos() {
           </p>
         </section>
         <section aria-labelledby="conteudo">
-          <h2 id="conteudo" className="text-xl font-semibold">3. Conteúdo</h2>
+          <h2 id="conteudo" className="text-xl font-semibold">4. Conteúdo</h2>
           <p className="mt-2 text-suave">
             As questões são obtidas de fontes oficiais e mantêm sua proveniência.
             Explicações podem passar por atualização e conferência sem alterar o
@@ -48,7 +69,7 @@ export default function Termos() {
           </p>
         </section>
         <section aria-labelledby="contato-termos">
-          <h2 id="contato-termos" className="text-xl font-semibold">4. Contato</h2>
+          <h2 id="contato-termos" className="text-xl font-semibold">5. Contato</h2>
           <p className="mt-2 text-suave">
             O canal de suporte, a identidade/CNPJ e os dados do responsável serão
             publicados com a versão jurídica revisada antes da operação comercial.

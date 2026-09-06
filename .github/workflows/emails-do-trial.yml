@@ -1,0 +1,47 @@
+name: E-mails do trial
+
+# AD-133 · AD-036 · AD-095 · AD-105
+# pg_cron enfileira (não fala HTTP); este job envia. Nunca em função serverless.
+#
+# Roda depois do cron de enfileiramento (11:00 UTC), com folga: o job só
+# consome o que já está na fila, então atrasar não perde e-mail — adianta é que
+# perderia, mandando a fila vazia.
+
+on:
+  schedule:
+    - cron: "30 11 * * *"
+  workflow_dispatch:
+
+jobs:
+  enviar:
+    name: Enviar a fila de e-mails do trial
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Enviar a fila
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM: ${{ secrets.RESEND_FROM }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: npm run jobs:emails-trial
+
+      # Falha fecha, não engole (AD-105): sem chave ou sem remetente o passo
+      # acima sai vermelho ANTES de tocar a fila, e este passo grita.
+      - name: Reportar falha do job
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "emails-do-trial terminou vermelho — a fila continua pendente"
+        run: node scripts/jobs/reportar-falha.mjs

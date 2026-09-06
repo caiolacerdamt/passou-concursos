@@ -51,6 +51,11 @@ values (
 );
 ```
 
+> **Um banco só, por enquanto.** Enquanto a SPEC 25 (ambientes e staging) não rodar, o `DATABASE_URL`
+> do `.env` e o segredo do GitHub Actions apontam para o **mesmo** projeto Supabase. Consequência
+> prática: aplicar a matriz "no dev" é aplicar em produção, e não existe um segundo INSERT a fazer
+> depois. Quando os ambientes se separarem, este SQL passa a ser rodado duas vezes.
+
 > **As duas linhas da medicao de prova (AD-141).** `etiqueta_de_item` e `separacao_de_itens` entram
 > com `batch: false` — o comando `medir-prova` chama `executarTarefa`, que **recusa** tarefa marcada
 > `batch: true` (`TarefaEhDeLote`). Nao e desperdicio de desconto: uma prova inteira sao ~4 pedidos, e

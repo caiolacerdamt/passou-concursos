@@ -102,10 +102,12 @@ Rodando o código desta spec sobre as 24 provas de `fontes/entrada/`:
 Dois números da spec ficaram **não confirmados de propósito**, e é honesto dizer:
 
 - **Custo real por prova**: não medido nesta rodada, porque a chamada ao provedor **custa dinheiro** e
-  não foi autorizada. A matriz de desenvolvimento já tem as duas linhas (`etiqueta_de_item` e
-  `separacao_de_itens` na Luna, esforço `max`, síncronas — decisão de 2026-09-06), então medir é um
-  comando: `npm run jobs:medir-prova -- --acao etiquetar --prova <uuid> --pdf <caminho>`. O número de
-  2026-09-05 (R$ 0,024 por 60 itens) continua sendo a única medição, e ela sustenta o AD-138.
+  não foi autorizada. A matriz já tem as duas linhas (`etiqueta_de_item` e `separacao_de_itens` na
+  Luna, esforço `max`, síncronas — decisão de 2026-09-06), então medir é um comando só:
+  `npm run jobs:medir-prova -- --acao etiquetar --prova b914f7d8-de48-459c-965e-7500149fa002 --pdf
+  "fontes/entrada/CAIXA 2021 PcD - PROVA - TECNICO BANCARIO NOVO.pdf"` (o id é o da CAIXA 2021 PcD já
+  catalogada). O número de 2026-09-05 (R$ 0,024 por 60 itens) continua sendo a única medição, e ela
+  sustenta o AD-138.
 - **Grade "ausente" em 17 provas**: o leitor cobre o formato CESGRANRIO medido. Prova de outra banca
   cai na fila humana, que é o comportamento que o BANCO-15 AC4 pede — não é um furo, é o lado seguro
   do erro. Quem completa a grade dessas provas é a tela da SPEC 40.

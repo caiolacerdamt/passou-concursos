@@ -1,113 +1,66 @@
-import type { Client } from "pg";
 import { expect, it } from "vitest";
 
-import { criarTopico, inserirQuestao } from "./acervo";
+import { inserirQuestao } from "./acervo";
 import { comTransacaoSemPerfilConcurso } from "./conexao";
+import {
+  criarMateria,
+  criarPerfil,
+  criarProvaMedida,
+  lerTopicos,
+  recalcular,
+} from "./medicao";
 import { descreveComBanco } from "./setup";
 
-async function criarPerfil(
-  cliente: Client,
-  topicos: string[],
-  opcoes: { banca?: string; ativo?: boolean } = {},
-): Promise<string> {
-  const { rows } = await cliente.query<{ id: string }>(
-    `insert into public.perfil_concurso
-       (orgao, banca, programa_edital, ativo)
-     values ('Banco do Brasil', $1, $2::jsonb, $3)
-     returning id`,
-    [
-      opcoes.banca ?? "Cesgranrio",
-      JSON.stringify(topicos),
-      opcoes.ativo ?? true,
-    ],
-  );
-  return rows[0].id;
-}
+/**
+ * `recalcula_raiox` — o que o AD-138 preservou.
+ *
+ * Este arquivo era escrito contra a formula revogada, em que o denominador era
+ * o acervo e a questao publicada era a unidade de medida. O que sobrevive
+ * intacto — e continua sendo verificado aqui — sao os tres mecanismos do
+ * AD-056, que mudaram de lugar mas nao de forma:
+ *
+ *   * o **decaimento por ano**, que agora pondera a media entre provas;
+ *   * o **amortecimento por amostra**, que agora tem como ancora a media
+ *     daquela materia;
+ *   * a **idempotencia** e o silencio sobre `tentativas` (RAIOX-14).
+ *
+ * A formula em dois niveis em si esta em `spec39-raiox-dois-niveis.test.ts`.
+ */
 
-async function criarQuestaoPublicada(
-  cliente: Client,
-  topicoId: string,
-  opcoes: { ano?: number; banca?: string; anulada?: boolean } = {},
-): Promise<{ id: string; provaId: string }> {
-  const questao = await inserirQuestao(cliente, {
-    topico_id: topicoId,
-    status: "publicada",
-    anulada: opcoes.anulada ?? false,
-  });
-  const { rows: origem } = await cliente.query<{ prova_id: string }>(
-    "select prova_id from public.questoes where id = $1 and questao_versao = $2",
-    [questao.id, questao.questao_versao],
-  );
-  await cliente.query(
-    "update public.provas set ano = $1, banca = $2 where id = $3",
-    [opcoes.ano ?? 2023, opcoes.banca ?? "Cesgranrio", origem[0].prova_id],
-  );
-  return { id: questao.id, provaId: origem[0].prova_id };
-}
-
-async function recalcular(cliente: Client, referencia = "2026-08-21"): Promise<number> {
-  const { rows } = await cliente.query<{ total: number }>(
-    "select public.recalcula_raiox($1::date) as total",
-    [referencia],
-  );
-  return Number(rows[0].total);
-}
-
-type Projecao = {
-  topico_id: string;
-  taxa_bruta: string;
-  peso: string;
-  n_questoes: number;
-  tendencia: string;
-  amostra_baixa: boolean;
-};
-
-async function lerProjecoes(cliente: Client, perfil: string): Promise<Projecao[]> {
-  const { rows } = await cliente.query<Projecao>(
-    `select topico_id, taxa_bruta, peso, n_questoes, tendencia, amostra_baixa
-       from public.raiox_projecoes
-      where perfil_concurso_id = $1
-      order by topico_id`,
-    [perfil],
-  );
-  return rows;
-}
-
-descreveComBanco("recalcula_raiox — fonte e taxa", () => {
-  it("conta real publicada vigente, mantém anulada e ignora inédita e versão antiga", async () => {
+descreveComBanco("recalcula_raiox — fonte da medicao", () => {
+  it("mede pela etiqueta do item, e a questao do acervo nao move linha", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
-      const topico = await criarTopico(cliente);
-      const perfil = await criarPerfil(cliente, [topico]);
-      const primeira = await criarQuestaoPublicada(cliente, topico);
+      const materia = await criarMateria(cliente, 2);
+      const { perfilId, orgao } = await criarPerfil(cliente, materia.topicos);
 
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        blocos: [{ materiaId: materia.materiaId, itens: 4 }],
+        etiquetas: {
+          1: materia.topicos[0],
+          2: materia.topicos[0],
+          3: materia.topicos[0],
+          4: materia.topicos[1],
+        },
+      });
+
+      expect(await recalcular(cliente)).toBe(2);
+      const antes = await lerTopicos(cliente, perfilId);
+      const porTopico = new Map(antes.map((linha) => [linha.topico_id, linha]));
+
+      expect(porTopico.get(materia.topicos[0])!.n_questoes).toBe(3);
+      expect(porTopico.get(materia.topicos[1])!.n_questoes).toBe(1);
+
+      // Publicar questao real do mesmo assunto nao desloca nada: quem mede e a
+      // etiqueta, e ela ja contou aquele item uma vez.
       await inserirQuestao(cliente, {
-        id: primeira.id,
-        questao_versao: 2,
-        prova_id: primeira.provaId,
-        numero: 1,
-        topico_id: topico,
+        topico_id: materia.topicos[1],
+        numero: 9,
         status: "publicada",
-        mudanca_tipo: "substantiva",
-        mudanca_motivo: "gabarito retificado",
       });
-      await criarQuestaoPublicada(cliente, topico, { anulada: true });
-      await inserirQuestao(cliente, {
-        origem: "gerada_ia",
-        prova_id: null,
-        numero: null,
-        fonte_citacao: null,
-        topico_id: topico,
-        status: "em_revisao",
-      });
-
-      expect(await recalcular(cliente)).toBe(1);
-      const [linha] = await lerProjecoes(cliente, perfil);
-
-      // A versão 1 deixou de ser vigente; a anulada ainda mede o que a banca
-      // cobrou; a inédita não entra em nenhuma circunstância.
-      expect(linha.n_questoes).toBe(2);
-      expect(Number(linha.taxa_bruta)).toBeGreaterThan(0);
-      expect(linha.amostra_baixa).toBe(true);
+      await recalcular(cliente);
+      expect(await lerTopicos(cliente, perfilId)).toEqual(antes);
 
       const { rows: funcao } = await cliente.query<{ definicao: string }>(
         "select pg_get_functiondef('public.recalcula_raiox(date)'::regprocedure) as definicao",
@@ -120,90 +73,130 @@ descreveComBanco("recalcula_raiox — fonte e taxa", () => {
 descreveComBanco("recalcula_raiox — decaimento e tendência", () => {
   it("dá mais peso ao recente e produz as três tendências", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
-      const recente = await criarTopico(cliente);
-      const anterior = await criarTopico(cliente);
-      const antigo = await criarTopico(cliente);
-      const perfil = await criarPerfil(cliente, [recente, anterior, antigo]);
+      // Uma matéria, três assuntos: subindo, caindo e sem item nenhum.
+      const materia = await criarMateria(cliente, 3);
+      const [subindo, caindo, parado] = materia.topicos;
+      const { perfilId, orgao } = await criarPerfil(cliente, materia.topicos);
 
-      await criarQuestaoPublicada(cliente, recente, { ano: 2025 });
-      await criarQuestaoPublicada(cliente, anterior, { ano: 2022 });
-      await criarQuestaoPublicada(cliente, antigo, { ano: 2010 });
+      // Janela recente (referência 2026, 3 anos): 2024–2026.
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        cargo: "Escriturario",
+        blocos: [{ materiaId: materia.materiaId, itens: 10 }],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 10 }, (_, i) => [
+            i + 1,
+            i < 8 ? subindo : caindo,
+          ] as const),
+        ),
+      });
+      // Janela anterior: 2021–2023. A proporção se inverte.
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2022,
+        cargo: "Agente Comercial",
+        blocos: [{ materiaId: materia.materiaId, itens: 10 }],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 10 }, (_, i) => [
+            i + 1,
+            i < 2 ? subindo : caindo,
+          ] as const),
+        ),
+      });
 
-      await recalcular(cliente);
-      const linhas = await lerProjecoes(cliente, perfil);
-      const porTopico = new Map(linhas.map((linha) => [linha.topico_id, linha]));
+      await recalcular(cliente, "2026-01-15");
+      const porTopico = new Map(
+        (await lerTopicos(cliente, perfilId)).map((linha) => [linha.topico_id, linha]),
+      );
 
-      const linhaRecente = porTopico.get(recente);
-      const linhaAnterior = porTopico.get(anterior);
-      const linhaAntigo = porTopico.get(antigo);
-      expect(linhaRecente).toBeDefined();
-      expect(linhaAnterior).toBeDefined();
-      expect(linhaAntigo).toBeDefined();
-      expect(Number(linhaRecente!.peso)).toBeGreaterThan(Number(linhaAnterior!.peso));
-      expect(linhaRecente!.tendencia).toBe("subindo");
-      expect(linhaAnterior!.tendencia).toBe("caindo");
-      expect(linhaAntigo!.tendencia).toBe("estavel");
+      // O decaimento por ano dá mais voz à prova de 2025 do que à de 2022:
+      // as duas proporções são simétricas, e o desempate é o tempo.
+      expect(Number(porTopico.get(subindo)!.peso)).toBeGreaterThan(
+        Number(porTopico.get(caindo)!.peso),
+      );
+      expect(porTopico.get(subindo)!.tendencia).toBe("subindo");
+      expect(porTopico.get(caindo)!.tendencia).toBe("caindo");
+      // Sem item em nenhuma das duas janelas não há direção a afirmar.
+      expect(porTopico.get(parado)!.tendencia).toBe("estavel");
     });
   });
 });
 
 descreveComBanco("recalcula_raiox — amortecimento e idempotência", () => {
-  it("puxa amostra pequena para a média e dá média ao tópico sem questão", async () => {
+  it("puxa amostra pequena para a média da matéria e dá média ao assunto sem item", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
-      const pequeno = await criarTopico(cliente);
-      const robusto = await criarTopico(cliente);
-      const semQuestao = await criarTopico(cliente);
-      const perfil = await criarPerfil(cliente, [pequeno, robusto, semQuestao]);
+      const materia = await criarMateria(cliente, 3);
+      const [pequeno, outro, semItem] = materia.topicos;
+      const { perfilId, orgao } = await criarPerfil(cliente, materia.topicos);
 
-      for (let i = 0; i < 3; i += 1) {
-        await criarQuestaoPublicada(cliente, pequeno);
-      }
-      await criarQuestaoPublicada(cliente, robusto);
+      // 6 itens medidos: 4 de um assunto, 2 de outro, nenhum do terceiro.
+      // n_m = 6 < piso 10, então a linha nasce rotulada de pouca amostra.
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        blocos: [{ materiaId: materia.materiaId, itens: 6 }],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 6 }, (_, i) => [i + 1, i < 4 ? pequeno : outro] as const),
+        ),
+      });
 
-      await recalcular(cliente);
-      const linhas = await lerProjecoes(cliente, perfil);
-      const porTopico = new Map(linhas.map((linha) => [linha.topico_id, linha]));
+      await recalcular(cliente, "2026-01-15");
+      const porTopico = new Map(
+        (await lerTopicos(cliente, perfilId)).map((linha) => [linha.topico_id, linha]),
+      );
       const linhaPequeno = porTopico.get(pequeno)!;
-      const linhaSemQuestao = porTopico.get(semQuestao)!;
-      const media = Number(linhaSemQuestao.peso);
+      const linhaSemItem = porTopico.get(semItem)!;
+      // A âncora do amortecimento: a média DAQUELA matéria, 1/3.
+      const media = 1 / 3;
 
-      expect(linhaPequeno.n_questoes).toBe(3);
+      expect(linhaPequeno.n_questoes).toBe(4);
       expect(linhaPequeno.amostra_baixa).toBe(true);
       expect(Number(linhaPequeno.peso)).not.toBe(Number(linhaPequeno.taxa_bruta));
       expect(Math.abs(Number(linhaPequeno.peso) - media)).toBeLessThan(
         Math.abs(Number(linhaPequeno.taxa_bruta) - media),
       );
-      expect(linhaSemQuestao.n_questoes).toBe(0);
-      expect(Number(linhaSemQuestao.taxa_bruta)).toBe(0);
-      expect(media).toBeGreaterThan(0);
-      expect(linhaSemQuestao.amostra_baixa).toBe(true);
+
+      // O assunto sem item não vai a zero: ele recebe a média da matéria,
+      // amortecida — e diz que a amostra é baixa.
+      expect(linhaSemItem.n_questoes).toBe(0);
+      expect(Number(linhaSemItem.taxa_bruta)).toBe(0);
+      expect(Number(linhaSemItem.peso)).toBeGreaterThan(0);
+      expect(linhaSemItem.amostra_baixa).toBe(true);
     });
   });
 
-  it("reroda com o mesmo resultado e preserva a projeção se uma execução falhar", async () => {
+  it("reroda com o mesmo resultado e não quebra com programa apontando para tópico inexistente", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
-      const topico = await criarTopico(cliente);
-      const perfil = await criarPerfil(cliente, [topico]);
-      await criarQuestaoPublicada(cliente, topico);
+      const materia = await criarMateria(cliente, 2);
+      const { perfilId, orgao } = await criarPerfil(cliente, materia.topicos);
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        blocos: [{ materiaId: materia.materiaId, itens: 4 }],
+        etiquetas: {
+          1: materia.topicos[0],
+          2: materia.topicos[0],
+          3: materia.topicos[1],
+          4: materia.topicos[1],
+        },
+      });
 
-      await recalcular(cliente);
-      const antes = await lerProjecoes(cliente, perfil);
-      await recalcular(cliente);
-      const depois = await lerProjecoes(cliente, perfil);
-      expect(depois).toEqual(antes);
+      await recalcular(cliente, "2026-01-15");
+      const antes = await lerTopicos(cliente, perfilId);
+      await recalcular(cliente, "2026-01-15");
+      expect(await lerTopicos(cliente, perfilId)).toEqual(antes);
 
-      // O programa aceita JSON por contrato; um UUID que não existe falha na
-      // FK da projeção. O savepoint prova que o DELETE não deixa meia projeção.
+      // O programa aceita JSON por contrato. Antes do AD-138 um UUID órfão
+      // derrubava o job na FK da projeção; agora o programa é casado com
+      // `topicos` na entrada e o órfão simplesmente não vira linha — o job de
+      // um perfil não pode ser derrubado por configuração de outro.
       await cliente.query(
         "update public.perfil_concurso set programa_edital = $1::jsonb where id = $2",
-        [JSON.stringify([crypto.randomUUID()]), perfil],
+        [JSON.stringify([...materia.topicos, crypto.randomUUID()]), perfilId],
       );
-      await cliente.query("savepoint falha_raiox");
-      await expect(recalcular(cliente)).rejects.toThrow(/foreign key|raiox_projecoes/);
-      await cliente.query("rollback to savepoint falha_raiox");
-
-      const preservada = await lerProjecoes(cliente, perfil);
-      expect(preservada).toEqual(antes);
+      await recalcular(cliente, "2026-01-15");
+      expect(await lerTopicos(cliente, perfilId)).toEqual(antes);
     });
   });
 });

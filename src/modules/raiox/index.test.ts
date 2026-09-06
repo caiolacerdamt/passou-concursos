@@ -4,8 +4,25 @@ import {
   classificarDominio,
   consultarMapaPrioridade,
   consultarRaioX,
+  detalhaPorAssunto,
+  lastroEmTexto,
   montarMateriasDoEdital,
 } from "./index";
+
+import type { LastroRaioX } from "./index";
+
+/**
+ * O lastro padrao das fixtures: degrau 1, medido em duas provas do proprio
+ * concurso. Quem quiser provar o comportamento de outro degrau sobrescreve.
+ */
+const LASTRO_TESTE: LastroRaioX = {
+  degrau: 1,
+  nProvas: 2,
+  anos: [2024, 2025],
+  baseDoPeso: "itens",
+  texto: lastroEmTexto(1, 2, [2024, 2025], "itens"),
+};
+
 
 type Resposta = { data: unknown; error: { message: string } | null };
 
@@ -58,6 +75,10 @@ describe("consultarRaioX", () => {
             n_questoes: 3,
             tendencia: "subindo",
             amostra_baixa: true,
+            degrau: 1,
+            n_provas: 2,
+            anos: [2024, 2025],
+            base_do_peso: "itens",
           },
           {
             topico_id: "topico-b",
@@ -65,6 +86,10 @@ describe("consultarRaioX", () => {
             n_questoes: 18,
             tendencia: "estavel",
             amostra_baixa: false,
+            degrau: 1,
+            n_provas: 2,
+            anos: [2024, 2025],
+            base_do_peso: "itens",
           },
         ],
         error: null,
@@ -95,6 +120,10 @@ describe("consultarRaioX", () => {
             n_topicos: 4,
             tendencia: "estavel",
             amostra_baixa: false,
+            degrau: 1,
+            n_provas: 2,
+            anos: [2024, 2025],
+            base_do_peso: "itens",
           },
           {
             materia_id: "materia-1",
@@ -103,6 +132,10 @@ describe("consultarRaioX", () => {
             n_topicos: 2,
             tendencia: "subindo",
             amostra_baixa: true,
+            degrau: 1,
+            n_provas: 2,
+            anos: [2024, 2025],
+            base_do_peso: "itens",
           },
         ],
         error: null,
@@ -125,6 +158,7 @@ describe("consultarRaioX", () => {
           nQuestoes: 3,
           tendencia: "subindo",
           amostraBaixa: true,
+          lastro: LASTRO_TESTE,
         },
         {
           topicoId: "topico-b",
@@ -133,6 +167,7 @@ describe("consultarRaioX", () => {
           nQuestoes: 18,
           tendencia: "estavel",
           amostraBaixa: false,
+          lastro: LASTRO_TESTE,
         },
       ],
       // A projeção por matéria é leitura própria, não a soma de `linhas`: as
@@ -147,6 +182,7 @@ describe("consultarRaioX", () => {
           nTopicos: 4,
           tendencia: "estavel",
           amostraBaixa: false,
+          lastro: LASTRO_TESTE,
           topicos: [
             {
               topicoId: "topico-b",
@@ -155,6 +191,7 @@ describe("consultarRaioX", () => {
               nQuestoes: 18,
               tendencia: "estavel",
               amostraBaixa: false,
+              lastro: LASTRO_TESTE,
               fatia: 0.8,
             },
           ],
@@ -168,6 +205,7 @@ describe("consultarRaioX", () => {
           nTopicos: 2,
           tendencia: "subindo",
           amostraBaixa: true,
+          lastro: LASTRO_TESTE,
           topicos: [
             {
               topicoId: "topico-a",
@@ -176,6 +214,7 @@ describe("consultarRaioX", () => {
               nQuestoes: 3,
               tendencia: "subindo",
               amostraBaixa: true,
+              lastro: LASTRO_TESTE,
               fatia: 0.2,
             },
           ],
@@ -279,6 +318,7 @@ describe("consultarMapaPrioridade", () => {
         nQuestoes: 18,
         tendencia: "estavel" as const,
         amostraBaixa: false,
+        lastro: LASTRO_TESTE,
       },
     ],
     materias: [],
@@ -371,6 +411,7 @@ describe("montarMateriasDoEdital", () => {
       nQuestoes: 12,
       tendencia: "subindo" as const,
       amostraBaixa: false,
+      lastro: LASTRO_TESTE,
     },
     {
       topicoId: "t-binomial",
@@ -379,6 +420,7 @@ describe("montarMateriasDoEdital", () => {
       nQuestoes: 4,
       tendencia: "estavel" as const,
       amostraBaixa: true,
+      lastro: LASTRO_TESTE,
     },
   ];
 
@@ -451,5 +493,70 @@ describe("montarMateriasDoEdital", () => {
     expect(materias[0].tendencia).toBe("estavel");
     // Um assunto com amostra cheia tira o rótulo de pouca amostra da matéria.
     expect(materias[0].amostraBaixa).toBe(false);
+  });
+});
+
+describe("lastro (RAIOX-18)", () => {
+  it("diz de onde veio a evidência sem adjetivá-la", () => {
+    expect(lastroEmTexto(1, 2, [2023, 2025], "itens")).toBe(
+      "Peso medido em 2 provas do proprio concurso, de 2023 e 2025.",
+    );
+    expect(lastroEmTexto(1, 1, [2025], "pontos")).toBe(
+      "Peso medido em 1 prova do proprio concurso, de 2025.",
+    );
+    expect(lastroEmTexto(2, 0, [], "edital")).toContain("declarado pelo edital");
+    expect(lastroEmTexto(3, 2, [2021, 2024], "itens")).toContain(
+      "mesma banca em outro orgao",
+    );
+    expect(lastroEmTexto(4, 0, [], "sem_dado")).toBe(
+      "Sem prova medida nem peso declarado para esta materia.",
+    );
+  });
+
+  it("só o degrau 1 abre o detalhe por assunto", () => {
+    const lastro = (degrau: 1 | 2 | 3 | 4) => ({
+      degrau,
+      nProvas: 1,
+      anos: [2025],
+      baseDoPeso: "itens" as const,
+      texto: "",
+    });
+
+    expect(detalhaPorAssunto(lastro(1))).toBe(true);
+    expect(detalhaPorAssunto(lastro(2))).toBe(false);
+    expect(detalhaPorAssunto(lastro(3))).toBe(false);
+    expect(detalhaPorAssunto(lastro(4))).toBe(false);
+  });
+
+  it("a matéria do edital herda o PIOR degrau dos assuntos que ela junta", () => {
+    const comLastro = (
+      topicoId: string,
+      degrau: 1 | 2 | 3 | 4,
+      anos: number[],
+    ) => ({
+      topicoId,
+      topico: topicoId,
+      peso: 0.1,
+      nQuestoes: 4,
+      tendencia: "estavel" as const,
+      amostraBaixa: false,
+      lastro: {
+        degrau,
+        nProvas: anos.length,
+        anos,
+        baseDoPeso: "itens" as const,
+        texto: lastroEmTexto(degrau, anos.length, anos, "itens"),
+      },
+    });
+
+    const [materia] = montarMateriasDoEdital(
+      [{ id: "cm-1", nome: "Bloco misto", ordem: 1, topicoIds: ["t-1", "t-2"] }],
+      [comLastro("t-1", 1, [2025]), comLastro("t-2", 3, [2021])],
+    );
+
+    // Dizer "medido na prova do próprio concurso" quando metade da linha veio
+    // de outro órgão daria ao aluno uma garantia que só vale para uma parte.
+    expect(materia.lastro.degrau).toBe(3);
+    expect(materia.lastro.anos).toEqual([2021, 2025]);
   });
 });

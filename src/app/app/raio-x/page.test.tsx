@@ -17,7 +17,12 @@ vi.mock("@/modules/conta/matricula", () => ({
 vi.mock("@/modules/config", () => ({
   isFlagOn: dependencias.flag,
 }));
-vi.mock("@/modules/raiox", () => ({
+// Só as duas leituras que vão ao banco são trocadas por dublê. Os helpers
+// puros do módulo (o lastro, a faixa de domínio) continuam sendo os de
+// verdade: dublar cálculo faria a tela ser testada contra uma segunda
+// implementação em vez de contra a que roda em produção.
+vi.mock("@/modules/raiox", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/raiox")>()),
   consultarMapaPrioridade: dependencias.mapa,
   consultarRaioX: dependencias.consultar,
 }));
@@ -45,6 +50,13 @@ const dados = {
       nQuestoes: 3,
       tendencia: "subindo" as const,
       amostraBaixa: true,
+      lastro: {
+        degrau: 1 as const,
+        nProvas: 1,
+        anos: [2025],
+        baseDoPeso: "itens" as const,
+        texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+      },
     },
   ],
   materias: [
@@ -57,6 +69,13 @@ const dados = {
       nTopicos: 7,
       tendencia: "subindo" as const,
       amostraBaixa: true,
+      lastro: {
+        degrau: 1 as const,
+        nProvas: 1,
+        anos: [2025],
+        baseDoPeso: "itens" as const,
+        texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+      },
       topicos: [
         {
           topicoId: "topico-1",
@@ -65,6 +84,13 @@ const dados = {
           nQuestoes: 3,
           tendencia: "subindo" as const,
           amostraBaixa: true,
+          lastro: {
+            degrau: 1 as const,
+            nProvas: 1,
+            anos: [2025],
+            baseDoPeso: "itens" as const,
+            texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+          },
           fatia: 1,
         },
       ],

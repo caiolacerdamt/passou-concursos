@@ -88,6 +88,7 @@ describe("catalogo de chaves", () => {
       "param.m5.piso_amostra_baixa",
       "param.m5.periodo_tendencia_recente_anos",
       "param.m5.periodo_tendencia_anterior_anos",
+      "param.m5.peso_degrau_3",
       "param.m5.prontidao_piso",
       "param.m6.pontos_estudo_prioritario",
       "param.m6.pontos_conclusao",

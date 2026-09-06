@@ -6,8 +6,10 @@ import Link from "next/link";
 import { ConviteDeMatricula } from "@/modules/conta/convite-de-matricula";
 import { Estado } from "@/modules/ui/estado";
 
+import { detalhaPorAssunto } from "./index";
 import type {
   DadosRaioX,
+  DegrauDeLastro,
   FaixaDominio,
   LinhaMateriaRaioX,
   TopicoDaMateria,
@@ -38,6 +40,27 @@ function percentual(fracao: number, casas = 1): string {
 function inteiroPercentual(fracao: number): string {
   return `${Math.round(fracao * 100).toLocaleString("pt-BR")}%`;
 }
+
+/**
+ * O rotulo curto do degrau (RAIOX-18 AC3/AC5).
+ *
+ * Ele nao adjetiva a evidencia — nomeia a fonte. Linhas de degraus diferentes
+ * convivem na mesma tela, cada uma com o seu rotulo, e e por isso que o texto
+ * precisa caber ao lado do nome da materia.
+ */
+const DEGRAU_EM_TEXTO: Record<DegrauDeLastro, string> = {
+  1: "Medido na prova",
+  2: "Declarado no edital",
+  3: "Banca em outro órgão",
+  4: "Sem dado",
+};
+
+const DEGRAU_EM_ESTILO: Record<DegrauDeLastro, string> = {
+  1: "bg-conquista-fundo text-conquista",
+  2: "bg-fundo-suave text-suave",
+  3: "bg-fundo-suave text-suave",
+  4: "bg-fundo-suave text-suave",
+};
 
 const TENDENCIA_EM_TEXTO: Record<TendenciaRaioX, string> = {
   subindo: "Subindo",
@@ -134,12 +157,12 @@ function Cabecalho({ perfil, nQuestoes }: { perfil: NonNullable<DadosRaioX["perf
         </p>
         <p className="mt-2.5 text-xl font-semibold">
           {nQuestoes.toLocaleString("pt-BR")}{" "}
-          {nQuestoes === 1 ? "questão real" : "questões reais"}
+          {nQuestoes === 1 ? "item medido" : "itens medidos"}
         </p>
         <p className="mt-2 text-sm leading-6 text-suave">
           {perfil.orgao} ·{" "}
-          {perfil.banca === "indefinida" ? "banca ainda não definida" : perfil.banca}. Questão
-          inédita nunca entra nesta conta.
+          {perfil.banca === "indefinida" ? "banca ainda não definida" : perfil.banca}. Item de
+          prova oficial; questão inédita nunca entra nesta conta.
         </p>
         <p className="mt-3.5 font-utilitaria text-[0.8125rem] text-suave">
           {dataDaProva(perfil.dataProva)}
@@ -238,7 +261,7 @@ function TopicoDaLista({ topico, teto }: { topico: TopicoDaMateria; teto: number
         <span className="text-[0.9375rem]">{topico.topico}</span>
         {topico.amostraBaixa ? (
           <span className="rounded-lg bg-conquista-fundo px-2 py-0.5 text-[0.6875rem] font-semibold text-conquista">
-            Poucas questões
+            Poucos itens
           </span>
         ) : null}
       </div>
@@ -279,6 +302,10 @@ function LinhaDaMateria({
   const tetoDoTopico = materia.topicos[0]?.fatia ?? 0;
   const listados = materia.topicos.length;
   const restantes = materia.nTopicos - listados;
+  // RAIOX-18 AC4: do degrau 2 para baixo a leitura **para na matéria**. Não é
+  // esconder dado — é não publicar decimal por assunto que a evidência não
+  // sustenta. O peso da matéria continua na tela, porque esse vem do documento.
+  const abreDetalhe = detalhaPorAssunto(materia.lastro);
 
   return (
     <li className="border-t border-linha first:border-t-0">
@@ -295,9 +322,19 @@ function LinhaDaMateria({
           <span className="block truncate text-[1.0625rem] font-semibold tracking-[-0.01em]">
             {materia.materia}
           </span>
-          <span className="mt-1.5 block font-utilitaria text-[0.8125rem] text-suave">
-            {materia.nTopicos} {materia.nTopicos === 1 ? "tópico" : "tópicos"} ·{" "}
-            {materia.nQuestoes} {materia.nQuestoes === 1 ? "questão real" : "questões reais"}
+          <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span
+              className={`rounded-lg px-2 py-0.5 text-[0.6875rem] font-semibold ${DEGRAU_EM_ESTILO[materia.lastro.degrau]}`}
+            >
+              {DEGRAU_EM_TEXTO[materia.lastro.degrau]}
+            </span>
+            <span className="font-utilitaria text-[0.8125rem] text-suave">
+              {materia.nTopicos} {materia.nTopicos === 1 ? "tópico" : "tópicos"} ·{" "}
+              {materia.nQuestoes} {materia.nQuestoes === 1 ? "item medido" : "itens medidos"}
+            </span>
+          </span>
+          <span className="mt-1 block text-[0.8125rem] text-suave">
+            {materia.lastro.texto}
           </span>
         </span>
 
@@ -314,7 +351,7 @@ function LinhaDaMateria({
             }`}
           >
             {materia.amostraBaixa
-              ? "Poucas questões reais"
+              ? "Poucos itens medidos"
               : TENDENCIA_EM_TEXTO[materia.tendencia]}
           </span>
         </span>
@@ -332,12 +369,28 @@ function LinhaDaMateria({
         </span>
       </button>
 
-      {aberta ? (
+      {aberta && !abreDetalhe ? (
+        <div id={painel} className="border-t border-linha bg-fundo-suave px-5 py-4 sm:px-7">
+          <p className="text-sm text-suave">
+            {materia.lastro.texto} Enquanto não houver prova medida deste concurso,
+            esta matéria é apresentada inteira: dividir o peso por assunto aqui
+            seria inventar um número.
+          </p>
+          <Link
+            href={`/app/sessao?materia=${encodeURIComponent(materia.materiaId)}`}
+            className="mt-3 inline-block text-sm font-semibold text-marca underline underline-offset-4"
+          >
+            Praticar esta matéria
+          </Link>
+        </div>
+      ) : null}
+
+      {aberta && abreDetalhe ? (
         <div id={painel} className="border-t border-linha bg-fundo-suave px-5 pb-5 pt-1 sm:px-7">
           <div className="hidden grid-cols-[minmax(0,1fr)_11.25rem_7.5rem_4.5rem] gap-x-6 py-3 font-utilitaria text-[0.6875rem] uppercase tracking-[0.14em] text-suave sm:grid">
             <span>Tópico</span>
             <span>Dentro da matéria</span>
-            <span>Questões reais</span>
+            <span>Itens medidos</span>
             <span className="text-right">%</span>
           </div>
 
@@ -350,7 +403,7 @@ function LinhaDaMateria({
           <div className="mt-3.5 flex flex-wrap items-center justify-between gap-4 border-t border-linha pt-3.5">
             <p className="text-sm text-suave">
               {restantes > 0
-                ? `Mais ${restantes} ${restantes === 1 ? "tópico do edital ainda não tem" : "tópicos do edital ainda não têm"} questão real publicada.`
+                ? `Mais ${restantes} ${restantes === 1 ? "tópico do edital ainda não tem" : "tópicos do edital ainda não têm"} item medido.`
                 : "Todos os tópicos desta matéria estão listados."}
             </p>
             <Link

@@ -100,7 +100,9 @@ descreveComBanco("contrato Raio-X → plano", () => {
         "select pg_get_functiondef('public.gera_plano_do_dia(uuid,date)'::regprocedure) as definicao",
       );
       expect(depois[0].definicao).toBe(antes[0].definicao);
-      expect(antes[0].definicao).toMatch(/raiox_peso_topico/);
+            // A fronteira passou a ser resolvida por aluno na SPEC 37; a view
+      // `raiox_peso_topico` continua existindo, mas nao e mais quem o plano le.
+      expect(antes[0].definicao).toMatch(/raiox_peso_do_aluno/);
     });
   });
 });

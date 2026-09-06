@@ -339,6 +339,136 @@ sem alteração de código.
 
 ---
 
+## Rodada 2026-09-05 — o denominador era o acervo (AD-138/AD-139/AD-140)
+
+> Entra pelas specs **37** e **39**. O AD-138 **revoga o AC2 da RAIOX-04** e o denominador único
+> assumido em AD-020/AD-056. O decaimento por ano, o amortecimento e o `amostra_baixa` (AD-056)
+> continuam valendo, agora **dentro da matéria**; os cortes por posição (AD-057) seguem intactos.
+
+### P1: Peso em dois níveis — matéria oficial × distribuição estimada ⭐ MVP
+
+**User Story**: Como plataforma, quero que o peso da matéria venha do documento oficial e só a
+distribuição interna seja estimada, para que o Raio-X pare de depender de quantas questões foram
+ingeridas.
+
+**Why P1**: É a correção do defeito central. Com o nível 1 vindo do documento, um concurso com acervo
+fino já tem o peso de matéria certo e a incerteza fica confinada e limitada.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL calcular `peso(assunto) = peso_oficial(matéria) × share(assunto | matéria)`.
+2. O `peso_oficial(matéria)` SHALL vir da grade declarada pela prova ou pelo edital (BANCO-15) e
+   SHALL NOT ser derivado da contagem de questões ingeridas.
+3. O `share(assunto | matéria)` SHALL ser estimado somente de itens de `origem='real'`, SHALL receber
+   o amortecimento do AD-056 tomando como âncora a **média daquela matéria**, e a soma dos shares
+   dentro de uma matéria SHALL ser 1.
+4. WHEN uma matéria não tem nenhum item etiquetado, THEN seus assuntos elegíveis SHALL dividir o peso
+   oficial da matéria em partes iguais e SHALL ser marcados `amostra_baixa=true`.
+5. O porteiro binário do edital (RAIOX-06 AC1) SHALL continuar valendo: assunto fora do programa
+   vigente SHALL receber zero antes de qualquer multiplicação.
+
+**Independent Test**: Zerar as questões de uma matéria e confirmar que o peso da matéria não muda e
+que os assuntos dela passam a dividir esse peso em partes iguais, com rótulo de pouca amostra.
+
+---
+
+### P1: A prova é a unidade de medida ⭐ MVP
+
+**User Story**: Como plataforma, quero que cada prova produza a taxa dela e só depois as provas sejam
+combinadas, para que uma prova ingerida pela metade não desloque as outras.
+
+**Why P1**: É o que impede que o esforço de digitação vire sinal de banca.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL calcular a taxa **dentro de cada prova** e SHALL agregar entre provas pela **média
+   ponderada** pelo decaimento por ano (AD-056), SHALL NOT somar itens de provas diferentes num
+   denominador único.
+2. WHEN a `cobertura` de uma prova está abaixo do piso configurado, THEN ela SHALL NOT entrar no
+   cálculo e SHALL aparecer na lista de provas pendentes de ingestão.
+3. Cadernos irmãos da mesma prova (BANCO-16 AC6) SHALL entrar **uma vez só**.
+4. O sistema SHALL persistir, por linha do Raio-X, **quantas provas** e **quais anos** a sustentam.
+5. O Raio-X SHALL continuar recalculável do zero e idempotente (RAIOX-14), e SHALL NOT ler
+   `tentativas`.
+
+**Independent Test**: Ingerir 40 itens de uma prova e 15 de outra do mesmo ano e confirmar que as duas
+pesam igual; baixar a cobertura de uma abaixo do piso e ver a linha citar só a outra.
+
+---
+
+### P1: Degraus de lastro e granularidade honesta ⭐ MVP
+
+**User Story**: Como aluno, quero saber em que evidência cada número se apoia e não quero ver decimal
+inventado quando não há prova suficiente.
+
+**Why P1**: É o que faz o Raio-X parecer pesquisado sem mentir, e é a diferença entre um concurso com
+10 provas e um recém-aberto.
+
+**Acceptance Criteria**:
+
+1. Cada linha do Raio-X SHALL registrar um **degrau de lastro**: `1` provas do próprio concurso, `2`
+   grade do edital sem provas, `3` provas da mesma banca em outro órgão, `4` sem dado.
+2. WHERE o degrau é `3`, o sistema SHALL transferir **apenas a distribuição dentro da matéria** da
+   banca de origem e SHALL NOT transferir o peso da matéria — o peso da matéria SHALL vir do
+   documento do próprio concurso ou, na ausência dele, a linha SHALL cair para degrau `4`.
+3. A tela SHALL exibir, por linha, o degrau e o lastro em texto — quantas provas, de quais anos e de
+   qual origem.
+4. WHILE o degrau de uma matéria é `2`, `3` ou `4`, a tela SHALL apresentar o resultado no nível da
+   **matéria** e SHALL NOT exibir percentual por assunto dentro dela.
+5. Linhas de degraus diferentes SHALL poder coexistir na mesma tela, cada uma com o seu rótulo.
+
+**Independent Test**: Abrir um concurso só com edital e confirmar que a tela mostra peso por matéria,
+rotula degrau 2 e não exibe nenhum percentual por assunto.
+
+---
+
+### P1: Raio-X por concurso, com o nome do edital do aluno ⭐ MVP
+
+**User Story**: Como aluno da CAIXA, quero ver "Atendimento Bancário" como está no meu edital, e não o
+nome que outro concurso usa para o mesmo conteúdo.
+
+**Why P1**: Sem isso, multi-concurso mostra a cada aluno o edital de outra pessoa (AD-139).
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL persistir, por concurso, a lista de matérias **com o nome e a ordem do edital
+   daquele concurso**, e cada matéria SHALL apontar para um conjunto de assuntos canônicos.
+2. A projeção do Raio-X SHALL ser calculada e persistida **por concurso**; SHALL NOT existir uma
+   projeção única servindo todos.
+3. WHEN o aluno abre o Raio-X, THEN a tela SHALL usar exclusivamente os nomes de matéria do concurso
+   dele e SHALL NOT expor nome de assunto canônico nem nome de matéria de outro concurso.
+4. WHEN um assunto canônico é renomeado ou reagrupado num concurso, THEN os demais concursos SHALL
+   permanecer inalterados.
+5. O mesmo assunto canônico SHALL poder pertencer a matérias de nomes diferentes em concursos
+   diferentes, e o sistema SHALL NOT exigir que ele tenha o mesmo pai em todos.
+
+**Independent Test**: Cadastrar CAIXA e BB, apontar o mesmo assunto canônico para matérias de nomes
+diferentes nos dois, e confirmar que cada aluno vê o nome do edital dele.
+
+---
+
+### P1: Prontidão — concurso nasce oculto ⭐ MVP
+
+**User Story**: Como plataforma, não quero mostrar um concurso cujo Raio-X aponta assunto que o plano
+não tem como servir.
+
+**Why P1**: O Raio-X mede sem acervo (é o ponto do AD-138), mas o plano não estuda sem questão. Sem
+gate, o aluno entra num concurso vazio.
+
+**Acceptance Criteria**:
+
+1. O concurso SHALL nascer com visibilidade **oculta** e SHALL NOT aparecer na escolha do aluno.
+2. WHEN a cobertura de conteúdo dos assuntos de maior peso atinge o piso configurado, THEN o concurso
+   SHALL ficar **elegível** à publicação; a publicação em si SHALL exigir ação humana registrada.
+3. O sistema SHALL exibir ao operador **quais** assuntos de alto peso estão sem questão suficiente.
+4. IF um concurso publicado cai abaixo do piso, THEN ele SHALL NOT ser despublicado automaticamente e
+   o operador SHALL ser alertado.
+
+**Independent Test**: Abrir um concurso, calcular o Raio-X sem nenhuma questão e confirmar que ele não
+aparece para o aluno e que o operador vê a lista do que falta.
+
+---
+
 ## Requirement Traceability
 
 | Requirement ID | Story | Fase | Status |
@@ -358,12 +488,21 @@ sem alteração de código.
 | RAIOX-13 | P1: Teto do empurrão **por posição** e corte núcleo/condicional **por posição dentro da banca** (AD-057) | Design | Pending |
 | RAIOX-14 | P1: Raio-X é projeção recalculável do acervo, por job; **não lê `tentativas`** (AD-019/AD-035) | Design | Pending |
 | RAIOX-15 | P2: Fila da base de referência (M2) ordenada por frequência real (AD-021/IA-05) | Design | Pending |
+| RAIOX-16 | P1: Peso em dois níveis — matéria oficial × share dentro da matéria (AD-138) | Design | Pending |
+| RAIOX-17 | P1: A prova é a unidade de medida; cobertura e caderno único (AD-138) | Design | Pending |
+| RAIOX-18 | P1: Degraus de lastro, transferência só do desenho interno, granularidade honesta (AD-138) | Design | Pending |
+| RAIOX-19 | P1: Projeção por concurso com o nome do edital do aluno (AD-139) | Design | Pending |
+| RAIOX-20 | P1: Prontidão de conteúdo — concurso nasce oculto (AD-140) | Design | Pending |
 
 **ID format:** `RAIOX-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 15 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 20 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+
+> **RAIOX-04 AC2 está revogado pelo AD-138.** A taxa não é mais participação dentro das questões da
+> banca; é média por prova de `peso_oficial(matéria) × share(assunto | matéria)`. O restante da
+> RAIOX-04 (só `origem='real'` e `status='publicada'`) permanece.
 
 ---
 

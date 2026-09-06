@@ -36,9 +36,13 @@ export default async function RaioX() {
     );
   }
 
-  const dados = await consultarRaioX();
+  const sessao = await clienteDaSessao();
+
+  // O `userId` só atravessa com a flag do multi-concurso ligada. É o que
+  // sustenta o AC: desligada, esta tela faz a mesma leitura de sempre (AD-139).
+  const dados = await consultarRaioX(undefined, await alunoDoMultiConcurso(sessao));
   const mapa = dados.perfil
-    ? await lerMapaComFalha(dados)
+    ? await lerMapaComFalha(sessao, dados)
     : { dados: null as DadosMapaPorMateria | null };
 
   return (
@@ -50,11 +54,25 @@ export default async function RaioX() {
   );
 }
 
+/**
+ * O aluno da sessão, **só** quando o multi-concurso está ligado.
+ *
+ * Com a flag desligada o Raio-X não pergunta quem está lendo: a projeção é a do
+ * concurso ativo, para todo mundo, exatamente como antes desta spec.
+ */
+async function alunoDoMultiConcurso(
+  sessao: Awaited<ReturnType<typeof clienteDaSessao>>,
+): Promise<string | undefined> {
+  if (!(await isFlagOn("flag.m5.multi_concurso"))) return undefined;
+  const { data } = await sessao.auth.getUser();
+  return data.user?.id ?? undefined;
+}
+
 async function lerMapaComFalha(
+  cliente: Awaited<ReturnType<typeof clienteDaSessao>>,
   dados: DadosRaioX,
 ): Promise<{ dados: DadosMapaPorMateria | null }> {
   try {
-    const cliente = await clienteDaSessao();
     const porTopico = await consultarMapaPrioridade(cliente, dados);
     return { dados: agruparMapaPorMateria(dados, porTopico) };
   } catch (erro) {

@@ -137,9 +137,19 @@ trabalho é refeito.
 | 34 | Tiers e mensalidade | mais de um plano sem migração destrutiva, decidido com dado do flywheel | 28, 29 | 6 | B |
 | 35 | Áudio — fábrica de voz | teste cego como porteiro, normalização antes da voz, geração 1× por versão | 16, 21 | 11 | B · 🧊 Congelada (AD-064) |
 | 36 | Áudio — escopo, controles e reserva | escopo por frequência, teto de gasto por lote, provedor reserva, controles de escuta | 35 | 9 | B · 🧊 Congelada (AD-064) |
+| 37 | **Concurso — assunto canônico e nome do edital** | assunto canônico compartilhado × matérias com o nome do edital de cada concurso, aluno escolhe o concurso, concurso nasce oculto | 11, 13 | 11 | B · ✅ Concluída |
+| 38 | **Leitor de prova — grade, itens e etiqueta** | grade declarada pela própria prova, cobertura, separação determinística com IA de reserva, etiqueta barata onde humano vence IA | 08, 09, 37 | 11 | B |
+| 39 | **Raio-X por concurso — dois níveis e lastro** | `peso_oficial(matéria) × share(assunto\|matéria)`, a prova como unidade, degraus de lastro, granularidade honesta | 11, 20, 37, 38 | 12 | **A** |
+| 40 | **Fluxo de abertura de concurso** | busca só em domínio oficial, telas de aprovação, fusão de assunto duplicado, relatório de prontidão por degrau | 15, 37, 38, 39 | 9 | B |
 
-**Total:** ~344 tasks em 36 specs (era ~391 em 42). Nenhuma spec passa de 12 — e se a fase Tasks
-desmentir para cima, a spec se divide antes de entrar em Execute.
+**Total:** ~387 tasks em 40 specs (eram ~344 em 36 antes do AD-138/139/140). Nenhuma spec passa de 12
+— e se a fase Tasks desmentir para cima, a spec se divide antes de entrar em Execute.
+
+**As specs 37–40 são um bloco e só fazem sentido na ordem.** Origem: **AD-138** (o denominador do
+Raio-X era o acervo), **AD-139** (a taxonomia de um concurso não serve outro) e **AD-140** (abrir
+concurso é operação de produto, não rodada de código). A 39 **revoga o AC2 da RAIOX-04** e reescreve
+`recalcula_raiox`; por isso é a única do bloco em Ritual A. Nada aqui é MVP — o lançamento continua
+sendo o fim da 14.
 
 ---
 

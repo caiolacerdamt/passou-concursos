@@ -127,6 +127,12 @@ export async function comTransacaoSemPerfilConcurso<T>(
   uso: (cliente: Client) => Promise<T>,
 ): Promise<T> {
   return comTransacaoRevertida(async (cliente) => {
+    // Desde a SPEC 37 o perfil tem um `concursos` pendurado, com FK restritiva
+    // dos dois lados: o concurso nao deixa o perfil ser apagado, e o perfil de
+    // estudo nao deixa o concurso ser apagado. A ordem abaixo e a unica que
+    // esvazia a tabela — e tudo volta no ROLLBACK, como antes.
+    await cliente.query("update public.perfil_estudo set concurso_id = null");
+    await cliente.query("delete from public.concursos");
     await cliente.query("delete from public.perfil_concurso");
     return uso(cliente);
   });

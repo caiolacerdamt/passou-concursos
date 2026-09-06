@@ -65,17 +65,17 @@ export function lastroEmTexto(
   const quando = anosEmTexto(anos);
 
   if (degrau === 1) {
-    return `Peso medido em ${provas} do proprio concurso${quando ? `, ${quando}` : ""}.`;
+    return `Peso medido em ${provas} do próprio concurso${quando ? `, ${quando}` : ""}.`;
   }
   if (degrau === 2) {
     return baseDoPeso === "edital"
-      ? "Peso declarado pelo edital. Ainda nao ha prova medida para detalhar os assuntos."
-      : `Peso declarado pela grade da prova${quando ? ` ${quando}` : ""}. Nenhum item desta materia foi medido ainda.`;
+      ? "Peso declarado pelo edital. Ainda não há prova medida para detalhar os assuntos."
+      : `Peso declarado pela grade da prova${quando ? ` ${quando}` : ""}. Nenhum item desta matéria foi medido ainda.`;
   }
   if (degrau === 3) {
-    return `Peso do documento do proprio concurso; a distribuicao interna vem de ${provas} da mesma banca em outro orgao${quando ? `, ${quando}` : ""}.`;
+    return `Peso do documento do próprio concurso; a distribuição interna vem de ${provas} da mesma banca em outro órgão${quando ? `, ${quando}` : ""}.`;
   }
-  return "Sem prova medida nem peso declarado para esta materia.";
+  return "Sem prova medida nem peso declarado para esta matéria.";
 }
 
 export type PerfilRaioX = {

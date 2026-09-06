@@ -499,17 +499,17 @@ describe("montarMateriasDoEdital", () => {
 describe("lastro (RAIOX-18)", () => {
   it("diz de onde veio a evidência sem adjetivá-la", () => {
     expect(lastroEmTexto(1, 2, [2023, 2025], "itens")).toBe(
-      "Peso medido em 2 provas do proprio concurso, de 2023 e 2025.",
+      "Peso medido em 2 provas do próprio concurso, de 2023 e 2025.",
     );
     expect(lastroEmTexto(1, 1, [2025], "pontos")).toBe(
-      "Peso medido em 1 prova do proprio concurso, de 2025.",
+      "Peso medido em 1 prova do próprio concurso, de 2025.",
     );
     expect(lastroEmTexto(2, 0, [], "edital")).toContain("declarado pelo edital");
     expect(lastroEmTexto(3, 2, [2021, 2024], "itens")).toContain(
-      "mesma banca em outro orgao",
+      "mesma banca em outro órgão",
     );
     expect(lastroEmTexto(4, 0, [], "sem_dado")).toBe(
-      "Sem prova medida nem peso declarado para esta materia.",
+      "Sem prova medida nem peso declarado para esta matéria.",
     );
   });
 

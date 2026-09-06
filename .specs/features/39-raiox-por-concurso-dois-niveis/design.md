@@ -115,8 +115,17 @@ esmo — a soma dos pesos das matérias fica abaixo de 1 e isso é a verdade daq
 
 ### 3.2 `concurso_peso_materia` — o peso declarado pelo edital
 
-Tabela nova `(concurso_id, materia_id, peso_declarado, base)`. É o nível 1 do **degrau 2**: concurso
-recém-aberto, com edital e sem prova.
+Tabela nova `(concurso_id, materia_id, peso_declarado, base)`.
+
+**Quem manda quando os dois documentos falam.** O edital manda na matéria que ele nomeia — ele fala do
+concurso que **vem**, e a grade da prova fala do que **passou**. Quando os dois discordam (a grade de
+2025 diz que Português era 100% da prova, o edital de agora diz 50%), o número que vale é o do edital.
+As matérias que o edital **não** nomeia dividem o que sobra — `1 −` o declarado que virou linha — na
+proporção da grade. Isso impede as duas falhas simétricas: um edital que nomeia só parte das matérias
+apagar as outras, e uma matéria que o edital deixou de cobrar continuar pesando porque a prova velha a
+cobrava.
+
+Sem edital nenhum, nada muda: o peso é o da grade.
 
 Por que na matéria **canônica** e não em `concurso_materias`: a projeção inteira (`raiox_projecoes`,
 `raiox_projecoes_materia`, `raiox_peso_topico`) é de grão canônico, e uma `concurso_materia` do edital
@@ -140,7 +149,8 @@ continua sendo a camada de fora (AD-139) e continua só apresentação.
 | --- | --- | --- |
 | `taxa_bruta` | participação da questão no acervo da banca | `peso_oficial(m) × share_bruto(a\|m)` — antes do amortecimento |
 | `n_questoes` | questões reais publicadas do tópico | **itens etiquetados** do assunto nas provas fonte |
-| `amostra_baixa` | `n_questoes < piso` | `n_m < piso` **ou** degrau ≥ 2 |
+| `amostra_baixa` | `n_questoes < piso`, **por assunto** | `n_m < piso` **ou** degrau ≥ 2 — o rótulo passa a ser **da matéria**: quem governa a distribuição interna é o tamanho da amostra da matéria, não o do assunto. Um assunto com 40 itens numa matéria de 8 nasce rotulado, e é correto: o que está mal medido é a repartição, não ele |
+| `raiox_projecoes_materia.taxa_bruta` | taxa antes do amortecimento | **cópia de `peso`**. No grão da matéria não existe "antes do amortecimento": o peso oficial vem do documento e não passa por amortecimento nenhum. A coluna fica por compatibilidade de leitura |
 
 `n_questoes` passa a contar etiqueta e não questão porque a unidade de **medição** é a etiqueta
 (AD-138); a questão continua sendo a unidade de **treino** e nada no M4 muda.
@@ -177,7 +187,8 @@ texto de lastro montado no servidor. A tela:
 
 | risco | mitigação |
 | --- | --- |
-| Bloco sem matéria resolvida derruba a soma dos pesos abaixo de 1 | é a verdade da prova; a tela normaliza para exibição e o lastro diz quantas provas sustentam |
+| Bloco sem matéria resolvida derruba a soma dos pesos abaixo de 1 | é a verdade da prova; a tela normaliza para exibição e o lastro diz quantas provas sustentam. Com o piso de cobertura em 0,9 esse estado só existe em ≤10% da prova |
+| Edital preenchido pela metade zera as matérias não declaradas quando a grade também não as mede | `registrar_peso_do_edital` grava **retrato inteiro**, como `registrar_grade_declarada`: declarar metade é declarar que a outra metade não cai. A tela da SPEC 40 é quem tem de exigir o quadro completo |
 | `n_questoes` muda de significado sem mudar de nome | registrado em §3.4 e no `comment on column` |
 | Piso de cobertura em 0,9 sem calibração | herdado da SPEC 38, mesma dívida, mesmo lugar |
 | Concurso sem `cargo` casado com prova de cargo diferente | a chave natural do concurso é `(orgao, cargo)`; casamento é exato, e o que não casa vira degrau 3 ou 4 |

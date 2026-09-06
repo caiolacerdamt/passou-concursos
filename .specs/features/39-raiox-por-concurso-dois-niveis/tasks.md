@@ -30,9 +30,10 @@
   que é calibração pendente.
   · RAIOX-18 AC2 · AD-078
 
-- [x] **T6 — `materia_do_bloco`: a resolução em duas vias**
-  Função que devolve `coalesce(bloco.materia_id, moda das etiquetas da faixa)`. Bloco irresolúvel
-  devolve `null` e continua no denominador do peso oficial.
+- [x] **T6 — `prova_bloco_materia`: a resolução em duas vias**
+  View que devolve `coalesce(bloco.materia_id, moda das etiquetas da faixa)` — view e não função, para
+  que o recálculo leia o conjunto todo numa varredura. Bloco irresolúvel devolve `null` e continua no
+  denominador do peso oficial.
   · RAIOX-16 AC2
 
 - [x] **T7 — `recalcula_raiox` reescrita: nível 1 × nível 2**

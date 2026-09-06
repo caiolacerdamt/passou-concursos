@@ -1291,50 +1291,74 @@
 - **Date**: 2026-09-06
 - **Status**: active
 
+### AD-143
+- **Decision**: **"Sem dado" não é "peso zero" na fronteira com o motor do plano.** A view
+  `raiox_peso_topico` e a função `raiox_peso_do_aluno` ganham um **terceiro caso**, irmão do fallback
+  que já existia para "sem perfil ativo": quando o perfil tem projeção mas **nenhuma linha com
+  `peso > 0`** — isto é, o Raio-X inteiro em degrau 4 —, a fronteira entrega os tópicos do
+  `programa_edital` com peso uniforme `1.0`. O porteiro do edital continua intacto (só tópico do
+  programa atravessa) e a **projeção continua dizendo a verdade**: degrau 4, `peso = 0`, sem lastro. O
+  fallback se desliga sozinho na primeira prova medida acima do piso de cobertura — não há flag e não
+  há estado a limpar.
+- **Reason**: Medido em 2026-09-06 contra o banco de desenvolvimento, que é o mesmo de produção
+  enquanto a SPEC 25 não separar ambientes: as **28 provas catalogadas estão todas em
+  `grade_status='ausente'` e não existe uma única etiqueta de item**. Com a fórmula do AD-138 isso
+  produz, corretamente, 85 linhas sem peso — e fazia `raiox_peso_topico` cair de 85 tópicos para
+  **zero**, deixando o plano do dia sem nada para ordenar. O job agendado das 05:30 teria feito isso em
+  produção na noite do merge. A projeção estava certa; o que estava errado era essa verdade atravessar
+  a fronteira do M4 como se fosse uma decisão de produto.
+- **Trade-off**: Enquanto não houver prova medida, o plano trata todos os assuntos do edital como
+  igualmente importantes — que é o comportamento pré-SPEC 11 e é honesto, mas **não** é o Raio-X. A
+  tela do Raio-X, essa sim, mostra a verdade crua: 0% e "sem dado" em toda linha (ela nasce atrás de
+  flag desligada, AD-076). Quem olhar a tela e o plano ao mesmo tempo vê dois números que não batem —
+  aceito, porque a alternativa é o produto parar. O terceiro caso também mascara um estado patológico
+  diferente: um concurso cujo recálculo quebrou e zerou tudo se comporta como um concurso novo. O sinal
+  para distinguir os dois é `degrau`/`n_provas` na projeção, e a tela do operador da SPEC 40 é quem tem
+  de mostrá-lo.
+- **Scope**: `supabase/migrations/20260908122000_spec39_fronteira_sem_lastro.sql` ·
+  `raiox_peso_topico` · `raiox_peso_do_aluno`.
+- **Date**: 2026-09-06
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: **SPEC 38 — leitor de prova: grade declarada, itens e etiqueta barata**
-  (BANCO-14, BANCO-15, BANCO-16). Ritual **B**: design embutido no `tasks.md`, sem `design.md`, com
-  verificação independente curta no fim do mesmo arquivo.
-- **Phase / Task**: Execute concluída, T1–T11. Branch `feat/spec38-leitor-de-prova`.
-- **A decisão de forma**: a prova é lida **três vezes, em ordem crescente de custo**, e cada leitura só
-  acontece porque a anterior não bastou. Grade (regex sobre o texto do PDF, custo zero) → separação
-  determinística (custo zero; **quando fecha com a grade, nenhuma chamada a modelo acontece**) →
-  etiqueta (a única chamada do caminho feliz). A **grade declarada é o gabarito de qualidade**: é ela
-  que decide se a separação vale, e é a divergência contra ela que manda a prova para conferência
-  humana em vez de deixar peso errado passar. A garantia do caderno irmão (BANCO-16 AC6) mora na
-  **leitura** (`provas_medidas` com `distinct on`), não num índice único — ver o achado Major abaixo.
-- **Completed**: 2 migrations (`20260907120000`, `20260907121000`) · `prova_blocos`,
-  `etiquetas_de_item`, cinco colunas novas em `provas` · `registrar_grade_declarada` (único caminho de
-  escrita dos blocos), `gravar_etiquetas_ia`, `alinhar_etiquetas_com_questoes`, `corrigir_etiqueta`,
-  `vincular_caderno_irmao` · views `cobertura_da_prova`, `grade_ausente_fila`, `provas_medidas` ·
-  `src/modules/acervo/{grade,itens,etiqueta}.ts` · `scripts/jobs/medir-prova.mts` (grade/separar/
-  etiquetar/relatorio) + `.github/workflows/medicao-de-prova.yml` · duas tarefas novas no gateway
-  (**AD-141**) · três parâmetros no catálogo do M1.
-- **Verificação independente**: 7 Success Criteria — **6 OK, 1 PARCIAL**. O parcial é o custo real por
-  prova, que **não foi medido** nesta rodada e está dito assim na spec (as duas tarefas novas precisam
-  de linha na matriz de modelos, que é configuração). Um achado **Major** corrigido: o índice único do
-  caderno principal quebrava a catalogação do segundo caderno de qualquer prova, revogando na prática o
-  `provas_alvo_unico` do BANCO-02 — a garantia mudou de lugar e ficou mais forte. Dois Minor corrigidos
-  (fim de faixa preguiçoso lendo `1 a 101,0` como faixa `1 a 1`; primeiro bloco saindo sem nome) e dois
-  aceitos com razão registrada (agrupamento colado no nome do primeiro bloco; cobertura mínima em 0,9
-  sem medição).
-- **Gate**: `npm run test:unit` **166 arquivos / 1241 testes / 0 falhas** · `npm run test:db`
-  **66 arquivos / 483 testes / 0 falhas** · `tsc --noEmit` limpo · `eslint src scripts` sem erro novo.
-  As 2 migrations foram aplicadas no Supabase de desenvolvimento por `npm run db:push`.
-- **In-progress / pendente**: a matriz de modelos ganhou `etiqueta_de_item` e `separacao_de_itens`
-  (Luna, esforço `max`, síncronas) na tabela `configuracoes` e no SQL do `docs/IA.md`. **Isso já vale
-  para produção**: enquanto a SPEC 25 não separar ambientes, o `DATABASE_URL` do `.env` e o segredo do
-  GitHub Actions apontam para o **mesmo** projeto Supabase — o workflow de migração do merge da SPEC 38
-  respondeu "Remote database is up to date" sobre o que o `db:push` já tinha aplicado. Falta **medir o
-  custo real** de uma prova — é uma chamada paga ao provedor, ~R$ 0,02, e ninguém autorizou o gasto
-  ainda; o comando é `npm run jobs:medir-prova -- --acao etiquetar --prova
-  b914f7d8-de48-459c-965e-7500149fa002 --pdf "fontes/entrada/CAIXA 2021 PcD - PROVA - TECNICO
-  BANCARIO NOVO.pdf"`. O leitor de grade cobre o formato CESGRANRIO medido; 17 das 24
-  provas de `fontes/entrada/` caem em `grade_ausente_fila`, que é o comportamento pedido pelo AC4 — a
-  tela que completa a grade é da SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37 (publicar o
-  concurso nº 1, medir o custo do plano com `raiox_peso_do_aluno`); nada disso foi tocado aqui.
-- **Next step**: **SPEC 39** (Raio-X por concurso: `peso_oficial(matéria) × share(assunto|matéria)`,
-  a prova como unidade, degraus de lastro), Ritual **A** — é uma das sete specs com verificador completo
-  e sensor de mutação. Ela consome `provas_medidas`, `cobertura_da_prova` e `etiquetas_de_item` desta
-  spec, aplicando `param.m1.cobertura_minima` como piso de entrada.
+- **Feature**: **SPEC 39 — Raio-X por concurso: dois níveis, a prova como unidade e o lastro na tela**
+  (RAIOX-16, RAIOX-17, RAIOX-18). Ritual **A**: `design.md` + `tasks.md` + `validation.md` +
+  verificador independente completo com sensor de mutação.
+- **Phase / Task**: Execute concluída, T1–T12. Branch `feat/spec39-raiox-dois-niveis`.
+- **A decisão de forma**: `peso(assunto) = peso_oficial(matéria) × share(assunto|matéria)`. O nível 1
+  vem de **documento** — a grade declarada pela prova (`prova_blocos`, com `materia_id` novo) ou o
+  peso declarado pelo edital (`concurso_peso_materia`, tabela nova) — e **o edital manda na matéria
+  que ele nomeia**, porque ele fala do concurso que vem e a grade fala do que passou. O nível 2 é
+  estimado das `etiquetas_de_item`, calculado **por prova** e combinado pela média ponderada pelo
+  decaimento: sai o denominador único que dividia o peso do tópico pelo acervo inteiro da banca. O
+  amortecimento do AD-056 continua, agora **dentro da matéria** e ancorado na média daquela matéria.
+  Cada linha declara o lastro (degrau 1–4, quantas provas, quais anos, qual base) e, do degrau 2 para
+  baixo, a tela para na matéria.
+- **Completed**: 3 migrations (`20260908120000`, `20260908121000`, `20260908122000`) ·
+  `prova_blocos.materia_id`, `concurso_peso_materia`, 4 colunas de lastro nas duas projeções ·
+  `vincular_bloco_a_materia`, `registrar_peso_do_edital`, views `prova_bloco_materia` e
+  `provas_pendentes_de_ingestao` · `recalcula_raiox` reescrita · `raiox_peso_topico` e
+  `raiox_peso_do_aluno` com o terceiro caso (**AD-143**) · `param.m5.peso_degrau_3` no catálogo ·
+  lastro no DTO e na tela do Raio-X · fixtures de medição em `tests/db/medicao.ts`.
+- **Verificação independente**: 15 AC + 8 Success Criteria, **veredito APROVADO COM RESSALVAS**.
+  1 **Major** corrigido (o edital era descartado por completo assim que existisse qualquer prova
+  própria — matéria declarada em 50% ia a peso 0/degrau 4) e 6 Minor, todos tratados. Antes disso o
+  autor achou **2 Blockers**: o sentinela `cargo='indefinido'` do concurso migrado pela SPEC 37, e —
+  no ensaio contra o acervo real — a fronteira do plano caindo de 85 tópicos para zero. Sensor de
+  mutação: **9 injetadas, 9 mortas**; duas sobreviveram na primeira passada e exigiram teste novo.
+- **Gate**: `npm run test:unit` **1247 testes / 0 falhas** · `npm run test:db` **506 testes / 0
+  falhas** · `tsc --noEmit` limpo · `eslint src scripts tests` sem erro novo. As 3 migrations foram
+  aplicadas no Supabase de desenvolvimento por `npm run db:push` — **e ele é o mesmo banco de
+  produção** enquanto a SPEC 25 não separar ambientes.
+- **In-progress / pendente**: o acervo real tem **28 provas todas sem grade lida e zero etiquetas** —
+  hoje o Raio-X sai inteiro em degrau 4 e quem sustenta o plano é o fallback do AD-143. Medir a
+  primeira prova de verdade é o próximo passo de produto, e depende da tela que completa a grade
+  (SPEC 40). Continuam sem calibração `param.m5.peso_degrau_3` (0,5) e `param.m1.cobertura_minima`
+  (0,9). `prova_blocos.materia_id` e `concurso_peso_materia` **não têm operador** — a SPEC 40 é quem
+  precisa exigir o quadro do edital inteiro, porque declarar metade das matérias é declarar que a
+  outra metade não cai. Segue tudo aberto do TRIAL-2 e da SPEC 37; nada disso foi tocado aqui.
+- **Next step**: **SPEC 40** (fluxo de abertura de concurso: busca só em domínio oficial, telas de
+  aprovação, fusão de assunto duplicado, relatório de prontidão por degrau), Ritual **B**. Ela consome
+  `provas_pendentes_de_ingestao`, `grade_ausente_fila`, `vincular_bloco_a_materia`,
+  `registrar_peso_do_edital` e o `degrau` desta spec.

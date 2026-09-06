@@ -113,7 +113,7 @@ describe("RaioXTela", () => {
     const html = renderToStaticMarkup(<RaioXTela dados={dados} />);
 
     expect(html).toContain("Medido na prova");
-    expect(html).toContain("Peso medido em 2 provas do proprio concurso");
+    expect(html).toContain("Peso medido em 2 provas do próprio concurso");
   });
 
   it("do degrau 2 para baixo a tela para na matéria e não exibe percentual por assunto", () => {

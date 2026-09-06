@@ -79,6 +79,9 @@ declare
   v_cargo            text;
   v_concurso         uuid;
   v_tem_propria      boolean;
+  v_tem_edital       boolean;
+  v_resto            numeric;
+  v_soma_nao_declarada numeric;
   v_linhas           integer := 0;
   v_inseridas        integer;
 begin
@@ -158,7 +161,10 @@ begin
   ) on commit drop;
   create temporary table if not exists pg_temp.tmp39_materia (
     materia_id uuid, a_m integer, peso_oficial numeric, base_do_peso text,
-    fonte text, n_m integer, n_provas integer, anos smallint[], degrau smallint
+    fonte text, n_m integer, n_provas integer, anos smallint[], degrau smallint,
+    -- O peso que as provas proprias sustentam, guardado a parte: quando o
+    -- edital existe ele so vale para as materias que o edital NAO nomeia.
+    peso_prova numeric, base_prova text
   ) on commit drop;
   create temporary table if not exists pg_temp.tmp39_share (
     materia_id uuid, topico_id uuid, share_bruto numeric, n_itens integer
@@ -271,18 +277,32 @@ begin
 
     -- ── As materias do edital, e quanta evidencia cada uma tem ─────────────
     insert into pg_temp.tmp39_materia
-      (materia_id, a_m, peso_oficial, base_do_peso, fonte, n_m, n_provas, anos, degrau)
-    select materia_id, count(*)::integer, 0, 'sem_dado', 'nenhuma', 0, 0, '{}'::smallint[], 4
+      (materia_id, a_m, peso_oficial, base_do_peso, fonte, n_m, n_provas, anos, degrau,
+       peso_prova, base_prova)
+    select materia_id, count(*)::integer, 0, 'sem_dado', 'nenhuma', 0, 0,
+           '{}'::smallint[], 4, null, null
       from pg_temp.tmp39_programa
      group by materia_id;
 
-    -- Nivel 1 agregado. **Ou tudo das provas proprias, ou tudo do edital**:
-    -- misturar as duas fontes quebraria a normalizacao, porque cada uma soma 1
-    -- no proprio universo. Havendo prova propria elegivel, ela manda.
+    -- ── Nivel 1 agregado: quem manda quando os dois documentos falam ──────
+    --
+    -- **O edital manda na materia que ele nomeia.** Ele fala do concurso que
+    -- vem; a prova fala do que passou. Quando os dois discordam — a grade de
+    -- 2025 diz que Portugues era 100% da prova e o edital de agora diz 50% — o
+    -- numero que vale e o do edital.
+    --
+    -- As materias que o edital **nao** nomeia dividem o que sobra
+    -- (1 menos o declarado que virou linha), na proporcao da grade. E o que
+    -- impede duas coisas ao mesmo tempo: um edital que nomeia so parte das
+    -- materias apagar as outras, e uma materia que o edital deixou de cobrar
+    -- continuar pesando so porque a prova velha a cobrava.
+    --
+    -- Sem edital, nada muda: o peso e o da grade, e a soma fica abaixo de 1
+    -- quando algum bloco nao resolveu materia (design §3.1).
     if v_tem_propria then
       update pg_temp.tmp39_materia m
-         set peso_oficial = s.peso,
-             base_do_peso = s.base
+         set peso_prova = s.peso,
+             base_prova = s.base
         from (
           select
             pp.materia_id,
@@ -299,7 +319,14 @@ begin
         ) s
        where s.materia_id = m.materia_id
          and s.peso is not null;
-    elsif v_concurso is not null then
+    end if;
+
+    v_tem_edital := v_concurso is not null and exists (
+      select 1 from public.concurso_peso_materia cpm
+       where cpm.concurso_id = v_concurso
+    );
+
+    if v_tem_edital then
       update pg_temp.tmp39_materia m
          set peso_oficial = s.peso,
              base_do_peso = 'edital'
@@ -310,6 +337,31 @@ begin
            where cpm.concurso_id = v_concurso
         ) s
        where s.materia_id = m.materia_id;
+
+      -- A sobra so e maior que zero quando o edital declara materia que nao
+      -- virou linha — tipicamente porque nenhum assunto dela esta no programa
+      -- vigente. Essa fatia volta para quem a grade mediu.
+      select greatest(1 - coalesce(sum(peso_oficial), 0), 0)
+        into v_resto
+        from pg_temp.tmp39_materia
+       where base_do_peso = 'edital';
+
+      select coalesce(sum(peso_prova), 0)
+        into v_soma_nao_declarada
+        from pg_temp.tmp39_materia
+       where base_do_peso <> 'edital' and peso_prova > 0;
+
+      if v_resto > 0 and v_soma_nao_declarada > 0 then
+        update pg_temp.tmp39_materia
+           set peso_oficial = peso_prova * v_resto / v_soma_nao_declarada,
+               base_do_peso = base_prova
+         where base_do_peso <> 'edital' and peso_prova > 0;
+      end if;
+    else
+      update pg_temp.tmp39_materia
+         set peso_oficial = peso_prova,
+             base_do_peso = base_prova
+       where peso_prova is not null;
     end if;
 
     -- Fonte da distribuicao: propria primeiro; so na ausencia dela a prova da
@@ -361,6 +413,24 @@ begin
     update pg_temp.tmp39_materia
        set n_provas = 0, anos = '{}'::smallint[], base_do_peso = 'sem_dado'
      where degrau = 4;
+
+    -- Degrau 2 sustentado pela GRADE de uma prova: o lastro dele sao as provas
+    -- que declararam a materia, e nao as que deram item — a matéria nao tem
+    -- item nenhum, e por isso o degrau e 2. Sem esta linha, a tela dizia "peso
+    -- declarado pela grade da prova" sem citar prova nem ano.
+    update pg_temp.tmp39_materia m
+       set n_provas = s.np, anos = s.anos
+      from (
+        select pp.materia_id,
+               count(distinct pp.prova_id)::integer as np,
+               array_agg(distinct pp.ano order by pp.ano) as anos
+          from pg_temp.tmp39_peso_prova pp
+         where pp.propria and pp.peso_rel > 0
+         group by pp.materia_id
+      ) s
+     where s.materia_id = m.materia_id
+       and m.degrau = 2
+       and m.base_do_peso in ('pontos', 'itens');
 
     -- ── Nivel 2, por prova e agregado (RAIOX-17 AC1) ───────────────────────
     --

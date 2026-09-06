@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 
 import { inserirQuestao, sufixo } from "./acervo";
 import { comTransacaoSemPerfilConcurso } from "./conexao";
+import { criarUsuario } from "./conta";
 import {
   criarMateria,
   criarPerfil,
@@ -476,6 +477,165 @@ descreveComBanco("SPEC 39 — degraus de lastro", () => {
     });
   });
 
+  it("o edital manda na materia que ele nomeia, mesmo havendo prova propria", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 2);
+      const b = await criarMateria(cliente, 2);
+      const { perfilId, orgao } = await criarPerfil(cliente, [
+        ...a.topicos,
+        ...b.topicos,
+      ]);
+
+      const { rows: concurso } = await cliente.query<{ id: string }>(
+        `insert into public.concursos (orgao, cargo, perfil_concurso_id)
+         values ($1, 'Escriturario', $2) returning id`,
+        [orgao, perfilId],
+      );
+
+      // O edital do concurso que VEM: 50/50.
+      await cliente.query(
+        "select public.registrar_peso_do_edital($1, $2::jsonb)",
+        [
+          concurso[0].id,
+          JSON.stringify([
+            { materia_id: a.materiaId, peso_declarado: 50, base: "percentual" },
+            { materia_id: b.materiaId, peso_declarado: 50, base: "percentual" },
+          ]),
+        ],
+      );
+
+      // A prova que PASSOU so tem bloco da materia A. Sem o edital, ela diria
+      // que A e 100% do concurso e a materia B sumiria do plano do dia.
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        cargo: "Escriturario",
+        blocos: [{ materiaId: a.materiaId, itens: 10 }],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 10 }, (_, i) => [
+            i + 1,
+            i < 7 ? a.topicos[0] : a.topicos[1],
+          ] as const),
+        ),
+      });
+
+      await recalcular(cliente, "2026-01-15");
+      const materias = new Map(
+        (await lerMaterias(cliente, perfilId)).map((l) => [l.materia_id, l]),
+      );
+
+      // Documento do concurso que vem vence documento do que passou.
+      expect(Number(materias.get(a.materiaId)!.peso)).toBeCloseTo(0.5, 7);
+      expect(Number(materias.get(b.materiaId)!.peso)).toBeCloseTo(0.5, 7);
+      expect(materias.get(a.materiaId)!.base_do_peso).toBe("edital");
+      expect(materias.get(b.materiaId)!.base_do_peso).toBe("edital");
+
+      // O desenho de dentro de A continua vindo da prova propria — o edital
+      // manda no peso da materia, nunca na distribuicao interna.
+      expect(materias.get(a.materiaId)!.degrau).toBe(1);
+      expect(materias.get(b.materiaId)!.degrau).toBe(2);
+      const topicos = new Map(
+        (await lerTopicos(cliente, perfilId)).map((l) => [l.topico_id, l]),
+      );
+      expect(Number(topicos.get(a.topicos[0])!.peso)).toBeGreaterThan(
+        Number(topicos.get(a.topicos[1])!.peso),
+      );
+    });
+  });
+
+  it("materia que o edital nao nomeia divide o que sobra, na proporcao da grade", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 1);
+      const b = await criarMateria(cliente, 1);
+      // Declarada no edital, mas nenhum assunto dela entra no programa: a fatia
+      // dela nao pode ficar presa numa linha que nao existe.
+      const semAssunto = await criarMateria(cliente, 1);
+      const { perfilId, orgao } = await criarPerfil(cliente, [
+        ...a.topicos,
+        ...b.topicos,
+      ]);
+
+      const { rows: concurso } = await cliente.query<{ id: string }>(
+        `insert into public.concursos (orgao, cargo, perfil_concurso_id)
+         values ($1, 'Escriturario', $2) returning id`,
+        [orgao, perfilId],
+      );
+      await cliente.query(
+        "select public.registrar_peso_do_edital($1, $2::jsonb)",
+        [
+          concurso[0].id,
+          JSON.stringify([
+            { materia_id: a.materiaId, peso_declarado: 60, base: "percentual" },
+            { materia_id: semAssunto.materiaId, peso_declarado: 40, base: "percentual" },
+          ]),
+        ],
+      );
+
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        cargo: "Escriturario",
+        blocos: [
+          { materiaId: a.materiaId, itens: 5 },
+          { materiaId: b.materiaId, itens: 5 },
+        ],
+        etiquetas: Object.fromEntries([
+          ...Array.from({ length: 5 }, (_, i) => [i + 1, a.topicos[0]] as const),
+          ...Array.from({ length: 5 }, (_, i) => [i + 6, b.topicos[0]] as const),
+        ]),
+      });
+
+      await recalcular(cliente, "2026-01-15");
+      const materias = new Map(
+        (await lerMaterias(cliente, perfilId)).map((l) => [l.materia_id, l]),
+      );
+
+      // A fica com os 60% que o edital deu. Os 40% da materia sem assunto no
+      // programa voltam para quem a grade mediu — aqui, so a materia B.
+      expect(Number(materias.get(a.materiaId)!.peso)).toBeCloseTo(0.6, 7);
+      expect(materias.get(a.materiaId)!.base_do_peso).toBe("edital");
+      expect(Number(materias.get(b.materiaId)!.peso)).toBeCloseTo(0.4, 7);
+      expect(materias.get(b.materiaId)!.base_do_peso).toBe("itens");
+    });
+  });
+
+  it("degrau 2 sustentado pela grade cita a prova e o ano que o sustentam", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 1);
+      const b = await criarMateria(cliente, 2);
+      const { perfilId, orgao } = await criarPerfil(cliente, [
+        ...a.topicos,
+        ...b.topicos,
+      ]);
+
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        cargo: "Escriturario",
+        blocos: [
+          { materiaId: a.materiaId, itens: 10 },
+          { materiaId: b.materiaId, itens: 10 },
+        ],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 20 }, (_, i) => [i + 1, a.topicos[0]] as const),
+        ),
+      });
+
+      await recalcular(cliente, "2026-01-15");
+      const materias = new Map(
+        (await lerMaterias(cliente, perfilId)).map((l) => [l.materia_id, l]),
+      );
+      const linha = materias.get(b.materiaId)!;
+
+      // O peso de B vem da grade de UMA prova de 2025. Dizer "0 provas,
+      // nenhum ano" seria publicar um lastro que a linha nao tem.
+      expect(linha.degrau).toBe(2);
+      expect(linha.base_do_peso).toBe("itens");
+      expect(linha.n_provas).toBe(1);
+      expect(linha.anos).toEqual([2025]);
+    });
+  });
+
   it("degrau 3 muda o desenho de dentro da materia e nao muda o peso da materia", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const a = await criarMateria(cliente, 2);
@@ -790,6 +950,119 @@ descreveComBanco("SPEC 39 — invariantes que nao podem cair", () => {
           order by attnum`,
       );
       expect(rows.map((linha) => linha.coluna)).toEqual(["topico_id", "peso"]);
+    });
+  });
+});
+
+descreveComBanco("SPEC 39 — sem dado nao e peso zero", () => {
+  it("concurso sem nenhuma prova medida entrega o edital uniforme ao plano", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 2);
+      const b = await criarMateria(cliente, 1);
+      // Um assunto ativo FORA do programa: o porteiro do edital tem de
+      // continuar valendo no fallback, senao "sem lastro" viraria "estuda tudo".
+      const foraDoEdital = await criarMateria(cliente, 1);
+      const { perfilId } = await criarPerfil(cliente, [...a.topicos, ...b.topicos]);
+
+      // Nenhuma prova com grade lida, nenhuma etiqueta — o estado real do
+      // acervo em 2026-09-06.
+      await recalcular(cliente, "2026-01-15");
+
+      const materias = await lerMaterias(cliente, perfilId);
+      const topicos = await lerTopicos(cliente, perfilId);
+
+      // A projecao diz a verdade: degrau 4, sem peso. Ela nao inventa nada.
+      expect(materias.every((linha) => linha.degrau === 4)).toBe(true);
+      expect(topicos.every((linha) => Number(linha.peso) === 0)).toBe(true);
+
+      // A fronteira com o motor do plano, nao: com a projecao inteira em degrau
+      // 4 ela entrega o edital uniforme, senao o plano do dia ficaria sem um
+      // unico topico para ordenar.
+      const { rows: fronteira } = await cliente.query<{
+        topico_id: string;
+        peso: string;
+      }>("select topico_id, peso from public.raiox_peso_topico");
+
+      expect(fronteira).toHaveLength(3);
+      expect(fronteira.every((linha) => Number(linha.peso) === 1)).toBe(true);
+      expect(new Set(fronteira.map((l) => l.topico_id))).toEqual(
+        new Set([...a.topicos, ...b.topicos]),
+      );
+      expect(fronteira.some((l) => l.topico_id === foraDoEdital.topicos[0])).toBe(false);
+    });
+  });
+
+  it("a primeira prova medida desliga o fallback sozinha", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 2);
+      const { perfilId, orgao } = await criarPerfil(cliente, a.topicos);
+
+      await criarProvaMedida(cliente, {
+        orgao,
+        ano: 2025,
+        blocos: [{ materiaId: a.materiaId, itens: 10 }],
+        etiquetas: Object.fromEntries(
+          Array.from({ length: 10 }, (_, i) => [
+            i + 1,
+            i < 8 ? a.topicos[0] : a.topicos[1],
+          ] as const),
+        ),
+      });
+      await recalcular(cliente, "2026-01-15");
+
+      const { rows } = await cliente.query<{ topico_id: string; peso: string }>(
+        "select topico_id, peso from public.raiox_peso_topico order by peso desc",
+      );
+
+      // Sem flag e sem estado a limpar: alguma linha ganhou peso, e a view
+      // voltou a entregar a projecao real — que nao e uniforme.
+      expect(rows).toHaveLength(2);
+      expect(Number(rows[0].peso)).not.toBe(1);
+      expect(Number(rows[0].peso)).toBeGreaterThan(Number(rows[1].peso));
+      expect(rows[0].topico_id).toBe(a.topicos[0]);
+      void perfilId;
+    });
+  });
+
+  it("a fronteira por aluno segue a mesma regra", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const a = await criarMateria(cliente, 3);
+      const { perfilId } = await criarPerfil(cliente, a.topicos, { ativo: false });
+
+      const { rows: concurso } = await cliente.query<{ id: string }>(
+        `insert into public.concursos
+           (orgao, cargo, perfil_concurso_id, visibilidade, publicado_em, publicado_por)
+         values ($1, 'Escriturario', $2, 'publicado', now(), $3) returning id`,
+        [`CAIXA ${sufixo()}`, perfilId, await criarUsuario(cliente)],
+      );
+
+      const aluno = await criarUsuario(cliente);
+      await cliente.query(
+        `insert into public.perfil_estudo
+           (user_id, nivel_declarado, minutos_por_dia, concurso_id)
+         values ($1, 'iniciante', 120, $2)`,
+        [aluno, concurso[0].id],
+      );
+
+      // Sem a flag, o concurso do aluno nao existe e a funcao cai no fallback
+      // historico "sem perfil", que e outro caso.
+      await cliente.query(
+        `insert into public.configuracoes
+           (chave, valor, modulo_dono, alterado_por, motivo)
+         values ('flag.m5.multi_concurso', 'true'::jsonb, 'm5', $1, 'teste SPEC 39')`,
+        [await criarUsuario(cliente)],
+      );
+
+      await recalcular(cliente, "2026-01-15");
+
+      const { rows } = await cliente.query<{ topico_id: string; peso: string }>(
+        "select topico_id, peso from public.raiox_peso_do_aluno($1)",
+        [aluno],
+      );
+
+      expect(rows).toHaveLength(3);
+      expect(rows.every((linha) => Number(linha.peso) === 1)).toBe(true);
+      expect(new Set(rows.map((l) => l.topico_id))).toEqual(new Set(a.topicos));
     });
   });
 });

@@ -55,7 +55,7 @@ const dados = {
         nProvas: 1,
         anos: [2025],
         baseDoPeso: "itens" as const,
-        texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+        texto: "Peso medido em 1 prova do próprio concurso, de 2025.",
       },
     },
   ],
@@ -74,7 +74,7 @@ const dados = {
         nProvas: 1,
         anos: [2025],
         baseDoPeso: "itens" as const,
-        texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+        texto: "Peso medido em 1 prova do próprio concurso, de 2025.",
       },
       topicos: [
         {
@@ -89,7 +89,7 @@ const dados = {
             nProvas: 1,
             anos: [2025],
             baseDoPeso: "itens" as const,
-            texto: "Peso medido em 1 prova do proprio concurso, de 2025.",
+            texto: "Peso medido em 1 prova do próprio concurso, de 2025.",
           },
           fatia: 1,
         },

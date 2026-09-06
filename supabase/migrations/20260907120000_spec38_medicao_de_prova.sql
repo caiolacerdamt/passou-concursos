@@ -50,12 +50,18 @@ comment on column public.provas.separacao_via is
 comment on column public.provas.caderno_irmao_de is
   'Caderno irmao (Tipo A/B/C) do mesmo concurso: aponta para o principal. Irmao e registrado e NAO soma peso ao ano (BANCO-16 AC6).';
 
--- Um principal por `(banca, ano, orgao, cargo)`. O indice unico de `provas` ja
--- existente (`provas_alvo_unico`) inclui `caderno` e por isso aceita os tres
--- cadernos; este aqui garante que exatamente um deles conta.
-create unique index provas_caderno_principal_unico
-  on public.provas (banca, ano, orgao, cargo)
-  where caderno_irmao_de is null;
+-- **Por que nao ha indice unico de "um principal por concurso" aqui.** A
+-- primeira versao desta migracao tinha um, e ele estava errado por dois motivos
+-- que so aparecem contra o banco real: o catalogo ja tem BB 2021 A/B/C
+-- catalogados (o indice nem seria criado), e catalogar o **segundo** caderno
+-- passaria a falhar, porque a linha nasce antes de alguem saber que ela e irma
+-- — o que revogaria na pratica o `provas_alvo_unico` do BANCO-02, que existe
+-- justamente para aceitar o caderno irmao.
+--
+-- Quem garante o AC6 e a **leitura**: `provas_medidas` escolhe um caderno por
+-- `(banca, ano, orgao, cargo)`, e `caderno_irmao_de` e o jeito de o operador
+-- dizer qual. Sem vinculo nenhum, a view ainda conta um so — nao existe estado
+-- em que os tres somem peso.
 
 -- Irmao nao aponta para irmao: cadeia de dois niveis viraria peso escondido.
 create or replace function public.trava_caderno_irmao()

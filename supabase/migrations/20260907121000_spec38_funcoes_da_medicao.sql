@@ -364,17 +364,27 @@ comment on view public.grade_ausente_fila is
 
 -- O que a SPEC 39 tem direito de contar. Tres portas, todas do BANCO-15/16:
 -- grade lida, sem conferencia pendente e caderno principal.
+-- O `distinct on` e o BANCO-16 AC6 **inteiro**, e ele nao depende de ninguem ter
+-- vinculado nada: mesmo com os tres cadernos soltos, um unico caderno por
+-- `(banca, ano, orgao, cargo)` chega ao Raio-X. `caderno_irmao_de` continua
+-- valendo, e de dois jeitos: tira o irmao da disputa e diz qual e o principal.
+--
+-- O desempate escolhe o caderno **melhor medido** (mais itens etiquetados), e
+-- so depois o rotulo. Entre irmaos o conteudo e o mesmo; o que difere e quanto
+-- da prova nos conseguimos medir, e medir mais e sempre a resposta melhor.
 create or replace view public.provas_medidas
 with (security_invoker = true)
 as
-  select c.*
+  select distinct on (c.banca, c.ano, c.orgao, c.cargo) c.*
     from public.cobertura_da_prova c
    where c.grade_status = 'lida'
      and c.conferencia_motivo is null
-     and c.caderno_irmao_de is null;
+     and c.caderno_irmao_de is null
+   order by c.banca, c.ano, c.orgao, c.cargo,
+            c.itens_ingeridos desc, coalesce(c.caderno, ''), c.prova_id;
 
 comment on view public.provas_medidas is
-  'Provas que podem entrar no Raio-X: grade lida, sem conferencia humana pendente e caderno principal (BANCO-15 AC5, BANCO-16 AC5/AC6). O piso de cobertura e aplicado por quem consulta, com param.m1.cobertura_minima.';
+  'Provas que podem entrar no Raio-X: grade lida, sem conferencia humana pendente e UM caderno por (banca, ano, orgao, cargo) — o melhor medido (BANCO-15 AC5, BANCO-16 AC5/AC6). O piso de cobertura e aplicado por quem consulta, com param.m1.cobertura_minima.';
 
 revoke all on public.cobertura_da_prova  from anon, authenticated;
 revoke all on public.grade_ausente_fila  from anon, authenticated;

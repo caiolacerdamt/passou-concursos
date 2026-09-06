@@ -1257,40 +1257,44 @@
 
 ## Handoff
 
-- **Feature**: **SPEC 37 — concurso: assunto canônico, nome do edital e escolha do aluno**
-  (RAIOX-19, RAIOX-20, ALUNO-13, RAIOX-08). Ritual **B**: design embutido no `tasks.md`, sem
-  `design.md`, com verificação independente curta no fim do mesmo arquivo.
-- **Phase / Task**: Execute concluída, T1–T11. Branch `feat/spec37-multi-concurso`, 9 commits.
-- **A decisão de forma**: `topicos` **já era** o assunto canônico — a camada de dentro não mudou de
-  schema. O que nasceu foi a camada de fora: `concursos` (chave natural `(orgao, cargo)`, 1:1 com
-  `perfil_concurso`), `concurso_materias` (o nome e a ordem do edital daquele concurso) e
-  `concurso_materia_assuntos` (**mapa**, não árvore). `concursos` é tabela nova em vez de
-  `perfil_concurso` renomeado porque o perfil é lido por cinco caminhos vivos, e mexer nele arriscaria
-  o AC de "flag desligada = hoje". Efeito colateral útil: a projeção **já** é por concurso, porque
-  `raiox_projecoes` é chaveada por perfil. O que estava errado nunca foi a escrita — era a leitura,
-  que casava por `p.ativo`.
-- **Completed**: 5 migrations (`20260906120000` a `20260906124000`) · `concurso_do_aluno` /
-  `perfil_concurso_do_aluno` / `escolher_concurso` / `raiox_peso_do_aluno` ·
-  `gera_plano_do_dia` reescrito a partir do corpo vigente com três trocas mecânicas (o arquivo
-  `20260906122000` passa a ser o corpo de verdade da função) · prontidão, publicação humana e fusão de
-  assunto canônico · `src/modules/concursos` · Raio-X e tela por aluno · `flag.m5.multi_concurso`
-  (nasce **desligada**) e `param.m5.prontidao_piso` (0.8) no catálogo.
-- **Verificação independente**: 6 Success Criteria, todos **OK** depois das correções. Um achado
-  **Major** — `concurso_do_aluno` castava a flag para boolean sem `jsonb_typeof`, e o erro estouraria
-  dentro do cursor de `gera_plano_do_dia`, derrubando o plano de **todos** os alunos; corrigido, com
-  teste em banco. Cinco Minor: três corrigidos (programa do edital na fusão, guarda da chave natural na
-  semeadura, dois testes que não testavam o que o nome dizia) e dois aceitos com razão registrada
-  (`plano_bloco` de plano já gerado; perda de inlining de `raiox_peso_do_aluno`).
-- **Gate**: `npm run test:db` **65 arquivos / 465 testes / 0 falhas** · `npm run test:unit`
-  **1185 PASS** · `tsc --noEmit` limpo · `eslint src tests` limpo. As 5 migrations foram aplicadas no
-  Supabase de desenvolvimento por `npm run db:push`.
-- **In-progress / pendente**: a **escolha do aluno não tem tela** — nesta rodada a ALUNO-13 AC4 existe
-  como RPC (`escolher_concurso`) e como módulo de leitura; as telas são da SPEC 40, conforme o
-  `Out of Scope`. O concurso nº 1 (o perfil vigente migrado) nasceu **oculto** de propósito: publicar
-  exige ação humana registrada, e ninguém publicou. Isso não afeta nada enquanto a flag estiver
-  desligada. Seguem abertas as pendências do TRIAL-2 — verificação visual em 375px com as duas contas,
-  `flag.m9.login_google` desligada, teto do Resend não conferido e os secrets do GitHub Actions para o
-  job de e-mails. Nada disso foi tocado aqui.
-- **Next step**: **SPEC 38** (leitor de prova: grade declarada, cobertura, separação determinística com
-  IA de reserva, etiqueta barata), Ritual **B**. Antes de ligar `flag.m5.multi_concurso`: medir o custo
-  do plano com `raiox_peso_do_aluno` (achado 4 da verificação) e publicar o concurso nº 1.
+- **Feature**: **SPEC 38 — leitor de prova: grade declarada, itens e etiqueta barata**
+  (BANCO-14, BANCO-15, BANCO-16). Ritual **B**: design embutido no `tasks.md`, sem `design.md`, com
+  verificação independente curta no fim do mesmo arquivo.
+- **Phase / Task**: Execute concluída, T1–T11. Branch `feat/spec38-leitor-de-prova`.
+- **A decisão de forma**: a prova é lida **três vezes, em ordem crescente de custo**, e cada leitura só
+  acontece porque a anterior não bastou. Grade (regex sobre o texto do PDF, custo zero) → separação
+  determinística (custo zero; **quando fecha com a grade, nenhuma chamada a modelo acontece**) →
+  etiqueta (a única chamada do caminho feliz). A **grade declarada é o gabarito de qualidade**: é ela
+  que decide se a separação vale, e é a divergência contra ela que manda a prova para conferência
+  humana em vez de deixar peso errado passar. A garantia do caderno irmão (BANCO-16 AC6) mora na
+  **leitura** (`provas_medidas` com `distinct on`), não num índice único — ver o achado Major abaixo.
+- **Completed**: 2 migrations (`20260907120000`, `20260907121000`) · `prova_blocos`,
+  `etiquetas_de_item`, cinco colunas novas em `provas` · `registrar_grade_declarada` (único caminho de
+  escrita dos blocos), `gravar_etiquetas_ia`, `alinhar_etiquetas_com_questoes`, `corrigir_etiqueta`,
+  `vincular_caderno_irmao` · views `cobertura_da_prova`, `grade_ausente_fila`, `provas_medidas` ·
+  `src/modules/acervo/{grade,itens,etiqueta}.ts` · `scripts/jobs/medir-prova.mts` (grade/separar/
+  etiquetar/relatorio) + `.github/workflows/medicao-de-prova.yml` · duas tarefas novas no gateway
+  (**AD-141**) · três parâmetros no catálogo do M1.
+- **Verificação independente**: 7 Success Criteria — **6 OK, 1 PARCIAL**. O parcial é o custo real por
+  prova, que **não foi medido** nesta rodada e está dito assim na spec (as duas tarefas novas precisam
+  de linha na matriz de modelos, que é configuração). Um achado **Major** corrigido: o índice único do
+  caderno principal quebrava a catalogação do segundo caderno de qualquer prova, revogando na prática o
+  `provas_alvo_unico` do BANCO-02 — a garantia mudou de lugar e ficou mais forte. Dois Minor corrigidos
+  (fim de faixa preguiçoso lendo `1 a 101,0` como faixa `1 a 1`; primeiro bloco saindo sem nome) e dois
+  aceitos com razão registrada (agrupamento colado no nome do primeiro bloco; cobertura mínima em 0,9
+  sem medição).
+- **Gate**: `npm run test:unit` **166 arquivos / 1241 testes / 0 falhas** · `npm run test:db`
+  **66 arquivos / 483 testes / 0 falhas** · `tsc --noEmit` limpo · `eslint src scripts` sem erro novo.
+  As 2 migrations foram aplicadas no Supabase de desenvolvimento por `npm run db:push`.
+- **In-progress / pendente**: **a matriz de modelos não tem as linhas `etiqueta_de_item` e
+  `separacao_de_itens`** — sem elas o gateway recusa com `TarefaSemPerfil`, que é a recusa visível de
+  sempre, e as ações `separar` (na reserva) e `etiquetar` não rodam. É INSERT na tabela `configuracoes`
+  feito por uma pessoa, com motivo registrado (o SQL está em `docs/IA.md`). Depois disso: medir o custo
+  real de uma prova e anotar na spec. O leitor de grade cobre o formato CESGRANRIO medido; 17 das 24
+  provas de `fontes/entrada/` caem em `grade_ausente_fila`, que é o comportamento pedido pelo AC4 — a
+  tela que completa a grade é da SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37 (publicar o
+  concurso nº 1, medir o custo do plano com `raiox_peso_do_aluno`); nada disso foi tocado aqui.
+- **Next step**: **SPEC 39** (Raio-X por concurso: `peso_oficial(matéria) × share(assunto|matéria)`,
+  a prova como unidade, degraus de lastro), Ritual **A** — é uma das sete specs com verificador completo
+  e sensor de mutação. Ela consome `provas_medidas`, `cobertura_da_prova` e `etiquetas_de_item` desta
+  spec, aplicando `param.m1.cobertura_minima` como piso de entrada.

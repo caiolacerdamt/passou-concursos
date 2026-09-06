@@ -138,7 +138,7 @@ trabalho é refeito.
 | 35 | Áudio — fábrica de voz | teste cego como porteiro, normalização antes da voz, geração 1× por versão | 16, 21 | 11 | B · 🧊 Congelada (AD-064) |
 | 36 | Áudio — escopo, controles e reserva | escopo por frequência, teto de gasto por lote, provedor reserva, controles de escuta | 35 | 9 | B · 🧊 Congelada (AD-064) |
 | 37 | **Concurso — assunto canônico e nome do edital** | assunto canônico compartilhado × matérias com o nome do edital de cada concurso, aluno escolhe o concurso, concurso nasce oculto | 11, 13 | 11 | B · ✅ Concluída |
-| 38 | **Leitor de prova — grade, itens e etiqueta** | grade declarada pela própria prova, cobertura, separação determinística com IA de reserva, etiqueta barata onde humano vence IA | 08, 09, 37 | 11 | B |
+| 38 | **Leitor de prova — grade, itens e etiqueta** | grade declarada pela própria prova, cobertura, separação determinística com IA de reserva, etiqueta barata onde humano vence IA | 08, 09, 37 | 11 | B · ✅ Concluída |
 | 39 | **Raio-X por concurso — dois níveis e lastro** | `peso_oficial(matéria) × share(assunto\|matéria)`, a prova como unidade, degraus de lastro, granularidade honesta | 11, 20, 37, 38 | 12 | **A** |
 | 40 | **Fluxo de abertura de concurso** | busca só em domínio oficial, telas de aprovação, fusão de assunto duplicado, relatório de prontidão por degrau | 15, 37, 38, 39 | 9 | B |
 

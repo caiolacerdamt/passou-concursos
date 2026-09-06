@@ -85,3 +85,26 @@ então determinismo primeiro, IA de reserva, e a grade declarada conferindo os d
 - [ ] Corrigir três etiquetas à mão e reexecutar preserva as três e não duplica nenhuma linha
 - [ ] Custo real de uma prova fica dentro da faixa registrada, e o número medido é anotado na spec
 - [ ] Nenhum PDF aparece no transcript do agente — só o relatório do comando
+
+## O que a implementação mediu (2026-09-06)
+
+Rodando o código desta spec sobre as 24 provas de `fontes/entrada/`:
+
+| Prova | Grade | Blocos | Declarados | Separados pelo código | Fecha? |
+| --- | --- | --- | --- | --- | --- |
+| CAIXA 2021 Técnico Bancário Novo | lida | **6** | **60** | **60** | **sim, sem chamar modelo** |
+| BB 2021 Prova A | lida | 8 | 70 | 20 | não → reserva |
+| BB 2021 Prova B | lida | 8 | 70 | 17 | não → reserva |
+| BB 2021 Prova C | lida | 8 | 70 | 70 | sim |
+| Outras 20 | ausente (17), sem texto → `precisa_ocr` (1), ilegíveis pelo leitor mínimo (6) | — | — | — | — |
+
+Dois números da spec ficaram **não confirmados de propósito**, e é honesto dizer:
+
+- **Custo real por prova**: não medido nesta rodada. A chamada ao provedor não foi feita — as duas
+  tarefas novas (`etiqueta_de_item`, `separacao_de_itens`) precisam de linha na matriz de modelos, que
+  é configuração e não código, e a matriz de desenvolvimento não as tem. O número de 2026-09-05
+  (R$ 0,024 por 60 itens) continua sendo a única medição, e ela sustenta o AD-138. Medir de novo é o
+  primeiro comando a rodar quando a matriz ganhar as duas linhas.
+- **Grade "ausente" em 17 provas**: o leitor cobre o formato CESGRANRIO medido. Prova de outra banca
+  cai na fila humana, que é o comportamento que o BANCO-15 AC4 pede — não é um furo, é o lado seguro
+  do erro. Quem completa a grade dessas provas é a tela da SPEC 40.

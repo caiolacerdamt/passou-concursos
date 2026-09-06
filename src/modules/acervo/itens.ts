@@ -162,10 +162,12 @@ function nomesDeBloco(
         grupo.unshift(texto);
         continue;
       }
-      // Linha que nao e cabecalho encerra o grupo. Se ja havia um, ele e o nome;
-      // se nao havia, o item nao abre bloco nenhum e nao ha nome a registrar.
+      // Linha comum **antes** de achar cabecalho nao encerra a busca: entre o
+      // cabecalho "LINGUA PORTUGUESA" e o item 1 costuma haver o texto de apoio
+      // inteiro, e parar nele deixaria justamente o primeiro bloco sem nome
+      // (medido na CAIXA 2021 e na BB 2021). Depois de achado, ela encerra — e o
+      // que mantem o nome contiguo e impede colar duas materias.
       if (grupo.length > 0) break;
-      if (!ehCabecalhoDePagina(texto)) break;
     }
     if (grupo.length > 0) nomes.set(inicio.numero, grupo.join(" "));
   });

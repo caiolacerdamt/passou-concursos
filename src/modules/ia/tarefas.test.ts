@@ -24,6 +24,8 @@ describe("a lista fechada de tarefas (IA-02 AC2)", () => {
         "tutor",
         "rascunho_inedita",
         "reprocessamento_verificacao",
+        "separacao_de_itens",
+        "etiqueta_de_item",
       ].sort(),
     );
   });

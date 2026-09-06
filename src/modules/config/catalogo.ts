@@ -135,6 +135,32 @@ export const CATALOGO = {
       "Fracao deterministica de questoes reais de alta confianca que recebe revisao por amostra (BANCO-07 AC3).",
   }),
 
+  // ── Medicao de prova (SPEC 38 / AD-138) ──────────────────────────────────
+  // Os tres calibram: entraram com o default registrado na spec, medidos numa
+  // prova so (CAIXA 2021, 2026-09-05/06). Trocar qualquer um e linha na tabela
+  // `configuracoes`, sem deploy (AD-078).
+  "param.m1.tolerancia_grade": chave({
+    tipo: z.number().int().min(0),
+    padrao: 0,
+    moduloDono: "m1",
+    descricao:
+      "Quantos itens de folga a distribuicao separada pode ter contra a grade declarada antes de a prova ir para conferencia humana (BANCO-16 AC5). Comeca em zero: sem folga, a divergencia aparece na primeira prova em vez de virar peso torto.",
+  }),
+  "param.m1.cobertura_minima": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.9,
+    moduloDono: "m1",
+    descricao:
+      "Piso de `itens_ingeridos / itens_declarados` para uma prova contar no Raio-X (BANCO-15 AC2, AD-138). Prova ingerida pela metade desloca todas as linhas sem sinal visivel; o piso e o que impede isso. Provisorio — calibra com o primeiro lote de provas medidas.",
+  }),
+  "param.m1.itens_por_pedido_de_etiqueta": chave({
+    tipo: z.number().int().positive(),
+    padrao: 20,
+    moduloDono: "m1",
+    descricao:
+      "Quantos itens vao em cada chamada do etiquetador. Medido a 20 itens por chamada em 2026-09-05; lote maior barateia por prova e piora o que se perde quando um pedido falha.",
+  }),
+
   // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
   // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da
   // spec do M4. Estao aqui com default porque o AD-078 exige default declarado

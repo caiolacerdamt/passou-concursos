@@ -1,0 +1,73 @@
+name: Medição de prova
+
+# BANCO-14 · BANCO-15 · BANCO-16 · AD-138 · AD-140 · INFRA-02
+#
+# Medir é diferente de ingerir. A `Ingestão de prova` monta acervo e custa o
+# preço disso; esta aqui responde "o que a banca cobra?" a partir de
+# `(prova, número do item, assunto)` — R$ 0,01 a R$ 0,05 por prova.
+#
+# Roda **aqui** e não na Vercel pelo motivo do AD-140: o PDF não pode passar
+# pela conversa do agente, onde seria reenviado a cada turno. O runner lê o
+# arquivo do repositório e devolve **relatório**, nunca texto de prova.
+#
+# A ordem é a do custo crescente, e cada passo só existe porque o anterior não
+# bastou:
+#   1. `grade`     — lê a grade que a prova declara. Custo zero.
+#   2. `separar`   — separa por regra de texto. Custo zero quando fecha.
+#   3. `etiquetar` — a única chamada de modelo do caminho feliz.
+#   4. `relatorio` — só lê.
+
+on:
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: "O que fazer"
+        required: true
+        type: choice
+        options: [grade, separar, etiquetar, relatorio]
+      prova:
+        description: "id da linha em `provas` (uuid)"
+        required: true
+        type: string
+      arquivo:
+        description: "caminho do PDF a partir da raiz do repositório (dispensado em `relatorio`)"
+        required: false
+        type: string
+
+jobs:
+  medicao:
+    name: ${{ inputs.acao }} — prova ${{ inputs.prova }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # `OPENAI_API_KEY` entra em todas as ações de propósito, e não só em
+      # `etiquetar`: `separar` pode cair na reserva por modelo (BANCO-16 AC3), e
+      # descobrir isso com a chave ausente desperdiçaria a rodada. Quem exige a
+      # chave é o job, e só quando ela é realmente necessária.
+      - name: Medir a prova
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: job
+        run: >-
+          npm run jobs:medir-prova --
+          --prova "${{ inputs.prova }}"
+          --pdf "${{ inputs.arquivo }}"
+          --acao "${{ inputs.acao }}"
+
+      - name: Reportar no Sentry
+        if: failure()
+        env:
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          DETALHE_DA_FALHA: "medicao (${{ inputs.acao }}) terminou vermelho"
+        run: node scripts/jobs/reportar-falha.mjs

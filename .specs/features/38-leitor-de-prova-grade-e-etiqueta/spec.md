@@ -8,7 +8,7 @@
 | **Tasks (estimativa)** | ~11 |
 | **Ritual** | **B — normal** (`tasks.md` com design embutido + Verificador independente curto, sem sensor) |
 | **Dificuldade** | Difícil |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída (2026-09-06, branch `feat/spec38-leitor-de-prova`) |
 | **Requisitos** | **BANCO-14**, **BANCO-15**, **BANCO-16** |
 | **Fonte dos requisitos** | `.specs/modulos/m1-banco-questoes/spec.md` |
 | **Decisões** | **AD-138**, AD-140 · herda AD-003 (fonte legal), AD-035/AD-036 (job fora do serverless), AD-068 (modelo em configuração), AD-041 (`precisa_ocr`) |
@@ -27,11 +27,11 @@ então determinismo primeiro, IA de reserva, e a grade declarada conferindo os d
 
 ## Goals
 
-- [ ] Uma prova vira grade declarada + itens separados + etiquetas, por comando, em GitHub Actions.
-- [ ] Nenhum PDF entra no contexto de conversa de agente; o agente lê resumo, não prova.
-- [ ] Quando o separador determinístico fecha com a grade, **nenhuma chamada a modelo acontece**.
-- [ ] Divergência entre etiqueta e grade declarada é pega **automaticamente**, nunca passa em silêncio.
-- [ ] Correção humana sobrevive a qualquer reexecução.
+- [x] Uma prova vira grade declarada + itens separados + etiquetas, por comando, em GitHub Actions.
+- [x] Nenhum PDF entra no contexto de conversa de agente; o agente lê resumo, não prova.
+- [x] Quando o separador determinístico fecha com a grade, **nenhuma chamada a modelo acontece**.
+- [x] Divergência entre etiqueta e grade declarada é pega **automaticamente**, nunca passa em silêncio.
+- [x] Correção humana sobrevive a qualquer reexecução.
 
 ## Escopo
 
@@ -78,10 +78,34 @@ então determinismo primeiro, IA de reserva, e a grade declarada conferindo os d
 
 ## Success Criteria
 
-- [ ] CAIXA 2021 Técnico Bancário Novo produz 6 blocos somando 60 itens, iguais à capa, sem chamar modelo
-- [ ] Adulterar um cabeçalho derruba a prova como inconsistente, em vez de gerar peso errado
-- [ ] Uma prova que o separador não fecha cai na reserva por modelo e fica marcada como tal
-- [ ] BB 2021 provas A, B e C contam como **uma** prova no peso do ano
-- [ ] Corrigir três etiquetas à mão e reexecutar preserva as três e não duplica nenhuma linha
-- [ ] Custo real de uma prova fica dentro da faixa registrada, e o número medido é anotado na spec
-- [ ] Nenhum PDF aparece no transcript do agente — só o relatório do comando
+- [x] CAIXA 2021 Técnico Bancário Novo produz 6 blocos somando 60 itens, iguais à capa, sem chamar modelo
+- [x] Adulterar um cabeçalho derruba a prova como inconsistente, em vez de gerar peso errado
+- [x] Uma prova que o separador não fecha cai na reserva por modelo e fica marcada como tal
+- [x] BB 2021 provas A, B e C contam como **uma** prova no peso do ano
+- [x] Corrigir três etiquetas à mão e reexecutar preserva as três e não duplica nenhuma linha
+- [ ] Custo real de uma prova fica dentro da faixa registrada, e o número medido é anotado na spec —
+      **pendente**: a medição custa uma chamada paga e não foi autorizada; ver a seção abaixo
+- [x] Nenhum PDF aparece no transcript do agente — só o relatório do comando
+
+## O que a implementação mediu (2026-09-06)
+
+Rodando o código desta spec sobre as 24 provas de `fontes/entrada/`:
+
+| Prova | Grade | Blocos | Declarados | Separados pelo código | Fecha? |
+| --- | --- | --- | --- | --- | --- |
+| CAIXA 2021 Técnico Bancário Novo | lida | **6** | **60** | **60** | **sim, sem chamar modelo** |
+| BB 2021 Prova A | lida | 8 | 70 | 20 | não → reserva |
+| BB 2021 Prova B | lida | 8 | 70 | 17 | não → reserva |
+| BB 2021 Prova C | lida | 8 | 70 | 70 | sim |
+| Outras 20 | ausente (17), sem texto → `precisa_ocr` (1), ilegíveis pelo leitor mínimo (6) | — | — | — | — |
+
+Dois números da spec ficaram **não confirmados de propósito**, e é honesto dizer:
+
+- **Custo real por prova**: não medido nesta rodada, porque a chamada ao provedor **custa dinheiro** e
+  não foi autorizada. A matriz de desenvolvimento já tem as duas linhas (`etiqueta_de_item` e
+  `separacao_de_itens` na Luna, esforço `max`, síncronas — decisão de 2026-09-06), então medir é um
+  comando: `npm run jobs:medir-prova -- --acao etiquetar --prova <uuid> --pdf <caminho>`. O número de
+  2026-09-05 (R$ 0,024 por 60 itens) continua sendo a única medição, e ela sustenta o AD-138.
+- **Grade "ausente" em 17 provas**: o leitor cobre o formato CESGRANRIO medido. Prova de outra banca
+  cai na fila humana, que é o comportamento que o BANCO-15 AC4 pede — não é um furo, é o lado seguro
+  do erro. Quem completa a grade dessas provas é a tela da SPEC 40.

@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { clienteDeServico } from "@/lib/db/servidor";
+import {
+  concursoDoAluno,
+  editalDoConcurso,
+  perfilConcursoDoAluno,
+} from "@/modules/concursos";
+
+import type { MateriaDoEdital } from "@/modules/concursos";
 
 export type TendenciaRaioX = "subindo" | "estavel" | "caindo";
 
@@ -412,17 +419,90 @@ function montarMaterias(
 }
 
 /**
+ * Agrupa as linhas de tópico pelas matérias do edital **do aluno** (RAIOX-19).
+ *
+ * Diferente de `montarMaterias`, que lê a projeção agregada persistida, aqui a
+ * matéria é a do edital daquele concurso: ela não tem projeção própria porque
+ * não é a mesma matéria em dois concursos. O peso é a soma das linhas, o que é
+ * honesto para agrupar — e é só apresentação: o motor do plano continua
+ * consumindo o peso cru por assunto canônico.
+ *
+ * Matéria do edital sem nenhuma linha na projeção não aparece: inventar linha
+ * zerada mostraria ao aluno um número que a banca não sustenta.
+ */
+export function montarMateriasDoEdital(
+  edital: readonly { id: string; nome: string; ordem: number; topicoIds: string[] }[],
+  linhas: readonly LinhaRaioX[],
+): LinhaMateriaRaioX[] {
+  const porTopico = new Map(linhas.map((linha) => [linha.topicoId, linha]));
+
+  const agrupadas = edital
+    .map((materia) => {
+      const daMateria = materia.topicoIds
+        .map((id) => porTopico.get(id))
+        .filter((linha): linha is LinhaRaioX => linha !== undefined)
+        .sort((a, b) =>
+          b.peso !== a.peso ? b.peso - a.peso : a.topico.localeCompare(b.topico, "pt-BR"),
+        );
+      return { materia, daMateria };
+    })
+    .filter(({ daMateria }) => daMateria.length > 0);
+
+  const fatias = fatiasDe(
+    agrupadas.map(({ daMateria }) =>
+      daMateria.reduce((soma, linha) => soma + linha.peso, 0),
+    ),
+  );
+
+  return agrupadas.map(({ materia, daMateria }, indice) => {
+    const peso = daMateria.reduce((soma, linha) => soma + linha.peso, 0);
+    const fatiaDaMateria = fatias[indice];
+    const internas = fatiasDe(daMateria.map((linha) => linha.peso));
+    const tendencias = new Set(daMateria.map((linha) => linha.tendencia));
+
+    return {
+      materiaId: materia.id,
+      materia: materia.nome,
+      peso,
+      fatia: fatiaDaMateria,
+      nQuestoes: daMateria.reduce((soma, linha) => soma + linha.nQuestoes, 0),
+      nTopicos: daMateria.length,
+      // Tendências que discordam dentro da matéria não viram uma terceira
+      // afirmação: a leitura por matéria fica estável e o aluno abre a matéria
+      // para ver a direção de cada assunto.
+      tendencia: tendencias.size === 1 ? [...tendencias][0] : "estavel",
+      // Uma matéria só carrega o rótulo de pouca amostra quando **todo**
+      // assunto dela tem pouca amostra.
+      amostraBaixa: daMateria.every((linha) => linha.amostraBaixa),
+      topicos: daMateria.map((linha, posicao) => ({
+        ...linha,
+        fatia: fatiaDaMateria * internas[posicao],
+      })),
+    } satisfies LinhaMateriaRaioX;
+  });
+}
+
+/**
  * Leitura pública do M5. O cliente de serviço fica aqui, no servidor; a tela
  * recebe apenas o perfil e os campos que precisa apresentar.
+ *
+ * `userId` só é passado quando `flag.m5.multi_concurso` está ligada — é o que
+ * mantém o AC de que, com a flag desligada, o produto se comporta como hoje:
+ * sem ele, este caminho é literalmente o de antes desta spec. Com ele, o perfil
+ * vem do concurso **do aluno** e as matérias saem do edital dele.
  */
 export async function consultarRaioX(
   cliente: SupabaseClient = clienteDeServico(),
+  userId?: string,
 ): Promise<DadosRaioX> {
-  const perfilConsulta = await cliente
-    .from("perfil_concurso")
-    .select("id, orgao, banca, data_prova, formato, programa_edital")
-    .eq("ativo", true)
-    .maybeSingle();
+  const perfilConsulta =
+    userId === undefined
+      ? await cliente
+          .from("perfil_concurso")
+          .select("id, orgao, banca, data_prova, formato, programa_edital")
+          .eq("ativo", true)
+          .maybeSingle()
+      : await perfilDoAluno(cliente, userId);
 
   if (perfilConsulta.error) {
     throw falhaAoLer("perfil_concurso", perfilConsulta.error.message);
@@ -498,6 +578,12 @@ export async function consultarRaioX(
     };
   });
 
+  // Com concurso do aluno, o agrupamento é o do edital dele. A projeção
+  // agregada por matéria canônica continua existindo e continua sendo o
+  // caminho de quem não passa `userId` — ela é a conta de outro recorte, não
+  // uma versão velha desta.
+  const edital = userId === undefined ? [] : await editalDoAluno(cliente, userId);
+
   return {
     perfil: {
       orgao: perfil.orgao,
@@ -507,12 +593,43 @@ export async function consultarRaioX(
       programaEdital: idsDoPrograma(perfil.programa_edital),
     },
     linhas,
-    materias: montarMaterias(
-      (materiasConsulta.data ?? []) as ProjecaoMateriaBanco[],
-      topicos,
-      linhas,
-    ),
+    materias:
+      edital.length > 0
+        ? montarMateriasDoEdital(edital, linhas)
+        : montarMaterias(
+            (materiasConsulta.data ?? []) as ProjecaoMateriaBanco[],
+            topicos,
+            linhas,
+          ),
   };
+}
+
+/** O perfil do concurso do aluno, no mesmo formato da leitura por `ativo`. */
+async function perfilDoAluno(
+  cliente: SupabaseClient,
+  userId: string,
+): Promise<{ data: PerfilBanco | null; error: { message: string } | null }> {
+  const perfilId = await perfilConcursoDoAluno(userId, cliente);
+  if (perfilId === null) return { data: null, error: null };
+
+  return (await cliente
+    .from("perfil_concurso")
+    .select("id, orgao, banca, data_prova, formato, programa_edital")
+    .eq("id", perfilId)
+    .maybeSingle()) as {
+    data: PerfilBanco | null;
+    error: { message: string } | null;
+  };
+}
+
+/** O edital do concurso do aluno, vazio quando ele ainda não tem grade. */
+async function editalDoAluno(
+  cliente: SupabaseClient,
+  userId: string,
+): Promise<MateriaDoEdital[]> {
+  const concursoId = await concursoDoAluno(userId, cliente);
+  if (concursoId === null) return [];
+  return editalDoConcurso(concursoId, cliente);
 }
 
 /**

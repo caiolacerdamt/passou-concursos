@@ -4,6 +4,7 @@ import {
   classificarDominio,
   consultarMapaPrioridade,
   consultarRaioX,
+  montarMateriasDoEdital,
 } from "./index";
 
 type Resposta = { data: unknown; error: { message: string } | null };
@@ -358,5 +359,97 @@ describe("consultarMapaPrioridade", () => {
     await expect(
       consultarMapaPrioridade(falso.cliente as never, dados, "2026-08-24"),
     ).rejects.toThrow("falha ao ler dominio_topico: indisponível");
+  });
+});
+
+describe("montarMateriasDoEdital", () => {
+  const linhas = [
+    {
+      topicoId: "t-venda",
+      topico: "Momento da verdade no atendimento",
+      peso: 0.6,
+      nQuestoes: 12,
+      tendencia: "subindo" as const,
+      amostraBaixa: false,
+    },
+    {
+      topicoId: "t-binomial",
+      topico: "Distribuição binomial",
+      peso: 0.2,
+      nQuestoes: 4,
+      tendencia: "estavel" as const,
+      amostraBaixa: true,
+    },
+  ];
+
+  it("usa o nome do edital do concurso, não o da taxonomia canônica", () => {
+    const materias = montarMateriasDoEdital(
+      [
+        { id: "cm-1", nome: "Atendimento Bancário", ordem: 1, topicoIds: ["t-venda"] },
+        { id: "cm-2", nome: "Probabilidade e Estatística", ordem: 2, topicoIds: ["t-binomial"] },
+      ],
+      linhas,
+    );
+
+    expect(materias.map((materia) => materia.materia)).toEqual([
+      "Atendimento Bancário",
+      "Probabilidade e Estatística",
+    ]);
+    // O mesmo assunto canônico, agrupado por outro edital, muda de pai sem que
+    // nada no núcleo mude: as linhas de tópico são as mesmas.
+    const outro = montarMateriasDoEdital(
+      [
+        {
+          id: "cm-3",
+          nome: "Vendas e Negociação",
+          ordem: 1,
+          topicoIds: ["t-venda", "t-binomial"],
+        },
+      ],
+      linhas,
+    );
+    expect(outro).toHaveLength(1);
+    expect(outro[0].materia).toBe("Vendas e Negociação");
+    expect(outro[0].nTopicos).toBe(2);
+    expect(outro[0].peso).toBeCloseTo(0.8, 10);
+  });
+
+  it("fecha 100% entre as matérias e reparte a fatia entre os assuntos", () => {
+    const materias = montarMateriasDoEdital(
+      [
+        { id: "cm-1", nome: "Atendimento Bancário", ordem: 1, topicoIds: ["t-venda"] },
+        { id: "cm-2", nome: "Probabilidade e Estatística", ordem: 2, topicoIds: ["t-binomial"] },
+      ],
+      linhas,
+    );
+
+    const soma = materias.reduce((total, materia) => total + materia.fatia, 0);
+    expect(soma).toBeCloseTo(1, 10);
+    expect(materias[0].fatia).toBeCloseTo(0.75, 10);
+    expect(materias[0].topicos[0].fatia).toBeCloseTo(0.75, 10);
+  });
+
+  it("não inventa matéria do edital que a projeção não sustenta", () => {
+    const materias = montarMateriasDoEdital(
+      [
+        { id: "cm-1", nome: "Atendimento Bancário", ordem: 1, topicoIds: ["t-venda"] },
+        { id: "cm-4", nome: "Redação", ordem: 3, topicoIds: ["t-sem-projecao"] },
+      ],
+      linhas,
+    );
+
+    expect(materias).toHaveLength(1);
+    expect(materias[0].materia).toBe("Atendimento Bancário");
+  });
+
+  it("não afirma uma terceira tendência quando os assuntos discordam", () => {
+    const materias = montarMateriasDoEdital(
+      [{ id: "cm-1", nome: "Bloco único", ordem: 1, topicoIds: ["t-venda", "t-binomial"] }],
+      linhas,
+    );
+
+    expect(materias[0].tendencia).toBe("estavel");
+    // Um assunto com amostra cheia tira o rótulo de pouca amostra da matéria.
+    expect(materias[0].amostraBaixa).toBe(false);
   });
 });

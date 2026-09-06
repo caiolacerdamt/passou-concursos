@@ -85,7 +85,9 @@ describe("/app/raio-x", () => {
     dependencias.flag.mockResolvedValue(false);
     dependencias.consultar.mockResolvedValue(dados);
     dependencias.mapa.mockResolvedValue({ dataReferencia: "2026-08-24", linhas: [] });
-    dependencias.cliente.mockResolvedValue({});
+    dependencias.cliente.mockResolvedValue({
+      auth: { getUser: async () => ({ data: { user: { id: "aluno-1" } } }) },
+    });
   });
 
   it("exige matrícula e, com flag desligada, não consulta a projeção", async () => {
@@ -100,15 +102,26 @@ describe("/app/raio-x", () => {
   });
 
   it("com flag ligada renderiza somente a leitura pré-computada", async () => {
-    dependencias.flag.mockResolvedValue(true);
+    dependencias.flag.mockImplementation(async (chave: string) => chave === "flag.m5.raiox");
 
     const html = renderToStaticMarkup(await RaioX());
 
     expect(dependencias.consultar).toHaveBeenCalledTimes(1);
+    // Multi-concurso desligado: a tela não pergunta quem está lendo.
+    expect(dependencias.consultar).toHaveBeenCalledWith(undefined, undefined);
     expect(dependencias.cliente).toHaveBeenCalledTimes(1);
     expect(dependencias.mapa).toHaveBeenCalledWith(expect.anything(), dados);
     expect(html).toContain("O que mais cai no seu concurso");
     expect(html).toContain("Matemática Financeira");
+  });
+
+  it("com multi-concurso ligado, lê o Raio-X do concurso do aluno", async () => {
+    dependencias.flag.mockResolvedValue(true);
+
+    renderToStaticMarkup(await RaioX());
+
+    expect(dependencias.consultar).toHaveBeenCalledWith(undefined, "aluno-1");
+    expect(dependencias.cliente).toHaveBeenCalledTimes(1);
   });
 
   it("mantém a leitura pública e sinaliza falha do mapa pessoal", async () => {

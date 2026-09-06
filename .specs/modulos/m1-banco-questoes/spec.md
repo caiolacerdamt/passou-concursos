@@ -261,6 +261,92 @@ tópico.
 
 ---
 
+## Rodada 2026-09-05 — medir é diferente de treinar (AD-138/AD-140)
+
+> Entra pelas specs **38** e **40**. Origem: o Raio-X dividia pelo acervo (AD-138) e abrir concurso novo
+> era trabalho manual (AD-140). O que muda no M1: a prova passa a declarar o que ela é, e nasce uma
+> unidade de **medição** mais barata que a questão.
+
+### P1: Etiqueta de item — a unidade de medição ⭐ MVP
+
+**User Story**: Como plataforma, quero registrar `(prova, número do item, assunto)` sem extrair a
+questão inteira, para medir o que a banca cobra sem pagar o preço de montar acervo.
+
+**Why P1**: É o que permite abrir um concurso novo com 4 provas em vez de com um acervo completo. Sem
+isso, o Raio-X de qualquer concurso novo continua refém do tamanho da ingestão.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL persistir `etiquetas_de_item` com `prova_id`, `numero`, `assunto_id`, `confianca`,
+   `origem ∈ {ia, humano}` e a versão do modelo que a produziu, com unicidade por `(prova_id, numero)`.
+2. A etiqueta SHALL NOT exigir enunciado, alternativas, gabarito ou explicação — SHALL ser gravável a
+   partir do texto do item apenas.
+3. WHEN o mesmo item também existe como `questao` publicada, THEN o `assunto_id` da questão SHALL ser a
+   verdade e a etiqueta SHALL apontar para ele — SHALL NOT haver duas classificações concorrentes para
+   o mesmo item.
+4. WHEN uma etiqueta tem `origem='humano'`, THEN uma reexecução do etiquetador SHALL NOT sobrescrevê-la.
+5. WHEN o etiquetador roda de novo sobre a mesma prova, THEN o resultado SHALL substituir apenas as
+   etiquetas de `origem='ia'` daquela prova, SHALL NOT duplicar linha e SHALL registrar a versão do
+   modelo aplicada.
+
+**Independent Test**: Etiquetar uma prova, corrigir três linhas à mão, rodar de novo e confirmar que as
+três correções permanecem e que nenhuma linha duplicou.
+
+---
+
+### P1: A prova declara a própria grade ⭐ MVP
+
+**User Story**: Como plataforma, quero ler da própria prova quantas questões e quantos pontos cada
+matéria tem, para saber o peso oficial sem depender do edital.
+
+**Why P1**: É o nível 1 do AD-138. Sem ele o peso da matéria volta a ser estimativa do acervo.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL persistir, por prova, os **blocos declarados** — nome do bloco como está impresso,
+   faixa de itens e pontuação por item quando a prova a declarar — e o total de itens declarados.
+2. O sistema SHALL persistir `itens_ingeridos` por prova e SHALL derivar `cobertura = itens_ingeridos ÷
+   itens_declarados`.
+3. WHEN a prova declara pontuação por item, THEN o peso do bloco SHALL ser calculado em **pontos**;
+   WHEN não declara, THEN SHALL ser calculado em **contagem de itens** e a linha SHALL registrar qual
+   das duas bases foi usada.
+4. IF a grade não pôde ser lida do documento, THEN a prova SHALL ficar com grade **ausente** e SHALL
+   entrar em fila para preenchimento humano — SHALL NOT receber grade inferida silenciosamente.
+5. WHEN a soma dos itens dos blocos declarados diverge do total declarado, THEN o sistema SHALL marcar
+   a prova como inconsistente e SHALL NOT publicá-la para consumo do Raio-X.
+
+**Independent Test**: Passar a CAIXA 2021 Técnico Bancário Novo e conferir que saem 6 blocos somando 60
+itens; adulterar um cabeçalho e ver a prova cair como inconsistente.
+
+---
+
+### P1: Separação determinística com IA de reserva, conferida pela grade ⭐ MVP
+
+**User Story**: Como plataforma, quero separar a prova em itens por código sempre que der, e só chamar
+a IA quando o código não fechar, para não pagar IA por trabalho que texto resolve.
+
+**Why P1**: Medido em 2026-09-05: a separação determinística fechou 6 das 23 provas testadas e perdeu
+itens nas demais. Sem reserva, o acervo de medição sai furado; sem conferência, sai furado em silêncio.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL tentar primeiro a separação por regra de texto, sem chamada a modelo.
+2. WHEN a quantidade de itens separados é igual ao total declarado **e** a distribuição por bloco bate
+   com a grade declarada, THEN o resultado SHALL ser aceito sem nenhuma chamada a modelo.
+3. IF a separação determinística não fecha com a grade declarada, THEN o sistema SHALL reprocessar a
+   prova pelo modelo e SHALL registrar na prova que a via de reserva foi usada.
+4. IF o PDF não tem camada de texto, THEN a prova SHALL entrar na fila `precisa_ocr` já existente
+   (BANCO-12) e SHALL NOT ser separada por regra de texto.
+5. WHEN a distribuição das etiquetas por bloco diverge da grade declarada acima da tolerância
+   configurada, THEN a prova SHALL ser marcada para conferência humana e SHALL NOT entrar no Raio-X.
+6. O sistema SHALL contar, para efeito de Raio-X, **um único caderno** por `(banca, ano, órgão, cargo)`;
+   cadernos irmãos (Tipo A/B/C) SHALL ser registrados e SHALL NOT somar peso ao ano.
+
+**Independent Test**: Rodar sobre as provas de `fontes/entrada/`; confirmar que as que fecham não
+chamam o modelo, que as que não fecham caem na reserva, e que BB 2021 A/B/C contam como uma prova só.
+
+---
+
 ## Requirement Traceability
 
 | Requirement ID | Story | Fase | Status |
@@ -278,12 +364,15 @@ tópico.
 | BANCO-11 | P1: Imagens extraídas → Storage (AD-041) | Design | Pending |
 | BANCO-12 | P1: Fila `precisa_ocr` p/ escaneadas (AD-041) | Design | Pending |
 | BANCO-13 | P1: Versionamento de questão (`questao_versao`, AD-039) | Design | Pending |
+| BANCO-14 | P1: Etiqueta de item como unidade de medição, humano vence IA (AD-138) | Design | Pending |
+| BANCO-15 | P1: Grade declarada pela prova, cobertura e base pontos × itens (AD-138) | Design | Pending |
+| BANCO-16 | P1: Separação determinística com IA de reserva, conferida pela grade; caderno único (AD-138) | Design | Pending |
 
 **ID format:** `BANCO-NN`.
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 13 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
+**Coverage:** 16 requisitos, 0 mapeados a tasks (Specify), 0 sem cobertura de story.
 
 ---
 

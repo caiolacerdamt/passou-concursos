@@ -1142,49 +1142,133 @@
 - **Date**: 2026-09-05
 - **Status**: active
 
+### AD-138
+- **Decision**: A frequência do Raio-X deixa de ser participação no acervo e passa a ser **medida por
+  prova, em dois níveis**. Nível 1: o **peso da matéria** vem da grade **declarada pela própria
+  prova** (cabeçalhos de bloco e pontuação por item na capa) ou pelo edital quando existir — número
+  oficial, não estimado. Nível 2: a **distribuição dentro da matéria** é estimada das questões reais,
+  amortecida, e **normalizada para somar 1 dentro daquela matéria**. `peso(assunto) = peso_oficial
+  (matéria) × share(assunto | matéria)`. A agregação entre provas é a **média das taxas por prova**
+  ponderada pelo decaimento por ano — nunca um denominador único somando questões de provas
+  diferentes. Cada prova passa a registrar **quantos itens declarou** e quantos foram ingeridos
+  (`cobertura`); prova abaixo do piso de cobertura não entra na conta. Nasce também a **etiqueta de
+  item** — `(prova, número, assunto)` — como unidade de **medição**, separada da `questao`, que
+  continua sendo a unidade de **treino**.
+- **Reason**: A conta vigente (`recalcula_raiox`, CTE `totais`) divide o peso do tópico pelo peso de
+  **todas as questões ingeridas** daquela banca. O denominador é o acervo: ingerir 40 itens de uma
+  prova e 15 de outra faz a primeira pesar 2,7× mais sem que a banca tenha cobrado nada a mais, e uma
+  prova ingerida pela metade desloca todas as linhas sem sinal visível. Prova oficial não é amostra —
+  é censo daquela prova; o erro estava em agregar censos por soma bruta. Medido em 2026-09-05 na
+  prova CAIXA 2021 — Técnico Bancário Novo: a grade sai do PDF **exata** (LP 10 · MF 10 · CB 10 ·
+  Prob 5 · Info 10 · Atendimento 15 = 60), por leitor de texto, sem IA e sem custo. Com o nível 1
+  vindo do documento, um concurso com acervo fino já tem peso de matéria **certo**, e só a
+  distribuição interna fica difusa — e limitada, porque tem de somar o peso da matéria.
+- **Trade-off**: Revoga o **AC2 da RAIOX-04** ("participação do tópico dentro das questões daquela
+  banca") e o denominador único assumido em AD-020/AD-056. O decaimento por ano, o amortecimento por
+  amostra e o piso `amostra_baixa` do **AD-056** continuam valendo — mudam de lugar, passam a operar
+  **dentro da matéria**. O teto do empurrão e os cortes por posição do **AD-057** seguem intactos. O
+  invariante anti-viés (só `origem='real'`) segue intacto. Custo: `provas` ganha itens declarados,
+  nasce a tabela de etiquetas, e o recálculo é reescrito.
+- **Medição que sustenta a decisão**: etiquetar 60 itens com modelo barato custou **R$ 0,024**
+  (R$ 0,012 em Batch) em 24s, com 60/60 devolvidos; a separação determinística fechou 60/60 nessa
+  prova e em mais 5 das 23 testadas, e **perdeu itens** nas demais — por isso o separador determina
+  primeiro e a IA é reserva, com a grade declarada servindo de conferência automática.
+- **Scope**: M5 (RAIOX-04, RAIOX-11, RAIOX-12, RAIOX-14) · M1 (`provas`, etiqueta de item) ·
+  `supabase/migrations/20260821101000_raiox_recalculo.sql` ·
+  `supabase/migrations/20260830120000_raiox_projecao_por_materia.sql`.
+- **Date**: 2026-09-05
+- **Status**: active
+
+### AD-139
+- **Decision**: A taxonomia se parte em **duas camadas**. Por dentro, o **assunto canônico** — o átomo,
+  fino (`distribuição binomial`, `momento da verdade no atendimento`), único, compartilhado por todos
+  os concursos, e **é nele que a questão e a etiqueta são gravadas**. Por fora, o **nome do edital**:
+  cada concurso tem sua própria lista de matérias, com o nome e o agrupamento do edital dele, e cada
+  matéria aponta para um conjunto de assuntos canônicos. O aluno **só vê a camada de fora**. O mesmo
+  assunto canônico pode aparecer sob nomes e matérias diferentes em concursos diferentes, e renomear
+  ou reagrupar num concurso **não toca** nos outros. `perfil_concurso.ativo` deixa de ser chave global:
+  o concurso passa a ser **escolha do aluno**, e `perfil_estudo.concurso_alvo` deixa de ser texto solto
+  para virar referência.
+- **Reason**: O mesmo conteúdo tem nome diferente por edital — a CAIXA 2021 chama de **Atendimento
+  Bancário** o que o BB chama de **Vendas e Negociação**, e separa **Probabilidade e Estatística** como
+  matéria própria onde o BB a coloca dentro de Matemática. Forçar a taxonomia de um concurso sobre o
+  outro (o que o teste de 2026-09-05 fez, e errou) mostra ao aluno da CAIXA um edital que não é o dele.
+  Um átomo fino resolve os dois lados de uma vez: o aluno vê o edital dele, e a **questão do BB serve
+  o aluno da CAIXA** quando o assunto é o mesmo, sem duplicar acervo. Hoje `raiox_integracao.sql:24` e
+  `ciclo_adaptativo.sql:78` casam a projeção por `p.ativo` — um concurso ligado para todo mundo —, e
+  `perfil_estudo.concurso_alvo` é `text` sem referência: multi-concurso não existe, é decoração.
+- **Trade-off**: Medir e treinar continuam separados (AD-138), mas agora **ambos** passam pelo assunto
+  canônico, o que faz da lista de assuntos um ativo que incha: cada concurso novo propõe assuntos e
+  aparece quase-duplicata. Por isso a aprovação humana tem de poder **fundir** assunto repetido, e a
+  fusão é segura porque o histórico está congelado por snapshot (AD-042). O `perfil_concurso` vigente
+  vira o primeiro concurso, sem migração destrutiva; enquanto a flag estiver desligada o produto se
+  comporta como hoje.
+- **Scope**: M5 (RAIOX-08) · M4 (`perfil_estudo`) · M1 (`materias`/`topicos`).
+- **Date**: 2026-09-05
+- **Status**: active
+
+### AD-140
+- **Decision**: Abrir um concurso novo é **operação de produto, não rodada de código**, e vira um
+  fluxo em quatro specs — **37** (assunto canônico × nome do edital, aluno escolhe), **38** (leitor de
+  prova: grade, itens e etiqueta barata), **39** (Raio-X por concurso: dois níveis, degraus e lastro)
+  e **40** (o fluxo de abertura: busca em fonte oficial, telas de aprovação e comandos). A
+  inteligência mora em **comando do repositório**, não no prompt do agente: a skill é a ordem dos
+  comandos e as perguntas ao operador, de modo que Claude Code e Codex executem o mesmo fluxo. O
+  trabalho pesado roda em **GitHub Actions + Batch** (AD-035/AD-036) e **nenhum PDF entra no contexto
+  da conversa**. A busca automática só aceita **fonte oficial** (site da banca, site do órgão, diário
+  oficial), por lista de domínios em configuração; o que estiver fora é **descartado**, não exibido —
+  o AD-003 não abre exceção para agregador.
+- **Reason**: O gargalo declarado é o trabalho manual do operador, não o custo de IA: medido em
+  2026-09-05, uma prova inteira custa entre R$ 0,01 e R$ 0,05, e 23 dos 24 PDFs em `fontes/entrada/`
+  têm camada de texto (extração grátis, 0,13s). O que é caro é o mesmo conteúdo passar pela
+  conversa, onde é reenviado a cada turno. Quatro specs e não uma porque o teto do roadmap é ~12 tasks
+  por spec e a dependência é linear (37 → 38 → 39 → 40), respeitando a regra de só depender de spec de
+  número menor.
+- **Trade-off**: A busca oficial não acha tudo — provas antigas frequentemente só existem em
+  agregador, que é proibido aqui. O fluxo assume isso: ele reporta o que achou **e o que faltou**, e o
+  operador supre por via oficial ou aceita rodar com menos provas, com o degrau registrado na tela. Um
+  concurso nasce **oculto** ao aluno e só é publicado quando passa no gate de prontidão de conteúdo —
+  senão o Raio-X aponta um assunto que o plano não tem como servir.
+- **Scope**: `.specs/features/37-*` a `40-*` · `.specs/ROADMAP.md`.
+- **Date**: 2026-09-05
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: Trial gratuito, **parte 2** — conversão, telas, e-mails e métrica
-  (`docs/planos/TRIAL-2-conversao-e-telas.md`). A parte 1 está mergeada (PR #40) e ligada em produção.
-  Esta rodada fecha **os 11 itens** do plano. Fecha com **AD-135**, **AD-136** e **AD-137**.
-- **Phase / Task**: Plano sem ritual, sem verificador independente — quem escreve confere pelos checks
-  de cada item, como o próprio plano declara. Onze commits atômicos na `feat/trial-conversao`.
-- **Completed**: item **4** (`/app/raio-x` em prévia — AD-137) · item **0** (a porta: CTA de trial no herói e saída secundária na oferta, com a
-  landing byte a byte idêntica com a flag desligada) · **1** (`matriculas.tipo` na aplicação,
-  `contextoDaMatricula()`, `ConviteDeMatricula`) · **2** (faixa de dias restantes **e questões
-  restantes hoje** no shell do `/app`) · **3** (`/app/progresso` em prévia) · **5** (`/assinar` com
-  os dois estados) · **6** (os quatro e-mails: fila + `pg_cron` + job + workflow — AD-136) ·
-  **7** (view `funil_trial` + `funil_trial_do_operador()`) · **8** (`/termos` e `/privacidade` falam
-  da conta gratuita) · **9** (`flag.m9.login_google` — AD-135) · **10** (`docs/DEPLOY.md` com a ordem
-  de ligar o Google e a tabela do `rate_limit_email_sent`) · **11** (a recusa do teto vira tela).
-- **Erro de método desta rodada, e a correção**: o item 4 foi dado como "não se aplica" sobre o
-  **default do catálogo** (`flag.m5.raiox: false`), porque a leitura do banco estava bloqueada
-  naquele momento. O valor **vigente é `true`**. Default de catálogo não é valor vigente, e o próprio
-  plano mandava conferir a flag antes de estimar o item — a conferência não podia ser substituída por
-  leitura de código. O item foi feito depois, na mesma branch (AD-137).
-- **Gates**: `unit` 1172/1172 · `test:db` 454/454 · `eslint` limpo (0 erros; 2 warnings
-  pré-existentes em `scripts/jobs/`) · `tsc --noEmit` limpo · `next build` compila, 33 rotas ·
-  varredura de segredos limpa. `git diff` não tocou `tem_matricula_ativa()` nem nenhuma das 7
-  policies.
-- **Regressão encontrada e consertada nesta rodada**: `trial_emails_pendentes` nasceu com `user_id`
-  **e** com o e-mail do titular em coluna própria, e ficou fora do grupo 1 da LGPD. Quem pegou foi o
-  teste de inventário do contrato nº 9 — que é exatamente para o que ele existe. A tabela entrou em
-  `TABELAS_GRUPO_1`, no `apagar_dados_do_usuario` e na contagem que prova o apagamento ao titular.
-  **Sensor exercido**: tirando o DELETE da função, o teste de banco fica vermelho; com ele de volta,
-  verde.
-- **In-progress / pendente**: (a) **A verificação visual com conta autenticada, em 375px, nos dois
-  tipos de matrícula, NÃO foi feita** — é o check que o plano nomeia como o único capaz de pegar a
-  trava do item 3 vazando para quem pagou. O teste de unidade compara os dois HTML renderizados e
-  prova que não vaza no componente, mas o navegador continua devendo. É a mesma dívida que já se
-  arrasta desde o AD-129/132. (b) `flag.m9.login_google` está **desligada**: o botão do Google não
-  aparece até o provedor ser ligado no painel e a flag virar. (c) O teto do plano do Resend não foi
-  conferido, e o `rate_limit_email_sent` continua em 30/hora — os quatro e-mails **não** somam nesse
-  balde, mas os cadastros somam. (d) `RESEND_API_KEY`, `RESEND_FROM` e `NEXT_PUBLIC_SITE_URL`
-  precisam existir nos **secrets do GitHub Actions**, senão o job dos e-mails sai vermelho todo dia.
-  Seguem pendentes das rodadas anteriores: as alíneas de verificação visual do AD-129/132,
-  AD-125/126/127 e AD-120/121/122, o `Descartar` nunca exercido contra o banco, e as duas correções
-  do W2-A sem sensor.
-- **Next step**: fechar a verificação visual em 375px com as duas contas, ligar o provedor do Google
-  e a flag, conferir o teto do Resend e anotar o `rate_limit_email_sent` escolhido no `docs/DEPLOY.md`.
-  Depois disso o `TRIAL-2` está fechado, exceto o item 4, que só existe se o Raio-X estiver ligado.
-
+- **Feature**: **SPEC 37 — concurso: assunto canônico, nome do edital e escolha do aluno**
+  (RAIOX-19, RAIOX-20, ALUNO-13, RAIOX-08). Ritual **B**: design embutido no `tasks.md`, sem
+  `design.md`, com verificação independente curta no fim do mesmo arquivo.
+- **Phase / Task**: Execute concluída, T1–T11. Branch `feat/spec37-multi-concurso`, 9 commits.
+- **A decisão de forma**: `topicos` **já era** o assunto canônico — a camada de dentro não mudou de
+  schema. O que nasceu foi a camada de fora: `concursos` (chave natural `(orgao, cargo)`, 1:1 com
+  `perfil_concurso`), `concurso_materias` (o nome e a ordem do edital daquele concurso) e
+  `concurso_materia_assuntos` (**mapa**, não árvore). `concursos` é tabela nova em vez de
+  `perfil_concurso` renomeado porque o perfil é lido por cinco caminhos vivos, e mexer nele arriscaria
+  o AC de "flag desligada = hoje". Efeito colateral útil: a projeção **já** é por concurso, porque
+  `raiox_projecoes` é chaveada por perfil. O que estava errado nunca foi a escrita — era a leitura,
+  que casava por `p.ativo`.
+- **Completed**: 5 migrations (`20260906120000` a `20260906124000`) · `concurso_do_aluno` /
+  `perfil_concurso_do_aluno` / `escolher_concurso` / `raiox_peso_do_aluno` ·
+  `gera_plano_do_dia` reescrito a partir do corpo vigente com três trocas mecânicas (o arquivo
+  `20260906122000` passa a ser o corpo de verdade da função) · prontidão, publicação humana e fusão de
+  assunto canônico · `src/modules/concursos` · Raio-X e tela por aluno · `flag.m5.multi_concurso`
+  (nasce **desligada**) e `param.m5.prontidao_piso` (0.8) no catálogo.
+- **Verificação independente**: 6 Success Criteria, todos **OK** depois das correções. Um achado
+  **Major** — `concurso_do_aluno` castava a flag para boolean sem `jsonb_typeof`, e o erro estouraria
+  dentro do cursor de `gera_plano_do_dia`, derrubando o plano de **todos** os alunos; corrigido, com
+  teste em banco. Cinco Minor: três corrigidos (programa do edital na fusão, guarda da chave natural na
+  semeadura, dois testes que não testavam o que o nome dizia) e dois aceitos com razão registrada
+  (`plano_bloco` de plano já gerado; perda de inlining de `raiox_peso_do_aluno`).
+- **Gate**: `npm run test:db` **65 arquivos / 465 testes / 0 falhas** · `npm run test:unit`
+  **1185 PASS** · `tsc --noEmit` limpo · `eslint src tests` limpo. As 5 migrations foram aplicadas no
+  Supabase de desenvolvimento por `npm run db:push`.
+- **In-progress / pendente**: a **escolha do aluno não tem tela** — nesta rodada a ALUNO-13 AC4 existe
+  como RPC (`escolher_concurso`) e como módulo de leitura; as telas são da SPEC 40, conforme o
+  `Out of Scope`. O concurso nº 1 (o perfil vigente migrado) nasceu **oculto** de propósito: publicar
+  exige ação humana registrada, e ninguém publicou. Isso não afeta nada enquanto a flag estiver
+  desligada. Seguem abertas as pendências do TRIAL-2 — verificação visual em 375px com as duas contas,
+  `flag.m9.login_google` desligada, teto do Resend não conferido e os secrets do GitHub Actions para o
+  job de e-mails. Nada disso foi tocado aqui.
+- **Next step**: **SPEC 38** (leitor de prova: grade declarada, cobertura, separação determinística com
+  IA de reserva, etiqueta barata), Ritual **B**. Antes de ligar `flag.m5.multi_concurso`: medir o custo
+  do plano com `raiox_peso_do_aluno` (achado 4 da verificação) e publicar o concurso nº 1.

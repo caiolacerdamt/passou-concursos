@@ -301,11 +301,41 @@ nenhum agendamento.
 | ALUNO-11 | P1: Plano emite dois níveis piso/meta cheia (AD-018, p/ M6) | Execute | In Tasks (T19, T20) |
 | ALUNO-12 | P1: Uma chamada de IA escreve o plano inicial — **tarefa própria do gateway**, default `gpt-5.6-luna`/`high` (AD-017/AD-018/**AD-073**) | Execute | In Tasks (T22) |
 
+| ALUNO-13 | P1: O aluno escolhe o concurso; plano e projeção passam a seguir a escolha dele (AD-139) | Design | Pending |
+
 **ID format:** `ALUNO-NN`.
+
+### P1: O aluno escolhe o concurso ⭐ MVP — ALUNO-13 (rodada 2026-09-05, AD-139)
+
+**User Story**: Como aluno, quero escolher para qual concurso estou estudando, para que o plano e o
+Raio-X sejam do meu edital e não do concurso que a plataforma tiver ligado no momento.
+
+**Why P1**: Hoje `perfil_concurso.ativo` é chave global e `perfil_estudo.concurso_alvo` é texto solto
+que não liga em nada — multi-concurso não existe, é decoração.
+
+**Acceptance Criteria**:
+
+1. O sistema SHALL persistir no perfil do aluno uma **referência** ao concurso escolhido, SHALL NOT
+   guardá-lo como texto livre.
+2. WHEN o aluno tem concurso escolhido, THEN o plano do dia e a projeção do Raio-X SHALL usar o
+   concurso **dele**, SHALL NOT usar um concurso marcado como ativo globalmente.
+3. WHEN o aluno troca de concurso, THEN as `tentativas` já gravadas SHALL permanecer intactas
+   (snapshot congelado, AD-042) e o domínio por assunto canônico SHALL ser reaproveitado no concurso
+   novo onde o assunto for comum.
+4. O aluno SHALL poder escolher apenas entre concursos **publicados** (RAIOX-20).
+5. WHERE a flag de multi-concurso está desligada, o produto SHALL se comportar como hoje — um único
+   concurso para todos — e a escolha SHALL NOT aparecer.
+6. IF o aluno não escolheu concurso, THEN o sistema SHALL usar o concurso padrão configurado e SHALL
+   NOT deixar o plano sem projeção.
+
+**Independent Test**: Publicar dois concursos, colocar dois alunos em concursos diferentes e confirmar
+que cada um recebe o plano e a tela do edital dele, com o histórico preservado ao trocar.
+
+---
 
 **Status values:** Pending → In Design → In Tasks → Implementing → Verified
 
-**Coverage:** 12 requisitos, **12 mapeados a tasks** (`.specs/modulos/m4-coluna-vertebral/tasks.md`),
+**Coverage:** 13 requisitos, **12 mapeados a tasks** (`.specs/modulos/m4-coluna-vertebral/tasks.md`),
 0 sem cobertura de story. **2 AC ficaram sem componente no design** e estão listados como lacunas no
 tasks.md: ALUNO-05 AC2 (diagnóstico adaptativo) e ALUNO-05 AC3 (chamada de IA do plano inicial).
 

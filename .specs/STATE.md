@@ -1287,12 +1287,14 @@
   **66 arquivos / 483 testes / 0 falhas** · `tsc --noEmit` limpo · `eslint src scripts` sem erro novo.
   As 2 migrations foram aplicadas no Supabase de desenvolvimento por `npm run db:push`.
 - **In-progress / pendente**: a matriz de modelos ganhou `etiqueta_de_item` e `separacao_de_itens`
-  (Luna, esforço `max`, síncronas) **no banco de desenvolvimento** e no SQL do `docs/IA.md`; em
-  **produção** o INSERT ainda não foi feito, e sem ele o gateway recusa com `TarefaSemPerfil`. Falta
-  também **medir o custo real** de uma prova — é uma chamada paga ao provedor, ~R$ 0,02, e ninguém
-  autorizou o gasto ainda; o comando é
-  `npm run jobs:medir-prova -- --acao etiquetar --prova <uuid> --pdf <caminho>`. O leitor de grade
-  cobre o formato CESGRANRIO medido; 17 das 24
+  (Luna, esforço `max`, síncronas) na tabela `configuracoes` e no SQL do `docs/IA.md`. **Isso já vale
+  para produção**: enquanto a SPEC 25 não separar ambientes, o `DATABASE_URL` do `.env` e o segredo do
+  GitHub Actions apontam para o **mesmo** projeto Supabase — o workflow de migração do merge da SPEC 38
+  respondeu "Remote database is up to date" sobre o que o `db:push` já tinha aplicado. Falta **medir o
+  custo real** de uma prova — é uma chamada paga ao provedor, ~R$ 0,02, e ninguém autorizou o gasto
+  ainda; o comando é `npm run jobs:medir-prova -- --acao etiquetar --prova
+  b914f7d8-de48-459c-965e-7500149fa002 --pdf "fontes/entrada/CAIXA 2021 PcD - PROVA - TECNICO
+  BANCARIO NOVO.pdf"`. O leitor de grade cobre o formato CESGRANRIO medido; 17 das 24
   provas de `fontes/entrada/` caem em `grade_ausente_fila`, que é o comportamento pedido pelo AC4 — a
   tela que completa a grade é da SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37 (publicar o
   concurso nº 1, medir o custo do plano com `raiox_peso_do_aluno`); nada disso foi tocado aqui.

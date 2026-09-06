@@ -68,6 +68,45 @@ export {
 } from "./extracao";
 
 export {
+  type BlocoDeclarado,
+  type GradeDeclarada,
+  blocosParaOBanco,
+  lerGradeDeclarada,
+  pesoDoBloco,
+} from "./grade";
+
+export {
+  type Conferencia,
+  type ItemSeparado,
+  type Separacao,
+  conferirComGrade,
+  nomearBlocos,
+  separarItens,
+} from "./itens";
+
+export {
+  CARACTERES_POR_ITEM,
+  type CasamentoDeEtiquetas,
+  type EtiquetaCasada,
+  type EtiquetaSugerida,
+  INSTRUCAO_DA_ETIQUETA,
+  INSTRUCAO_DA_SEPARACAO,
+  NOME_DO_FORMATO_DA_ETIQUETA,
+  NOME_DO_FORMATO_DA_SEPARACAO,
+  SCHEMA_DA_ETIQUETA,
+  SCHEMA_DA_SEPARACAO,
+  casarEtiquetas,
+  catalogoParaOPedido,
+  cortarPorTrechos,
+  entradaDoPedido,
+  etiquetasParaOBanco,
+  etiquetasSugeridasSchema,
+  instrucaoComCatalogo,
+  itensSeparadosPorModeloSchema,
+  lotesDeItens,
+} from "./etiqueta";
+
+export {
   type Classificacao,
   type TopicoCanonico,
   casarTopico,

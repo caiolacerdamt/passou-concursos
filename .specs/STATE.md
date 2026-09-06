@@ -1233,6 +1233,28 @@
 - **Date**: 2026-09-05
 - **Status**: active
 
+### AD-141
+- **Decision**: A lista fechada de tarefas de IA (IA-02 AC2) ganha **duas**: `etiqueta_de_item` e
+  `separacao_de_itens`. A primeira é a única chamada de modelo do caminho feliz da medição de prova —
+  recebe `(número, trecho do item)` e devolve `(número, assunto, matéria, confiança)`, e **não**
+  extrai questão: sem enunciado, sem alternativa, sem gabarito. A segunda é **reserva**: só roda
+  quando o separador determinístico não fecha com a grade declarada, e devolve, por item, o **trecho
+  inicial copiado literalmente** — quem corta o texto continua sendo o nosso código.
+- **Reason**: `tarefas.ts` proíbe `push` no array sem AD nova, e com razão: tarefa nova é linha nova
+  na matriz de configuração e custo novo. As duas são exigidas pela SPEC 38 (BANCO-14 AC1, BANCO-16
+  AC3). Separar da `extracao_pdf` não é preciosismo — é o invariante nº12 (extração e explicação são
+  chamadas separadas) aplicado à medição: a extração custa o preço do acervo, a etiqueta custou
+  R$ 0,024 numa prova de 60 itens. Juntá-las traria de volta exatamente o custo que o AD-138 corta.
+- **Trade-off**: Duas linhas a mais na matriz de modelos que precisam existir antes de o comando
+  `medir-prova --acao etiquetar` rodar; sem elas o gateway recusa com `TarefaSemPerfil`, que é a
+  recusa visível de sempre. `separacao_de_itens` devolver trecho em vez do item inteiro custa itens
+  perdidos quando o modelo parafraseia — preferível a aceitar texto que o modelo escreveu como se
+  fosse da prova.
+- **Scope**: `src/modules/ia/tarefas.ts` · `src/modules/acervo/etiqueta.ts` ·
+  `.specs/features/38-leitor-de-prova-grade-e-etiqueta/`.
+- **Date**: 2026-09-06
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: **SPEC 37 — concurso: assunto canônico, nome do edital e escolha do aluno**

@@ -23,6 +23,12 @@ export const TAREFAS = [
   "tutor",
   "rascunho_inedita",
   "reprocessamento_verificacao",
+  // SPEC 38 / AD-141: a medicao de prova. `separacao_de_itens` e **reserva** —
+  // so roda quando o separador deterministico nao fecha com a grade declarada
+  // (BANCO-16 AC3). `etiqueta_de_item` e a unica chamada de modelo do caminho
+  // feliz da medicao, e nao extrai questao: devolve `(numero, assunto)`.
+  "separacao_de_itens",
+  "etiqueta_de_item",
 ] as const;
 
 export type Tarefa = (typeof TAREFAS)[number];
@@ -56,6 +62,8 @@ export const VERSAO_DO_PROMPT: Record<Tarefa, string> = {
   tutor: "1",
   rascunho_inedita: "1",
   reprocessamento_verificacao: "1",
+  separacao_de_itens: "1",
+  etiqueta_de_item: "1",
 };
 
 /**

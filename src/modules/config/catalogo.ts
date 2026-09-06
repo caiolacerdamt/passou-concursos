@@ -371,6 +371,20 @@ export const CATALOGO = {
     descricao:
       "Tamanho, em anos, da janela anterior comparada com a janela recente da tendência.",
   }),
+  "flag.m5.multi_concurso": chave({
+    tipo: z.boolean(),
+    padrao: false,
+    moduloDono: "m5",
+    descricao:
+      "O aluno escolhe o concurso e vê o nome do edital dele (AD-139). Desligada, o produto se comporta como hoje: um único concurso para todos, e a escolha não aparece.",
+  }),
+  "param.m5.prontidao_piso": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.8,
+    moduloDono: "m5",
+    descricao:
+      "Fração dos assuntos de maior peso que precisa ter questão suficiente para um concurso ficar elegível à publicação. Publicar continua exigindo ação humana registrada.",
+  }),
 
   // ── M6 · gamificação solo ─────────────────────────────────────────────────
   // A flag é global e nasce desligada. Os pontos e as metas ficam em

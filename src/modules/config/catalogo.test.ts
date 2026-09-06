@@ -43,6 +43,7 @@ describe("catalogo de chaves", () => {
       "flag.m4.trajetoria",
       "flag.m4.caderno_erros",
       "flag.m5.raiox",
+      "flag.m5.multi_concurso",
       "flag.m6.gamificacao",
       "flag.m8.trial_gratuito",
       "flag.m9.rota_de_erro_proposital",
@@ -84,6 +85,7 @@ describe("catalogo de chaves", () => {
       "param.m5.piso_amostra_baixa",
       "param.m5.periodo_tendencia_recente_anos",
       "param.m5.periodo_tendencia_anterior_anos",
+      "param.m5.prontidao_piso",
       "param.m6.pontos_estudo_prioritario",
       "param.m6.pontos_conclusao",
       "param.m6.pontos_revisao_no_prazo",
@@ -136,6 +138,15 @@ describe("catalogo de chaves", () => {
     expect(CATALOGO["param.m5.piso_amostra_baixa"].padrao).toBe(10);
     expect(CATALOGO["param.m5.periodo_tendencia_recente_anos"].padrao).toBe(3);
     expect(CATALOGO["param.m5.periodo_tendencia_anterior_anos"].padrao).toBe(3);
+  });
+
+  it("nasce com o multi-concurso desligado e o piso de prontidão calibrável", () => {
+    expect(CATALOGO["flag.m5.multi_concurso"].padrao).toBe(false);
+    expect(CATALOGO["param.m5.prontidao_piso"].padrao).toBe(0.8);
+    const piso = CATALOGO["param.m5.prontidao_piso"].tipo;
+    expect(piso.safeParse(-0.01).success).toBe(false);
+    expect(piso.safeParse(1.01).success).toBe(false);
+    expect(piso.safeParse(0.5).success).toBe(true);
   });
 
   it("declara a flag global e os valores calibráveis da gamificação", () => {

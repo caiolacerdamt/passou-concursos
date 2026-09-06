@@ -41,13 +41,22 @@ values (
     "plano_inicial":               {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":false,"cache":true, "fallback":null},
     "frase_do_plano":              {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":false,"cache":true, "fallback":null},
     "tutor":                       {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"medium","batch":false,"cache":true, "fallback":null},
-    "rascunho_inedita":            {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null}
+    "rascunho_inedita":            {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"high",  "batch":true, "cache":true, "fallback":null},
+    "etiqueta_de_item":            {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"max",   "batch":false,"cache":true, "fallback":null},
+    "separacao_de_itens":          {"modelo":"gpt-5.6-luna","versao":"gpt-5.6-luna","esforco":"max",   "batch":false,"cache":true, "fallback":null}
   }'::jsonb,
   'm2',
   'SEU_USER_ID',
-  'matriz inicial: Luna em todas as tarefas (decisao de 2026-08-20)'
+  'matriz inicial: Luna em todas as tarefas (decisao de 2026-08-20); medicao de prova acrescentada em 2026-09-06 (AD-141)'
 );
 ```
+
+> **As duas linhas da medicao de prova (AD-141).** `etiqueta_de_item` e `separacao_de_itens` entram
+> com `batch: false` — o comando `medir-prova` chama `executarTarefa`, que **recusa** tarefa marcada
+> `batch: true` (`TarefaEhDeLote`). Nao e desperdicio de desconto: uma prova inteira sao ~4 pedidos, e
+> a janela de 24 horas da Batch API custaria mais em espera do que economiza em preco. O `cache: true`
+> e o que importa aqui — o catalogo de assuntos e a instrucao vao identicos em todos os lotes da mesma
+> prova, e sao o trecho estavel que a 0,1x da entrada paga.
 
 > **Por que Luna em tudo, e o que isso custa.** A AD-073 previa `gpt-5.6-terra` no refaz 1× da
 > verificação quantitativa. A decisão de 2026-08-20 foi usar **só a Luna**, que é a mais barata. A

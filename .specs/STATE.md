@@ -1286,11 +1286,13 @@
 - **Gate**: `npm run test:unit` **166 arquivos / 1241 testes / 0 falhas** · `npm run test:db`
   **66 arquivos / 483 testes / 0 falhas** · `tsc --noEmit` limpo · `eslint src scripts` sem erro novo.
   As 2 migrations foram aplicadas no Supabase de desenvolvimento por `npm run db:push`.
-- **In-progress / pendente**: **a matriz de modelos não tem as linhas `etiqueta_de_item` e
-  `separacao_de_itens`** — sem elas o gateway recusa com `TarefaSemPerfil`, que é a recusa visível de
-  sempre, e as ações `separar` (na reserva) e `etiquetar` não rodam. É INSERT na tabela `configuracoes`
-  feito por uma pessoa, com motivo registrado (o SQL está em `docs/IA.md`). Depois disso: medir o custo
-  real de uma prova e anotar na spec. O leitor de grade cobre o formato CESGRANRIO medido; 17 das 24
+- **In-progress / pendente**: a matriz de modelos ganhou `etiqueta_de_item` e `separacao_de_itens`
+  (Luna, esforço `max`, síncronas) **no banco de desenvolvimento** e no SQL do `docs/IA.md`; em
+  **produção** o INSERT ainda não foi feito, e sem ele o gateway recusa com `TarefaSemPerfil`. Falta
+  também **medir o custo real** de uma prova — é uma chamada paga ao provedor, ~R$ 0,02, e ninguém
+  autorizou o gasto ainda; o comando é
+  `npm run jobs:medir-prova -- --acao etiquetar --prova <uuid> --pdf <caminho>`. O leitor de grade
+  cobre o formato CESGRANRIO medido; 17 das 24
   provas de `fontes/entrada/` caem em `grade_ausente_fila`, que é o comportamento pedido pelo AC4 — a
   tela que completa a grade é da SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37 (publicar o
   concurso nº 1, medir o custo do plano com `raiox_peso_do_aluno`); nada disso foi tocado aqui.

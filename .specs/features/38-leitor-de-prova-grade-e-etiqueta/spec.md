@@ -100,11 +100,11 @@ Rodando o código desta spec sobre as 24 provas de `fontes/entrada/`:
 
 Dois números da spec ficaram **não confirmados de propósito**, e é honesto dizer:
 
-- **Custo real por prova**: não medido nesta rodada. A chamada ao provedor não foi feita — as duas
-  tarefas novas (`etiqueta_de_item`, `separacao_de_itens`) precisam de linha na matriz de modelos, que
-  é configuração e não código, e a matriz de desenvolvimento não as tem. O número de 2026-09-05
-  (R$ 0,024 por 60 itens) continua sendo a única medição, e ela sustenta o AD-138. Medir de novo é o
-  primeiro comando a rodar quando a matriz ganhar as duas linhas.
+- **Custo real por prova**: não medido nesta rodada, porque a chamada ao provedor **custa dinheiro** e
+  não foi autorizada. A matriz de desenvolvimento já tem as duas linhas (`etiqueta_de_item` e
+  `separacao_de_itens` na Luna, esforço `max`, síncronas — decisão de 2026-09-06), então medir é um
+  comando: `npm run jobs:medir-prova -- --acao etiquetar --prova <uuid> --pdf <caminho>`. O número de
+  2026-09-05 (R$ 0,024 por 60 itens) continua sendo a única medição, e ela sustenta o AD-138.
 - **Grade "ausente" em 17 provas**: o leitor cobre o formato CESGRANRIO medido. Prova de outra banca
   cai na fila humana, que é o comportamento que o BANCO-15 AC4 pede — não é um furo, é o lado seguro
   do erro. Quem completa a grade dessas provas é a tela da SPEC 40.

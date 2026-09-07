@@ -27,8 +27,17 @@ import { USO } from "./jobs/abrir-concurso.mts";
 const CANONICA = ".agents/skills/abrir-concurso/SKILL.md";
 const ADAPTADOR = ".claude/skills/abrir-concurso/SKILL.md";
 
+/**
+ * Le a skill com o fim de linha **normalizado**.
+ *
+ * O git materializa estes arquivos em CRLF no Windows e em LF no runner da CI.
+ * Sem esta linha, todo padrao que atravessa uma quebra de linha se comporta
+ * diferente nos dois lugares — verde na CI, vermelho na maquina de quem
+ * desenvolve, ou o contrario. Normalizar aqui conserta a classe inteira do
+ * problema, em vez de remendar regex por regex.
+ */
 function ler(caminho: string): string {
-  return readFileSync(path.join(process.cwd(), caminho), "utf8");
+  return readFileSync(path.join(process.cwd(), caminho), "utf8").replace(/\r\n/g, "\n");
 }
 
 /** As ações que o comando aceita, lidas do próprio `USO` — nunca digitadas aqui. */
@@ -102,10 +111,14 @@ describe("o roteiro canônico casa com o comando que existe", () => {
     const roteiro = ler(CANONICA);
 
     expect(roteiro).toMatch(/na \*\*sua sessão\*\*|sua própria sessão/i);
-    // O caminho de escape honesto: sem busca, pede as URLs ao operador. O `\s`
-    // no lugar do espaco existe porque o markdown quebra linha no meio da
-    // frase, e um teste que so casasse a linha inteira seria fragil a isso.
-    expect(roteiro).toMatch(/pare\se\speça\sas\sURLs\soficiais\sao\soperador/i);
+    // O caminho de escape honesto: sem busca, pede as URLs ao operador.
+    //
+    // `\s+`, e nao `\s`: o markdown quebra linha no meio da frase, e no
+    // Windows essa quebra e **dois** caracteres (`\r\n`). Com `\s` simples
+    // este teste passava no working tree em LF e falhava no checkout em CRLF
+    // — verde na CI Linux, vermelho na maquina de quem desenvolve. Foi
+    // exatamente o que aconteceu no merge da SPEC 40.
+    expect(roteiro).toMatch(/pare\s+e\s+peça\s+as\s+URLs\s+oficiais\s+ao\s+operador/i);
     expect(roteiro).toMatch(/nunca troque silenciosamente para uma API paga/i);
   });
 

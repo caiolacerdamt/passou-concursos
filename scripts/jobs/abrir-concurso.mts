@@ -15,25 +15,38 @@
  *   `iniciar`             abre (ou reencontra) a execucao do concurso
  *   `registrar-achados`   recebe o manifesto do agente, tria e grava candidatos
  *   `decidir-documentos`  1a CONFIRMACAO: aprova/rejeita e baixa so o aprovado
+ *   `programa`            recorta o trecho do programa do edital, e so ele
+ *   `propor-assuntos`     recebe a proposta da sessao e calcula quase-duplicatas
+ *   `decidir-assuntos`    2a CONFIRMACAO: aplica o quadro do edital numa transacao
  *
- * **Nada de PDF sai por aqui.** O agente le contagem, ID e veredito; o arquivo
- * fica no disco do runner (AD-140).
+ * **Nada de prova sai por aqui.** A unica saida de texto de documento e o
+ * trecho do programa, cortado localmente e com teto; o caderno de prova segue
+ * direto para `medir-prova` e nunca passa pela conversa (AD-140).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { Client } from "pg";
+import { z } from "zod";
 
 import {
   type BuscadorHttp,
+  type ProgramaExtraido,
   type TipoDeDocumento,
   baixarAprovados,
+  casarTopico,
+  extrairPrograma,
+  lerCatalogo,
   lerDominiosOficiais,
   lerManifesto,
+  lerPdf,
+  nomeInternoDoDocumento,
+  normalizarNome,
+  quaseDuplicatas,
   triarCandidatos,
 } from "@/modules/acervo";
-import { definirLeitorDeConfig } from "@/modules/config";
+import { definirLeitorDeConfig, getParam } from "@/modules/config";
 import { type ClienteSql, leitorDeConfigPorPg } from "@/modules/ia";
 
 import { lerEnv } from "../alvo-do-banco.mjs";
@@ -44,22 +57,32 @@ export type Acao =
   | "dominios"
   | "iniciar"
   | "registrar-achados"
-  | "decidir-documentos";
+  | "decidir-documentos"
+  | "programa"
+  | "propor-assuntos"
+  | "decidir-assuntos";
 
 const ACOES: readonly Acao[] = [
   "dominios",
   "iniciar",
   "registrar-achados",
   "decidir-documentos",
+  "programa",
+  "propor-assuntos",
+  "decidir-assuntos",
 ];
 
 export const USO =
-  "uso: abrir-concurso --acao dominios|iniciar|registrar-achados|decidir-documentos\n" +
-  "  dominios                          (nada mais)\n" +
+  "uso: abrir-concurso --acao <acao>\n" +
+  "  dominios           (nada mais)\n" +
   "  iniciar            --concurso <uuid> --operador <uuid>\n" +
   "  registrar-achados  --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
   "  decidir-documentos --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
-  "                     [--motivo <texto>] [--destino <pasta>]";
+  "                     [--motivo <texto>] [--destino <pasta>]\n" +
+  "  programa           --abertura <uuid> --operador <uuid> [--destino <pasta>]\n" +
+  "  propor-assuntos    --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
+  "  decidir-assuntos   --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
+  "                     [--motivo <texto>]";
 
 export type Argumentos = {
   acao: Acao;
@@ -72,6 +95,14 @@ export type Argumentos = {
 };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** As acoes que recebem um JSON escrito pelo agente. */
+const COM_ENTRADA: readonly Acao[] = [
+  "registrar-achados",
+  "decidir-documentos",
+  "propor-assuntos",
+  "decidir-assuntos",
+];
 
 export function lerArgumentos(argv: readonly string[]): Argumentos {
   const valores = new Map<string, string>();
@@ -102,10 +133,14 @@ export function lerArgumentos(argv: readonly string[]): Argumentos {
     exigirUuid("concurso");
     exigirUuid("operador");
   }
-  if (acao === "registrar-achados" || acao === "decidir-documentos") {
+  if (acao !== "dominios" && acao !== "iniciar") {
     exigirUuid("abertura");
     exigirUuid("operador");
-    if (argumentos.entrada === "") throw new Error(`--entrada e obrigatorio\n${USO}`);
+  }
+  // `programa` e a excecao: ele nao recebe JSON do agente — LE o edital ja
+  // baixado do disco e devolve so o trecho do programa.
+  if (COM_ENTRADA.includes(acao) && argumentos.entrada === "") {
+    throw new Error(`--entrada e obrigatorio\n${USO}`);
   }
 
   return argumentos;
@@ -347,6 +382,391 @@ export async function acaoDecidirDocumentos(
   return { aprovados, baixados, falhas: resultado.falhas };
 }
 
+// ── Acao `programa` ─────────────────────────────────────────────────────────
+
+/**
+ * Entrega ao agente **somente** o trecho do programa do edital.
+ *
+ * O corte e local e por regra de texto. O que sai daqui e o unico texto de
+ * documento que a sessao ve em toda a abertura — a prova nao passa por aqui de
+ * jeito nenhum: ela segue direto para `medir-prova` (AD-140).
+ *
+ * Corte que nao fecha vira **pendencia**, e nao "manda o edital inteiro e deixa
+ * o agente achar": o edital inteiro seria reenviado a cada turno da sessao.
+ */
+export async function acaoPrograma(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+  opcoes: { lerArquivo?: (caminho: string) => Buffer; destino?: string } = {},
+): Promise<ProgramaExtraido & { arquivo: string }> {
+  await cliente.query("select public.exigir_operador_ativo($1)", [operador]);
+
+  const { rows } = await cliente.query(
+    `select id::text, tipo::text
+       from public.concurso_documentos
+      where abertura_id = $1 and tipo = 'edital'
+        and decisao = 'aprovado' and baixado_em is not null
+      order by registrado_em
+      limit 1`,
+    [abertura],
+  );
+  if (rows.length === 0) {
+    throw new Error(
+      "nenhum edital aprovado e baixado nesta abertura: rode `decidir-documentos` antes",
+    );
+  }
+
+  const documentoId = String((rows[0] as { id: string }).id);
+  const arquivo = path.join(
+    opcoes.destino ?? "provas",
+    nomeInternoDoDocumento(documentoId, "edital"),
+  );
+  const ler = opcoes.lerArquivo ?? ((alvo: string) => readFileSync(alvo));
+  const pdf = lerPdf(ler(arquivo));
+
+  return { ...extrairPrograma(pdf.paginas), arquivo };
+}
+
+export function formatarPrograma(resultado: ProgramaExtraido & { arquivo: string }): string {
+  if (!resultado.confiavel) {
+    return [
+      `PENDENCIA: ${resultado.motivo}.`,
+      "Nenhum texto do edital foi emitido — o documento inteiro NAO vai para a conversa.",
+      `Abra ${resultado.arquivo} a mao, confira as paginas do programa e siga com o operador.`,
+    ].join("\n");
+  }
+
+  return [
+    `programa do edital · paginas ${resultado.paginaInicial}-${resultado.paginaFinal} · ` +
+      `${resultado.caracteres} caracteres` +
+      (resultado.truncado ? " (TRUNCADO no teto)" : ""),
+    "",
+    resultado.trecho,
+    "",
+    "Leia o trecho acima na SUA sessao, monte a proposta de materias e assuntos e " +
+      "entregue-a a `propor-assuntos`. Nao ha chamada de modelo do produto aqui.",
+  ].join("\n");
+}
+
+// ── Acao `propor-assuntos` ──────────────────────────────────────────────────
+
+/**
+ * A proposta que o agente escreve depois de ler o trecho.
+ *
+ * `.strict()` pela mesma razao do manifesto: campo a mais e sinal de que a
+ * sessao entendeu outra coisa. O peso e opcional — edital sem tabela de pontos
+ * existe, e inventar peso seria pior do que ficar sem ele.
+ */
+export const propostaSchema = z
+  .object({
+    materias: z
+      .array(
+        z
+          .object({
+            nome: z.string().min(1).max(200),
+            ordem: z.number().int().min(0).max(999).default(0),
+            peso: z
+              .object({
+                valor: z.number().positive(),
+                base: z.enum(["pontos", "itens", "percentual"]),
+              })
+              .strict()
+              .optional(),
+            assuntos: z.array(z.string().min(1).max(200)).min(1).max(200),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(50),
+  })
+  .strict();
+
+export type Proposta = z.infer<typeof propostaSchema>;
+
+export function lerProposta(bruto: unknown): Proposta {
+  const lido = propostaSchema.safeParse(bruto);
+  if (!lido.success) {
+    throw new Error(
+      `proposta recusada: ${lido.error.issues.map((i) => i.path.join(".")).join(", ")}`,
+    );
+  }
+  return lido.data;
+}
+
+export type LinhaProposta = {
+  id: string;
+  materiaEdital: string;
+  nomeProposto: string;
+  topicoId: string | null;
+  candidatos: { topicoId: string; nome: string; materiaNome: string; similaridade: number }[];
+};
+
+/** A base e a mesma do `concurso_peso_materia` da SPEC 39, e nao texto livre. */
+export type BaseDoPeso = "pontos" | "itens" | "percentual";
+
+export type PesoSugerido = {
+  materia_id: string;
+  materia_nome: string;
+  peso_declarado: number;
+  base: BaseDoPeso;
+};
+
+export type ResumoDaProposta = {
+  linhas: LinhaProposta[];
+  pesos: PesoSugerido[];
+  pesosSemMateria: string[];
+};
+
+/**
+ * Casa a proposta com a taxonomia e calcula as quase-duplicatas **por codigo**.
+ *
+ * O agente nao decide nada aqui: ele nomeou assuntos, e o codigo diz quais ja
+ * existem com esse nome exato (`casarTopico`) e quais se parecem o bastante
+ * para virarem pergunta de fusao. O limiar vive em configuracao (AD-078).
+ */
+export async function acaoProporAssuntos(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+  bruto: unknown,
+): Promise<ResumoDaProposta> {
+  const proposta = lerProposta(bruto);
+  const catalogo = await lerCatalogo(cliente);
+  const limiar = await getParam("param.m1.limiar_quase_duplicata");
+
+  const paraOBanco = proposta.materias.flatMap((materia) =>
+    materia.assuntos.map((assunto, indice) => {
+      const casado = casarTopico(assunto, materia.nome, catalogo);
+      return {
+        materia_edital: materia.nome,
+        nome_proposto: assunto,
+        ordem: materia.ordem * 100 + indice,
+        topico_id: casado?.id ?? null,
+        // Assunto que ja casou exato nao ganha pergunta de fusao: fundir um
+        // assunto nele mesmo nao e decisao, e ruido.
+        candidatos:
+          casado === null ? quaseDuplicatas(assunto, catalogo, limiar) : [],
+      };
+    }),
+  );
+
+  await cliente.query("select public.registrar_assuntos_propostos($1, $2, $3::jsonb)", [
+    abertura,
+    operador,
+    JSON.stringify(paraOBanco),
+  ]);
+
+  // O peso do edital e por materia CANONICA (SPEC 39): a materia do edital so
+  // vira peso quando ha uma canonica com o mesmo nome. Sem isso, o peso ficaria
+  // repartido por estimativa — que e o que o nivel 1 existe para nao fazer.
+  const canonicas = new Map<string, { id: string; nome: string }>();
+  for (const topico of catalogo) {
+    canonicas.set(normalizarNome(topico.materiaNome), {
+      id: topico.materiaId,
+      nome: topico.materiaNome,
+    });
+  }
+
+  const pesos: PesoSugerido[] = [];
+  const pesosSemMateria: string[] = [];
+  for (const materia of proposta.materias) {
+    if (materia.peso === undefined) continue;
+    const canonica = canonicas.get(normalizarNome(materia.nome));
+    if (canonica === undefined) {
+      pesosSemMateria.push(materia.nome);
+      continue;
+    }
+    pesos.push({
+      materia_id: canonica.id,
+      materia_nome: canonica.nome,
+      peso_declarado: materia.peso.valor,
+      base: materia.peso.base,
+    });
+  }
+
+  const { rows } = await cliente.query(
+    `select id::text, materia_edital, nome_proposto, topico_id::text, candidatos
+       from public.abertura_assuntos
+      where abertura_id = $1 and decisao = 'pendente'
+      order by ordem, nome_proposto`,
+    [abertura],
+  );
+
+  return {
+    linhas: rows.map((linha) => ({
+      id: String(linha.id),
+      materiaEdital: String(linha.materia_edital),
+      nomeProposto: String(linha.nome_proposto),
+      topicoId: linha.topico_id === null ? null : String(linha.topico_id),
+      candidatos: (linha.candidatos ?? []) as LinhaProposta["candidatos"],
+    })),
+    pesos,
+    pesosSemMateria,
+  };
+}
+
+/**
+ * A segunda confirmacao, como o operador a le.
+ *
+ * Cada linha diz o que o codigo achou e **qual decisao ela espera**. Nada tem
+ * default: linha sem decisao segura o quadro inteiro, porque escolher por
+ * omissao seria decidir no lugar de quem assina.
+ */
+export function formatarProposta(resumo: ResumoDaProposta): string {
+  const partes = [`${resumo.linhas.length} assunto(s) propostos pelo programa do edital:`];
+
+  let materiaAtual = "";
+  for (const linha of resumo.linhas) {
+    if (linha.materiaEdital !== materiaAtual) {
+      materiaAtual = linha.materiaEdital;
+      partes.push(`\n  ${materiaAtual}`);
+    }
+    if (linha.topicoId !== null) {
+      partes.push(`    ${linha.id}  "${linha.nomeProposto}"  ->  ja existe (mapear)`);
+      continue;
+    }
+    partes.push(`    ${linha.id}  "${linha.nomeProposto}"  ->  nao existe`);
+    for (const candidato of linha.candidatos) {
+      partes.push(
+        `        parecido: ${candidato.nome} (${candidato.materiaNome}) · ` +
+          `${(candidato.similaridade * 100).toFixed(0)}% · topico ${candidato.topicoId}`,
+      );
+    }
+    if (linha.candidatos.length === 0) partes.push("        nenhum parecido — criar ou rejeitar");
+  }
+
+  if (resumo.pesos.length > 0) {
+    partes.push("\n  peso declarado pelo edital (entra junto da decisao):");
+    for (const peso of resumo.pesos) {
+      partes.push(`    ${peso.materia_nome}: ${peso.peso_declarado} em ${peso.base}`);
+    }
+  }
+  for (const semMateria of resumo.pesosSemMateria) {
+    partes.push(
+      `    AVISO: "${semMateria}" declara peso mas nao tem materia canonica de mesmo nome; ` +
+        "o peso NAO entra (repartir por estimativa e o que o degrau 2 evita).",
+    );
+  }
+
+  partes.push("");
+  partes.push(
+    "CONFIRMACAO 2 — nada do edital mudou ainda. Decida CADA linha (mapear, criar, " +
+      "fundir ou rejeitar) e rode `decidir-assuntos`. Fusao e sempre humana.",
+  );
+  return partes.join("\n");
+}
+
+// ── Acao `decidir-assuntos` ─────────────────────────────────────────────────
+
+export const decisoesDeAssuntoSchema = z
+  .object({
+    decisoes: z
+      .array(
+        z
+          .object({
+            id: z.string().regex(UUID),
+            decisao: z.enum(["mapear", "criar", "fundir", "rejeitar"]),
+            topico_id: z.string().regex(UUID).optional(),
+            origem_id: z.string().regex(UUID).optional(),
+            materia_id: z.string().regex(UUID).optional(),
+          })
+          .strict(),
+      )
+      .min(1),
+    pesos: z
+      .array(
+        z
+          .object({
+            materia_id: z.string().regex(UUID),
+            // `materia_nome` viaja so para o humano conferir o que assinou; o
+            // banco ignora, e por isso ele e opcional aqui.
+            materia_nome: z.string().optional(),
+            peso_declarado: z.number().positive(),
+            base: z.enum(["pontos", "itens", "percentual"]),
+          })
+          .strict(),
+      )
+      .default([]),
+  })
+  .strict();
+
+export type DecisoesDeAssunto = z.infer<typeof decisoesDeAssuntoSchema>;
+
+export function lerDecisoesDeAssunto(bruto: unknown): DecisoesDeAssunto {
+  const lido = decisoesDeAssuntoSchema.safeParse(bruto);
+  if (!lido.success) {
+    throw new Error(
+      `decisoes recusadas: ${lido.error.issues.map((i) => i.path.join(".")).join(", ")}`,
+    );
+  }
+
+  // O que o schema nao alcanca: cada decisao exige o que ela usa. Conferir aqui
+  // e melhor do que deixar o `raise` do banco explicar no meio da transacao.
+  for (const decisao of lido.data.decisoes) {
+    if (decisao.decisao === "mapear" && decisao.topico_id === undefined) {
+      throw new Error("`mapear` exige `topico_id`");
+    }
+    if (decisao.decisao === "criar" && decisao.materia_id === undefined) {
+      throw new Error("`criar` exige `materia_id` da materia canonica");
+    }
+    if (
+      decisao.decisao === "fundir" &&
+      (decisao.topico_id === undefined || decisao.origem_id === undefined)
+    ) {
+      throw new Error("`fundir` exige `topico_id` (destino) e `origem_id`");
+    }
+  }
+  return lido.data;
+}
+
+export type ResumoDaSegundaConfirmacao = { aplicados: number; pesos: number };
+
+/**
+ * Aplica o quadro inteiro — numa transacao so, do lado do banco.
+ *
+ * O comando nao monta edital em pedacos: `decidir_assuntos` mapeia, cria pela
+ * fila de candidatos da SPEC 15, funde pela funcao da SPEC 37 e grava o peso do
+ * edital de uma vez. Linha invalida derruba tudo e nada fica pela metade.
+ */
+export async function acaoDecidirAssuntos(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+  entrada: DecisoesDeAssunto,
+  motivo: string,
+): Promise<ResumoDaSegundaConfirmacao> {
+  const { rows } = await cliente.query(
+    "select public.decidir_assuntos($1, $2, $3::jsonb, $4::jsonb, $5) as aplicados",
+    [
+      abertura,
+      operador,
+      JSON.stringify(entrada.decisoes),
+      JSON.stringify(
+        entrada.pesos.map((peso) => ({
+          materia_id: peso.materia_id,
+          peso_declarado: peso.peso_declarado,
+          base: peso.base,
+        })),
+      ),
+      motivo,
+    ],
+  );
+
+  return {
+    aplicados: Number((rows[0] as { aplicados: number }).aplicados),
+    pesos: entrada.pesos.length,
+  };
+}
+
+export function formatarSegundaConfirmacao(resumo: ResumoDaSegundaConfirmacao): string {
+  return [
+    `${resumo.aplicados} assunto(s) aplicados ao edital do concurso; ` +
+      `${resumo.pesos} peso(s) de materia gravados.`,
+    "O edital esta montado. Siga com a medicao das provas e o recalculo do Raio-X.",
+  ].join("\n");
+}
+
 export function formatarDecisao(resumo: ResumoDaDecisao): string {
   const partes = [
     `${resumo.aprovados} documento(s) aprovado(s); ${resumo.baixados.length} baixado(s).`,
@@ -392,6 +812,11 @@ export function motivoDeParada(
 /** Le o JSON que o agente escreveu. Injetavel para o teste nao tocar o disco. */
 export type LeitorDeTexto = (caminho: string) => string;
 
+/** O motivo que vai a `operador_acoes`. Nunca vazio: o banco recusaria. */
+export function motivoOuPadrao(motivo: string): string {
+  return motivo === "" ? "decisao do operador na sessao de abertura" : motivo;
+}
+
 export function lerEntradaJson(
   caminho: string,
   ler: LeitorDeTexto = (alvo) => readFileSync(alvo, "utf8"),
@@ -411,6 +836,7 @@ export async function executar(
     abrirConexao?: () => ClienteSql & { connect(): Promise<void>; end(): Promise<void> };
     lerArquivo?: LeitorDeTexto;
     escreverArquivo?: (caminho: string, dados: Buffer) => void;
+    lerPdfDoDisco?: (caminho: string) => Buffer;
   } = {},
 ): Promise<number> {
   let argumentos: Argumentos;
@@ -462,20 +888,51 @@ export async function executar(
         dominios,
       );
       console.log(formatarAchados(resumo));
-    } else {
+    } else if (argumentos.acao === "decidir-documentos") {
       const bruto = lerEntradaJson(argumentos.entrada, opcoes.lerArquivo);
       const resumo = await acaoDecidirDocumentos(
         cliente,
         argumentos.abertura,
         argumentos.operador,
         lerDecisoes(bruto),
-        argumentos.motivo === ""
-          ? "decisao do operador na sessao de abertura"
-          : argumentos.motivo,
+        motivoOuPadrao(argumentos.motivo),
         dominios,
         { destino: argumentos.destino, escrever: opcoes.escreverArquivo },
       );
       console.log(formatarDecisao(resumo));
+    } else if (argumentos.acao === "programa") {
+      const resultado = await acaoPrograma(
+        cliente,
+        argumentos.abertura,
+        argumentos.operador,
+        { destino: argumentos.destino, lerArquivo: opcoes.lerPdfDoDisco },
+      );
+      console.log(formatarPrograma(resultado));
+      // Corte que nao fecha e pendencia de verdade: sai com codigo vermelho
+      // para a sessao nao seguir para `propor-assuntos` como se tivesse lido.
+      if (!resultado.confiavel) {
+        await encerrar();
+        return 1;
+      }
+    } else if (argumentos.acao === "propor-assuntos") {
+      const bruto = lerEntradaJson(argumentos.entrada, opcoes.lerArquivo);
+      const resumo = await acaoProporAssuntos(
+        cliente,
+        argumentos.abertura,
+        argumentos.operador,
+        bruto,
+      );
+      console.log(formatarProposta(resumo));
+    } else {
+      const bruto = lerEntradaJson(argumentos.entrada, opcoes.lerArquivo);
+      const resumo = await acaoDecidirAssuntos(
+        cliente,
+        argumentos.abertura,
+        argumentos.operador,
+        lerDecisoesDeAssunto(bruto),
+        motivoOuPadrao(argumentos.motivo),
+      );
+      console.log(formatarSegundaConfirmacao(resumo));
     }
 
     await encerrar();

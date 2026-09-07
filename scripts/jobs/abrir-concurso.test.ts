@@ -8,8 +8,14 @@ import {
   formatarDecisao,
   formatarDominios,
   lerArgumentos,
+  formatarPrograma,
+  formatarProposta,
+  formatarSegundaConfirmacao,
   lerDecisoes,
+  lerDecisoesDeAssunto,
+  lerProposta,
   motivoDeParada,
+  motivoOuPadrao,
 } from "./abrir-concurso.mts";
 
 const UUID_A = "3f2504e0-4f89-11d3-9a0c-0305e82c3301";
@@ -161,6 +167,217 @@ describe("o que o agente le na tela", () => {
     expect(texto).toContain("FALHOU");
     expect(texto).toContain("resposta 503");
     expect(texto).toMatch(/nao duplica/);
+  });
+});
+
+// ── T5 · a segunda confirmacao ──────────────────────────────────────────────
+
+describe("os argumentos das acoes do programa e dos assuntos", () => {
+  it("`programa` exige abertura e operador, e NAO exige entrada", () => {
+    const lido = lerArgumentos([
+      "--acao",
+      "programa",
+      "--abertura",
+      UUID_A,
+      "--operador",
+      UUID_B,
+    ]);
+    expect(lido.acao).toBe("programa");
+    expect(lido.entrada).toBe("");
+  });
+
+  it("`propor-assuntos` e `decidir-assuntos` exigem o JSON do agente", () => {
+    for (const acao of ["propor-assuntos", "decidir-assuntos"]) {
+      expect(() =>
+        lerArgumentos(["--acao", acao, "--abertura", UUID_A, "--operador", UUID_B]),
+      ).toThrow(/--entrada e obrigatorio/);
+    }
+  });
+
+  it("o motivo nunca vai vazio ao banco", () => {
+    expect(motivoOuPadrao("")).toMatch(/operador/);
+    expect(motivoOuPadrao("conferido com o edital impresso")).toBe(
+      "conferido com o edital impresso",
+    );
+  });
+});
+
+describe("a proposta que o agente escreve depois de ler o trecho", () => {
+  const VALIDA = {
+    materias: [
+      {
+        nome: "Língua Portuguesa",
+        ordem: 1,
+        peso: { valor: 20, base: "itens" },
+        assuntos: ["Crase", "Regência Verbal"],
+      },
+      { nome: "Conhecimentos Bancários", ordem: 2, assuntos: ["Produtos"] },
+    ],
+  };
+
+  it("aceita o formato combinado, com peso opcional", () => {
+    const lida = lerProposta(VALIDA);
+    expect(lida.materias).toHaveLength(2);
+    expect(lida.materias[0].peso).toEqual({ valor: 20, base: "itens" });
+    expect(lida.materias[1].peso).toBeUndefined();
+    expect(lida.materias[1].ordem).toBe(2);
+  });
+
+  it("recusa campo desconhecido, materia sem assunto e base de peso inventada", () => {
+    expect(() =>
+      lerProposta({ materias: [{ ...VALIDA.materias[1], observacao: "extra" }] }),
+    ).toThrow(/proposta recusada/);
+
+    expect(() => lerProposta({ materias: [{ nome: "Vazia", assuntos: [] }] })).toThrow(
+      /proposta recusada/,
+    );
+
+    expect(() =>
+      lerProposta({
+        materias: [{ nome: "X", assuntos: ["Y"], peso: { valor: 1, base: "estrelas" } }],
+      }),
+    ).toThrow(/proposta recusada/);
+
+    expect(() => lerProposta({ materias: [] })).toThrow(/proposta recusada/);
+    expect(() => lerProposta({})).toThrow(/proposta recusada/);
+  });
+});
+
+describe("as decisoes de assunto exigem o que cada uma usa", () => {
+  it("aceita as quatro decisoes com os campos certos", () => {
+    const lidas = lerDecisoesDeAssunto({
+      decisoes: [
+        { id: UUID_A, decisao: "mapear", topico_id: UUID_B },
+        { id: UUID_B, decisao: "rejeitar" },
+      ],
+      pesos: [{ materia_id: UUID_A, peso_declarado: 10, base: "pontos" }],
+    });
+    expect(lidas.decisoes).toHaveLength(2);
+    expect(lidas.pesos).toHaveLength(1);
+  });
+
+  it("pesos e opcional e nasce vazio — edital sem tabela de pontos existe", () => {
+    expect(
+      lerDecisoesDeAssunto({ decisoes: [{ id: UUID_A, decisao: "rejeitar" }] }).pesos,
+    ).toEqual([]);
+  });
+
+  it("recusa decisao que nao carrega o que precisa para ser aplicada", () => {
+    expect(() =>
+      lerDecisoesDeAssunto({ decisoes: [{ id: UUID_A, decisao: "mapear" }] }),
+    ).toThrow(/mapear. exige/);
+
+    expect(() =>
+      lerDecisoesDeAssunto({ decisoes: [{ id: UUID_A, decisao: "criar" }] }),
+    ).toThrow(/criar. exige/);
+
+    // Fusao sem origem seria "funda com alguma coisa" — nunca automatica.
+    expect(() =>
+      lerDecisoesDeAssunto({ decisoes: [{ id: UUID_A, decisao: "fundir", topico_id: UUID_B }] }),
+    ).toThrow(/fundir. exige/);
+  });
+
+  it("recusa `pendente` como decisao: linha sem decisao segura o quadro", () => {
+    expect(() =>
+      lerDecisoesDeAssunto({ decisoes: [{ id: UUID_A, decisao: "pendente" }] }),
+    ).toThrow(/decisoes recusadas/);
+    expect(() => lerDecisoesDeAssunto({ decisoes: [] })).toThrow(/decisoes recusadas/);
+  });
+});
+
+describe("o que o operador le na segunda confirmacao", () => {
+  it("separa o que ja existe do que nao existe, e mostra o parecido com o percentual", () => {
+    const texto = formatarProposta({
+      linhas: [
+        {
+          id: UUID_A,
+          materiaEdital: "Língua Portuguesa",
+          nomeProposto: "Crase",
+          topicoId: UUID_B,
+          candidatos: [],
+        },
+        {
+          id: UUID_B,
+          materiaEdital: "Língua Portuguesa",
+          nomeProposto: "Regência verbal e nominal",
+          topicoId: null,
+          candidatos: [
+            {
+              topicoId: UUID_A,
+              nome: "Regência Verbal",
+              materiaNome: "Português",
+              similaridade: 0.82,
+            },
+          ],
+        },
+      ],
+      pesos: [
+        { materia_id: UUID_A, materia_nome: "Português", peso_declarado: 20, base: "itens" },
+      ],
+      pesosSemMateria: ["Atualidades"],
+    });
+
+    expect(texto).toContain("ja existe (mapear)");
+    expect(texto).toContain("nao existe");
+    expect(texto).toContain("Regência Verbal");
+    expect(texto).toContain("82%");
+    expect(texto).toContain("Português: 20 em itens");
+    expect(texto).toContain("AVISO");
+    expect(texto).toContain("Atualidades");
+    expect(texto).toMatch(/CONFIRMACAO 2/);
+    expect(texto).toMatch(/nada do edital mudou ainda/i);
+    expect(texto).toMatch(/Fusao e sempre humana/);
+  });
+
+  it("assunto sem nada parecido diz o que sobrou de opcao", () => {
+    const texto = formatarProposta({
+      linhas: [
+        {
+          id: UUID_A,
+          materiaEdital: "Atualidades",
+          nomeProposto: "Agenda ESG",
+          topicoId: null,
+          candidatos: [],
+        },
+      ],
+      pesos: [],
+      pesosSemMateria: [],
+    });
+    expect(texto).toContain("nenhum parecido — criar ou rejeitar");
+  });
+
+  it("o fecho da segunda confirmacao conta o que entrou", () => {
+    const texto = formatarSegundaConfirmacao({ aplicados: 12, pesos: 3 });
+    expect(texto).toContain("12 assunto(s) aplicados");
+    expect(texto).toContain("3 peso(s)");
+  });
+});
+
+describe("o trecho do programa e a unica saida de texto de documento", () => {
+  it("o corte que fecha sai com paginas, tamanho e o texto do programa", () => {
+    const texto = formatarPrograma({
+      confiavel: true,
+      trecho: "LÍNGUA PORTUGUESA: 1 Crase.",
+      paginaInicial: 3,
+      paginaFinal: 4,
+      caracteres: 27,
+      truncado: false,
+      arquivo: "provas/edital-x.pdf",
+    });
+    expect(texto).toContain("paginas 3-4");
+    expect(texto).toContain("LÍNGUA PORTUGUESA");
+    expect(texto).toMatch(/Nao ha chamada de modelo do produto aqui/);
+  });
+
+  it("o corte que NAO fecha vira pendencia sem emitir uma linha do edital", () => {
+    const texto = formatarPrograma({
+      confiavel: false,
+      motivo: "nao achei o inicio do conteudo programatico por regra de texto",
+      arquivo: "provas/edital-x.pdf",
+    });
+    expect(texto).toMatch(/^PENDENCIA:/);
+    expect(texto).toContain("provas/edital-x.pdf");
+    expect(texto).toMatch(/documento inteiro NAO vai para a conversa/);
   });
 });
 

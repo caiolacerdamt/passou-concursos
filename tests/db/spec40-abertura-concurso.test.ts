@@ -2,7 +2,10 @@ import type { Client } from "pg";
 import { expect, it } from "vitest";
 
 import {
+  acaoDecidirAssuntos,
   acaoDecidirDocumentos,
+  acaoPrograma,
+  acaoProporAssuntos,
   acaoRegistrarAchados,
   garantirProva,
 } from "../../scripts/jobs/abrir-concurso.mts";
@@ -824,6 +827,314 @@ descreveComBanco("SPEC 40 — o CLI da primeira confirmacao, contra o banco", ()
         cargo: "Tecnico",
       });
       expect(segunda).toBe(resumo.baixados[0].prova);
+    });
+  });
+});
+
+descreveComBanco("SPEC 40 — o CLI da segunda confirmacao, contra o banco", () => {
+  /**
+   * Um edital de teste, montado byte a byte.
+   *
+   * Nao ha PDF de edital real no repositorio, e nem poderia haver: binario de
+   * documento oficial nao entra no git. O que precisa ser exercitado aqui e o
+   * caminho `disco -> lerPdf -> corte do programa`, e para isso o arquivo
+   * precisa ser um PDF de verdade — nao um Buffer qualquer.
+   */
+  function editalDeTeste(paginas: string[][]): Buffer {
+    const pedacos: Buffer[] = [Buffer.from("%PDF-1.7\n", "latin1")];
+    const ids = paginas.map((_, i) => 3 + i * 2);
+
+    const objeto = (numero: number, corpo: string, stream?: Buffer) => {
+      pedacos.push(Buffer.from(`${numero} 0 obj\n${corpo}\n`, "latin1"));
+      if (stream !== undefined) {
+        pedacos.push(Buffer.from("stream\n", "latin1"), stream, Buffer.from("\nendstream\n", "latin1"));
+      }
+      pedacos.push(Buffer.from("endobj\n", "latin1"));
+    };
+
+    objeto(1, "<< /Type /Catalog /Pages 2 0 R >>");
+    objeto(
+      2,
+      `<< /Type /Pages /Count ${paginas.length} /Kids [${ids.map((id) => `${id} 0 R`).join(" ")}] >>`,
+    );
+    paginas.forEach((linhas, i) => {
+      const stream = Buffer.from(
+        linhas
+          .map((linha) => `BT /F1 12 Tf (${linha.replace(/([()\\])/g, "\\$1")}) Tj ET`)
+          .join("\n"),
+        "latin1",
+      );
+      objeto(ids[i], `<< /Type /Page /Parent 2 0 R /Contents ${ids[i] + 1} 0 R >>`);
+      objeto(ids[i] + 1, `<< /Length ${stream.length} >>`, stream);
+    });
+
+    pedacos.push(Buffer.from("trailer\n<< /Root 1 0 R >>\n%%EOF\n", "latin1"));
+    return Buffer.concat(pedacos);
+  }
+
+  const EDITAL = editalDeTeste([
+    ["EDITAL No 1 - ABERTURA", "DAS VAGAS: 100 vagas para o cargo."],
+    ["ANEXO I - CONTEUDO PROGRAMATICO", "LINGUA PORTUGUESA: 1 Crase. 2 Regencia verbal e nominal."],
+    ["CRONOGRAMA PREVISTO", "Inscricoes de 10/01 a 30/01."],
+  ]);
+
+  const PDF_BAIXADO = Buffer.concat([Buffer.from("%PDF-1.7\n"), Buffer.alloc(32, 0x20)]);
+
+  /** Leva a abertura ate ter um edital aprovado e baixado. */
+  async function ateEditalBaixado(cliente: Client) {
+    const operador = await criarOperador(cliente);
+    const concurso = await criarConcurso(cliente);
+    const { rows } = await cliente.query<{ id: string }>(
+      "select public.iniciar_abertura($1, $2) as id",
+      [concurso, operador],
+    );
+    const abertura = rows[0].id;
+
+    const achados = await acaoRegistrarAchados(
+      cliente,
+      abertura,
+      operador,
+      {
+        candidatos: [
+          {
+            tipo: "edital",
+            url: "https://gov.br/edital.pdf",
+            titulo: "Edital de abertura",
+            metadados: {},
+          },
+        ],
+        faltantes: [],
+      },
+      ["gov.br"],
+    );
+
+    await acaoDecidirDocumentos(
+      cliente,
+      abertura,
+      operador,
+      [{ id: achados.documentos[0].id, decisao: "aprovado" }],
+      MOTIVO,
+      ["gov.br"],
+      {
+        destino: "provas",
+        escrever: () => {},
+        buscar: async () =>
+          new Response(new Uint8Array(PDF_BAIXADO), {
+            status: 200,
+            headers: { "content-type": "application/pdf" },
+          }),
+        tetoMib: 25,
+      },
+    );
+
+    return { operador, concurso, abertura, documento: achados.documentos[0].id };
+  }
+
+  it("`programa` entrega SO o trecho do programa, lido do disco", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura, documento } = await ateEditalBaixado(cliente);
+
+      const lidos: string[] = [];
+      const resultado = await acaoPrograma(cliente, abertura, operador, {
+        destino: "provas",
+        lerArquivo: (caminho: string) => {
+          lidos.push(caminho);
+          return EDITAL;
+        },
+      });
+
+      // O arquivo aberto e o do ID do documento — nunca um nome vindo de fora.
+      expect(lidos).toHaveLength(1);
+      expect(lidos[0]).toContain(documento);
+
+      expect(resultado.confiavel).toBe(true);
+      if (!resultado.confiavel) return;
+      expect(resultado.trecho).toContain("Crase");
+      expect(resultado.trecho).not.toContain("DAS VAGAS");
+      expect(resultado.trecho).not.toContain("CRONOGRAMA");
+    });
+  });
+
+  it("sem edital aprovado, `programa` recusa em vez de procurar arquivo", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const operador = await criarOperador(cliente);
+      const concurso = await criarConcurso(cliente);
+      const { rows } = await cliente.query<{ id: string }>(
+        "select public.iniciar_abertura($1, $2) as id",
+        [concurso, operador],
+      );
+
+      await expect(
+        acaoPrograma(cliente, rows[0].id, operador, {
+          lerArquivo: () => {
+            throw new Error("nao deveria ter tentado ler nada");
+          },
+        }),
+      ).rejects.toThrow(/nenhum edital aprovado/);
+    });
+  });
+
+  it("a proposta casa o exato, calcula o parecido e NAO muda o edital", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, concurso, abertura } = await ateEditalBaixado(cliente);
+
+      // Uma materia canonica com dois assuntos de nome conhecido.
+      const { rows: materia } = await cliente.query<{ id: string; nome: string }>(
+        "insert into public.materias (nome) values ($1) returning id, nome",
+        [`Portugues ${sufixo()}`],
+      );
+      const nomeExato = `Crase ${sufixo()}`;
+      const { rows: topico } = await cliente.query<{ id: string }>(
+        "insert into public.topicos (materia_id, nome) values ($1, $2) returning id",
+        [materia[0].id, nomeExato],
+      );
+      const { rows: parecido } = await cliente.query<{ id: string }>(
+        "insert into public.topicos (materia_id, nome) values ($1, $2) returning id",
+        [materia[0].id, "Politica Monetaria"],
+      );
+
+      await cliente.query("select public.avancar_abertura($1, $2, 'processamento_em_andamento')", [
+        abertura,
+        operador,
+      ]);
+
+      const proposta = await acaoProporAssuntos(cliente, abertura, operador, {
+        materias: [
+          {
+            nome: materia[0].nome,
+            ordem: 1,
+            peso: { valor: 20, base: "itens" },
+            assuntos: [nomeExato, "Politicas Monetarias"],
+          },
+        ],
+      });
+
+      const exato = proposta.linhas.find((l) => l.nomeProposto === nomeExato)!;
+      const novo = proposta.linhas.find((l) => l.nomeProposto === "Politicas Monetarias")!;
+
+      // O nome exato casou; ele nao vira pergunta de fusao.
+      expect(exato.topicoId).toBe(topico[0].id);
+      expect(exato.candidatos).toEqual([]);
+
+      // O quase-duplicado nao casou, e o codigo achou o parecido.
+      expect(novo.topicoId).toBeNull();
+      expect(novo.candidatos.map((c) => c.topicoId)).toContain(parecido[0].id);
+
+      // O peso foi resolvido para a materia CANONICA de mesmo nome.
+      expect(proposta.pesos).toEqual([
+        {
+          materia_id: materia[0].id,
+          materia_nome: materia[0].nome,
+          peso_declarado: 20,
+          base: "itens",
+        },
+      ]);
+      expect(proposta.pesosSemMateria).toEqual([]);
+
+      // Proposta nao e decisao: o edital do concurso continua vazio.
+      const { rows: edital } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.concurso_materia_assuntos where concurso_id = $1",
+        [concurso],
+      );
+      expect(Number(edital[0].n)).toBe(0);
+
+      // ── e agora a segunda confirmacao ───────────────────────────────────
+      const resumo = await acaoDecidirAssuntos(
+        cliente,
+        abertura,
+        operador,
+        {
+          decisoes: [
+            { id: exato.id, decisao: "mapear", topico_id: topico[0].id },
+            { id: novo.id, decisao: "fundir", topico_id: parecido[0].id, origem_id: topico[0].id },
+          ],
+          pesos: proposta.pesos,
+        },
+        MOTIVO,
+      );
+
+      expect(resumo.aplicados).toBe(2);
+      expect(resumo.pesos).toBe(1);
+
+      const { rows: aplicado } = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.concurso_materia_assuntos where concurso_id = $1",
+        [concurso],
+      );
+      expect(Number(aplicado[0].n)).toBeGreaterThan(0);
+
+      const { rows: peso } = await cliente.query<{ base: string }>(
+        "select base from public.concurso_peso_materia where concurso_id = $1",
+        [concurso],
+      );
+      expect(peso[0].base).toBe("itens");
+    });
+  });
+
+  it("peso de materia sem canonica de mesmo nome vira AVISO, e nao estimativa", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura } = await ateEditalBaixado(cliente);
+      await cliente.query("select public.avancar_abertura($1, $2, 'processamento_em_andamento')", [
+        abertura,
+        operador,
+      ]);
+
+      const proposta = await acaoProporAssuntos(cliente, abertura, operador, {
+        materias: [
+          {
+            nome: `Materia que nao existe ${sufixo()}`,
+            ordem: 1,
+            peso: { valor: 15, base: "pontos" },
+            assuntos: ["Assunto qualquer"],
+          },
+        ],
+      });
+
+      expect(proposta.pesos).toEqual([]);
+      expect(proposta.pesosSemMateria).toHaveLength(1);
+    });
+  });
+
+  it("a segunda confirmacao inteira nao gera UMA chamada de modelo (AD-145)", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura } = await ateEditalBaixado(cliente);
+
+      const antes = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.ia_geracoes",
+      );
+
+      await acaoPrograma(cliente, abertura, operador, {
+        destino: "provas",
+        lerArquivo: () => EDITAL,
+      });
+      await cliente.query("select public.avancar_abertura($1, $2, 'processamento_em_andamento')", [
+        abertura,
+        operador,
+      ]);
+
+      const { rows: materia } = await cliente.query<{ id: string; nome: string }>(
+        "insert into public.materias (nome) values ($1) returning id, nome",
+        [`Materia ${sufixo()}`],
+      );
+      const proposta = await acaoProporAssuntos(cliente, abertura, operador, {
+        materias: [{ nome: materia[0].nome, ordem: 1, assuntos: [`Assunto ${sufixo()}`] }],
+      });
+      await acaoDecidirAssuntos(
+        cliente,
+        abertura,
+        operador,
+        {
+          decisoes: [
+            { id: proposta.linhas[0].id, decisao: "criar", materia_id: materia[0].id },
+          ],
+          pesos: [],
+        },
+        MOTIVO,
+      );
+
+      const depois = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.ia_geracoes",
+      );
+      expect(Number(depois.rows[0].n)).toBe(Number(antes.rows[0].n));
     });
   });
 });

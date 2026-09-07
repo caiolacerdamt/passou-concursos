@@ -134,6 +134,17 @@ export {
 } from "./etiqueta";
 
 export {
+  LIMITE_DE_PAGINAS,
+  LIMITE_DO_TRECHO,
+  type ProgramaExtraido,
+  type QuaseDuplicata,
+  TETO_DE_CANDIDATOS,
+  extrairPrograma,
+  quaseDuplicatas,
+  similaridade,
+} from "./programa-edital";
+
+export {
   type Classificacao,
   type TopicoCanonico,
   casarTopico,

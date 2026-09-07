@@ -42,6 +42,11 @@ desktop.ini
 /.playwright-mcp/
 /.impeccable/
 /.claude/skills/
+# Exceção: a skill de abertura de concurso é do PROJETO, não da máquina de
+# ninguém (SPEC 40). Ela é um adaptador de três linhas que manda ler a fonte
+# canônica em .agents/skills/, e um teste confere que os dois apontam para o
+# mesmo lugar — o que não funciona se o arquivo não estiver versionado.
+!/.claude/skills/abrir-concurso/
 /.github/agents/
 /.github/hooks/
 /.github/skills/

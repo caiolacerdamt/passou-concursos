@@ -5,8 +5,13 @@ import {
   acaoDecidirAssuntos,
   acaoDecidirDocumentos,
   acaoPrograma,
+  acaoProcessarProvas,
   acaoProporAssuntos,
+  acaoPublicar,
+  acaoRecalcular,
   acaoRegistrarAchados,
+  acaoRelatorio,
+  formatarRelatorioDaAbertura,
   garantirProva,
 } from "../../scripts/jobs/abrir-concurso.mts";
 
@@ -1135,6 +1140,208 @@ descreveComBanco("SPEC 40 — o CLI da segunda confirmacao, contra o banco", () 
         "select count(*) as n from public.ia_geracoes",
       );
       expect(Number(depois.rows[0].n)).toBe(Number(antes.rows[0].n));
+    });
+  });
+});
+
+descreveComBanco("SPEC 40 — o fecho: medicao delegada, prontidao e publicacao", () => {
+  const PDF = Buffer.concat([Buffer.from("%PDF-1.7\n"), Buffer.alloc(32, 0x20)]);
+
+  function respostaPdf(): Response {
+    return new Response(new Uint8Array(PDF), {
+      status: 200,
+      headers: { "content-type": "application/pdf" },
+    });
+  }
+
+  /** Leva a abertura ate ter uma prova aprovada e baixada. */
+  async function ateProvaBaixada(cliente: Client) {
+    const operador = await criarOperador(cliente);
+    const concurso = await criarConcurso(cliente);
+    const { rows } = await cliente.query<{ id: string }>(
+      "select public.iniciar_abertura($1, $2) as id",
+      [concurso, operador],
+    );
+    const abertura = rows[0].id;
+
+    const achados = await acaoRegistrarAchados(
+      cliente,
+      abertura,
+      operador,
+      {
+        candidatos: [
+          {
+            tipo: "prova",
+            url: "https://cesgranrio.org.br/caderno.pdf",
+            titulo: "Caderno 1",
+            metadados: {
+              banca: "Cesgranrio",
+              ano: 2021,
+              orgao: `CAIXA ${sufixo()}`,
+              cargo: "Tecnico",
+            },
+          },
+        ],
+        faltantes: [],
+      },
+      ["cesgranrio.org.br"],
+    );
+
+    const decisao = await acaoDecidirDocumentos(
+      cliente,
+      abertura,
+      operador,
+      [{ id: achados.documentos[0].id, decisao: "aprovado" }],
+      MOTIVO,
+      ["cesgranrio.org.br"],
+      { destino: "provas", escrever: () => {}, buscar: async () => respostaPdf(), tetoMib: 25 },
+    );
+
+    return { operador, concurso, abertura, prova: decisao.baixados[0].prova as string };
+  }
+
+  it("`processar-provas` delega ao medir-prova com a prova e o arquivo certos", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura, prova } = await ateProvaBaixada(cliente);
+
+      const chamadas: { prova: string; pdf: string }[] = [];
+      const resumo = await acaoProcessarProvas(cliente, abertura, operador, {
+        destino: "provas",
+        medir: async (provaId, pdf) => {
+          chamadas.push({ prova: provaId, pdf });
+          return { codigo: 0, saida: "[medicao] 60 etiquetas casadas" };
+        },
+      });
+
+      // Delega uma vez, com o ID da prova do catalogo-alvo e o arquivo do ID
+      // do documento — nunca com um nome vindo de fora.
+      expect(chamadas).toHaveLength(1);
+      expect(chamadas[0].prova).toBe(prova);
+      expect(chamadas[0].pdf).toContain(".pdf");
+      expect(resumo.provas[0].codigo).toBe(0);
+
+      // A medicao terminou: a execucao liberou a etapa do edital.
+      const { rows: estado } = await cliente.query<{ estado: string }>(
+        "select estado from public.aberturas_concurso where id = $1",
+        [abertura],
+      );
+      expect(estado[0].estado).toBe("processamento_em_andamento");
+    });
+  });
+
+  it("prova que falha na medicao nao derruba a abertura, e fica no resumo", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura } = await ateProvaBaixada(cliente);
+
+      const resumo = await acaoProcessarProvas(cliente, abertura, operador, {
+        medir: async () => ({ codigo: 1, saida: "[medicao] a prova nao tem camada de texto" }),
+      });
+
+      expect(resumo.provas[0].codigo).toBe(1);
+      expect(resumo.provas[0].saida).toMatch(/camada de texto/);
+
+      // Mesmo com a falha, o estado andou: a medicao e retomavel por prova, e
+      // travar a abertura inteira num PDF escaneado nao ajudaria ninguem.
+      const { rows: estado } = await cliente.query<{ estado: string }>(
+        "select estado from public.aberturas_concurso where id = $1",
+        [abertura],
+      );
+      expect(estado[0].estado).toBe("processamento_em_andamento");
+    });
+  });
+
+  it("`recalcular` roda so regra e SQL: nenhuma linha nova em ia_geracoes", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura } = await ateProvaBaixada(cliente);
+
+      const antes = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.ia_geracoes",
+      );
+      const resumo = await acaoRecalcular(cliente, abertura, operador);
+      const depois = await cliente.query<{ n: string }>(
+        "select count(*) as n from public.ia_geracoes",
+      );
+
+      expect(resumo.linhas).toBeGreaterThanOrEqual(0);
+      expect(Number(depois.rows[0].n)).toBe(Number(antes.rows[0].n));
+    });
+  });
+
+  it("o relatorio le o estado real e diz o proximo comando", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura, concurso } = await ateProvaBaixada(cliente);
+
+      const relatorio = await acaoRelatorio(cliente, abertura);
+      expect(relatorio.aberturaId).toBe(abertura);
+      expect(relatorio.estado).toBe("documentos_aprovados");
+      expect(relatorio.documentosAprovados).toBe(1);
+      expect(relatorio.documentosBaixados).toBe(1);
+      expect(relatorio.provas).toBe(1);
+      expect(relatorio.metaDeProvas).toBe(4);
+      expect(relatorio.visibilidade).toBe("oculto");
+
+      const texto = formatarRelatorioDaAbertura(relatorio);
+      expect(texto).toMatch(/programa/);
+      expect(texto).toMatch(/processar-provas/);
+
+      // O relatorio anda junto com o estado: depois de medir, ele muda de passo.
+      await acaoProcessarProvas(cliente, abertura, operador, {
+        medir: async () => ({ codigo: 0, saida: "" }),
+      });
+      const depois = await acaoRelatorio(cliente, abertura);
+      expect(depois.estado).toBe("processamento_em_andamento");
+      expect(formatarRelatorioDaAbertura(depois)).toMatch(/propor-assuntos/);
+
+      expect(depois.aberturaId).toBe(abertura);
+      const { rows } = await cliente.query<{ visibilidade: string }>(
+        "select visibilidade from public.concursos where id = $1",
+        [concurso],
+      );
+      expect(rows[0].visibilidade).toBe("oculto");
+    });
+  });
+
+  it("publicar recusa concurso que a prontidao nao aprovou, e nao fecha a abertura", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const { operador, abertura } = await ateProvaBaixada(cliente);
+      const { topicos } = await criarMateriaComTopicos(cliente, 1);
+
+      // Leva a execucao ate `pronto_para_recalculo` pelo caminho normal.
+      await acaoProcessarProvas(cliente, abertura, operador, {
+        medir: async () => ({ codigo: 0, saida: "" }),
+      });
+      await cliente.query("select public.registrar_assuntos_propostos($1, $2, $3::jsonb)", [
+        abertura,
+        operador,
+        JSON.stringify([
+          { materia_edital: "Matematica", nome_proposto: "Juros", ordem: 1, topico_id: topicos[0] },
+        ]),
+      ]);
+      const { rows: linhas } = await cliente.query<{ id: string }>(
+        "select id from public.abertura_assuntos where abertura_id = $1",
+        [abertura],
+      );
+      await cliente.query("select public.decidir_assuntos($1, $2, $3::jsonb, $4::jsonb, $5)", [
+        abertura,
+        operador,
+        JSON.stringify([{ id: linhas[0].id, decisao: "mapear", topico_id: topicos[0] }]),
+        JSON.stringify([]),
+        MOTIVO,
+      ]);
+
+      // O concurso nao tem acervo: a prontidao nao o torna elegivel, e publicar
+      // e recusado pelo banco. A abertura NAO pode ficar meio-fechada.
+      await cliente.query("savepoint tentativa");
+      await expect(
+        acaoPublicar(cliente, abertura, operador, "prontidao conferida"),
+      ).rejects.toThrow(/concurso_nao_elegivel/);
+      await cliente.query("rollback to savepoint tentativa");
+
+      const { rows: estado } = await cliente.query<{ estado: string }>(
+        "select estado from public.aberturas_concurso where id = $1",
+        [abertura],
+      );
+      expect(estado[0].estado).toBe("pronto_para_recalculo");
     });
   });
 });

@@ -2,8 +2,14 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it, vi } from "vitest";
 
+import type { Relatorio } from "./abrir-concurso.mts";
 import {
   USO,
+  comoRetomar,
+  formatarProcessamento,
+  formatarPublicacao,
+  formatarRelatorioDaAbertura,
+  proximoPasso,
   formatarAchados,
   formatarDecisao,
   formatarDominios,
@@ -45,8 +51,10 @@ describe("os argumentos do comando", () => {
 
   it("recusa acao desconhecida e acao inventada pelo agente", () => {
     expect(() => lerArgumentos([])).toThrow(USO);
+    // `pesquisar` e a tentacao obvia: a busca e da sessao, e nao existe acao
+    // de comando para ela (AD-145).
     expect(() => lerArgumentos(["--acao", "pesquisar"])).toThrow(USO);
-    expect(() => lerArgumentos(["--acao", "publicar"])).toThrow(USO);
+    expect(() => lerArgumentos(["--acao", "baixar-tudo"])).toThrow(USO);
   });
 
   it("exige uuid de verdade nos IDs, e nao qualquer texto", () => {
@@ -378,6 +386,151 @@ describe("o trecho do programa e a unica saida de texto de documento", () => {
     expect(texto).toMatch(/^PENDENCIA:/);
     expect(texto).toContain("provas/edital-x.pdf");
     expect(texto).toMatch(/documento inteiro NAO vai para a conversa/);
+  });
+});
+
+// ── T6 · medicao, prontidao e fecho ─────────────────────────────────────────
+
+describe("os argumentos das acoes que fecham a abertura", () => {
+  it("`relatorio` nao exige operador: e o comando de quem chegou agora", () => {
+    const lido = lerArgumentos(["--acao", "relatorio", "--abertura", UUID_A]);
+    expect(lido.acao).toBe("relatorio");
+    expect(lido.operador).toBe("");
+  });
+
+  it("`publicar` exige motivo — ele vai assinado a operador_acoes", () => {
+    expect(() =>
+      lerArgumentos(["--acao", "publicar", "--abertura", UUID_A, "--operador", UUID_B]),
+    ).toThrow(/--motivo e obrigatorio em publicar/);
+
+    expect(
+      lerArgumentos([
+        "--acao",
+        "publicar",
+        "--abertura",
+        UUID_A,
+        "--operador",
+        UUID_B,
+        "--motivo",
+        "prontidao conferida com o operador",
+      ]).motivo,
+    ).toBe("prontidao conferida com o operador");
+  });
+
+  it("`processar-provas` e `recalcular` exigem abertura e operador", () => {
+    for (const acao of ["processar-provas", "recalcular"]) {
+      expect(() => lerArgumentos(["--acao", acao, "--abertura", UUID_A])).toThrow(
+        /--operador precisa ser um uuid/,
+      );
+    }
+  });
+});
+
+describe("o degrau vira proximo passo, e nao so um numero", () => {
+  const base = { materia: "Português", nProvas: 0, anos: [], baseDoPeso: "sem_dado" };
+
+  it("diz o que falta em cada degrau", () => {
+    expect(proximoPasso({ ...base, degrau: 4 }, 4)).toMatch(/registrar o peso do edital/);
+    expect(proximoPasso({ ...base, degrau: 3 }, 4)).toMatch(/outro orgao/);
+    expect(proximoPasso({ ...base, degrau: 2 }, 4)).toMatch(/medir uma prova DESTE concurso/);
+  });
+
+  it("no degrau 1 conta quantas provas faltam para a meta, e reconhece quando ela chega", () => {
+    expect(proximoPasso({ ...base, degrau: 1, nProvas: 1 }, 4)).toMatch(/faltam 3 prova/);
+    expect(proximoPasso({ ...base, degrau: 1, nProvas: 4 }, 4)).toMatch(/meta de 4 atingida/);
+    // Passar da meta nao vira "faltam -1".
+    expect(proximoPasso({ ...base, degrau: 1, nProvas: 6 }, 4)).toMatch(/atingida/);
+  });
+});
+
+describe("o relatorio diz onde parou e qual comando vem agora", () => {
+  const base: Relatorio = {
+    aberturaId: UUID_A,
+    orgao: "CAIXA",
+    cargo: "Técnico Bancário",
+    estado: "pronto_para_recalculo",
+    visibilidade: "oculto",
+    descartados: 6,
+    faltantes: ["prova 2018"],
+    documentosPendentes: 0,
+    documentosAprovados: 3,
+    documentosBaixados: 3,
+    provas: 2,
+    metaDeProvas: 4,
+    cobertura: 0.62,
+    piso: 0.8,
+    atingePiso: false,
+    materias: [
+      { materia: "Português", degrau: 1, nProvas: 2, anos: [2021, 2024], baseDoPeso: "itens" },
+      { materia: "Atualidades", degrau: 4, nProvas: 0, anos: [], baseDoPeso: "sem_dado" },
+    ],
+  };
+
+  it("mostra o lastro materia por materia, com anos e o que falta", () => {
+    const texto = formatarRelatorioDaAbertura(base);
+
+    expect(texto).toContain("CAIXA · Técnico Bancário");
+    expect(texto).toContain("2 de 4 (meta operacional)");
+    expect(texto).toContain("6 descartado(s)");
+    expect(texto).toContain("prova 2018");
+    expect(texto).toContain("Português · degrau 1 · 2 prova(s) (2021, 2024) · peso de itens");
+    expect(texto).toContain("Atualidades · degrau 4");
+    expect(texto).toMatch(/faltam 2 prova/);
+    expect(texto).toMatch(/registrar o peso do edital/);
+    expect(texto).toContain("cobertura 62.0% contra o piso de 80% — NAO atinge");
+  });
+
+  it("cada estado aponta o comando seguinte, para a retomada nao ser adivinhacao", () => {
+    const passos: [string, RegExp][] = [
+      ["pesquisa_pendente", /registrar-achados/],
+      ["documentos_pendentes", /decidir-documentos/],
+      ["documentos_aprovados", /programa.*processar-provas/],
+      ["processamento_em_andamento", /propor-assuntos/],
+      ["assuntos_pendentes", /decidir-assuntos/],
+      ["pronto_para_recalculo", /recalcular/],
+    ];
+    for (const [estado, esperado] of passos) {
+      expect(comoRetomar({ ...base, estado })).toMatch(esperado);
+    }
+  });
+
+  it("concluida diz se falta publicar, e nao promete o que a prontidao nao permite", () => {
+    expect(comoRetomar({ ...base, estado: "concluida" })).toMatch(/Publicar depende/);
+    expect(
+      comoRetomar({ ...base, estado: "concluida", visibilidade: "publicado" }),
+    ).toMatch(/Nada pendente/);
+  });
+
+  it("sem materia projetada manda recalcular em vez de mentir que nao ha lastro", () => {
+    expect(formatarRelatorioDaAbertura({ ...base, materias: [] })).toMatch(
+      /nenhuma materia projetada ainda/,
+    );
+  });
+});
+
+describe("o processamento delega, e nao reimplementa a medicao", () => {
+  it("sem prova baixada o relatorio diz que o concurso vive do edital", () => {
+    expect(formatarProcessamento({ provas: [] })).toMatch(/degrau 2/);
+  });
+
+  it("mostra o veredito de cada prova e nao esconde a que falhou", () => {
+    const texto = formatarProcessamento({
+      provas: [
+        { prova: UUID_A, arquivo: "provas/a.pdf", codigo: 0, saida: "[medicao] 60 etiquetas" },
+        { prova: UUID_B, arquivo: "provas/b.pdf", codigo: 1, saida: "[medicao] precisa_ocr" },
+      ],
+    });
+    expect(texto).toContain("2 prova(s) medidas");
+    expect(texto).toContain("OK");
+    expect(texto).toContain("FALHOU");
+    expect(texto).toContain("60 etiquetas");
+    expect(texto).toContain("precisa_ocr");
+  });
+
+  it("a publicacao diz que ficou registrada com operador e motivo", () => {
+    expect(formatarPublicacao({ concurso: UUID_A, visibilidade: "publicado" })).toMatch(
+      /operador e motivo registrados em operador_acoes/,
+    );
   });
 });
 

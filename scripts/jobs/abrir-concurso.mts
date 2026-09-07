@@ -18,6 +18,10 @@
  *   `programa`            recorta o trecho do programa do edital, e so ele
  *   `propor-assuntos`     recebe a proposta da sessao e calcula quase-duplicatas
  *   `decidir-assuntos`    2a CONFIRMACAO: aplica o quadro do edital numa transacao
+ *   `processar-provas`    delega a medicao ao `medir-prova` da SPEC 38
+ *   `recalcular`          recalcula o Raio-X e reavalia a prontidao
+ *   `relatorio`           onde a execucao esta, o lastro por materia e o proximo passo
+ *   `publicar`            3a CONFIRMACAO: fecha a execucao e publica o concurso
  *
  * **Nada de prova sai por aqui.** A unica saida de texto de documento e o
  * trecho do programa, cortado localmente e com teto; o caderno de prova segue
@@ -60,7 +64,11 @@ export type Acao =
   | "decidir-documentos"
   | "programa"
   | "propor-assuntos"
-  | "decidir-assuntos";
+  | "decidir-assuntos"
+  | "processar-provas"
+  | "recalcular"
+  | "relatorio"
+  | "publicar";
 
 const ACOES: readonly Acao[] = [
   "dominios",
@@ -70,6 +78,10 @@ const ACOES: readonly Acao[] = [
   "programa",
   "propor-assuntos",
   "decidir-assuntos",
+  "processar-provas",
+  "recalcular",
+  "relatorio",
+  "publicar",
 ];
 
 export const USO =
@@ -82,7 +94,11 @@ export const USO =
   "  programa           --abertura <uuid> --operador <uuid> [--destino <pasta>]\n" +
   "  propor-assuntos    --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
   "  decidir-assuntos   --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
-  "                     [--motivo <texto>]";
+  "                     [--motivo <texto>]\n" +
+  "  processar-provas   --abertura <uuid> --operador <uuid> [--destino <pasta>]\n" +
+  "  recalcular         --abertura <uuid> --operador <uuid>\n" +
+  "  relatorio          --abertura <uuid>\n" +
+  "  publicar           --abertura <uuid> --operador <uuid> --motivo <texto>";
 
 export type Argumentos = {
   acao: Acao;
@@ -135,7 +151,14 @@ export function lerArgumentos(argv: readonly string[]): Argumentos {
   }
   if (acao !== "dominios" && acao !== "iniciar") {
     exigirUuid("abertura");
-    exigirUuid("operador");
+    // `relatorio` so LE: ele e o comando da retomada, e exigir operador para
+    // perguntar "onde isto parou" so atrapalharia quem chegou agora.
+    if (acao !== "relatorio") exigirUuid("operador");
+  }
+  // Publicar e a terceira confirmacao: o motivo vai a `operador_acoes` e nao
+  // pode ser o texto generico que as outras acoes aceitam.
+  if (acao === "publicar" && argumentos.motivo === "") {
+    throw new Error(`--motivo e obrigatorio em publicar\n${USO}`);
   }
   // `programa` e a excecao: ele nao recebe JSON do agente — LE o edital ja
   // baixado do disco e devolve so o trecho do programa.
@@ -767,6 +790,376 @@ export function formatarSegundaConfirmacao(resumo: ResumoDaSegundaConfirmacao): 
   ].join("\n");
 }
 
+// ── Acao `processar-provas` ─────────────────────────────────────────────────
+
+/**
+ * Roda a medicao de uma prova. **Delega, nao reimplementa.**
+ *
+ * O contrato e o do `medir-prova` da SPEC 38, chamado como comando: e la que
+ * moram a grade, o separador deterministico, a reserva por modelo e a chave do
+ * provedor. Chamar por processo — e nao importar as funcoes — e o que mantem
+ * este arquivo sem gateway e sem segredo de modelo, e o que faz o teste de
+ * `motivoDeParada` continuar dizendo a verdade (AD-141, AD-145).
+ */
+export type MedidorDeProva = (
+  provaId: string,
+  pdf: string,
+) => Promise<{ codigo: number; saida: string }>;
+
+export const medidorPadrao: MedidorDeProva = async (provaId, pdf) => {
+  const { spawnSync } = await import("node:child_process");
+  const resultado = spawnSync(
+    process.execPath,
+    [
+      path.join("node_modules", "tsx", "dist", "cli.mjs"),
+      path.join("scripts", "jobs", "medir-prova.mts"),
+      "--acao",
+      "etiquetar",
+      "--prova",
+      provaId,
+      "--pdf",
+      pdf,
+    ],
+    { encoding: "utf8" },
+  );
+  return {
+    codigo: resultado.status ?? 1,
+    // O `medir-prova` ja e quem garante que nenhuma linha de prova sai no
+    // stdout: ele imprime contagem e veredito. Repassar o texto dele e seguro.
+    saida: `${resultado.stdout ?? ""}${resultado.stderr ?? ""}`.trim(),
+  };
+};
+
+export type ResumoDoProcessamento = {
+  provas: { prova: string; arquivo: string; codigo: number; saida: string }[];
+};
+
+/**
+ * Mede cada prova aprovada e baixada, e so entao libera a etapa do edital.
+ *
+ * Nao ha tarefa de IA nova aqui: `etiqueta_de_item` e `separacao_de_itens` sao
+ * as da SPEC 38, e a extracao completa de questoes (SPEC 09) **nao** e acionada
+ * pela abertura. Prova que falha nao derruba as outras — fica no relatorio.
+ */
+export async function acaoProcessarProvas(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+  opcoes: { destino?: string; medir?: MedidorDeProva } = {},
+): Promise<ResumoDoProcessamento> {
+  await cliente.query("select public.exigir_operador_ativo($1)", [operador]);
+
+  const { rows } = await cliente.query(
+    `select id::text as documento_id, prova_id::text
+       from public.concurso_documentos
+      where abertura_id = $1 and tipo = 'prova'
+        and decisao = 'aprovado' and prova_id is not null
+      order by registrado_em`,
+    [abertura],
+  );
+
+  const medir = opcoes.medir ?? medidorPadrao;
+  const provas: ResumoDoProcessamento["provas"] = [];
+
+  for (const linha of rows) {
+    const documentoId = String(linha.documento_id);
+    const provaId = String(linha.prova_id);
+    const arquivo = path.join(
+      opcoes.destino ?? "provas",
+      nomeInternoDoDocumento(documentoId, "prova"),
+    );
+    const { codigo, saida } = await medir(provaId, arquivo);
+    provas.push({ prova: provaId, arquivo, codigo, saida });
+  }
+
+  // A medicao acabou; o edital e o proximo passo. `avancar_abertura` recusa se
+  // a execucao ja tiver passado daqui, e aceita repetir o estado atual.
+  await cliente.query("select public.avancar_abertura($1, $2, 'processamento_em_andamento')", [
+    abertura,
+    operador,
+  ]);
+
+  return { provas };
+}
+
+export function formatarProcessamento(resumo: ResumoDoProcessamento): string {
+  if (resumo.provas.length === 0) {
+    return [
+      "nenhuma prova aprovada e baixada nesta abertura.",
+      "O concurso segue so com o edital: o Raio-X nasce no degrau 2, e o " +
+        "relatorio dira, materia por materia, o que falta para subir.",
+    ].join("\n");
+  }
+
+  const partes = [`${resumo.provas.length} prova(s) medidas pelo pipeline da SPEC 38:`];
+  for (const prova of resumo.provas) {
+    partes.push(`  ${prova.prova} ${prova.codigo === 0 ? "OK" : "FALHOU"}`);
+    for (const linha of prova.saida.split("\n").filter((l) => l.trim() !== "")) {
+      partes.push(`      ${linha}`);
+    }
+  }
+  return partes.join("\n");
+}
+
+// ── Acao `recalcular` ───────────────────────────────────────────────────────
+
+export type ResumoDoRecalculo = { linhas: number; mudancasDeVisibilidade: number };
+
+/**
+ * Recalcula o Raio-X e reavalia a prontidao.
+ *
+ * Determinista de ponta a ponta: `recalcula_raiox` e regra e SQL, e
+ * `avaliar_prontidao_do_concurso` compara cobertura com o piso. Nenhum modelo
+ * participa — o AD invariante 6 vale aqui como vale no plano.
+ */
+export async function acaoRecalcular(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+): Promise<ResumoDoRecalculo> {
+  const { rows: dono } = await cliente.query(
+    "select concurso_id::text from public.aberturas_concurso where id = $1",
+    [abertura],
+  );
+  if (dono.length === 0) throw new Error("abertura_inexistente");
+  const concurso = String((dono[0] as { concurso_id: string }).concurso_id);
+
+  await cliente.query("select public.exigir_operador_ativo($1)", [operador]);
+
+  const { rows: raiox } = await cliente.query("select public.recalcula_raiox() as linhas");
+  const { rows: prontidao } = await cliente.query(
+    "select public.avaliar_prontidao_do_concurso($1) as mudou",
+    [concurso],
+  );
+
+  return {
+    linhas: Number((raiox[0] as { linhas: number }).linhas),
+    mudancasDeVisibilidade: Number((prontidao[0] as { mudou: number }).mudou),
+  };
+}
+
+// ── Acao `relatorio` ────────────────────────────────────────────────────────
+
+export type LinhaDoLastro = {
+  materia: string;
+  degrau: number;
+  nProvas: number;
+  anos: number[];
+  baseDoPeso: string;
+};
+
+export type Relatorio = {
+  aberturaId: string;
+  orgao: string;
+  cargo: string;
+  estado: string;
+  visibilidade: string;
+  descartados: number;
+  faltantes: string[];
+  documentosPendentes: number;
+  documentosAprovados: number;
+  documentosBaixados: number;
+  provas: number;
+  metaDeProvas: number;
+  cobertura: number | null;
+  piso: number;
+  atingePiso: boolean;
+  materias: LinhaDoLastro[];
+};
+
+export async function acaoRelatorio(
+  cliente: ClienteSql,
+  abertura: string,
+): Promise<Relatorio> {
+  const { rows } = await cliente.query(
+    `select a.abertura_id::text, a.concurso_id::text, a.orgao, a.cargo,
+            a.estado::text, a.visibilidade::text, a.descartados, a.faltantes,
+            a.documentos_pendentes, a.documentos_aprovados, a.documentos_baixados,
+            a.provas_da_abertura,
+            c.perfil_concurso_id::text
+       from public.abertura_em_curso a
+       join public.concursos c on c.id = a.concurso_id
+      where a.abertura_id = $1`,
+    [abertura],
+  );
+  if (rows.length === 0) throw new Error("abertura_inexistente");
+  const linha = rows[0];
+
+  const { rows: resumo } = await cliente.query(
+    `select cobertura, piso, atinge_piso
+       from public.prontidao_do_concurso_resumo where concurso_id = $1`,
+    [linha.concurso_id],
+  );
+
+  const { rows: materias } = await cliente.query(
+    `select m.nome, p.degrau, p.n_provas, p.anos, p.base_do_peso
+       from public.raiox_projecoes_materia p
+       join public.materias m on m.id = p.materia_id
+      where p.perfil_concurso_id = $1
+      order by p.peso desc, m.nome`,
+    [linha.perfil_concurso_id],
+  );
+
+  return {
+    aberturaId: String(linha.abertura_id),
+    orgao: String(linha.orgao),
+    cargo: String(linha.cargo),
+    estado: String(linha.estado),
+    visibilidade: String(linha.visibilidade),
+    descartados: Number(linha.descartados),
+    faltantes: (linha.faltantes ?? []) as string[],
+    documentosPendentes: Number(linha.documentos_pendentes),
+    documentosAprovados: Number(linha.documentos_aprovados),
+    documentosBaixados: Number(linha.documentos_baixados),
+    provas: Number(linha.provas_da_abertura),
+    metaDeProvas: await getParam("param.m1.meta_provas_por_concurso"),
+    cobertura: resumo[0]?.cobertura === undefined ? null : Number(resumo[0].cobertura),
+    piso: Number(resumo[0]?.piso ?? 0),
+    atingePiso: Boolean(resumo[0]?.atinge_piso),
+    materias: materias.map((m) => ({
+      materia: String(m.nome),
+      degrau: Number(m.degrau),
+      nProvas: Number(m.n_provas),
+      anos: (m.anos ?? []) as number[],
+      baseDoPeso: String(m.base_do_peso),
+    })),
+  };
+}
+
+/**
+ * O que falta para a materia subir de degrau (RAIOX-18).
+ *
+ * O degrau nao e nota: e de onde o peso veio. Dizer "degrau 3" sem dizer o que
+ * o faria virar 1 devolveria ao operador a mesma pergunta que ele veio fazer.
+ */
+export function proximoPasso(linha: LinhaDoLastro, metaDeProvas: number): string {
+  switch (linha.degrau) {
+    case 1: {
+      const faltam = metaDeProvas - linha.nProvas;
+      return faltam > 0
+        ? `no lastro proprio; faltam ${faltam} prova(s) para a meta de ${metaDeProvas}`
+        : `no lastro proprio, com ${linha.nProvas} prova(s) — meta de ${metaDeProvas} atingida`;
+    }
+    case 2:
+      return "peso vem do edital; medir uma prova DESTE concurso leva ao degrau 1";
+    case 3:
+      return "peso vem de prova da mesma banca em outro orgao; prova deste concurso leva ao degrau 1";
+    default:
+      return "sem dado: registrar o peso do edital leva ao degrau 2, medir uma prova leva ao 1";
+  }
+}
+
+/**
+ * O relatorio que fecha a abertura — e que diz como retomar quando ela parou.
+ *
+ * E o mesmo comando nos dois casos de proposito: quem volta a uma execucao
+ * interrompida nao deveria precisar saber um comando diferente de quem esta
+ * conferindo o resultado.
+ */
+export function formatarRelatorioDaAbertura(relatorio: Relatorio): string {
+  const partes = [
+    `${relatorio.orgao} · ${relatorio.cargo}`,
+    `abertura ${relatorio.aberturaId} · estado ${relatorio.estado} · concurso ${relatorio.visibilidade}`,
+    `documentos: ${relatorio.documentosAprovados} aprovado(s), ` +
+      `${relatorio.documentosBaixados} baixado(s), ${relatorio.documentosPendentes} pendente(s); ` +
+      `${relatorio.descartados} descartado(s) fora da allowlist`,
+    `provas nesta abertura: ${relatorio.provas} de ${relatorio.metaDeProvas} (meta operacional)`,
+  ];
+
+  if (relatorio.faltantes.length > 0) {
+    partes.push("faltando em fonte oficial:");
+    for (const falta of relatorio.faltantes) partes.push(`  - ${falta}`);
+  }
+
+  partes.push("");
+  if (relatorio.materias.length === 0) {
+    partes.push("Raio-X: nenhuma materia projetada ainda — rode `recalcular`.");
+  } else {
+    partes.push("lastro do Raio-X, materia por materia:");
+    for (const materia of relatorio.materias) {
+      partes.push(
+        `  ${materia.materia} · degrau ${materia.degrau} · ${materia.nProvas} prova(s)` +
+          (materia.anos.length > 0 ? ` (${materia.anos.join(", ")})` : "") +
+          ` · peso de ${materia.baseDoPeso}`,
+      );
+      partes.push(`      ${proximoPasso(materia, relatorio.metaDeProvas)}`);
+    }
+  }
+
+  partes.push("");
+  const cobertura =
+    relatorio.cobertura === null ? "?" : `${(relatorio.cobertura * 100).toFixed(1)}%`;
+  partes.push(
+    `prontidao: cobertura ${cobertura} contra o piso de ${(relatorio.piso * 100).toFixed(0)}% — ` +
+      (relatorio.atingePiso ? "atinge" : "NAO atinge"),
+  );
+  partes.push(comoRetomar(relatorio));
+  return partes.join("\n");
+}
+
+/** A frase que diz qual comando vem agora. Existe para a retomada nao ser adivinhacao. */
+export function comoRetomar(relatorio: Relatorio): string {
+  switch (relatorio.estado) {
+    case "pesquisa_pendente":
+      return "PROXIMO: pesquisar na sua sessao e rodar `registrar-achados`.";
+    case "documentos_pendentes":
+      return "PROXIMO: levar a lista ao operador e rodar `decidir-documentos` (confirmacao 1).";
+    case "documentos_aprovados":
+      return "PROXIMO: `programa` para ler o edital e `processar-provas` para medir as provas.";
+    case "processamento_em_andamento":
+      return "PROXIMO: `propor-assuntos` com a proposta que voce montou do trecho do programa.";
+    case "assuntos_pendentes":
+      return "PROXIMO: levar as linhas ao operador e rodar `decidir-assuntos` (confirmacao 2).";
+    case "pronto_para_recalculo":
+      return "PROXIMO: `recalcular` e, com o operador de acordo, `publicar` (confirmacao 3).";
+    default:
+      return relatorio.visibilidade === "publicado"
+        ? "abertura concluida e concurso publicado. Nada pendente."
+        : "abertura concluida. Publicar depende de o concurso ficar elegivel — veja a prontidao acima.";
+  }
+}
+
+// ── Acao `publicar` ─────────────────────────────────────────────────────────
+
+export type ResumoDaPublicacao = { concurso: string; visibilidade: string };
+
+/**
+ * A terceira confirmacao: a publicacao, que e acao humana registrada.
+ *
+ * O comando **nao** decide nada aqui. Ele fecha a execucao e chama
+ * `publicar_concurso`, que exige o concurso ja elegivel pela regra da SPEC 37 e
+ * grava operador e motivo. Concurso que nao atingiu o piso e recusado pelo
+ * banco, com a mensagem que o operador precisa ler (RAIOX-20 AC2).
+ */
+export async function acaoPublicar(
+  cliente: ClienteSql,
+  abertura: string,
+  operador: string,
+  motivo: string,
+): Promise<ResumoDaPublicacao> {
+  const { rows: fechada } = await cliente.query(
+    "select public.concluir_abertura($1, $2, $3) as concurso",
+    [abertura, operador, motivo],
+  );
+  const concurso = String((fechada[0] as { concurso: string }).concurso);
+
+  await cliente.query("select public.publicar_concurso($1, $2, $3)", [
+    concurso,
+    operador,
+    motivo,
+  ]);
+
+  const { rows } = await cliente.query(
+    "select visibilidade::text from public.concursos where id = $1",
+    [concurso],
+  );
+  return { concurso, visibilidade: String((rows[0] as { visibilidade: string }).visibilidade) };
+}
+
+export function formatarPublicacao(resumo: ResumoDaPublicacao): string {
+  return `concurso ${resumo.concurso} agora esta ${resumo.visibilidade}, com operador e motivo registrados em operador_acoes.`;
+}
+
 export function formatarDecisao(resumo: ResumoDaDecisao): string {
   const partes = [
     `${resumo.aprovados} documento(s) aprovado(s); ${resumo.baixados.length} baixado(s).`,
@@ -837,6 +1230,7 @@ export async function executar(
     lerArquivo?: LeitorDeTexto;
     escreverArquivo?: (caminho: string, dados: Buffer) => void;
     lerPdfDoDisco?: (caminho: string) => Buffer;
+    medir?: MedidorDeProva;
   } = {},
 ): Promise<number> {
   let argumentos: Argumentos;
@@ -923,7 +1317,7 @@ export async function executar(
         bruto,
       );
       console.log(formatarProposta(resumo));
-    } else {
+    } else if (argumentos.acao === "decidir-assuntos") {
       const bruto = lerEntradaJson(argumentos.entrada, opcoes.lerArquivo);
       const resumo = await acaoDecidirAssuntos(
         cliente,
@@ -933,6 +1327,34 @@ export async function executar(
         motivoOuPadrao(argumentos.motivo),
       );
       console.log(formatarSegundaConfirmacao(resumo));
+    } else if (argumentos.acao === "processar-provas") {
+      const resumo = await acaoProcessarProvas(cliente, argumentos.abertura, argumentos.operador, {
+        destino: argumentos.destino,
+        medir: opcoes.medir,
+      });
+      console.log(formatarProcessamento(resumo));
+      // Prova que falhou na medicao deixa codigo vermelho: o relatorio ja diz
+      // o que aconteceu, e a sessao nao deve seguir como se tivesse medido.
+      if (resumo.provas.some((prova) => prova.codigo !== 0)) {
+        await encerrar();
+        return 1;
+      }
+    } else if (argumentos.acao === "recalcular") {
+      const resumo = await acaoRecalcular(cliente, argumentos.abertura, argumentos.operador);
+      console.log(
+        `[abertura] Raio-X recalculado: ${resumo.linhas} linha(s); ` +
+          `${resumo.mudancasDeVisibilidade} mudanca(s) de visibilidade por prontidao.`,
+      );
+    } else if (argumentos.acao === "relatorio") {
+      console.log(formatarRelatorioDaAbertura(await acaoRelatorio(cliente, argumentos.abertura)));
+    } else {
+      const resumo = await acaoPublicar(
+        cliente,
+        argumentos.abertura,
+        argumentos.operador,
+        argumentos.motivo,
+      );
+      console.log(formatarPublicacao(resumo));
     }
 
     await encerrar();

@@ -1,6 +1,12 @@
 import type { Client } from "pg";
 import { expect, it } from "vitest";
 
+import {
+  acaoDecidirDocumentos,
+  acaoRegistrarAchados,
+  garantirProva,
+} from "../../scripts/jobs/abrir-concurso.mts";
+
 import { criarProva, sufixo } from "./acervo";
 import { comTransacaoRevertida } from "./conexao";
 import { criarUsuario } from "./conta";
@@ -618,6 +624,206 @@ descreveComBanco("SPEC 40 — as tabelas da abertura nao sao do navegador", () =
           [rows[0].id],
         ),
       ).rejects.toThrow(/concurso_documentos_url_check/);
+    });
+  });
+});
+
+descreveComBanco("SPEC 40 — o CLI da primeira confirmacao, contra o banco", () => {
+  const PDF = Buffer.concat([Buffer.from("%PDF-1.7\n"), Buffer.alloc(32, 0x20)]);
+
+  function respostaPdf(): Response {
+    return new Response(new Uint8Array(PDF), {
+      status: 200,
+      headers: { "content-type": "application/pdf" },
+    });
+  }
+
+  const DOMINIOS = ["cesgranrio.org.br", "gov.br"];
+
+  const MANIFESTO = {
+    candidatos: [
+      {
+        tipo: "edital" as const,
+        url: "https://gov.br/edital.pdf",
+        titulo: "Edital de abertura",
+        metadados: {},
+      },
+      {
+        tipo: "prova" as const,
+        url: "https://cesgranrio.org.br/caderno.pdf",
+        titulo: "Caderno 1",
+        metadados: {
+          banca: "Cesgranrio",
+          ano: 2021,
+          orgao: `CAIXA ${sufixo()}`,
+          cargo: "Tecnico Bancario",
+        },
+      },
+      // Agregador: nao pode chegar a lista de aprovacao.
+      {
+        tipo: "prova" as const,
+        url: "https://agregador-de-questoes.com/caderno.pdf",
+        titulo: "mesma prova, fonte ilegal",
+        metadados: {
+          banca: "Cesgranrio",
+          ano: 2021,
+          orgao: "CAIXA",
+          cargo: "Tecnico Bancario",
+        },
+      },
+    ],
+    faltantes: ["prova 2019 do mesmo cargo"],
+  };
+
+  it("registra achados, recusa decisao prematura e baixa somente o aprovado", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const operador = await criarOperador(cliente);
+      const concurso = await criarConcurso(cliente);
+      const { rows } = await cliente.query<{ id: string }>(
+        "select public.iniciar_abertura($1, $2) as id",
+        [concurso, operador],
+      );
+      const abertura = rows[0].id;
+
+      const achados = await acaoRegistrarAchados(
+        cliente,
+        abertura,
+        operador,
+        MANIFESTO,
+        DOMINIOS,
+      );
+
+      // O agregador virou numero; a lista de aprovacao tem dois.
+      expect(achados.aceitos).toBe(2);
+      expect(achados.descartados).toBe(1);
+      expect(achados.documentos).toHaveLength(2);
+      expect(JSON.stringify(achados)).not.toContain("agregador-de-questoes");
+
+      // Retomada: rodar de novo devolve o MESMO relatorio, sem duplicar linha.
+      const denovo = await acaoRegistrarAchados(
+        cliente,
+        abertura,
+        operador,
+        MANIFESTO,
+        DOMINIOS,
+      );
+      expect(denovo.documentos.map((d: { id: string }) => d.id).sort()).toEqual(
+        achados.documentos.map((d: { id: string }) => d.id).sort(),
+      );
+
+      const edital = achados.documentos.find((d: { tipo: string }) => d.tipo === "edital")!;
+      const prova = achados.documentos.find((d: { tipo: string }) => d.tipo === "prova")!;
+
+      // Aprovar so um dos dois nao passa: nada e decidido por omissao.
+      await recusa(
+        cliente,
+        "select public.decidir_documentos($1, $2, $3::jsonb, $4)",
+        [abertura, operador, JSON.stringify([{ id: edital.id, decisao: "aprovado" }]), MOTIVO],
+        /documentos_pendentes_restantes/,
+      );
+
+      const escritos: string[] = [];
+      const resumo = await acaoDecidirDocumentos(
+        cliente,
+        abertura,
+        operador,
+        [
+          { id: edital.id, decisao: "aprovado" },
+          { id: prova.id, decisao: "rejeitado" },
+        ],
+        MOTIVO,
+        DOMINIOS,
+        {
+          destino: "provas",
+          escrever: (caminho: string) => escritos.push(caminho),
+          buscar: async () => respostaPdf(),
+          tetoMib: 25,
+        },
+      );
+
+      // Um aprovado, um baixado; o rejeitado nao foi buscado.
+      expect(resumo.aprovados).toBe(1);
+      expect(resumo.baixados).toHaveLength(1);
+      expect(resumo.baixados[0].id).toBe(edital.id);
+      expect(resumo.baixados[0].prova).toBeNull();
+      expect(escritos).toHaveLength(1);
+      expect(escritos[0]).toContain(edital.id);
+
+      const { rows: gravado } = await cliente.query<{
+        bytes: number;
+        sha256: string;
+        baixado_em: Date | null;
+      }>(
+        "select bytes, sha256, baixado_em from public.concurso_documentos where id = $1",
+        [edital.id],
+      );
+      expect(gravado[0].bytes).toBe(PDF.length);
+      expect(gravado[0].sha256).toMatch(/^[0-9a-f]{64}$/);
+
+      const { rows: recusado } = await cliente.query<{ baixado_em: Date | null }>(
+        "select baixado_em from public.concurso_documentos where id = $1",
+        [prova.id],
+      );
+      expect(recusado[0].baixado_em).toBeNull();
+    });
+  });
+
+  it("prova aprovada vira linha do catalogo-alvo com a URL de origem, sem duplicar", async () => {
+    await comTransacaoRevertida(async (cliente) => {
+      const operador = await criarOperador(cliente);
+      const concurso = await criarConcurso(cliente);
+      const { rows } = await cliente.query<{ id: string }>(
+        "select public.iniciar_abertura($1, $2) as id",
+        [concurso, operador],
+      );
+      const abertura = rows[0].id;
+
+      const orgao = `CAIXA ${sufixo()}`;
+      const achados = await acaoRegistrarAchados(
+        cliente,
+        abertura,
+        operador,
+        {
+          candidatos: [
+            {
+              tipo: "prova",
+              url: "https://cesgranrio.org.br/caderno.pdf",
+              titulo: "Caderno 1",
+              metadados: { banca: "Cesgranrio", ano: 2021, orgao, cargo: "Tecnico" },
+            },
+          ],
+          faltantes: [],
+        },
+        DOMINIOS,
+      );
+
+      const resumo = await acaoDecidirDocumentos(
+        cliente,
+        abertura,
+        operador,
+        [{ id: achados.documentos[0].id, decisao: "aprovado" }],
+        MOTIVO,
+        DOMINIOS,
+        { destino: "provas", escrever: () => {}, buscar: async () => respostaPdf(), tetoMib: 25 },
+      );
+
+      expect(resumo.baixados[0].prova).not.toBeNull();
+
+      const { rows: prova } = await cliente.query<{ url_origem: string; ano: number }>(
+        "select url_origem, ano from public.provas where id = $1",
+        [resumo.baixados[0].prova],
+      );
+      expect(prova[0].url_origem).toBe("https://cesgranrio.org.br/caderno.pdf");
+      expect(prova[0].ano).toBe(2021);
+
+      // A mesma prova numa segunda abertura encontra a linha que ja existe.
+      const segunda = await garantirProva(cliente, {
+        banca: "Cesgranrio",
+        ano: 2021,
+        orgao,
+        cargo: "Tecnico",
+      });
+      expect(segunda).toBe(resumo.baixados[0].prova);
     });
   });
 });

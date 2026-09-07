@@ -55,7 +55,22 @@ export const candidatoSchema = z
       .strict()
       .default({}),
   })
-  .strict();
+  .strict()
+  // Prova sem `(banca, ano, orgao, cargo)` nao tem como virar linha do
+  // catalogo-alvo (BANCO-02): a chave natural da prova e essa. Recusar aqui e
+  // melhor do que descobrir na hora de gravar, com metade do fluxo andado.
+  .superRefine((candidato, ctx) => {
+    if (candidato.tipo !== "prova") return;
+    for (const campo of ["banca", "ano", "orgao", "cargo"] as const) {
+      if (candidato.metadados[campo] === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["metadados", campo],
+          message: `prova precisa de ${campo}`,
+        });
+      }
+    }
+  });
 
 export const manifestoSchema = z
   .object({

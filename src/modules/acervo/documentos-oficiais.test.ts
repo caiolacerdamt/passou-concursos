@@ -22,8 +22,17 @@ import {
 
 const DOMINIOS = ["cesgranrio.org.br", "gov.br", "fgv.br"];
 
+/** Prova exige a chave natural do catalogo-alvo; edital nao tem uma. */
 function candidato(url: string, tipo: "edital" | "prova" = "prova") {
-  return { tipo, url, titulo: "Caderno", metadados: {} };
+  return {
+    tipo,
+    url,
+    titulo: "Caderno",
+    metadados:
+      tipo === "prova"
+        ? { banca: "Cesgranrio", ano: 2021, orgao: "CAIXA", cargo: "Tecnico" }
+        : {},
+  };
 }
 
 afterEach(() => {
@@ -40,7 +49,7 @@ describe("o manifesto que a sessao entrega e entrada nao confiavel", () => {
           tipo: "prova",
           url: "https://cesgranrio.org.br/p.pdf",
           titulo: "CAIXA 2021",
-          metadados: { banca: "Cesgranrio", ano: 2021 },
+          metadados: { banca: "Cesgranrio", ano: 2021, orgao: "CAIXA", cargo: "Tecnico" },
         },
       ],
     });
@@ -65,6 +74,33 @@ describe("o manifesto que a sessao entrega e entrada nao confiavel", () => {
       .toThrow(ManifestoInvalido);
     expect(() => lerManifesto({})).toThrow(ManifestoInvalido);
     expect(() => lerManifesto("candidatos")).toThrow(ManifestoInvalido);
+  });
+
+  it("prova sem a chave natural do catalogo-alvo e recusada de saida", () => {
+    // `(banca, ano, orgao, cargo)` e a chave de `provas` (BANCO-02). Sem ela a
+    // prova nao tem como virar linha, e descobrir isso depois do download seria
+    // descobrir tarde.
+    expect(() =>
+      lerManifesto({
+        candidatos: [
+          {
+            tipo: "prova",
+            url: "https://cesgranrio.org.br/p.pdf",
+            titulo: "Caderno",
+            metadados: { banca: "Cesgranrio", ano: 2021 },
+          },
+        ],
+      }),
+    ).toThrow(ManifestoInvalido);
+
+    // Edital nao e prova e nao precisa de nenhum desses campos.
+    expect(
+      lerManifesto({
+        candidatos: [
+          { tipo: "edital", url: "https://gov.br/e.pdf", titulo: "Edital", metadados: {} },
+        ],
+      }).candidatos,
+    ).toHaveLength(1);
   });
 });
 

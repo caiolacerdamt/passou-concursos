@@ -1320,7 +1320,97 @@
 - **Date**: 2026-09-06
 - **Status**: active
 
+### AD-144
+- **Decision**: A busca oficial da SPEC 40 usa a ferramenta **`web_search` da Responses API**, pelo
+  gateway de IA existente, com `allowed_domains` vindo de `param.m1.dominios_oficiais` e a lista
+  completa de fontes habilitada. Entram duas tarefas na lista fechada: `busca_documentos_oficiais`
+  e `extracao_programa_edital`; modelo, versão e esforço continuam exclusivamente na matriz de
+  configuração. O filtro hospedado não é a fronteira final: o código revalida HTTPS, hostname e cada
+  redirecionamento antes de persistir ou baixar, e configuração ilegível desliga a busca. O roteiro
+  compartilhado fica canônico em `.agents/skills/abrir-concurso/SKILL.md`; o entrypoint de Claude Code
+  em `.claude/skills/abrir-concurso/SKILL.md` só aponta para a fonte canônica.
+- **Reason**: É o único caminho que aproveita o provedor, o SDK, a chave, a matriz de modelos e a
+  auditoria de custo já existentes, sem introduzir uma segunda API de busca. A API suporta filtro de
+  até 100 domínios e devolução de todas as fontes consultadas. Deixar a busca para a ferramenta do
+  agente quebraria o AD-140: a regra voltaria a morar na conversa e não rodaria igual no GitHub
+  Actions, no Codex e no Claude Code.
+- **Trade-off**: Cada abertura passa a pagar chamadas de busca além da leitura dos documentos e fica
+  dependente da disponibilidade dessa ferramenta. O filtro de domínio do provedor reduz resultados,
+  mas não substitui a validação local contra SSRF e redirects. Há dois entrypoints de descoberta de
+  skill no repositório; só o da `.agents` contém o roteiro para impedir divergência.
+- **Scope**: SPEC 40 · gateway de IA · configuração M1/M2 · skills locais do repositório.
+- **Date**: 2026-09-06
+- **Status**: active
+
+### AD-145
+- **Decision**: A SPEC 40 é conduzida integralmente na sessão do **Codex ou Claude Code**. Ao receber
+  “abra o concurso X”, o agente consulta a allowlist e pesquisa a web com as ferramentas e o limite da
+  própria sessão; entrega os links encontrados a um comando local que revalida, registra e só baixa
+  depois da confirmação humana. O agente interpreta apenas o trecho delimitado do programa do edital
+  e prepara a proposta de assuntos; PDF de prova não entra na conversa. As duas aprovações e a
+  confirmação de publicação acontecem na sessão, não em novas telas web. A SPEC 40 cria **zero tarefa
+  de IA**: medir as provas reutiliza `etiqueta_de_item` e a reserva `separacao_de_itens` da SPEC 38;
+  extração completa de questões continua no pipeline separado da SPEC 09. Esta decisão **substitui
+  integralmente a AD-144** e recorta a AD-140 onde ela dizia busca automática do sistema, inteligência
+  só no comando e telas de aprovação.
+- **Reason**: A operação pretendida é assistida pelo agente junto do operador, e a pesquisa deve
+  consumir a assinatura/limite já usado na sessão, não `OPENAI_API_KEY`, Responses API ou outro
+  provedor cobrado pelo produto. Persistir e validar pelo comando conserva segurança, auditoria e
+  retomada sem transformar a conversa em fonte da verdade. A classificação barata das provas já está
+  implementada e configurada pela SPEC 38/AD-141; duplicá-la seria custo e arquitetura novos.
+- **Trade-off**: A qualidade e disponibilidade da pesquisa dependem das ferramentas e limites da
+  sessão ativa. Se não houver busca, o agente precisa pedir URLs oficiais ao operador. O trecho do
+  programa do edital consome contexto da sessão, mas provas e questões continuam fora do transcript.
+  Não haverá painel web próprio para essa operação; outra sessão retoma pelo estado e relatório do
+  comando.
+- **Scope**: SPEC 40 · skills locais do repositório · comandos de abertura · fronteira M1/M5.
+- **Date**: 2026-09-06
+- **Status**: active
+
 ## Handoff
+
+- **Feature**: **SPEC 40 — fluxo de abertura de concurso** (BANCO-01/02, RAIOX-07/20), Ritual B.
+  **Execute concluída, T1–T8.** Branch `feat/spec40-abertura-concurso`, 8 commits atômicos, sem push.
+- **Completed**: migration `20260909120000_spec40_abertura_concurso.sql` — `aberturas_concurso`,
+  `concurso_documentos`, `abertura_assuntos`, `provas.url_origem`, 9 RPCs transacionais e a view
+  `abertura_em_curso` · 4 chaves `param.m1.*` (`dominios_oficiais`, `meta_provas_por_concurso`,
+  `tamanho_maximo_pdf_mib`, `limiar_quase_duplicata`) · `src/modules/acervo/documentos-oficiais.ts`
+  (triagem, allowlist, download com revalidação de redirect) · `src/modules/acervo/programa-edital.ts`
+  (corte do programa + similaridade de Dice) · `scripts/jobs/abrir-concurso.mts` com **11 ações** ·
+  skill canônica em `.agents/skills/abrir-concurso/` + adaptador em `.claude/skills/` · três sensores
+  (`sem-busca-do-produto.test.ts`, `skills-de-abertura.test.ts`, e o anti-`fetch` do próprio CLI).
+- **A decisão de forma**: o agente conduz, o comando é a verdade. A pesquisa consome a sessão do
+  Codex/Claude; o produto **não ganhou** provedor de busca, segredo nem tarefa de IA (AD-145). A
+  medição delega ao `medir-prova` da SPEC 38 **por processo**, e é isso que mantém gateway e chave de
+  provedor fora do `abrir-concurso`. Três portas humanas: documentos, assuntos, publicação — nenhuma
+  com default, nenhuma com fusão automática. Não nasceu tela web.
+- **Gate**: `npm run test:unit` **1339 testes / 0 falhas** · `npm run test:db` **530 / 0** ·
+  `tsc --noEmit` limpo · `eslint src scripts tests` sem erro novo · `npm run build` OK. A migration
+  foi aplicada por `npm run db:push` no Supabase de desenvolvimento — **que é o mesmo banco de
+  produção** enquanto a SPEC 25 não separar ambientes.
+- **Verificação**: `validation.md`, veredito **APROVADO COM RESSALVAS**, 7/7 Success Criteria com
+  evidência `file:line`. Duas ressalvas `Minor` abertas, nenhuma bloqueante:
+  1. a proveniência grava a URL **aprovada**, não a URL final do redirect (as duas são oficiais; o
+     que se perde é auditoria fina);
+  2. `processar-provas` avança o estado mesmo quando toda prova falha — sai com código 1 e mostra
+     `FALHOU`, mas quem ignorar o vermelho segue para o edital sem lastro.
+- **Calibração medida — decisão de produto pendente**: `param.m1.limiar_quase_duplicata` = 0,78 é
+  **estrito demais**. Medido em `programa-edital.test.ts`: pega `Politica Monetaria` ×
+  `Politicas Monetarias` (0,800) e **cala** em `Produtos Bancarios` × `Produtos e Servicos Bancarios`
+  (0,776) e `Regencia Verbal` × `Regencia Verbal e Nominal` (0,762) — os dois casos que mais
+  interessam ao operador. Faixa de 0,70–0,75 pegaria os três sem alcançar assuntos irmãos (0,606). É
+  linha na tabela `configuracoes`, sem deploy (AD-078). **Não mexi: o número é da spec.**
+- **Desvio registrado**: `/.claude/skills/` é ignorado pelo git; foi preciso abrir exceção em
+  `.gitignore:49` para o adaptador chegar a quem clona — sem ela o teste de contrato passaria
+  mentindo.
+- **Continuam sem calibração**: `param.m1.meta_provas_por_concurso` (4), `tamanho_maximo_pdf_mib`
+  (25), `param.m5.peso_degrau_3` (0,5), `param.m1.cobertura_minima` (0,9).
+- **Next step**: o roteiro **nunca rodou contra concurso real** — todo o `test:db` usa fixtures em
+  transação revertida. O primeiro uso de verdade depende de PDF oficial na mão (pendência externa do
+  `ROADMAP.md`). Quando houver, rodar `$abrir-concurso` / `/abrir-concurso` para CAIXA · técnico
+  bancário é o teste que falta, e é ele que calibra o limiar e a meta de provas.
+
+### Handoff anterior — SPEC 39
 
 - **Feature**: **SPEC 39 — Raio-X por concurso: dois níveis, a prova como unidade e o lastro na tela**
   (RAIOX-16, RAIOX-17, RAIOX-18). Ritual **A**: `design.md` + `tasks.md` + `validation.md` +

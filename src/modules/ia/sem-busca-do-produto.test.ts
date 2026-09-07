@@ -42,14 +42,24 @@ const PROVEDORES = [
 
 const PASTAS_VARRIDAS = ["src/", "scripts/", "tests/", ".github/", "supabase/"];
 
-const ESTE_ARQUIVO = "src/modules/ia/sem-busca-do-produto.test.ts";
+/**
+ * Os sensores nao se varrem, nem varrem uns aos outros.
+ *
+ * Os dois arquivos abaixo existem justamente para **procurar** estes nomes, e
+ * por isso precisam escreve-los. Sao a unica excecao aceitavel — qualquer outro
+ * arquivo que cite um provedor esta usando um, e e disso que o teste trata.
+ */
+const SENSORES = [
+  "src/modules/ia/sem-busca-do-produto.test.ts",
+  "scripts/skills-de-abertura.test.ts",
+];
 
 function arquivosDeCodigo(): string[] {
   return execFileSync("git", ["ls-files", "-z", ...PASTAS_VARRIDAS], {
     encoding: "utf8",
   })
     .split("\0")
-    .filter((caminho) => caminho !== "" && caminho !== ESTE_ARQUIVO);
+    .filter((caminho) => caminho !== "" && !SENSORES.includes(caminho));
 }
 
 describe("a abertura de concurso nao criou busca no produto (AD-145)", () => {

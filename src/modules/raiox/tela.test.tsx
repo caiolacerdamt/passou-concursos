@@ -1,9 +1,23 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import type { DadosRaioX, LinhaMateriaRaioX } from "./index";
+import { lastroEmTexto } from "./index";
+import type { DadosRaioX, LastroRaioX, LinhaMateriaRaioX } from "./index";
 import type { DadosMapaPorMateria } from "./mapa-por-materia";
 import { posicoesDosRotulos, RaioXTela, type PontoDoMapa } from "./tela";
+
+/**
+ * O lastro padrao das fixtures: degrau 1, medido em duas provas do proprio
+ * concurso. Quem quiser provar o comportamento de outro degrau sobrescreve.
+ */
+const LASTRO_TESTE: LastroRaioX = {
+  degrau: 1,
+  nProvas: 2,
+  anos: [2024, 2025],
+  baseDoPeso: "itens",
+  texto: lastroEmTexto(1, 2, [2024, 2025], "itens"),
+};
+
 
 const perfil = {
   orgao: "Banco do Brasil",
@@ -22,6 +36,7 @@ const bancarios: LinhaMateriaRaioX = {
   nTopicos: 16,
   tendencia: "subindo",
   amostraBaixa: false,
+  lastro: LASTRO_TESTE,
   topicos: [
     {
       topicoId: "topico-1",
@@ -30,6 +45,7 @@ const bancarios: LinhaMateriaRaioX = {
       nQuestoes: 72,
       tendencia: "subindo",
       amostraBaixa: false,
+      lastro: LASTRO_TESTE,
       fatia: 0.5,
     },
     {
@@ -39,6 +55,7 @@ const bancarios: LinhaMateriaRaioX = {
       nQuestoes: 3,
       tendencia: "estavel",
       amostraBaixa: true,
+      lastro: LASTRO_TESTE,
       fatia: 0.3,
     },
   ],
@@ -53,6 +70,7 @@ const financeira: LinhaMateriaRaioX = {
   nTopicos: 7,
   tendencia: "caindo",
   amostraBaixa: true,
+  lastro: LASTRO_TESTE,
   topicos: [
     {
       topicoId: "topico-3",
@@ -61,6 +79,7 @@ const financeira: LinhaMateriaRaioX = {
       nQuestoes: 3,
       tendencia: "caindo",
       amostraBaixa: true,
+      lastro: LASTRO_TESTE,
       fatia: 0.2,
     },
   ],
@@ -80,8 +99,8 @@ describe("RaioXTela", () => {
     expect(html).toContain("Conhecimentos Bancários");
     expect(html).toContain("Matemática Financeira");
     expect(html).toContain("80,0%");
-    expect(html).toContain("16 tópicos · 297 questões reais");
-    expect(html).toContain("306 questões reais");
+    expect(html).toContain("16 tópicos · 297 itens medidos");
+    expect(html).toContain("306 itens medidos");
 
     // A primeira matéria nasce aberta; a segunda, fechada — e tópico de
     // matéria fechada não pode aparecer, que é o problema que esta tela veio
@@ -90,11 +109,74 @@ describe("RaioXTela", () => {
     expect(html).not.toContain("Juros compostos");
   });
 
+  it("mostra o lastro de cada matéria e o rótulo do degrau", () => {
+    const html = renderToStaticMarkup(<RaioXTela dados={dados} />);
+
+    expect(html).toContain("Medido na prova");
+    expect(html).toContain("Peso medido em 2 provas do próprio concurso");
+  });
+
+  it("do degrau 2 para baixo a tela para na matéria e não exibe percentual por assunto", () => {
+    const soEdital: LastroRaioX = {
+      degrau: 2,
+      nProvas: 0,
+      anos: [],
+      baseDoPeso: "edital",
+      texto: lastroEmTexto(2, 0, [], "edital"),
+    };
+    const html = renderToStaticMarkup(
+      <RaioXTela
+        dados={{
+          ...dados,
+          materias: [
+            { ...bancarios, lastro: soEdital },
+            { ...financeira, lastro: soEdital },
+          ],
+        }}
+      />,
+    );
+
+    // O peso da matéria continua na tela — ele vem do documento oficial.
+    expect(html).toContain("Conhecimentos Bancários");
+    expect(html).toContain("80,0%");
+    expect(html).toContain("Declarado no edital");
+    // O detalhe por assunto, não: a matéria nasce aberta e mesmo assim nenhum
+    // tópico dela aparece.
+    expect(html).not.toContain("SFN e mercados");
+    expect(html).toContain("seria inventar um número");
+  });
+
+  it("degraus diferentes coexistem, cada linha com o seu rótulo", () => {
+    const html = renderToStaticMarkup(
+      <RaioXTela
+        dados={{
+          ...dados,
+          materias: [
+            bancarios,
+            {
+              ...financeira,
+              lastro: {
+                degrau: 3,
+                nProvas: 1,
+                anos: [2021],
+                baseDoPeso: "itens",
+                texto: lastroEmTexto(3, 1, [2021], "itens"),
+              },
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(html).toContain("Medido na prova");
+    expect(html).toContain("Banca em outro órgão");
+  });
+
   it("marca amostra baixa em vez de deixar o número passar como confiável", () => {
     const html = renderToStaticMarkup(<RaioXTela dados={dados} />);
 
-    expect(html).toContain("Poucas questões");
-    expect(html).toContain("Poucas questões reais");
+    expect(html).toContain("Poucos itens");
+    expect(html).toContain("Poucos itens medidos");
   });
 
   it("mostra estado orientado sem perfil ou sem matérias", () => {

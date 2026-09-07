@@ -404,6 +404,13 @@ export const CATALOGO = {
     descricao:
       "O aluno escolhe o concurso e vê o nome do edital dele (AD-139). Desligada, o produto se comporta como hoje: um único concurso para todos, e a escolha não aparece.",
   }),
+  "param.m5.peso_degrau_3": chave({
+    tipo: z.number().positive().max(1),
+    padrao: 0.5,
+    moduloDono: "m5",
+    descricao:
+      "Quanto vale a distribuição transferida de prova da mesma banca em outro órgão (degrau 3, RAIOX-18 AC2). Ela nunca muda o peso da matéria: o número só encolhe a amostra efetiva, puxando a linha mais forte para a média da matéria. Provisório — calibra quando houver concurso vivendo de degrau 3.",
+  }),
   "param.m5.prontidao_piso": chave({
     tipo: z.number().min(0).max(1),
     padrao: 0.8,

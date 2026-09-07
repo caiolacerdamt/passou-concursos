@@ -11,6 +11,73 @@ import type { MateriaDoEdital } from "@/modules/concursos";
 
 export type TendenciaRaioX = "subindo" | "estavel" | "caindo";
 
+/**
+ * O degrau de lastro do RAIOX-18 AC1, na ordem do mais forte para o mais fraco:
+ *
+ *   1  provas do proprio concurso
+ *   2  grade do edital, sem provas
+ *   3  provas da mesma banca em outro orgao (so o desenho de dentro da materia)
+ *   4  sem dado
+ *
+ * Do degrau 2 para baixo a tela **para na materia**: nao exibe percentual por
+ * assunto, porque a evidencia nao sustenta o decimal (AC4).
+ */
+export type DegrauDeLastro = 1 | 2 | 3 | 4;
+
+export type BaseDoPeso = "pontos" | "itens" | "edital" | "sem_dado";
+
+/** O lastro de uma linha, pronto para a tela (RAIOX-18 AC3). */
+export type LastroRaioX = {
+  degrau: DegrauDeLastro;
+  nProvas: number;
+  anos: number[];
+  baseDoPeso: BaseDoPeso;
+  /** A frase que a tela mostra: quantas provas, de quais anos e de qual origem. */
+  texto: string;
+};
+
+/** Do degrau 2 para baixo a tela nao abre o detalhe por assunto (AC4). */
+export function detalhaPorAssunto(lastro: LastroRaioX): boolean {
+  return lastro.degrau === 1;
+}
+
+function anosEmTexto(anos: readonly number[]): string {
+  const unicos = [...new Set(anos)].sort((a, b) => a - b);
+  if (unicos.length === 0) return "";
+  if (unicos.length === 1) return `de ${unicos[0]}`;
+  if (unicos.length === 2) return `de ${unicos[0]} e ${unicos[1]}`;
+  return `de ${unicos.slice(0, -1).join(", ")} e ${unicos[unicos.length - 1]}`;
+}
+
+/**
+ * A frase do lastro.
+ *
+ * Ela nao adjetiva a evidencia — diz de onde ela veio. "Boa base" seria opiniao
+ * nossa; "2 provas do proprio concurso, de 2023 e 2025" e o que esta no banco.
+ */
+export function lastroEmTexto(
+  degrau: DegrauDeLastro,
+  nProvas: number,
+  anos: readonly number[],
+  baseDoPeso: BaseDoPeso,
+): string {
+  const provas = `${nProvas} ${nProvas === 1 ? "prova" : "provas"}`;
+  const quando = anosEmTexto(anos);
+
+  if (degrau === 1) {
+    return `Peso medido em ${provas} do próprio concurso${quando ? `, ${quando}` : ""}.`;
+  }
+  if (degrau === 2) {
+    return baseDoPeso === "edital"
+      ? "Peso declarado pelo edital. Ainda não há prova medida para detalhar os assuntos."
+      : `Peso declarado pela grade da prova${quando ? ` ${quando}` : ""}. Nenhum item desta matéria foi medido ainda.`;
+  }
+  if (degrau === 3) {
+    return `Peso do documento do próprio concurso; a distribuição interna vem de ${provas} da mesma banca em outro órgão${quando ? `, ${quando}` : ""}.`;
+  }
+  return "Sem prova medida nem peso declarado para esta matéria.";
+}
+
 export type PerfilRaioX = {
   orgao: string;
   banca: string;
@@ -24,9 +91,11 @@ export type LinhaRaioX = {
   topicoId: string;
   topico: string;
   peso: number;
+  /** Itens etiquetados do assunto nas provas fonte (AD-138), nao questoes. */
   nQuestoes: number;
   tendencia: TendenciaRaioX;
   amostraBaixa: boolean;
+  lastro: LastroRaioX;
 };
 
 /**
@@ -49,6 +118,7 @@ export type LinhaMateriaRaioX = {
   nTopicos: number;
   tendencia: TendenciaRaioX;
   amostraBaixa: boolean;
+  lastro: LastroRaioX;
   /** Tópicos da matéria, do maior peso para o menor. */
   topicos: TopicoDaMateria[];
 };
@@ -124,7 +194,14 @@ type PerfilBanco = {
   programa_edital?: unknown;
 };
 
-type ProjecaoBanco = {
+type LastroBanco = {
+  degrau: number;
+  n_provas: number;
+  anos: number[] | null;
+  base_do_peso: BaseDoPeso;
+};
+
+type ProjecaoBanco = LastroBanco & {
   topico_id: string;
   peso: number | string;
   n_questoes: number;
@@ -139,7 +216,7 @@ type TopicoBanco = {
   materias?: { nome?: unknown } | { nome?: unknown }[] | null;
 };
 
-type ProjecaoMateriaBanco = {
+type ProjecaoMateriaBanco = LastroBanco & {
   materia_id: string;
   peso: number | string;
   n_questoes: number;
@@ -147,6 +224,24 @@ type ProjecaoMateriaBanco = {
   tendencia: TendenciaRaioX;
   amostra_baixa: boolean;
 };
+
+/** Traduz a linha crua do banco no lastro que a tela le. */
+function lastroDaLinha(linha: LastroBanco): LastroRaioX {
+  const degrau = ([1, 2, 3, 4] as const).includes(linha.degrau as DegrauDeLastro)
+    ? (linha.degrau as DegrauDeLastro)
+    : 4;
+  const anos = (linha.anos ?? []).map(Number).filter(Number.isFinite);
+  const nProvas = Number(linha.n_provas);
+  const baseDoPeso = linha.base_do_peso ?? "sem_dado";
+
+  return {
+    degrau,
+    nProvas: Number.isFinite(nProvas) ? nProvas : 0,
+    anos,
+    baseDoPeso,
+    texto: lastroEmTexto(degrau, Number.isFinite(nProvas) ? nProvas : 0, anos, baseDoPeso),
+  };
+}
 
 type DominioBanco = {
   topico_id: string;
@@ -410,12 +505,49 @@ function montarMaterias(
       nTopicos: Number(projecao.n_topicos),
       tendencia: projecao.tendencia,
       amostraBaixa: projecao.amostra_baixa,
+      lastro: lastroDaLinha(projecao),
       topicos: daMateria.map((linha, posicao) => ({
         ...linha,
         fatia: fatiaDaMateria * internas[posicao],
       })),
     } satisfies LinhaMateriaRaioX;
   });
+}
+
+/**
+ * O lastro de uma matéria do edital.
+ *
+ * A matéria do edital pode juntar assuntos de mais de uma matéria canônica, e
+ * cada uma delas tem o seu degrau. O degrau do grupo é o **pior** deles: dizer
+ * "medido em prova do próprio concurso" quando metade dos assuntos veio de
+ * outro órgão seria dar ao aluno uma garantia que só vale para uma parte da
+ * linha. Os anos e as provas são a união do que sustenta o grupo.
+ */
+function lastroDoGrupo(linhas: readonly LinhaRaioX[]): LastroRaioX {
+  if (linhas.length === 0) {
+    return {
+      degrau: 4,
+      nProvas: 0,
+      anos: [],
+      baseDoPeso: "sem_dado",
+      texto: lastroEmTexto(4, 0, [], "sem_dado"),
+    };
+  }
+
+  const degrau = Math.max(...linhas.map((linha) => linha.lastro.degrau)) as DegrauDeLastro;
+  const anos = [...new Set(linhas.flatMap((linha) => linha.lastro.anos))].sort(
+    (a, b) => a - b,
+  );
+  const nProvas = Math.max(...linhas.map((linha) => linha.lastro.nProvas));
+  const doDegrau = linhas.find((linha) => linha.lastro.degrau === degrau)!;
+
+  return {
+    degrau,
+    nProvas,
+    anos,
+    baseDoPeso: doDegrau.lastro.baseDoPeso,
+    texto: lastroEmTexto(degrau, nProvas, anos, doDegrau.lastro.baseDoPeso),
+  };
 }
 
 /**
@@ -474,6 +606,7 @@ export function montarMateriasDoEdital(
       // Uma matéria só carrega o rótulo de pouca amostra quando **todo**
       // assunto dela tem pouca amostra.
       amostraBaixa: daMateria.every((linha) => linha.amostraBaixa),
+      lastro: lastroDoGrupo(daMateria),
       topicos: daMateria.map((linha, posicao) => ({
         ...linha,
         fatia: fatiaDaMateria * internas[posicao],
@@ -513,7 +646,9 @@ export async function consultarRaioX(
 
   const projecoesConsulta = await cliente
     .from("raiox_projecoes")
-    .select("topico_id, peso, n_questoes, tendencia, amostra_baixa")
+    .select(
+      "topico_id, peso, n_questoes, tendencia, amostra_baixa, degrau, n_provas, anos, base_do_peso",
+    )
     .eq("perfil_concurso_id", perfil.id)
     .order("peso", { ascending: false })
     .order("topico_id", { ascending: true });
@@ -542,7 +677,9 @@ export async function consultarRaioX(
     cliente.from("topicos").select("id, nome, materia_id, materias(nome)").in("id", topicoIds),
     cliente
       .from("raiox_projecoes_materia")
-      .select("materia_id, peso, n_questoes, n_topicos, tendencia, amostra_baixa")
+      .select(
+        "materia_id, peso, n_questoes, n_topicos, tendencia, amostra_baixa, degrau, n_provas, anos, base_do_peso",
+      )
       .eq("perfil_concurso_id", perfil.id)
       .order("peso", { ascending: false })
       .order("materia_id", { ascending: true }),
@@ -575,6 +712,7 @@ export async function consultarRaioX(
       nQuestoes: Number(projecao.n_questoes),
       tendencia: projecao.tendencia,
       amostraBaixa: projecao.amostra_baixa,
+      lastro: lastroDaLinha(projecao),
     };
   });
 

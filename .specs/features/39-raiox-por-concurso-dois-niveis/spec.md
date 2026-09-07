@@ -8,7 +8,7 @@
 | **Tasks (estimativa)** | ~12 |
 | **Ritual** | **A — completo** (`design.md` + `tasks.md` + `validation.md` + Verificador independente completo com sensor de mutação) |
 | **Dificuldade** | Difícil |
-| **Status** | ⬜ Não iniciada |
+| **Status** | ✅ Concluída |
 | **Requisitos** | **RAIOX-16**, **RAIOX-17**, **RAIOX-18** · revisa RAIOX-04, RAIOX-11, RAIOX-12, RAIOX-14 |
 | **Fonte dos requisitos** | `.specs/modulos/m5-raiox-banca/spec.md` |
 | **Decisões** | **AD-138** (revoga RAIOX-04 AC2) · mantém AD-056 (decaimento, amortecimento) e AD-057 (cortes por posição) |

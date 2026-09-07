@@ -1,12 +1,26 @@
 import { describe, expect, it } from "vitest";
 
+import { lastroEmTexto } from "./index";
 import { agruparMapaPorMateria } from "./mapa-por-materia";
 
 import type {
   DadosMapaPrioridade,
   DadosRaioX,
+  LastroRaioX,
   LinhaMapaPrioridade,
 } from "./index";
+
+/**
+ * O lastro padrao das fixtures: degrau 1, medido em duas provas do proprio
+ * concurso. Quem quiser provar o comportamento de outro degrau sobrescreve.
+ */
+const LASTRO_TESTE: LastroRaioX = {
+  degrau: 1,
+  nProvas: 2,
+  anos: [2024, 2025],
+  baseDoPeso: "itens",
+  texto: lastroEmTexto(1, 2, [2024, 2025], "itens"),
+};
 
 function topicoDoMapa(
   parcial: Partial<LinhaMapaPrioridade> & { topicoId: string; topico: string },
@@ -46,6 +60,7 @@ const dados: DadosRaioX = {
       nTopicos: 4,
       tendencia: "subindo",
       amostraBaixa: false,
+      lastro: LASTRO_TESTE,
       topicos: [
         {
           topicoId: "t1",
@@ -54,6 +69,7 @@ const dados: DadosRaioX = {
           nQuestoes: 72,
           tendencia: "subindo",
           amostraBaixa: false,
+          lastro: LASTRO_TESTE,
           fatia: 0.6,
         },
         {
@@ -63,6 +79,7 @@ const dados: DadosRaioX = {
           nQuestoes: 18,
           tendencia: "estavel",
           amostraBaixa: false,
+          lastro: LASTRO_TESTE,
           fatia: 0.2,
         },
       ],
@@ -76,6 +93,7 @@ const dados: DadosRaioX = {
       nTopicos: 2,
       tendencia: "estavel",
       amostraBaixa: false,
+      lastro: LASTRO_TESTE,
       topicos: [
         {
           topicoId: "t3",
@@ -84,6 +102,7 @@ const dados: DadosRaioX = {
           nQuestoes: 44,
           tendencia: "estavel",
           amostraBaixa: false,
+          lastro: LASTRO_TESTE,
           fatia: 0.2,
         },
       ],

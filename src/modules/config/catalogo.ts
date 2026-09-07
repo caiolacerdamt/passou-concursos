@@ -161,6 +161,64 @@ export const CATALOGO = {
       "Quantos itens vao em cada chamada do etiquetador. Medido a 20 itens por chamada em 2026-09-05; lote maior barateia por prova e piora o que se perde quando um pedido falha.",
   }),
 
+  // ── Abertura de concurso (SPEC 40 / AD-145) ──────────────────────────────
+  // A pesquisa acontece na **sessao** do Codex ou do Claude Code, com a
+  // ferramenta e o limite daquela sessao. O produto nao ganha provedor de
+  // busca, segredo nem tarefa de IA por causa disto: o que entra em codigo e a
+  // fronteira que decide o que e fonte legal, e ela e configuracao (AD-078).
+  "param.m1.dominios_oficiais": chave({
+    // Cada entrada e um **host**, comparado como host exato ou subdominio dele.
+    // Sem esquema, sem caminho, sem porta e sem curinga: o curinga esconderia
+    // `cesgranrio.org.br.exemplo.com`, e o caminho daria falsa seguranca, porque
+    // um redirect muda o caminho e nao muda o host.
+    //
+    // O ultimo rotulo e **alfabetico** de proposito: sem isso `127.0.0.1` seria
+    // um "dominio oficial" bem formado, e IP literal e exatamente o que a
+    // fronteira precisa recusar.
+    tipo: z
+      .array(
+        z
+          .string()
+          .regex(/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/),
+      )
+      .min(1),
+    padrao: [
+      // Bancas do AD-009.
+      "cesgranrio.org.br",
+      "fgv.br",
+      "cebraspe.org.br",
+      // Orgao e diario oficial. `gov.br` cobre o orgao federal (caixa.gov.br,
+      // bcb.gov.br) e `in.gov.br` e a Imprensa Nacional; `bb.com.br` esta fora
+      // de `gov.br` porque o Banco do Brasil e sociedade de economia mista.
+      "gov.br",
+      "bb.com.br",
+    ],
+    moduloDono: "m1",
+    descricao:
+      "Hosts que valem como fonte legal de edital e de prova (AD-003): banca, orgao e diario oficial. Agregador nunca entra, mesmo que tenha o PDF. Comparacao e por host exato ou subdominio; incluir banca nova e linha nesta lista, sem deploy. Lista ilegivel ou vazia DESLIGA a busca, nunca a torna permissiva.",
+  }),
+  "param.m1.meta_provas_por_concurso": chave({
+    tipo: z.number().int().positive(),
+    padrao: 4,
+    moduloDono: "m1",
+    descricao:
+      "Quantas provas etiquetadas um concurso deveria ter para o Raio-X sair do chute. E alvo operacional que aparece no relatorio de abertura, nao trava: concurso com menos publica se a prontidao permitir, e o relatorio diz quantas faltam. Nao medido — default registrado na SPEC 40.",
+  }),
+  "param.m1.tamanho_maximo_pdf_mib": chave({
+    tipo: z.number().int().positive(),
+    padrao: 25,
+    moduloDono: "m1",
+    descricao:
+      "Teto em MiB de um PDF baixado de fonte oficial. O download para ao ultrapassar, sem gravar o arquivo: caderno de prova real fica bem abaixo disto, e o que passa do teto e sinal de que a URL nao aponta para o que se pensava.",
+  }),
+  "param.m1.limiar_quase_duplicata": chave({
+    tipo: z.number().min(0).max(1),
+    padrao: 0.78,
+    moduloDono: "m1",
+    descricao:
+      "Similaridade a partir da qual um assunto proposto pelo edital vira candidato a FUSAO com um assunto canonico existente. O numero so seleciona o que vai a pergunta; fundir continua sendo decisao humana (RAIOX-07). Provisorio — calibra na primeira abertura real.",
+  }),
+
   // ── M4 · coluna vertebral do aluno ────────────────────────────────────────
   // Nenhum destes numeros esta confirmado: sao [provisorio] nas Assumptions da
   // spec do M4. Estao aqui com default porque o AD-078 exige default declarado

@@ -61,6 +61,10 @@ describe("catalogo de chaves", () => {
       "param.m1.tolerancia_grade",
       "param.m1.cobertura_minima",
       "param.m1.itens_por_pedido_de_etiqueta",
+      "param.m1.dominios_oficiais",
+      "param.m1.meta_provas_por_concurso",
+      "param.m1.tamanho_maximo_pdf_mib",
+      "param.m1.limiar_quase_duplicata",
       "param.m4.algoritmo_revisao",
       "param.m4.fsrs_faixas_nota",
       "param.m4.minutos_por_questao",
@@ -218,5 +222,61 @@ describe("catalogo de chaves", () => {
       "constructor",
       "toString",
     ]);
+  });
+
+  it("a allowlist de fonte oficial so aceita host, e host nenhum e recusa (SPEC 40)", () => {
+    const dominios = CATALOGO["param.m1.dominios_oficiais"];
+
+    expect(dominios.padrao).toEqual([
+      "cesgranrio.org.br",
+      "fgv.br",
+      "cebraspe.org.br",
+      "gov.br",
+      "bb.com.br",
+    ]);
+
+    // Lista vazia nao e "aceite tudo": e configuracao invalida, e o leitor cai
+    // para o default em vez de abrir a fronteira (AD-078).
+    expect(dominios.tipo.safeParse([]).success).toBe(false);
+
+    // O que nao e host puro fica de fora: esquema, caminho, porta, curinga e
+    // caixa alta. Curinga e o pior deles — `*.gov.br` casaria com um host
+    // que apenas TERMINA em gov.br, e nao com o dominio.
+    for (const hostil of [
+      "https://cesgranrio.org.br",
+      "cesgranrio.org.br/provas",
+      "cesgranrio.org.br:8443",
+      "*.gov.br",
+      "GOV.BR",
+      "localhost",
+      "127.0.0.1",
+      "",
+    ]) {
+      expect(dominios.tipo.safeParse([hostil]).success).toBe(false);
+    }
+
+    expect(dominios.tipo.safeParse(["exemplo-de-banca.org.br"]).success).toBe(true);
+  });
+
+  it("declara as calibracoes da abertura de concurso (SPEC 40)", () => {
+    expect(CATALOGO["param.m1.meta_provas_por_concurso"].padrao).toBe(4);
+    expect(CATALOGO["param.m1.tamanho_maximo_pdf_mib"].padrao).toBe(25);
+    expect(CATALOGO["param.m1.limiar_quase_duplicata"].padrao).toBe(0.78);
+
+    // Meta e teto sao contagens inteiras e positivas: zero prova de meta ou
+    // teto fracionario de MiB sao configuracao errada, nao calibragem.
+    for (const chave of [
+      "param.m1.meta_provas_por_concurso",
+      "param.m1.tamanho_maximo_pdf_mib",
+    ] as const) {
+      expect(CATALOGO[chave].tipo.safeParse(0).success).toBe(false);
+      expect(CATALOGO[chave].tipo.safeParse(2.5).success).toBe(false);
+      expect(CATALOGO[chave].tipo.safeParse(-1).success).toBe(false);
+    }
+
+    const limiar = CATALOGO["param.m1.limiar_quase_duplicata"].tipo;
+    expect(limiar.safeParse(-0.01).success).toBe(false);
+    expect(limiar.safeParse(1.01).success).toBe(false);
+    expect(limiar.safeParse(0.9).success).toBe(true);
   });
 });

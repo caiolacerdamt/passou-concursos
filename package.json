@@ -15,6 +15,7 @@
     "jobs:frase-do-plano": "tsx scripts/jobs/frase-do-plano.mts",
     "jobs:ingestao": "tsx scripts/jobs/ingestao-de-prova.mts",
     "jobs:medir-prova": "tsx scripts/jobs/medir-prova.mts",
+    "jobs:abrir-concurso": "tsx scripts/jobs/abrir-concurso.mts",
     "jobs:importar-questoes-json": "tsx scripts/jobs/importar-questoes-json.mts",
     "jobs:grupo3": "tsx scripts/jobs/grupo3-classificacao.mts",
     "jobs:importar-recursos-estudo": "tsx scripts/jobs/importar-recursos-estudo.mts",

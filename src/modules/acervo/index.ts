@@ -46,6 +46,33 @@ export {
 } from "./pdf";
 
 export {
+  type BuscadorHttp,
+  type Candidato,
+  ConfiguracaoDaBuscaIlegivel,
+  DownloadRecusado,
+  MAXIMO_DE_REDIRECTS,
+  type Manifesto,
+  ManifestoInvalido,
+  type MotivoDeRecusa,
+  type PdfBaixado,
+  TIPOS_DE_DOCUMENTO,
+  type TipoDeDocumento,
+  type Triagem,
+  type Veredito,
+  avaliarUrl,
+  baixarAprovados,
+  baixarDocumentoOficial,
+  candidatoSchema,
+  hostPermitido,
+  lerDominiosOficiais,
+  lerManifesto,
+  manifestoSchema,
+  nomeInternoDoDocumento,
+  normalizarDominios,
+  triarCandidatos,
+} from "./documentos-oficiais";
+
+export {
   type BlocoDaProva,
   type OrcamentoDeTokens,
   PaginaMaiorQueOTeto,
@@ -105,6 +132,17 @@ export {
   itensSeparadosPorModeloSchema,
   lotesDeItens,
 } from "./etiqueta";
+
+export {
+  LIMITE_DE_PAGINAS,
+  LIMITE_DO_TRECHO,
+  type ProgramaExtraido,
+  type QuaseDuplicata,
+  TETO_DE_CANDIDATOS,
+  extrairPrograma,
+  quaseDuplicatas,
+  similaridade,
+} from "./programa-edital";
 
 export {
   type Classificacao,

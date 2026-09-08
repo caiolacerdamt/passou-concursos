@@ -9,6 +9,7 @@ const dependencias = vi.hoisted(() => ({
   sair: vi.fn(),
   solicitar: vi.fn(),
   reembolso: vi.fn(),
+  trocar: vi.fn(),
   precos: vi.fn(),
   repositorio: vi.fn(),
   reportar: vi.fn(),
@@ -27,6 +28,7 @@ vi.mock("@/modules/pagamentos/repositorio", () => ({
 vi.mock("./acoes", () => ({
   solicitarEsquecimento: dependencias.solicitar,
   pedirReembolso: dependencias.reembolso,
+  trocarSenha: dependencias.trocar,
 }));
 
 vi.mock("@/modules/pagamentos/preco", async () => {
@@ -66,7 +68,13 @@ describe("/app/conta", () => {
     dependencias.cliente.mockResolvedValue({
       auth: {
         getUser: vi.fn(async () => ({
-          data: { user: { id: "aluno-1", email: "aluno@exemplo.com" } },
+          data: {
+            user: {
+              id: "aluno-1",
+              email: "aluno@exemplo.com",
+              identities: [{ provider: "email" }],
+            },
+          },
         })),
       },
     });
@@ -149,6 +157,78 @@ describe("/app/conta", () => {
 
     expect(html).toContain("nada foi baixado");
     expect(html).toContain("Baixar meus dados");
+  });
+
+  describe("troca de senha", () => {
+    it("mostra o formulário de senha na aba de privacidade", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Senha e acesso");
+      expect(html).toContain('name="senha_atual"');
+      expect(html).toContain('name="senha"');
+      expect(html).toContain("Trocar senha");
+    });
+
+    /*
+     * Senha é tarefa corriqueira; apagar a conta é irreversível. Embaixo, o
+     * aluno passaria pelo botão vermelho toda vez que fosse fazer a coisa banal.
+     */
+    it("a seção de senha vem antes do bloco de apagar", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html.indexOf("Senha e acesso")).toBeLessThan(html.indexOf("Apagar minha conta"));
+    });
+
+    /*
+     * Quem entra pelo Google não tem senha nossa. Mostrar o formulário daria
+     * "senha atual incorreta" sobre uma senha que nunca existiu.
+     */
+    it("conta só-Google não renderiza formulário de senha", async () => {
+      dependencias.cliente.mockResolvedValue({
+        auth: {
+          getUser: vi.fn(async () => ({
+            data: {
+              user: {
+                id: "aluno-g",
+                email: "g@exemplo.com",
+                identities: [{ provider: "google" }],
+              },
+            },
+          })),
+        },
+      });
+
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Você entra pelo Google");
+      expect(html).not.toContain('name="senha_atual"');
+    });
+
+    it("confirma a troca sem esconder o formulário", async () => {
+      const html = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_trocada" }),
+      );
+
+      expect(html).toContain("Senha trocada");
+      expect(html).toContain('name="senha_atual"');
+    });
+
+    /*
+     * Uma frase só para os três motivos de recusa: separar diria a quem pegou
+     * uma sessão aberta se acertou a senha atual.
+     */
+    it("recusa senha curta e senha atual errada com a mesma frase", async () => {
+      const curta = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_curta" }),
+      );
+      const recusada = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_recusada" }),
+      );
+
+      expect(curta).toContain("Não foi possível trocar a senha");
+      expect(recusada).toContain("Não foi possível trocar a senha");
+      expect(recusada).not.toContain("senha atual está errada");
+    });
   });
 
   it("cai na assinatura quando a aba da URL não existe", async () => {

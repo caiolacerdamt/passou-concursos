@@ -10,6 +10,7 @@ const dependencias = vi.hoisted(() => ({
   repositorio: vi.fn(),
   gateway: vi.fn(),
   reembolso: vi.fn(),
+  conferir: vi.fn(),
   redirect: vi.fn((destino: string): never => {
     throw new Error(`NEXT_REDIRECT:${destino}`);
   }),
@@ -26,6 +27,15 @@ vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
 vi.mock("@/modules/lgpd/esquecimento", () => ({ executarEsquecimento: dependencias.executar }));
+vi.mock("@/modules/conta/troca-de-senha", async () => {
+  const real = await vi.importActual<typeof import("@/modules/conta/troca-de-senha")>(
+    "@/modules/conta/troca-de-senha",
+  );
+  // `provedoresDoUsuario` e `temSenhaPropria` continuam REAIS: e a regra do
+  // Google, e mocka-la aqui apagaria justamente o caso que o teste cobre. So a
+  // conferencia da senha atual e dublada, porque ela fala com o provedor.
+  return { ...real, conferirSenhaAtual: dependencias.conferir };
+});
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("@/modules/pagamentos/preco", () => ({ obterPrecosPublicos: dependencias.precos }));
 vi.mock("@/modules/pagamentos/asaas", () => ({
@@ -38,7 +48,7 @@ vi.mock("@/modules/pagamentos/repositorio", () => ({
   criarRepositorioDePagamentos: dependencias.repositorio,
 }));
 
-const { pedirReembolso, solicitarEsquecimento } = await import("./acoes");
+const { pedirReembolso, solicitarEsquecimento, trocarSenha } = await import("./acoes");
 
 function formulario(confirmacao = "APAGAR", userId = "tentativa-do-form") {
   const form = new FormData();
@@ -124,6 +134,138 @@ describe("action de esquecimento", () => {
       erro,
       expect.objectContaining({ operacao: "solicitar_esquecimento" }),
     );
+  });
+});
+
+describe("action de troca de senha", () => {
+  function sessaoComSenha(user: {
+    id: string;
+    email: string;
+    identities?: { provider: string }[];
+  }) {
+    const updateUser = vi.fn(async () => ({ error: null }));
+    dependencias.cliente.mockResolvedValue({
+      auth: {
+        getUser: vi.fn(async () => ({
+          data: { user: { identities: [{ provider: "email" }], ...user } },
+        })),
+        updateUser,
+      },
+    });
+    return updateUser;
+  }
+
+  function formularioDeSenha(atual = "senhaatual", nova = "senhanovalonga") {
+    const form = new FormData();
+    form.set("senha_atual", atual);
+    form.set("senha", nova);
+    return form;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    dependencias.conferir.mockResolvedValue(true);
+  });
+
+  it("troca a senha e volta com a confirmação", async () => {
+    const updateUser = sessaoComSenha({ id: "aluno-a", email: "a@x.com" });
+
+    await expect(trocarSenha(formularioDeSenha())).rejects.toThrow(
+      "NEXT_REDIRECT:/app/conta?aba=privacidade&resultado=senha_trocada",
+    );
+    expect(updateUser).toHaveBeenCalledWith({ password: "senhanovalonga" });
+  });
+
+  /*
+   * A regra é a de `senha.ts`, única do produto. Uma segunda regra aqui seria o
+   * começo da divergência — e vale sempre a mais frouxa.
+   */
+  it("recusa senha curta antes de ir ao provedor", async () => {
+    const updateUser = sessaoComSenha({ id: "aluno-a", email: "a@x.com" });
+
+    await expect(trocarSenha(formularioDeSenha("senhaatual", "curta"))).rejects.toThrow(
+      "resultado=senha_curta",
+    );
+    expect(dependencias.conferir).not.toHaveBeenCalled();
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  /*
+   * `updateUser` não pede a senha antiga. Sem a conferência, uma sessão
+   * esquecida aberta troca a senha e tranca o dono fora da própria conta.
+   */
+  it("exige a senha atual, que updateUser não pede", async () => {
+    const updateUser = sessaoComSenha({ id: "aluno-a", email: "a@x.com" });
+    dependencias.conferir.mockResolvedValue(false);
+
+    await expect(trocarSenha(formularioDeSenha())).rejects.toThrow(
+      "resultado=senha_recusada",
+    );
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  /*
+   * Conta só-Google não tem senha. A tela nem mostra o formulário; chegar aqui é
+   * pedido forjado, e ele não pode criar senha para uma conta que entra por
+   * outro caminho.
+   */
+  it("conta só-Google não ganha senha por pedido forjado", async () => {
+    const updateUser = sessaoComSenha({
+      id: "aluno-g",
+      email: "g@x.com",
+      identities: [{ provider: "google" }],
+    });
+
+    await expect(trocarSenha(formularioDeSenha())).rejects.toThrow(
+      "resultado=senha_sem_formulario",
+    );
+    expect(updateUser).not.toHaveBeenCalled();
+  });
+
+  it("sem sessão vai para o login sem conferir nada", async () => {
+    dependencias.cliente.mockResolvedValue({
+      auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
+    });
+
+    await expect(trocarSenha(formularioDeSenha())).rejects.toThrow(
+      "NEXT_REDIRECT:/entrar?proximo=%2Fapp%2Fconta",
+    );
+    expect(dependencias.conferir).not.toHaveBeenCalled();
+  });
+
+  it("falha do provedor não confirma troca que não aconteceu", async () => {
+    dependencias.cliente.mockResolvedValue({
+      auth: {
+        getUser: vi.fn(async () => ({
+          data: {
+            user: { id: "aluno-a", email: "a@x.com", identities: [{ provider: "email" }] },
+          },
+        })),
+        updateUser: vi.fn(async () => ({ error: new Error("auth fora do ar") })),
+      },
+    });
+
+    await expect(trocarSenha(formularioDeSenha())).rejects.toThrow(
+      "resultado=senha_recusada",
+    );
+    expect(dependencias.reportar).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ operacao: "trocar_senha" }),
+    );
+  });
+
+  /*
+   * A conferência da senha atual roda num cliente descartável: no cliente da
+   * sessão, `signInWithPassword` rotacionaria o cookie do próprio aluno no meio
+   * da operação.
+   */
+  it("confere a senha atual com o e-mail da sessão", async () => {
+    sessaoComSenha({ id: "aluno-a", email: "a@x.com" });
+
+    await expect(trocarSenha(formularioDeSenha("atualdela"))).rejects.toThrow(
+      "resultado=senha_trocada",
+    );
+    expect(dependencias.conferir).toHaveBeenCalledWith("a@x.com", "atualdela");
   });
 });
 

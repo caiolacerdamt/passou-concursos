@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Estado } from "@/modules/ui/estado";
+import { MINIMO_DE_CARACTERES } from "@/modules/conta/senha";
 import type { DadosDaTelaDaGarantia } from "@/modules/pagamentos/garantia-tela";
 import { fraseDaGarantia } from "@/modules/pagamentos/garantia-tela";
 
@@ -57,6 +58,11 @@ export type DadosDaConta = {
   fimDoAcesso: string | null;
   assinatura: AssinaturaDaConta | null;
   garantia: { tela: DadosDaTelaDaGarantia; dias: number } | null;
+  /**
+   * A conta tem senha própria? `false` para quem entra só pelo Google — e aí a
+   * seção de senha explica em vez de mostrar um formulário que só sabe falhar.
+   */
+  temSenha: boolean;
 };
 
 type AcaoSemEntrada = () => Promise<void>;
@@ -502,13 +508,103 @@ function Destinos() {
   );
 }
 
-function Privacidade({
-  solicitarEsquecimento,
+/**
+ * Trocar a senha logado (PAG-07).
+ *
+ * Fica **acima** do bloco de apagar, e não no fim da aba: senha é uma tarefa
+ * corriqueira e apagar a conta é irreversível. Embaixo, o aluno passaria o
+ * botão vermelho toda vez que fosse fazer a coisa banal — e a rotina de
+ * conviver com um botão perigoso é o que faz alguém clicar nele sem querer.
+ *
+ * O mínimo aparece no `minLength` do campo **e** é conferido na action: o
+ * atributo do HTML é conveniência, nunca a trava.
+ */
+function Senha({
+  temSenha,
+  trocarSenha,
 }: {
+  temSenha: boolean;
+  trocarSenha: AcaoDeFormulario;
+}) {
+  return (
+    <section aria-labelledby="titulo-senha" className="mt-9">
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
+        <h2 id="titulo-senha" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
+          Senha e acesso
+        </h2>
+        <p className="text-[0.8125rem] text-suave">Como você entra na sua conta</p>
+      </div>
+
+      {temSenha ? (
+        <form action={trocarSenha} className="mt-5 max-w-[21rem]">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="senha_atual" className="text-[0.84375rem] font-medium">
+              Senha atual
+            </label>
+            <input
+              id="senha_atual"
+              name="senha_atual"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="min-h-11 w-full rounded-[0.625rem] border border-linha bg-painel px-3.5 text-[0.9375rem] text-texto"
+            />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-1">
+            <label htmlFor="senha_nova" className="text-[0.84375rem] font-medium">
+              Nova senha
+            </label>
+            <input
+              id="senha_nova"
+              name="senha"
+              type="password"
+              autoComplete="new-password"
+              minLength={MINIMO_DE_CARACTERES}
+              required
+              aria-describedby="regra-da-nova-senha"
+              className="min-h-11 w-full rounded-[0.625rem] border border-linha bg-painel px-3.5 text-[0.9375rem] text-texto"
+            />
+            <p id="regra-da-nova-senha" className="mt-1 text-[0.8125rem] text-suave">
+              Ao menos {MINIMO_DE_CARACTERES} caracteres.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-marca px-6 font-semibold text-white transition hover:bg-marca-apoio"
+          >
+            Trocar senha
+          </button>
+        </form>
+      ) : (
+        /*
+         * Conta que entra só pelo Google não tem senha. Mostrar o formulário
+         * para ela daria "senha atual incorreta" sobre uma senha que nunca
+         * existiu — erro sem saída para o aluno.
+         */
+        <p className="mt-5 max-w-[58ch] text-sm leading-6 text-suave">
+          Você entra pelo Google, então não há senha nossa para trocar. Sua senha
+          e a verificação em duas etapas ficam na sua conta Google.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Privacidade({
+  temSenha,
+  solicitarEsquecimento,
+  trocarSenha,
+}: {
+  temSenha: boolean;
   solicitarEsquecimento: AcaoDeFormulario;
+  trocarSenha: AcaoDeFormulario;
 }) {
   return (
     <>
+      <Senha temSenha={temSenha} trocarSenha={trocarSenha} />
+
       <section aria-labelledby="titulo-destinos" className="mt-9">
         <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
           <h2 id="titulo-destinos" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
@@ -623,6 +719,7 @@ export function ContaTela({
   resultado,
   agora,
   solicitarEsquecimento,
+  trocarSenha,
   pedirReembolso,
 }: {
   aba: AbaDaConta;
@@ -630,6 +727,7 @@ export function ContaTela({
   resultado?: string;
   agora: Date;
   solicitarEsquecimento: AcaoDeFormulario;
+  trocarSenha: AcaoDeFormulario;
   pedirReembolso: AcaoSemEntrada;
 }) {
   return (
@@ -685,7 +783,11 @@ export function ContaTela({
           )}
         </>
       ) : (
-        <Privacidade solicitarEsquecimento={solicitarEsquecimento} />
+        <Privacidade
+          temSenha={dados.temSenha}
+          solicitarEsquecimento={solicitarEsquecimento}
+          trocarSenha={trocarSenha}
+        />
       )}
     </div>
   );
@@ -706,6 +808,39 @@ function Avisos({ resultado }: { resultado?: string }) {
       <div className="mt-6">
         <Estado tipo="degradado" oQueCaiu="A confirmação não foi reconhecida" />
       </div>
+    );
+  }
+
+  if (resultado === "senha_trocada") {
+    return (
+      <p
+        role="status"
+        className="mt-6 rounded-card border border-marca/30 bg-marca-suave px-4 py-3 text-sm leading-6 text-marca"
+      >
+        Senha trocada. Use a nova da próxima vez que entrar.
+      </p>
+    );
+  }
+
+  /*
+   * Uma frase só para senha curta, senha atual errada e falha do provedor.
+   * Separar os casos diria a quem pegou uma sessão aberta se acertou a senha
+   * atual — transformaria o formulário num verificador de senha, que é
+   * exatamente contra quem a conferência existe.
+   */
+  if (
+    resultado === "senha_recusada" ||
+    resultado === "senha_curta" ||
+    resultado === "senha_sem_formulario"
+  ) {
+    return (
+      <p
+        role="alert"
+        className="mt-6 rounded-card border border-erro/40 bg-erro-fundo px-4 py-3 text-sm leading-6 text-erro"
+      >
+        Não foi possível trocar a senha. Confira a senha atual e use uma nova com
+        ao menos {MINIMO_DE_CARACTERES} caracteres.
+      </p>
     );
   }
 

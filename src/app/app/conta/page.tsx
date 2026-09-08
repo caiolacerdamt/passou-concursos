@@ -3,13 +3,14 @@ import { redirect } from "next/navigation";
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { clienteDeServico } from "@/lib/db/servidor";
 import { matriculaAtiva, ultimaMatricula } from "@/modules/conta/matricula";
+import { provedoresDoUsuario, temSenhaPropria } from "@/modules/conta/troca-de-senha";
 import { ContaTela, abaValida, type DadosDaConta } from "@/modules/conta/conta-tela";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { dadosDaTelaDaGarantia } from "@/modules/pagamentos/garantia-tela";
 import { formatarBRL, obterPrecosPublicos } from "@/modules/pagamentos/preco";
 import { criarRepositorioDePagamentos } from "@/modules/pagamentos/repositorio";
 
-import { pedirReembolso, solicitarEsquecimento } from "./acoes";
+import { pedirReembolso, solicitarEsquecimento, trocarSenha } from "./acoes";
 
 export const dynamic = "force-dynamic";
 
@@ -134,9 +135,13 @@ export default async function Conta({
         email: user.email,
         tipo: matricula?.tipo ?? null,
         fimDoAcesso,
+        // Quem entra só pelo Google não tem senha nossa para trocar; a seção
+        // explica em vez de mostrar um formulário que só sabe falhar.
+        temSenha: temSenhaPropria(provedoresDoUsuario(user)),
         ...assinatura,
       }}
       solicitarEsquecimento={solicitarEsquecimento}
+      trocarSenha={trocarSenha}
       pedirReembolso={pedirReembolso}
     />
   );

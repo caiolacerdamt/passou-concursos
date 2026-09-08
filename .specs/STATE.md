@@ -1367,6 +1367,38 @@
 - **Date**: 2026-09-06
 - **Status**: active
 
+### AD-146
+- **Decision**: A medição do Raio-X passa a ler uma **fonte única**, a view `itens_medidos_efetivos`,
+  com uma linha por `(prova_id, numero)` e precedência determinística: **questão vigente, real e
+  publicada** vence **etiqueta humana**, que vence **etiqueta de IA**. Rascunho, rejeitada, versão
+  antiga e `origem='gerada_ia'` nunca entram como verdade de prova. A questão publicada **não é
+  copiada** para `etiquetas_de_item`: a view é a fronteira que junta as duas tabelas e expõe a coluna
+  `fonte` (`questao_publicada` · `etiqueta_humana` · `etiqueta_ia`) para a precedência ser auditável.
+  Junto disso, o vínculo entre concurso e prova vira **explícito**: a tabela `concurso_provas`
+  (`concurso_id`, `prova_id`, `vinculada_por`, `motivo`, `abertura_id`), escrita só pelo RPC
+  `vincular_prova_ao_concurso`, é quem responde `propria=true` em `recalcula_raiox()`. A igualdade
+  textual de `orgao`/`cargo` continua valendo **apenas** enquanto o concurso não tiver nenhum vínculo
+  explícito, como compatibilidade temporária e removível. O acervo legado é convertido **sem DELETE**:
+  nenhuma questão, tentativa, explicação ou prova é apagada, duplicada ou reclassificada.
+- **Reason**: O Raio-X do BB saiu inteiro em `0%`/`sem dado` porque as duas pontas falharam ao mesmo
+  tempo. A medição só olhava `etiquetas_de_item`, e o acervo tem 1.375 questões publicadas
+  classificadas e **zero** etiquetas — a verdade mais forte que existe estava fora da conta, e
+  reetiquetá-la por modelo seria pagar para produzir uma classificação pior que a conferida. E a
+  descoberta de prova própria comparava `concursos.orgao` com `provas.orgao` como texto: o concurso
+  legado é `'Banco do Brasil — Escriturário, Agente Comercial'`, as provas são
+  `orgao='Banco do Brasil'` + `cargo='Escriturário - Agente Comercial'`, e `cargo='indefinido'` é
+  sentinela — nenhuma prova do próprio banco casava. Vínculo humano registrado não quebra quando a
+  banca muda de grafia (`Cesgranrio` → `Fundação Cesgranrio`) nem quando o cargo ganha sufixo.
+- **Trade-off**: A view custa um `full join` por leitura da medição, e `cobertura_da_prova` deixa de
+  ser uma contagem de uma tabela só. Quem quiser corrigir a classificação de um item que já é questão
+  publicada tem de corrigir a **questão** — `corrigir_etiqueta` continua recusando esse item, e agora
+  a recusa tem consequência visível na medição. O vínculo explícito acrescenta uma escrita ao fluxo de
+  abertura (feita dentro da transação do download, sem pergunta nova ao operador) e obriga o backfill
+  do acervo legado a passar por decisão humana documento a documento, em vez de "adivinhar" pelo nome.
+- **Scope**: M5 Raio-X · M1 acervo/medição · SPEC 38/39/40 · backfill do concurso legado do BB.
+- **Date**: 2026-09-08
+- **Status**: active
+
 ## Handoff
 
 - **Feature**: **SPEC 40 — fluxo de abertura de concurso** (BANCO-01/02, RAIOX-07/20), Ritual B.

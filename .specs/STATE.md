@@ -1403,8 +1403,7 @@
 
 - **Feature**: **Backfill do Raio-X legado do Banco do Brasil** (`docs/planos/BACKFILL-RAIOX-BB-POS-SPEC40.md`),
   **AD-146**. Não é spec numerada: é correção de um defeito achado depois da SPEC 40. Branch
-  `fix/m5-backfill-raiox-bb`, 6 commits atômicos, sem push. **T1–T7 concluídas; T8 e T9 aguardam
-  autorização explícita e separada.**
+  `fix/m5-backfill-raiox-bb`, 7 commits atômicos, sem push. **T1–T8 concluídas; T9 parcial.**
 - **O defeito, em duas metades**: o Raio-X do BB saía inteiro em `0%`/`sem dado` porque (1) a medição
   só lia `etiquetas_de_item`, e o acervo tem **1.375 questões publicadas classificadas e zero
   etiquetas** — a verdade mais forte que existe estava fora da conta; e (2) "prova própria" era
@@ -1442,18 +1441,59 @@
   as questões publicadas já medem 70/70 nos cadernos principais (2023 Prova B, 2021 Prova A). 2018,
   2012 e 2010 têm acervo incompleto (35, 25 e 25 itens) e só entram se o etiquetador classificar o
   resto: ~125 itens, ~8 pedidos, menos de R$ 0,10 no total. Custo não é o gargalo.
-- **BLOQUEIO do T8**: **nenhuma das 28 provas tem `url_origem`**, e o vínculo pelo fluxo normal exige
-  URL oficial em host da allowlist. Não inventei nenhuma. O operador precisa entregar os links da
-  Cesgranrio/BB/diário oficial, ou decidir conscientemente vincular por RPC direta deixando a
-  proveniência das provas legadas sem registro (dívida a declarar). As seis perguntas que destravam o
-  T8 estão listadas no §10 do manifesto.
-- **In-progress / pendente**: T8 (aplicar o backfill) e T9 (verificação pós-aplicação) **não
-  autorizados** — o plano exige mensagem separada e inequívoca. `flag.m5.raiox` continua `true` e
-  `flag.m5.multi_concurso` não foi tocada. Continuam sem calibração `param.m1.cobertura_minima` (0,9),
-  `param.m1.meta_provas_por_concurso` (4) e `param.m5.peso_degrau_3` (0,5); o
-  `param.m1.limiar_quase_duplicata` (0,78) segue medido como estrito demais desde a SPEC 40. Segue
-  tudo aberto do TRIAL-2 e da SPEC 37.
-- **Next step**: responder as seis perguntas do §10 do manifesto e autorizar o T8. Depois dele, a
+- **T8 AUTORIZADO E APLICADO** (as seis respostas do §10 vieram do operador). Escrito no banco
+  compartilhado, tudo com `operador_acoes`: 6 vínculos em `concurso_provas` (2023 A/B/C e 2021 A/B/C,
+  banca `Fundação Cesgranrio`) por **RPC direta**, sem `url_origem` e sem `abertura_id` ·
+  `concursos.orgao`→`Banco do Brasil`, `concursos.cargo`→`Escriturário - Agente Comercial`,
+  `perfil_concurso.orgao`→`Banco do Brasil` · `caderno_irmao_de` em 4 provas (principais: 2023 Prova
+  B, 2021 Prova A) · grade de 2021 Prova A lida do PDF local: **8 blocos, 70 itens contra 70
+  declarados**, cobertura `1,0000` · `recalcula_raiox(current_date)`.
+- **Resultado**: o Raio-X do BB saiu de 8 matérias em degrau 4 com peso 0 para **8 matérias em degrau
+  1**, base `pontos`, somando 1,0 — Informática 22,5% · Vendas e Negociação 22,5% · Português 15% ·
+  Bancários 15% · Matemática Financeira 7,5% · Matemática 7,5% · Inglês 5% · Atualidades 5%. Os 85
+  tópicos saíram do degrau 4 para o **degrau 1**, somando 1,0. Acervo intacto e conferido: `questoes`
+  1.601/1.396 vigentes/1.375 publicadas, `tentativas` **106**, `etiquetas_de_item` **0** — nenhuma
+  questão foi copiada, que é o ponto da AD-146. `flag.m5.raiox` ficou **ligada** (decisão do
+  operador); `flag.m5.multi_concurso` não foi tocada.
+- **DÍVIDA declarada**: as 6 provas legadas estão vinculadas **sem proveniência** — `url_origem` e
+  `abertura_id` nulos, porque o operador optou por vincular sem esperar as URLs oficiais. Preencher
+  quando os links da Cesgranrio/BB chegarem; o fluxo normal da SPEC 40 faz isso sem refazer vínculo.
+- **2023 NÃO entrou, e o motivo mudou duas vezes durante a rodada** — registrar para não repetir a
+  investigação. Não é caderno errado nem arquivo incompleto: a página 1 dos três PDFs de 2023 **é** a
+  folha de instruções com a tabela da grade (conferido pelo operador no arquivo). O que falha é o
+  extrator, em dois pontos ainda abertos: (a) o layout de 2023 separa faixa e pontuação por quebra de
+  linha (`1 a 10`⏎`1,5 ponto cada`) e as duas regex de `grade.ts` exigem ou colado — como 2021 — ou
+  espaço com pontuação **inteira**; falta um terceiro padrão; (b) parte do texto da página 1 é
+  truncada no meio da palavra (`um CARTÃO-RESPOSTA destinad`), e por isso a frase do total
+  (`70 questões objetivas`) não sai — sem total, `lerGradeDeclarada` devolve `ausente` por AC4, que
+  proíbe deduzir o total somando os blocos. A página tem várias streams de conteúdo e a primeira delas
+  é só vetor, sem nenhum `Tj`. **Descartadas por medição**: não é Form XObject (2023 tem 7, 2021 zero,
+  mas ler os formulários rendeu +867 caracteres em outras páginas e **não** mexeu na página 1) e não é
+  a limpeza de texto nova (2021 sai com 66.244 caracteres antes e depois, idêntico).
+- **`separar` não se aplica a prova inteiramente publicada — cuidado no próximo backfill.** Rodar
+  `medir-prova --acao separar` na 2021 Prova A gravou `conferencia_motivo` (separou 27 de 70) e isso
+  **tirou a prova de `provas_medidas`**, que exige o campo nulo. O passo era inútil ali: os 70 itens
+  já são questões publicadas, não havia nada a enviar ao etiquetador, e a separação não alimenta
+  nenhum dos dois níveis do Raio-X. Desfeito com ação de operador registrada. A divergência é
+  legítima e vai voltar: a prova numera as **linhas** do texto de Português na lateral, e um extrator
+  que descarta posição não distingue número de linha de número de questão. Custou US$ 0,0248.
+- **Correção nova no leitor de PDF** (commit `fix(m1): le PDF 1.5+ com objetos comprimidos`):
+  `indexarObjetos` abre `/Type /ObjStm` (só preenche buraco — objeto solto vence), `ordemDasPaginas`
+  acha o `/Root` no stream de xref quando não há `trailer`, e `textoDoConteudo` descarta string que é
+  operando de operador que não exibe (`/Span <</Lang (pt-BR)>> BDC` grudava `pt-BR` em cada linha) e
+  decodifica UTF-16BE. Os **seis** cadernos do BB agora abrem; antes, cinco.
+- **Gate**: `npm run test:unit` **1364/0** · `tsc --noEmit` limpo · `eslint` limpo. Sensor de mutação
+  nos 6 testes novos: 5 falham contra o código antigo, e o sexto passa nas duas versões de propósito
+  (é o teste de não-regressão). `npm run test:db` e `npm run build` **não foram reexecutados** depois
+  do commit do leitor.
+- **In-progress / pendente**: T9 parcial — verificado 1, 2, 3, 5, 6, 7, 8, 9, 10 e 13(unit); **falta**
+  o item 4 (só **1** edição vinculada com grade lida, contra a meta de 4 — `param.m1.meta_provas_por_concurso`
+  não trava publicação), o item 11 (plano diário) e o item 12 (`/app/raio-x` na tela). Continuam sem
+  calibração `param.m1.cobertura_minima` (0,9), `param.m1.meta_provas_por_concurso` (4) e
+  `param.m5.peso_degrau_3` (0,5); o `param.m1.limiar_quase_duplicata` (0,78) segue medido como estrito
+  demais desde a SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37.
+- **Next step**: fechar 2023 pelos dois pontos do extrator descritos acima (é o que leva o concurso de
+  1 para 2 edições), abrir `/app/raio-x` para conferir a tela, e rodar `test:db` + `build`. Depois, a
   SPEC 41 do `ROADMAP.md`.
 
 ### Handoff anterior — SPEC 40

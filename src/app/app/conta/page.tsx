@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { clienteDeServico } from "@/lib/db/servidor";
-import { matriculaAtiva, ultimaMatricula } from "@/modules/conta/matricula";
+import { contextoDaMatricula } from "@/modules/conta/contexto";
+import { ultimaMatricula } from "@/modules/conta/matricula";
 import { provedoresDoUsuario, temSenhaPropria } from "@/modules/conta/troca-de-senha";
 import { ContaTela, abaValida, type DadosDaConta } from "@/modules/conta/conta-tela";
 import { reportarErro } from "@/modules/observabilidade/reporte";
@@ -112,7 +113,15 @@ export default async function Conta({
     redirect("/entrar?proximo=%2Fapp%2Fconta");
   }
 
-  const matricula = await matriculaAtiva();
+  /*
+   * `contextoDaMatricula` em vez de `matriculaAtiva` direto: ele devolve a
+   * matrícula **e** os números do trial já calculados. Recalcular "faltam N
+   * dias" aqui faria esta tela discordar da faixa do topo por arredondar
+   * diferente — e o aluno veria "2 dias" numa e "1 dia" na outra no mesmo
+   * minuto. Fora do trial ele não consulta o teto, então não custa nada.
+   */
+  const contexto = await contextoDaMatricula();
+  const matricula = contexto.matricula;
 
   /*
    * Sem matrícula ativa a data do fim vem da **última** matrícula: a ativa não
@@ -138,6 +147,8 @@ export default async function Conta({
         // Quem entra só pelo Google não tem senha nossa para trocar; a seção
         // explica em vez de mostrar um formulário que só sabe falhar.
         temSenha: temSenhaPropria(provedoresDoUsuario(user)),
+        diasRestantes: contexto.diasRestantes,
+        questoesRestantesHoje: contexto.questoesRestantesHoje,
         ...assinatura,
       }}
       solicitarEsquecimento={solicitarEsquecimento}

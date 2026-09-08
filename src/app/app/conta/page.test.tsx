@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const dependencias = vi.hoisted(() => ({
-  matricula: vi.fn(),
+  contexto: vi.fn(),
   ultima: vi.fn(),
   cliente: vi.fn(),
   servico: vi.fn(),
@@ -17,10 +17,8 @@ const dependencias = vi.hoisted(() => ({
 
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
-vi.mock("@/modules/conta/matricula", () => ({
-  matriculaAtiva: dependencias.matricula,
-  ultimaMatricula: dependencias.ultima,
-}));
+vi.mock("@/modules/conta/matricula", () => ({ ultimaMatricula: dependencias.ultima }));
+vi.mock("@/modules/conta/contexto", () => ({ contextoDaMatricula: dependencias.contexto }));
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("@/modules/pagamentos/repositorio", () => ({
   criarRepositorioDePagamentos: dependencias.repositorio,
@@ -58,11 +56,17 @@ describe("/app/conta", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(new Date("2026-09-01T12:00:00.000Z"));
-    dependencias.matricula.mockResolvedValue({
-      id: "matricula-1",
-      estado: "ativa",
-      fim_em: "2027-08-28T12:00:00.000Z",
+    dependencias.contexto.mockResolvedValue({
+      matricula: {
+        id: "matricula-1",
+        estado: "ativa",
+        fim_em: "2027-08-28T12:00:00.000Z",
+        tipo: "pago",
+      },
       tipo: "pago",
+      ehTrial: false,
+      diasRestantes: null,
+      questoesRestantesHoje: null,
     });
     dependencias.ultima.mockResolvedValue(null);
     dependencias.cliente.mockResolvedValue({
@@ -278,7 +282,13 @@ describe("/app/conta", () => {
    */
   describe("sem matrícula ativa", () => {
     beforeEach(() => {
-      dependencias.matricula.mockResolvedValue(null);
+      dependencias.contexto.mockResolvedValue({
+        matricula: null,
+        tipo: null,
+        ehTrial: false,
+        diasRestantes: null,
+        questoesRestantesHoje: null,
+      });
       dependencias.ultima.mockResolvedValue({
         id: "matricula-1",
         estado: "expirada",
@@ -352,6 +362,95 @@ describe("/app/conta", () => {
       const html = renderToStaticMarkup(await renderConta());
 
       expect(html).toContain("Quero meu dinheiro de volta");
+    });
+  });
+
+  /*
+   * Antes disso o aluno de trial caía no card de pagamento: sem preço, sem data
+   * e sem saída — um plano vazio que parecia produto quebrado.
+   */
+  describe("no trial", () => {
+    beforeEach(() => {
+      dependencias.contexto.mockResolvedValue({
+        matricula: {
+          id: "matricula-t",
+          estado: "ativa",
+          fim_em: "2026-09-05T12:00:00.000Z",
+          tipo: "trial",
+        },
+        tipo: "trial",
+        ehTrial: true,
+        diasRestantes: 4,
+        questoesRestantesHoje: 6,
+      });
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => null),
+      });
+    });
+
+    it("diz os dias que faltam e o teto do dia, com o convite", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Faltam 4 dias do seu teste grátis");
+      expect(html).toContain("6 questões");
+      expect(html).toContain('href="/checkout"');
+    });
+
+    /*
+     * Sem pagamento não há o que devolver. Um cabeçalho "Garantia" no trial
+     * seria promessa falsa.
+     */
+    it("não renderiza a palavra Garantia", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Garantia");
+    });
+
+    it("não mostra o card de plano pago nem valor nenhum", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Seu acesso vai até");
+      expect(html).not.toContain("Pagamento confirmado");
+    });
+
+    /*
+     * Invariante nº14: nada de contagem em segundos, vermelho ou "última
+     * chance". A urgência aqui é verdadeira e não precisa de teatro.
+     */
+    it("não inventa urgência", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("última chance");
+      expect(html).not.toContain("Últimas horas");
+      expect(html).not.toContain("text-erro");
+    });
+
+    /* `null` é leitura falha, e não zero: a tela cala a linha em vez de mentir. */
+    it("teto ilegível cala a linha em vez de dizer zero", async () => {
+      dependencias.contexto.mockResolvedValue({
+        matricula: {
+          id: "matricula-t",
+          estado: "ativa",
+          fim_em: "2026-09-05T12:00:00.000Z",
+          tipo: "trial",
+        },
+        tipo: "trial",
+        ehTrial: true,
+        diasRestantes: 4,
+        questoesRestantesHoje: null,
+      });
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Questões ainda hoje");
+      expect(html).toContain("Faltam 4 dias");
+    });
+
+    it("o selo do topo diz teste grátis, e não matrícula ativa", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Matrícula ativa");
+      expect(html).toContain("Teste grátis");
     });
   });
 

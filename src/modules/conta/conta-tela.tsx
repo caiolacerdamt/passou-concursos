@@ -63,6 +63,14 @@ export type DadosDaConta = {
    * seção de senha explica em vez de mostrar um formulário que só sabe falhar.
    */
   temSenha: boolean;
+  /**
+   * Dias inteiros até o fim do trial, ou `null` fora do trial / leitura falha.
+   * Vem de `contextoDaMatricula` — a tela **não** recalcula: doze superfícies
+   * arredondando por conta própria mostram "2 dias" numa e "1 dia" na outra.
+   */
+  diasRestantes: number | null;
+  /** Questões que ainda cabem hoje no teto do trial. `null` sem teto ou sem leitura. */
+  questoesRestantesHoje: number | null;
 };
 
 type AcaoSemEntrada = () => Promise<void>;
@@ -275,6 +283,85 @@ function Assinatura({
         </dl>
       ) : null}
     </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ trial ══ */
+
+/**
+ * A aba de assinatura de quem está no **trial** (AD-133).
+ *
+ * Antes disso a tela caía no card de pagamento sem preço, sem data e sem saída:
+ * o aluno de trial via um plano vazio e concluía que a conta estava quebrada.
+ *
+ * Os números saem de `contextoDaMatricula`, não de conta feita aqui. É o mesmo
+ * helper da faixa do topo — se esta tela recalculasse "faltam N dias" por
+ * conta própria, as duas se contradiriam no mesmo minuto por arredondar
+ * diferente.
+ *
+ * **Sem bloco de garantia**: não houve pagamento, não há o que devolver. E sem
+ * contagem em segundos, sem vermelho e sem "última chance" — invariante nº14.
+ */
+function Trial({
+  dados,
+}: {
+  dados: DadosDaConta;
+}) {
+  const dias = dados.diasRestantes;
+  const restantes = dados.questoesRestantesHoje;
+  const fim = dados.fimDoAcesso ? dataPorExtenso(dados.fimDoAcesso) : null;
+
+  return (
+    <div className="mt-8">
+      <section
+        aria-labelledby="titulo-trial"
+        className="rounded-2xl bg-breu px-7 pb-6 pt-6 text-breu-tinta sm:px-8"
+      >
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-breu-verde">
+          Teste grátis
+        </p>
+        <h2
+          id="titulo-trial"
+          className="mt-3 text-[1.5rem] font-semibold leading-tight tracking-[-0.022em] sm:text-[1.75rem]"
+        >
+          {/* `null` é leitura falha, não zero: sem número, a frase encurta. */}
+          {dias === null
+            ? "Seu teste grátis está em andamento"
+            : dias === 0
+              ? "Último dia do seu teste grátis"
+              : dias === 1
+                ? "Falta 1 dia do seu teste grátis"
+                : `Faltam ${dias} dias do seu teste grátis`}
+        </h2>
+        <p className="mt-2 text-sm text-breu-suave">
+          {fim
+            ? `O acesso do teste vai até ${fim}. Você não pagou nada e nada é cobrado sem você pedir.`
+            : "Você não pagou nada e nada é cobrado sem você pedir."}
+        </p>
+
+        {restantes === null ? null : (
+          <dl className="mt-5 border-t border-breu-linha pt-5">
+            <dt className="font-utilitaria text-[0.65625rem] uppercase tracking-[0.14em] text-breu-suave">
+              Questões ainda hoje
+            </dt>
+            <dd className="mt-1.5 text-sm">
+              {restantes === 0
+                ? "As questões de hoje acabaram. Amanhã o teto reabre."
+                : `${restantes} ${restantes === 1 ? "questão" : "questões"} dentro do teto diário do teste.`}
+            </dd>
+          </dl>
+        )}
+      </section>
+
+      <div className="mt-6">
+        <ConviteDeMatricula titulo="A matrícula tira o teto diário e abre o acervo inteiro.">
+          <p>
+            São 12 meses de acesso, e o que você já respondeu no teste continua no
+            seu histórico.
+          </p>
+        </ConviteDeMatricula>
+      </div>
+    </div>
   );
 }
 
@@ -753,6 +840,8 @@ export function ContaTela({
         <>
           {dados.tipo === null ? (
             <AcessoEncerrado fimDoAcesso={dados.fimDoAcesso} />
+          ) : dados.tipo === "trial" ? (
+            <Trial dados={dados} />
           ) : (
             <Assinatura dados={dados} agora={agora} />
           )}
@@ -763,10 +852,14 @@ export function ContaTela({
             travou no fechamento local precisa repetir o pedido, e nesse estado
             a matrícula já caiu. Esconder o bloco aqui deixaria esse caminho sem
             porta na interface.
+
+            O placeholder "não há pagamento para consultar", esse sim, só
+            aparece no plano pago. No trial não houve pagamento — não há o que
+            devolver, e um cabeçalho "Garantia" ali seria uma promessa falsa.
           */}
           {dados.garantia ? (
             <Garantia garantia={dados.garantia} pedirReembolso={pedirReembolso} />
-          ) : dados.tipo === null ? null : (
+          ) : dados.tipo !== "pago" ? null : (
             <section aria-labelledby="titulo-sem-garantia" className="mt-11">
               <div className="border-b border-linha pb-3.5">
                 <h2

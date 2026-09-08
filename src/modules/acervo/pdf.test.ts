@@ -248,4 +248,109 @@ describe("textoDoConteudo", () => {
   it("fluxo sem operador de texto devolve string vazia", () => {
     expect(textoDoConteudo(Buffer.from("1 0 0 1 50 700 cm", "latin1"))).toBe("");
   });
+
+  it("string de marcacao de idioma nao entra no texto da pagina", () => {
+    // O caderno do BB 2023 marca o idioma de cada trecho com
+    // `/Span <</Lang (pt-BR)>> BDC`. Essa string nunca e exibida, e antes ela
+    // grudava um "pt-BR" em cada linha do enunciado.
+    const fluxo = Buffer.from(
+      "BT /Span <</Lang (pt-BR)>> BDC (Qual e o montante?) Tj EMC ET",
+      "latin1",
+    );
+    expect(textoDoConteudo(fluxo)).toBe("Qual e o montante?");
+  });
+
+  it("string operando de operador que nao exibe some junto com ele", () => {
+    // `(nao exibida)` e operando de `BDC`; so `(exibida)` chega ao `Tj`.
+    const fluxo = Buffer.from("(nao exibida) BDC (exibida) Tj", "latin1");
+    expect(textoDoConteudo(fluxo)).toBe("exibida");
+  });
+
+  it("string UTF-16BE sai legivel, e nao como bytes soltos", () => {
+    // `FEFF` e o BOM; lido como Latin-1 ele virava "þÿ" seguido de um byte
+    // nulo entre cada letra.
+    const fluxo = Buffer.from("<FEFF00420042003200300032003300> Tj", "latin1");
+    expect(textoDoConteudo(fluxo)).toBe("BB2023");
+  });
+});
+
+describe("lerPdf — PDF 1.5+ com objetos comprimidos", () => {
+  /** Empacota corpos de objeto num `/Type /ObjStm`, como o PDF 1.5+ faz. */
+  function objectStream(numero: number, dentro: { numero: number; corpo: string }[]) {
+    const cabecalho: string[] = [];
+    let corpos = "";
+    for (const objeto of dentro) {
+      cabecalho.push(`${objeto.numero} ${corpos.length}`);
+      corpos += `${objeto.corpo} `;
+    }
+    const texto = `${cabecalho.join(" ")}\n`;
+    const bruto = Buffer.from(texto + corpos, "latin1");
+    const stream = deflateSync(bruto);
+
+    return {
+      numero,
+      corpo:
+        `<< /Type /ObjStm /N ${dentro.length} /First ${texto.length} ` +
+        `/Filter /FlateDecode /Length ${stream.length} >>`,
+      stream,
+    };
+  }
+
+  it("acha as paginas guardadas dentro de um object stream", () => {
+    const fluxo = conteudo(["QUESTAO 1", "Conhecimentos Bancarios"]);
+    const pdf = montarPdf([
+      objectStream(10, [
+        { numero: 1, corpo: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { numero: 2, corpo: "<< /Type /Pages /Count 1 /Kids [3 0 R] >>" },
+        { numero: 3, corpo: "<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>" },
+      ]),
+      { numero: 4, corpo: `<< /Length ${fluxo.length} >>`, stream: fluxo },
+    ]);
+
+    const lido = lerPdf(pdf);
+
+    expect(lido.totalDePaginas).toBe(1);
+    expect(lido.paginas[0].texto).toContain("Conhecimentos Bancarios");
+  });
+
+  it("acha o /Root no stream de xref quando nao ha trailer", () => {
+    // PDF 1.5+ troca o `trailer` pelo `stream` de xref. Sem ler o `/Root` de
+    // la, o caderno B do BB 2023 nao entregava pagina nenhuma.
+    const fluxo = conteudo(["QUESTAO 1"]);
+    const comTrailer = montarPdf([
+      objectStream(10, [
+        { numero: 1, corpo: "<< /Type /Catalog /Pages 2 0 R >>" },
+        { numero: 2, corpo: "<< /Type /Pages /Count 1 /Kids [3 0 R] >>" },
+        { numero: 3, corpo: "<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>" },
+      ]),
+      { numero: 4, corpo: `<< /Length ${fluxo.length} >>`, stream: fluxo },
+    ]);
+
+    const semTrailer = Buffer.concat([
+      comTrailer.subarray(0, comTrailer.indexOf(Buffer.from("trailer", "latin1"))),
+      Buffer.from("11 0 obj\n<< /Type /XRef /Root 1 0 R >>\nendobj\n%%EOF\n", "latin1"),
+    ]);
+
+    const lido = lerPdf(semTrailer);
+
+    expect(lido.totalDePaginas).toBe(1);
+    expect(lido.paginas[0].texto).toContain("QUESTAO 1");
+  });
+
+  it("objeto solto no arquivo vence o homonimo de dentro do pacote", () => {
+    // Garante que abrir o pacote nao muda PDF que ja era lido: o pacote so
+    // preenche buraco.
+    const fluxo = conteudo(["PAGINA SOLTA"]);
+    const pdf = montarPdf([
+      { numero: 1, corpo: "<< /Type /Catalog /Pages 2 0 R >>" },
+      { numero: 2, corpo: "<< /Type /Pages /Count 1 /Kids [3 0 R] >>" },
+      { numero: 3, corpo: "<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>" },
+      { numero: 4, corpo: `<< /Length ${fluxo.length} >>`, stream: fluxo },
+      objectStream(10, [
+        { numero: 3, corpo: "<< /Type /Page /Parent 2 0 R /Contents 99 0 R >>" },
+      ]),
+    ]);
+
+    expect(lerPdf(pdf).paginas[0].texto).toContain("PAGINA SOLTA");
+  });
 });

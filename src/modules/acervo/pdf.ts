@@ -119,7 +119,60 @@ function indexarObjetos(bruto: Buffer): Map<number, ObjetoBruto> {
     objetos.set(numero, { dicionario, conteudo: aplicarFiltro(dicionario, conteudo) });
   }
 
+  expandirObjectStreams(objetos);
+
   return objetos;
+}
+
+/**
+ * Abre os objetos que o PDF 1.5+ guarda **comprimidos** dentro de um
+ * `/Type /ObjStm`.
+ *
+ * A partir do PDF 1.5 a banca pode empacotar catalogo, arvore de paginas e
+ * dicionarios de pagina dentro de um unico `stream` Flate, e ai nada disso
+ * aparece como `N 0 obj` solto no arquivo. A varredura sequencial nao ve
+ * objeto nenhum e o documento parece nao ter pagina — que era o defeito do
+ * caderno B do BB 2023.
+ *
+ * O formato: o conteudo descomprimido comeca com `N` pares
+ * `numero deslocamento` e, do byte `/First` em diante, traz os corpos colados,
+ * sem `obj`/`endobj`. Objeto ali dentro **nunca** tem `stream` proprio (a
+ * especificacao proibe), por isso `conteudo` e sempre `null`.
+ *
+ * **So preenche buraco.** Objeto que ja apareceu solto no arquivo vence o que
+ * vem do pacote: e o que garante que PDF que ja era lido continue lido
+ * exatamente igual.
+ */
+function expandirObjectStreams(objetos: Map<number, ObjetoBruto>): void {
+  for (const objeto of [...objetos.values()]) {
+    if (objeto.conteudo === null) continue;
+    if (!/\/Type\s*\/ObjStm\b/.test(objeto.dicionario)) continue;
+
+    const quantos = Number(/\/N\s+(\d+)\b/.exec(objeto.dicionario)?.[1] ?? NaN);
+    const primeiro = Number(/\/First\s+(\d+)\b/.exec(objeto.dicionario)?.[1] ?? NaN);
+    if (!Number.isFinite(quantos) || !Number.isFinite(primeiro)) continue;
+
+    const texto = objeto.conteudo.toString("latin1");
+    const cabecalho = texto.slice(0, primeiro).trim().split(/\s+/);
+    // Cabecalho curto = pacote cortado. Melhor ignorar o pacote inteiro do que
+    // indexar corpo que comeca no lugar errado.
+    if (cabecalho.length < quantos * 2) continue;
+
+    for (let i = 0; i < quantos; i += 1) {
+      const numero = Number(cabecalho[i * 2]);
+      const inicio = Number(cabecalho[i * 2 + 1]);
+      if (!Number.isFinite(numero) || !Number.isFinite(inicio)) continue;
+      if (objetos.has(numero)) continue;
+
+      // O corpo vai ate o deslocamento do proximo; o ultimo vai ate o fim.
+      const proximo = i + 1 < quantos ? Number(cabecalho[i * 2 + 3]) : NaN;
+      const fim = Number.isFinite(proximo) ? primeiro + proximo : texto.length;
+      objetos.set(numero, {
+        dicionario: texto.slice(primeiro + inicio, fim),
+        conteudo: null,
+      });
+    }
+  }
 }
 
 /**
@@ -156,6 +209,25 @@ function referenciasDoArray(trecho: string): number[] {
 }
 
 /**
+ * O objeto `/Root` — o catalogo, por onde a arvore de paginas comeca.
+ *
+ * O `trailer` primeiro, que e onde o PDF classico guarda o `/Root`. PDF 1.5+
+ * troca o `trailer` por um `stream` de xref e guarda o `/Root` no dicionario
+ * dele; ai vale a **ultima** ocorrencia do arquivo, porque atualizacao
+ * incremental empilha revisao e a mais nova fica no fim.
+ */
+function raizDoDocumento(texto: string): number | null {
+  const marca = texto.lastIndexOf("trailer");
+  if (marca !== -1) {
+    const doTrailer = referencia(texto.slice(marca), "Root");
+    if (doTrailer !== null) return doTrailer;
+  }
+
+  const todas = [...texto.matchAll(/\/Root\s+(\d+)\s+\d+\s+R/g)];
+  return todas.length === 0 ? null : Number(todas[todas.length - 1][1]);
+}
+
+/**
  * As paginas na ordem em que o documento as declara.
  *
  * A ordem sai da arvore `/Root -> /Pages -> /Kids`, e nao da ordem dos objetos
@@ -169,7 +241,7 @@ function ordemDasPaginas(
   objetos: Map<number, ObjetoBruto>,
 ): number[] {
   const texto = bruto.toString("latin1");
-  const raiz = referencia(texto.slice(texto.lastIndexOf("trailer")), "Root");
+  const raiz = raizDoDocumento(texto);
   const paginasDoCatalogo =
     raiz === null ? null : referencia(objetos.get(raiz)?.dicionario ?? "", "Pages");
 
@@ -202,8 +274,36 @@ function ordemDasPaginas(
     .sort((a, b) => a - b);
 }
 
-/** Os operadores de texto do PDF: `Tj`, `TJ`, `'` e `"`. */
-const OPERADOR_DE_TEXTO = /\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]*>|\bT[jJ]\b|'|"/g;
+/**
+ * As pecas do fluxo de conteudo que interessam: string literal, string
+ * hexadecimal, os operadores que **exibem** texto (`Tj`, `TJ`, `'`, `"`) e
+ * qualquer outro token de palavra.
+ *
+ * O token generico entrou por causa de um defeito real: nem toda string do
+ * fluxo e texto da pagina. `/Span <</Lang (pt-BR)>> BDC` marca o idioma do
+ * trecho, e a string `(pt-BR)` nunca e exibida — mas a versao antiga desta
+ * regex so enxergava strings e `Tj`/`TJ`, entao guardava `pt-BR` junto com o
+ * enunciado e entregava um `pt-BR` grudado em cada linha da prova. Enxergar o
+ * operador seguinte e o que permite jogar fora a string que ele nao exibe.
+ */
+const OPERADOR_DE_TEXTO =
+  /\((?:\\.|[^\\()])*\)|<[0-9A-Fa-f\s]*>|\bT[jJ]\b|'|"|[A-Za-z][A-Za-z0-9*]*/g;
+
+/**
+ * String que comeca com o BOM `FE FF` e UTF-16BE, nao Latin-1.
+ *
+ * Sem isto o BOM sai como `þÿ` e cada caractere seguinte vira um par com um
+ * byte nulo no meio — o lixo que aparecia no texto extraido dos cadernos.
+ */
+function talvezUtf16(bytes: string): string {
+  if (bytes.charCodeAt(0) !== 0xfe || bytes.charCodeAt(1) !== 0xff) return bytes;
+
+  let saida = "";
+  for (let i = 2; i + 1 < bytes.length; i += 2) {
+    saida += String.fromCharCode((bytes.charCodeAt(i) << 8) | bytes.charCodeAt(i + 1));
+  }
+  return saida;
+}
 
 function decodificarLiteral(cru: string): string {
   return cru
@@ -249,11 +349,18 @@ export function textoDoConteudo(conteudo: Buffer): string {
     const pedaco = achado[0];
 
     if (pedaco.startsWith("(")) {
-      pendentes.push(decodificarLiteral(pedaco));
+      pendentes.push(talvezUtf16(decodificarLiteral(pedaco)));
       continue;
     }
     if (pedaco.startsWith("<")) {
-      pendentes.push(decodificarHex(pedaco));
+      pendentes.push(talvezUtf16(decodificarHex(pedaco)));
+      continue;
+    }
+
+    // Operador que nao exibe (`BDC`, `Tf`, `EMC`...) descarta o que estava
+    // pendente: aquilo era operando dele, e nao texto da pagina.
+    if (pedaco !== "Tj" && pedaco !== "TJ" && pedaco !== "'" && pedaco !== '"') {
+      pendentes.length = 0;
       continue;
     }
     if (pendentes.length === 0) continue;

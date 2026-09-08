@@ -34,7 +34,7 @@ describe("páginas públicas legais", () => {
     expect(privacidade).toContain('href="/termos"');
     expect(privacidade).toContain("Resend");
     expect(privacidade).toContain("Faturas, aceite");
-    expect(privacidade).toContain("privacidade@passouconcursos.com");
+    expect(privacidade).toContain("passouconcurso@gmail.com");
     expect(privacidade).toContain("checkbox de consentimento");
   });
 });

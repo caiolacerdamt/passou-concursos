@@ -1401,6 +1401,63 @@
 
 ## Handoff
 
+- **Feature**: **Backfill do Raio-X legado do Banco do Brasil** (`docs/planos/BACKFILL-RAIOX-BB-POS-SPEC40.md`),
+  **AD-146**. Não é spec numerada: é correção de um defeito achado depois da SPEC 40. Branch
+  `fix/m5-backfill-raiox-bb`, 6 commits atômicos, sem push. **T1–T7 concluídas; T8 e T9 aguardam
+  autorização explícita e separada.**
+- **O defeito, em duas metades**: o Raio-X do BB saía inteiro em `0%`/`sem dado` porque (1) a medição
+  só lia `etiquetas_de_item`, e o acervo tem **1.375 questões publicadas classificadas e zero
+  etiquetas** — a verdade mais forte que existe estava fora da conta; e (2) "prova própria" era
+  comparação textual de `orgao`/`cargo`, e o concurso legado é `Banco do Brasil — Escriturário,
+  Agente Comercial` com `cargo='indefinido'` enquanto as provas são `orgao='Banco do Brasil'` +
+  `cargo='Escriturário - Agente Comercial'`. Nenhuma prova do próprio banco casava.
+- **A decisão de forma (AD-146)**: `itens_medidos_efetivos` é a fonte única — uma linha por
+  `(prova_id, numero)`, com questão publicada > etiqueta humana > etiqueta de IA — e a questão **não
+  é copiada** para `etiquetas_de_item`; a view é a fronteira, e `fonte` deixa a precedência
+  auditável. `concurso_provas` responde "esta prova dá lastro a este concurso" por decisão humana com
+  autor, motivo e abertura de origem; a igualdade textual sobrevive só enquanto o concurso não tiver
+  nenhum vínculo, e é removível. A fórmula de dois níveis da SPEC 39 **não mudou**.
+- **Completed**: 3 migrations (`20260910120000`, `20260910121000`, `20260910122000`) —
+  `itens_medidos_efetivos`, `concurso_provas`, `vincular_prova_ao_concurso` (idempotente),
+  `provas_proprias_do_concurso`, `cobertura_da_prova` e `prova_bloco_materia` lendo a view efetiva,
+  `recalcula_raiox` com as duas trocas, e `registrar_documento_baixado` gravando o vínculo na mesma
+  transação do download · `medir-prova --acao etiquetar` só envia ao modelo os itens **sem** medição
+  efetiva (prova inteiramente publicada custa **zero**: nem catálogo, nem matriz, nem chamada) ·
+  `abrir-concurso --acao inventario-legado`, somente leitura de verdade (o cliente recusa qualquer SQL
+  que não comece por `select`/`with`) · seção nova na skill canônica.
+- **Gate**: `npm run test:unit` **1358/0** · `npm run test:db` **547/0** · `tsc --noEmit` limpo ·
+  `eslint` 0 erros · `npm run build` OK. As 3 migrations foram aplicadas por `npm run db:push` no
+  Supabase de desenvolvimento — **que é o mesmo banco de produção** enquanto a SPEC 25 não separar
+  ambientes. Snapshot antes/depois **idêntico** em `questoes`, `provas`, `tentativas`,
+  `raiox_projecoes`, `raiox_projecoes_materia` e `concursos`: o DDL foi neutro porque, sem vínculo
+  gravado, `provas_proprias_do_concurso` cai no caminho textual antigo, e como as 28 provas estão
+  todas com `grade_status='ausente'` a `provas_medidas` continua vazia.
+- **Três correções que só apareceram contra o banco real** (viraram teste): versão de questão a partir
+  da v2 exige `mudanca_tipo`/`mudanca_motivo` (BANCO-13); `gerada_ia` **não pode** virar `publicada` —
+  a trava da SPEC 10 recusa antes de a view opinar, e o filtro `origem='real'` é a segunda tranca; e
+  sem vínculo e sem edital a matéria cai no degrau **4**, não no 3, porque o degrau 3 empresta só a
+  distribuição de dentro da matéria e o peso continua exigindo documento do próprio concurso.
+- **T7 entregue**: `docs/planos/MANIFESTO-BACKFILL-BB.md`, produzido pelo dry-run somente leitura.
+  Achado que muda a execução: **2023 e 2021 atingem a cobertura mínima com zero chamada de modelo** —
+  as questões publicadas já medem 70/70 nos cadernos principais (2023 Prova B, 2021 Prova A). 2018,
+  2012 e 2010 têm acervo incompleto (35, 25 e 25 itens) e só entram se o etiquetador classificar o
+  resto: ~125 itens, ~8 pedidos, menos de R$ 0,10 no total. Custo não é o gargalo.
+- **BLOQUEIO do T8**: **nenhuma das 28 provas tem `url_origem`**, e o vínculo pelo fluxo normal exige
+  URL oficial em host da allowlist. Não inventei nenhuma. O operador precisa entregar os links da
+  Cesgranrio/BB/diário oficial, ou decidir conscientemente vincular por RPC direta deixando a
+  proveniência das provas legadas sem registro (dívida a declarar). As seis perguntas que destravam o
+  T8 estão listadas no §10 do manifesto.
+- **In-progress / pendente**: T8 (aplicar o backfill) e T9 (verificação pós-aplicação) **não
+  autorizados** — o plano exige mensagem separada e inequívoca. `flag.m5.raiox` continua `true` e
+  `flag.m5.multi_concurso` não foi tocada. Continuam sem calibração `param.m1.cobertura_minima` (0,9),
+  `param.m1.meta_provas_por_concurso` (4) e `param.m5.peso_degrau_3` (0,5); o
+  `param.m1.limiar_quase_duplicata` (0,78) segue medido como estrito demais desde a SPEC 40. Segue
+  tudo aberto do TRIAL-2 e da SPEC 37.
+- **Next step**: responder as seis perguntas do §10 do manifesto e autorizar o T8. Depois dele, a
+  SPEC 41 do `ROADMAP.md`.
+
+### Handoff anterior — SPEC 40
+
 - **Feature**: **SPEC 40 — fluxo de abertura de concurso** (BANCO-01/02, RAIOX-07/20), Ritual B.
   **Execute concluída, T1–T8.** Branch `feat/spec40-abertura-concurso`, 8 commits atômicos, sem push.
 - **Completed**: migration `20260909120000_spec40_abertura_concurso.sql` — `aberturas_concurso`,
@@ -1441,46 +1498,3 @@
   transação revertida. O primeiro uso de verdade depende de PDF oficial na mão (pendência externa do
   `ROADMAP.md`). Quando houver, rodar `$abrir-concurso` / `/abrir-concurso` para CAIXA · técnico
   bancário é o teste que falta, e é ele que calibra o limiar e a meta de provas.
-
-### Handoff anterior — SPEC 39
-
-- **Feature**: **SPEC 39 — Raio-X por concurso: dois níveis, a prova como unidade e o lastro na tela**
-  (RAIOX-16, RAIOX-17, RAIOX-18). Ritual **A**: `design.md` + `tasks.md` + `validation.md` +
-  verificador independente completo com sensor de mutação.
-- **Phase / Task**: Execute concluída, T1–T12. Branch `feat/spec39-raiox-dois-niveis`.
-- **A decisão de forma**: `peso(assunto) = peso_oficial(matéria) × share(assunto|matéria)`. O nível 1
-  vem de **documento** — a grade declarada pela prova (`prova_blocos`, com `materia_id` novo) ou o
-  peso declarado pelo edital (`concurso_peso_materia`, tabela nova) — e **o edital manda na matéria
-  que ele nomeia**, porque ele fala do concurso que vem e a grade fala do que passou. O nível 2 é
-  estimado das `etiquetas_de_item`, calculado **por prova** e combinado pela média ponderada pelo
-  decaimento: sai o denominador único que dividia o peso do tópico pelo acervo inteiro da banca. O
-  amortecimento do AD-056 continua, agora **dentro da matéria** e ancorado na média daquela matéria.
-  Cada linha declara o lastro (degrau 1–4, quantas provas, quais anos, qual base) e, do degrau 2 para
-  baixo, a tela para na matéria.
-- **Completed**: 3 migrations (`20260908120000`, `20260908121000`, `20260908122000`) ·
-  `prova_blocos.materia_id`, `concurso_peso_materia`, 4 colunas de lastro nas duas projeções ·
-  `vincular_bloco_a_materia`, `registrar_peso_do_edital`, views `prova_bloco_materia` e
-  `provas_pendentes_de_ingestao` · `recalcula_raiox` reescrita · `raiox_peso_topico` e
-  `raiox_peso_do_aluno` com o terceiro caso (**AD-143**) · `param.m5.peso_degrau_3` no catálogo ·
-  lastro no DTO e na tela do Raio-X · fixtures de medição em `tests/db/medicao.ts`.
-- **Verificação independente**: 15 AC + 8 Success Criteria, **veredito APROVADO COM RESSALVAS**.
-  1 **Major** corrigido (o edital era descartado por completo assim que existisse qualquer prova
-  própria — matéria declarada em 50% ia a peso 0/degrau 4) e 6 Minor, todos tratados. Antes disso o
-  autor achou **2 Blockers**: o sentinela `cargo='indefinido'` do concurso migrado pela SPEC 37, e —
-  no ensaio contra o acervo real — a fronteira do plano caindo de 85 tópicos para zero. Sensor de
-  mutação: **9 injetadas, 9 mortas**; duas sobreviveram na primeira passada e exigiram teste novo.
-- **Gate**: `npm run test:unit` **1247 testes / 0 falhas** · `npm run test:db` **506 testes / 0
-  falhas** · `tsc --noEmit` limpo · `eslint src scripts tests` sem erro novo. As 3 migrations foram
-  aplicadas no Supabase de desenvolvimento por `npm run db:push` — **e ele é o mesmo banco de
-  produção** enquanto a SPEC 25 não separar ambientes.
-- **In-progress / pendente**: o acervo real tem **28 provas todas sem grade lida e zero etiquetas** —
-  hoje o Raio-X sai inteiro em degrau 4 e quem sustenta o plano é o fallback do AD-143. Medir a
-  primeira prova de verdade é o próximo passo de produto, e depende da tela que completa a grade
-  (SPEC 40). Continuam sem calibração `param.m5.peso_degrau_3` (0,5) e `param.m1.cobertura_minima`
-  (0,9). `prova_blocos.materia_id` e `concurso_peso_materia` **não têm operador** — a SPEC 40 é quem
-  precisa exigir o quadro do edital inteiro, porque declarar metade das matérias é declarar que a
-  outra metade não cai. Segue tudo aberto do TRIAL-2 e da SPEC 37; nada disso foi tocado aqui.
-- **Next step**: **SPEC 40** (fluxo de abertura de concurso: busca só em domínio oficial, telas de
-  aprovação, fusão de assunto duplicado, relatório de prontidão por degrau), Ritual **B**. Ela consome
-  `provas_pendentes_de_ingestao`, `grade_ausente_fila`, `vincular_bloco_a_materia`,
-  `registrar_peso_do_edital` e o `degrau` desta spec.

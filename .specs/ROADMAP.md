@@ -140,7 +140,7 @@ trabalho é refeito.
 | 37 | **Concurso — assunto canônico e nome do edital** | assunto canônico compartilhado × matérias com o nome do edital de cada concurso, aluno escolhe o concurso, concurso nasce oculto | 11, 13 | 11 | B · ✅ Concluída |
 | 38 | **Leitor de prova — grade, itens e etiqueta** | grade declarada pela própria prova, cobertura, separação determinística com IA de reserva, etiqueta barata onde humano vence IA | 08, 09, 37 | 11 | B · ✅ Concluída |
 | 39 | **Raio-X por concurso — dois níveis e lastro** | `peso_oficial(matéria) × share(assunto\|matéria)`, a prova como unidade, degraus de lastro, granularidade honesta | 11, 20, 37, 38 | 12 | **A** · ✅ Concluída |
-| 40 | **Fluxo de abertura de concurso** | agente pesquisa só em domínio oficial na própria sessão, duas confirmações na conversa, fusão de assunto duplicado, relatório de prontidão por degrau | 15, 37, 38, 39 | 8 | B · ✅ Concluída |
+| 40 | **Fluxo de abertura de concurso** | agente pesquisa só em domínio oficial na própria sessão, duas confirmações na conversa, fusão de assunto duplicado, relatório de prontidão por degrau | 15, 37, 38, 39 | 8 | B · ✅ Concluída · corrigida pela AD-146 |
 
 **Total:** ~386 tasks em 40 specs (eram ~344 em 36 antes do AD-138/139/140). Nenhuma spec passa de 12
 — e se a fase Tasks desmentir para cima, a spec se divide antes de entrar em Execute.

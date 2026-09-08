@@ -574,19 +574,42 @@ function Privacidade({
       <section aria-labelledby="titulo-direitos" className="mt-11">
         <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
           <h2 id="titulo-direitos" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
-            Seus dados
+            Levar seus dados
           </h2>
-          <p className="text-[0.8125rem] text-suave">Outros direitos previstos na LGPD</p>
+          <p className="text-[0.8125rem] text-suave">Direito de acesso — LGPD, art. 18</p>
         </div>
-        <p className="mt-5 max-w-[58ch] text-sm leading-6 text-suave">
-          Precisa exercer outro direito, como acesso ou correção? No lançamento,
-          esse atendimento é feito manualmente pelo canal de privacidade informado
-          na{" "}
-          <Link href="/privacidade" className="font-medium underline">
-            política de privacidade
-          </Link>
-          .
-        </p>
+
+        <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <p className="max-w-[58ch] text-[0.9375rem] leading-6">
+              Baixe um arquivo com tudo o que guardamos sobre você: respostas,
+              planos, revisões, caderno de erros, matrícula e pagamentos.
+            </p>
+            <p className="mt-2 max-w-[58ch] text-[0.84375rem] leading-6 text-suave">
+              É um JSON, gerado na hora. Baixar não apaga nada e não muda seu
+              acesso. Precisa exercer outro direito, como correção? O canal está
+              na{" "}
+              <Link href="/privacidade" className="font-medium underline">
+                política de privacidade
+              </Link>
+              .
+            </p>
+          </div>
+
+          {/*
+            POST, não link: o pedido grava um registro de auditoria, e um GET
+            que escreve é disparado por qualquer página de terceiro embutindo a
+            URL. Como formulário, o cookie SameSite já barra isso.
+          */}
+          <form method="post" action="/app/conta/exportar" className="sm:w-[14.5rem] sm:shrink-0">
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center justify-center rounded-pill border border-linha bg-painel px-4 text-[0.90625rem] font-medium text-texto transition-colors hover:border-marca hover:text-marca"
+            >
+              Baixar meus dados
+            </button>
+          </form>
+        </div>
       </section>
     </>
   );
@@ -683,6 +706,18 @@ function Avisos({ resultado }: { resultado?: string }) {
       <div className="mt-6">
         <Estado tipo="degradado" oQueCaiu="A confirmação não foi reconhecida" />
       </div>
+    );
+  }
+
+  if (resultado === "exportacao_falhou") {
+    return (
+      <p
+        role="alert"
+        className="mt-6 rounded-card border border-erro/40 bg-erro-fundo px-4 py-3 text-sm leading-6 text-erro"
+      >
+        Não conseguimos montar seu arquivo agora, e por isso nada foi baixado —
+        entregar metade sem avisar seria pior. Tente de novo em alguns minutos.
+      </p>
     );
   }
 

@@ -129,6 +129,28 @@ describe("/app/conta", () => {
     expect(html).toContain('name="confirmacao"');
   });
 
+  /*
+   * Exportar é POST, não link: o pedido grava um registro de auditoria, e um
+   * GET que escreve é disparado por qualquer página de terceiro que embuta a
+   * URL na sessão do aluno.
+   */
+  it("oferece o download dos dados por POST na aba de privacidade", async () => {
+    const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+    expect(html).toContain('action="/app/conta/exportar"');
+    expect(html).toContain('method="post"');
+    expect(html).toContain("Baixar meus dados");
+  });
+
+  it("avisa que nada foi baixado quando a exportação falha", async () => {
+    const html = renderToStaticMarkup(
+      await renderConta({ aba: "privacidade", resultado: "exportacao_falhou" }),
+    );
+
+    expect(html).toContain("nada foi baixado");
+    expect(html).toContain("Baixar meus dados");
+  });
+
   it("cai na assinatura quando a aba da URL não existe", async () => {
     const html = renderToStaticMarkup(await renderConta({ aba: "../../etc/passwd" }));
 

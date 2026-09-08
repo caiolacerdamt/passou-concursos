@@ -20,6 +20,7 @@ export function ConviteDeMatricula({
   chamada = "Fazer a matrícula",
   destino = "/checkout",
   tom = "claro",
+  etiqueta = "Teste grátis",
 }: {
   titulo: string;
   /** O argumento em número. Sempre dado real do aluno, nunca estimativa. */
@@ -28,6 +29,13 @@ export function ConviteDeMatricula({
   destino?: string;
   /** `escuro` para quando o convite fecha uma seção clara e precisa de peso. */
   tom?: "claro" | "escuro";
+  /**
+   * A tarja de cima. O padrão serve às superfícies travadas no trial, que são
+   * a maioria — mas quem teve **plano pago** e venceu nunca esteve num teste
+   * grátis, e a tarja padrão contaria uma história falsa sobre o passado dele.
+   * É a única coisa que varia; o resto da forma continua sendo uma só.
+   */
+  etiqueta?: string;
 }) {
   const escuro = tom === "escuro";
 
@@ -44,7 +52,7 @@ export function ConviteDeMatricula({
           escuro ? "text-breu-verde" : "text-marca-apoio"
         }`}
       >
-        Teste grátis
+        {etiqueta}
       </p>
       <h2 className="mt-3 max-w-[34ch] text-[1.375rem] font-semibold leading-[1.2] tracking-[-0.015em] sm:text-[1.5rem]">
         {titulo}

@@ -4,6 +4,9 @@ import { Estado } from "@/modules/ui/estado";
 import type { DadosDaTelaDaGarantia } from "@/modules/pagamentos/garantia-tela";
 import { fraseDaGarantia } from "@/modules/pagamentos/garantia-tela";
 
+import { ConviteDeMatricula } from "./convite-de-matricula";
+import type { TipoDaMatricula } from "./matricula";
+
 /**
  * A tela de conta do aluno — identidade, assinatura, garantia e apagamento.
  *
@@ -38,8 +41,20 @@ export type AssinaturaDaConta = {
 
 export type DadosDaConta = {
   email: string;
-  /** Fim da matrícula ativa, em ISO. */
-  fimDoAcesso: string;
+  /**
+   * O tipo da matrícula **ativa**, ou `null` quando não há nenhuma.
+   *
+   * É o que separa os estados da aba de assinatura. Não dá para deduzir de
+   * `fimDoAcesso`: quem venceu também tem data, só que no passado — e uma tela
+   * que compara data com relógio faria a mesma conta que `matriculaAtiva()` já
+   * fez no banco, com chance de discordar dela.
+   */
+  tipo: TipoDaMatricula | null;
+  /**
+   * Fim do acesso, em ISO. Com matrícula ativa é o fim dela; sem matrícula é o
+   * fim da última. `null` quando a leitura falhou — a tela cala a data.
+   */
+  fimDoAcesso: string | null;
   assinatura: AssinaturaDaConta | null;
   garantia: { tela: DadosDaTelaDaGarantia; dias: number } | null;
 };
@@ -80,7 +95,32 @@ function diasAte(iso: string, agora: Date): number | null {
 
 /* ═══════════════════════════════════════════════════════ cabeçalho e abas ══ */
 
-function Identidade({ email }: { email: string }) {
+/**
+ * O selo do topo diz o estado real, e não um "ativa" decorativo.
+ *
+ * Quem venceu abre esta tela justamente para resolver conta — dizer "Matrícula
+ * ativa" para ele seria a tela mentindo na primeira linha. Sem matrícula o selo
+ * é **neutro**, não vermelho: acesso encerrado é um fato, não um erro dele.
+ */
+function SeloDoAcesso({ tipo }: { tipo: TipoDaMatricula | null }) {
+  if (tipo === null) {
+    return (
+      <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-fundo-suave px-3 py-1.5 text-xs font-medium text-suave">
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-suave" />
+        Acesso encerrado
+      </span>
+    );
+  }
+
+  return (
+    <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-marca-suave px-3 py-1.5 text-xs font-medium text-marca">
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-ok" />
+      {tipo === "trial" ? "Teste grátis" : "Matrícula ativa"}
+    </span>
+  );
+}
+
+function Identidade({ email, tipo }: { email: string; tipo: TipoDaMatricula | null }) {
   return (
     <div className="mt-7 flex items-center gap-3.5 border-b border-linha pb-5">
       <span
@@ -95,10 +135,7 @@ function Identidade({ email }: { email: string }) {
           É para este e-mail que vão os avisos da sua conta.
         </p>
       </div>
-      <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-marca-suave px-3 py-1.5 text-xs font-medium text-marca">
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-ok" />
-        Matrícula ativa
-      </span>
+      <SeloDoAcesso tipo={tipo} />
     </div>
   );
 }
@@ -144,8 +181,8 @@ function Assinatura({
   dados: DadosDaConta;
   agora: Date;
 }) {
-  const fim = dataPorExtenso(dados.fimDoAcesso);
-  const restam = diasAte(dados.fimDoAcesso, agora);
+  const fim = dados.fimDoAcesso ? dataPorExtenso(dados.fimDoAcesso) : null;
+  const restam = dados.fimDoAcesso ? diasAte(dados.fimDoAcesso, agora) : null;
   const assinatura = dados.assinatura;
   const preenchidos =
     assinatura?.progresso === null || assinatura?.progresso === undefined
@@ -232,6 +269,64 @@ function Assinatura({
         </dl>
       ) : null}
     </section>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════ acesso encerrado ══ */
+
+/**
+ * A aba de assinatura de quem **não tem matrícula ativa**.
+ *
+ * Não é conteúdo parcial (m8 §P1 AC6): aqui não há uma linha do acervo — há a
+ * data em que o acesso terminou e o caminho de volta. O conteúdo pago continua
+ * inteiramente fora, e as telas de estudo continuam caindo em `/assinar`.
+ *
+ * Sem data legível a frase encurta em vez de inventar um dia.
+ */
+function AcessoEncerrado({ fimDoAcesso }: { fimDoAcesso: string | null }) {
+  const fim = fimDoAcesso ? dataPorExtenso(fimDoAcesso) : null;
+
+  return (
+    <div className="mt-8">
+      <section
+        aria-labelledby="titulo-encerrado"
+        className="rounded-2xl border border-linha bg-painel px-7 pb-6 pt-6 sm:px-8"
+      >
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
+          Seu plano
+        </p>
+        <h2
+          id="titulo-encerrado"
+          className="mt-3 text-[1.5rem] font-semibold leading-tight tracking-[-0.022em] sm:text-[1.75rem]"
+        >
+          {fim ? `Seu acesso terminou em ${fim}` : "Seu acesso terminou"}
+        </h2>
+        <p className="mt-2 max-w-[54ch] text-sm leading-6 text-suave">
+          Seus dados continuam aqui e continuam seus: a aba{" "}
+          <Link href="/app/conta?aba=privacidade" className="font-medium underline">
+            Privacidade e dados
+          </Link>{" "}
+          exporta e apaga tudo, com ou sem matrícula.
+        </p>
+      </section>
+
+      <div className="mt-6">
+        {/*
+          A tarja é "Voltar a estudar" e não a padrão: esta tela atende tanto
+          quem veio de um trial quanto quem veio de um plano pago, e ela precisa
+          ser verdadeira para os dois passados.
+        */}
+        <ConviteDeMatricula
+          etiqueta="Voltar a estudar"
+          titulo="Quando quiser voltar, seu histórico está aqui esperando."
+        >
+          <p>
+            A matrícula reabre o acervo, o plano do dia e as revisões de onde você
+            parou.
+          </p>
+        </ConviteDeMatricula>
+      </div>
+    </div>
   );
 }
 
@@ -528,17 +623,29 @@ export function ContaTela({
         </p>
       </header>
 
-      <Identidade email={dados.email} />
+      <Identidade email={dados.email} tipo={dados.tipo} />
       <Abas atual={aba} />
 
       <Avisos resultado={resultado} />
 
       {aba === "assinatura" ? (
         <>
-          <Assinatura dados={dados} agora={agora} />
+          {dados.tipo === null ? (
+            <AcessoEncerrado fimDoAcesso={dados.fimDoAcesso} />
+          ) : (
+            <Assinatura dados={dados} agora={agora} />
+          )}
+          {/*
+            A garantia continua aparecendo **mesmo sem matrícula ativa** quando
+            há pagamento. É deliberado, e o comentário de `pedirReembolso` em
+            `acoes.ts` explica: quem teve o estorno confirmado pelo gateway e
+            travou no fechamento local precisa repetir o pedido, e nesse estado
+            a matrícula já caiu. Esconder o bloco aqui deixaria esse caminho sem
+            porta na interface.
+          */}
           {dados.garantia ? (
             <Garantia garantia={dados.garantia} pedirReembolso={pedirReembolso} />
-          ) : (
+          ) : dados.tipo === null ? null : (
             <section aria-labelledby="titulo-sem-garantia" className="mt-11">
               <div className="border-b border-linha pb-3.5">
                 <h2

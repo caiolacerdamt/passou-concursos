@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const dependencias = vi.hoisted(() => ({
   matricula: vi.fn(),
+  ultima: vi.fn(),
   cliente: vi.fn(),
   servico: vi.fn(),
   sair: vi.fn(),
@@ -15,7 +16,10 @@ const dependencias = vi.hoisted(() => ({
 
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
-vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias.matricula }));
+vi.mock("@/modules/conta/matricula", () => ({
+  matriculaAtiva: dependencias.matricula,
+  ultimaMatricula: dependencias.ultima,
+}));
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("@/modules/pagamentos/repositorio", () => ({
   criarRepositorioDePagamentos: dependencias.repositorio,
@@ -56,7 +60,9 @@ describe("/app/conta", () => {
       id: "matricula-1",
       estado: "ativa",
       fim_em: "2027-08-28T12:00:00.000Z",
+      tipo: "pago",
     });
+    dependencias.ultima.mockResolvedValue(null);
     dependencias.cliente.mockResolvedValue({
       auth: {
         getUser: vi.fn(async () => ({
@@ -160,6 +166,101 @@ describe("/app/conta", () => {
 
     expect(html).toContain("nada foi enviado ao banco");
     expect(html).not.toContain("ficou em análise");
+  });
+
+  /*
+   * Os direitos do titular (LGPD art. 18) não vencem com a matrícula. Quem mais
+   * pede apagamento é quem já saiu — e antes desta mudança ele batia em
+   * `/assinar`, ou seja, precisava comprar de novo para conseguir apagar os
+   * próprios dados.
+   */
+  describe("sem matrícula ativa", () => {
+    beforeEach(() => {
+      dependencias.matricula.mockResolvedValue(null);
+      dependencias.ultima.mockResolvedValue({
+        id: "matricula-1",
+        estado: "expirada",
+        fim_em: "2026-08-20T12:00:00.000Z",
+        tipo: "pago",
+      });
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => null),
+      });
+    });
+
+    it("abre a conta e diz quando o acesso terminou, sem selo de ativa", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Seu acesso terminou em");
+      expect(html).toContain("20 de agosto de 2026");
+      expect(html).toContain("Acesso encerrado");
+      expect(html).not.toContain("Matrícula ativa");
+    });
+
+    it("convida de volta sem chamar de teste grátis quem tinha plano pago", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain('href="/checkout"');
+      expect(html).toContain("Voltar a estudar");
+      expect(html).not.toContain("Teste grátis");
+    });
+
+    /*
+     * O m8 §P1 AC6 proíbe conteúdo parcial. A tela sem matrícula mostra data,
+     * convite e os direitos do titular — nunca uma linha do acervo.
+     */
+    it("não renderiza card de plano nem valor pago", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Seu acesso vai até");
+      expect(html).not.toContain("Pagamento confirmado");
+    });
+
+    it("a aba de privacidade continua inteira: é o que ele veio fazer", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Apagar minha conta");
+      expect(html).toContain('name="confirmacao"');
+      expect(html).toContain("Some para sempre");
+    });
+
+    /*
+     * A data sai da ÚLTIMA matrícula, não da ativa — que não existe. Leitura
+     * que falha cala a data em vez de inventar um dia.
+     */
+    it("sem conseguir ler a última matrícula, cala a data em vez de inventar", async () => {
+      dependencias.ultima.mockResolvedValue(null);
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Seu acesso terminou");
+      expect(html).not.toContain("Seu acesso terminou em");
+    });
+
+    /*
+     * Quem teve o estorno confirmado pelo gateway e travou no fechamento local
+     * fica sem matrícula e precisa repetir o pedido. Esconder a garantia aqui
+     * deixaria esse caminho sem porta na interface.
+     */
+    it("mantém o pedido de reembolso quando ainda há pagamento na janela", async () => {
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => PAGAMENTO),
+      });
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Quero meu dinheiro de volta");
+    });
+  });
+
+  it("sem sessão continua indo para o login, e não para a conta", async () => {
+    dependencias.cliente.mockResolvedValue({
+      auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
+    });
+
+    await expect(renderConta()).rejects.toMatchObject({
+      digest: expect.stringContaining("/entrar?proximo=%2Fapp%2Fconta"),
+    });
   });
 
   it("nunca ecoa o texto do parâmetro resultado na tela", async () => {

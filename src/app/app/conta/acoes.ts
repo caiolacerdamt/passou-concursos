@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { clienteDeServico } from "@/lib/db/servidor";
-import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
 import { executarEsquecimento } from "@/modules/lgpd/esquecimento";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { gatewayAsaasDoAmbiente } from "@/modules/pagamentos/asaas";
@@ -22,10 +21,17 @@ function confirmou(formulario: FormData): boolean {
  * A action ignora qualquer `user_id` do formulário. O titular vem do cookie
  * de sessão, e a confirmação textual existe para tornar um clique acidental
  * incapaz de iniciar a rotina irreversível.
+ *
+ * De propósito **não** exige matrícula ativa, pelo mesmo motivo de
+ * `pedirReembolso` logo abaixo: o direito ao esquecimento (LGPD art. 18) não
+ * vence junto com o acesso, e quem mais pede apagamento é exatamente quem já
+ * saiu. Exigir matrícula aqui mandava esse aluno para `/assinar` — ou seja,
+ * cobrava uma matrícula nova para ele conseguir apagar os dados.
+ *
+ * A dona da autorização continua sendo a sessão, e ela é única: o apagamento
+ * roda sobre o `user.id` do cookie, nunca sobre identificador de formulário.
  */
 export async function solicitarEsquecimento(formulario: FormData): Promise<never> {
-  await exigirMatriculaAtiva();
-
   if (!confirmou(formulario)) {
     redirect("/app/conta?aba=privacidade&resultado=confirmacao");
   }

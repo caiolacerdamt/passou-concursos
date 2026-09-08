@@ -16,6 +16,12 @@ const dependencias = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({ redirect: dependencias.redirect }));
+/*
+ * A guarda continua mockada de propósito, mesmo depois de `acoes.ts` deixar de
+ * importá-la: assim ela é um **sensor**. O mock manda para `/assinar`, então o
+ * dia em que alguém reintroduzir `exigirMatriculaAtiva()` no esquecimento, o
+ * teste "não exige matrícula" fica vermelho em vez de passar em silêncio.
+ */
 vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias.matricula }));
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
@@ -50,8 +56,29 @@ function clienteComUsuario(user: { id: string; email?: string } | null) {
 describe("action de esquecimento", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    dependencias.matricula.mockResolvedValue({ id: "matricula-1" });
+    dependencias.matricula.mockImplementation((): never => {
+      throw new Error("NEXT_REDIRECT:/assinar");
+    });
     dependencias.executar.mockResolvedValue({ estado: "concluido" });
+  });
+
+  /*
+   * O direito ao esquecimento (LGPD art. 18) não vence com a matrícula, e quem
+   * mais o exerce é justamente quem já saiu. Com a guarda no caminho, esse aluno
+   * era mandado para `/assinar`: precisava comprar de novo para apagar os
+   * próprios dados. A autorização continua sendo uma só — a sessão.
+   */
+  it("não exige matrícula ativa: quem já saiu ainda apaga os próprios dados", async () => {
+    clienteComUsuario({ id: "aluno-vencido", email: "vencido@exemplo.com" });
+
+    await expect(solicitarEsquecimento(formulario())).rejects.toThrow(
+      "NEXT_REDIRECT:/entrar?resultado=esquecimento",
+    );
+    expect(dependencias.matricula).not.toHaveBeenCalled();
+    expect(dependencias.executar).toHaveBeenCalledWith({
+      id: "aluno-vencido",
+      email: "vencido@exemplo.com",
+    });
   });
 
   it("exige a confirmação textual antes de abrir a sessão", async () => {

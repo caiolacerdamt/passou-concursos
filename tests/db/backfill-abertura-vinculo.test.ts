@@ -205,6 +205,11 @@ descreveComBanco("AD-146 — a abertura grava o vinculo", () => {
     });
   });
 
+  // A falha usada aqui e a FK de `concurso_documentos.prova_id`, que e o modo
+  // real de isto dar errado: o comando passou um id de prova que nao existe. Ela
+  // dispara depois de o UPDATE do documento ja ter sido montado, e o que o teste
+  // prova e que nada daquele UPDATE sobrevive — a funcao inteira e uma transacao,
+  // e o vinculo nasce dentro dela.
   it("falha no meio desfaz o download inteiro: nem vinculo, nem bytes, nem sha", async () => {
     await comTransacaoRevertida(async (cliente) => {
       const operador = await criarOperador(cliente);
@@ -225,7 +230,7 @@ descreveComBanco("AD-146 — a abertura grava o vinculo", () => {
           SHA,
           crypto.randomUUID(),
         ]),
-      ).rejects.toThrow(/prova_inexistente/);
+      ).rejects.toThrow(/prova_inexistente|violates foreign key/);
       await cliente.query("rollback to savepoint tentativa");
 
       expect(await vinculos(cliente, concurso)).toEqual([]);

@@ -192,13 +192,16 @@ descreveComBanco("AD-146 — itens_medidos_efetivos", () => {
         topico_id: topicos[0],
         status: "publicada",
       });
-      // Mesma `id` = versao nova. A anterior perde `vigente` pelo gatilho.
+      // Mesma `id` = versao nova. A anterior perde `vigente` pelo gatilho, e a
+      // partir da v2 a mudanca precisa ser declarada (BANCO-13).
       await inserirQuestao(cliente, {
         id: primeira.id,
         prova_id: prova,
         numero: 4,
         topico_id: topicos[1],
         status: "publicada",
+        mudanca_tipo: "substantiva",
+        mudanca_motivo: "reclassificacao do assunto",
       });
 
       const { rows } = await cliente.query<{ n: string }>(
@@ -217,13 +220,29 @@ descreveComBanco("AD-146 — itens_medidos_efetivos", () => {
     await comTransacaoRevertida(async (cliente) => {
       const { topicos } = await criarMateria(cliente, 1);
       const prova = await novaProva(cliente);
+
+      // Publicar uma inedita e recusado pelo proprio banco desde a SPEC 10 — o
+      // filtro `origem = 'real'` da view e a segunda tranca, nao a primeira.
+      await cliente.query("savepoint inedita");
+      await expect(
+        inserirQuestao(cliente, {
+          prova_id: prova,
+          numero: 9,
+          topico_id: topicos[0],
+          origem: "gerada_ia",
+          fonte_citacao: null,
+          status: "publicada",
+        }),
+      ).rejects.toThrow(/gerada_ia_passa_por_revisao/);
+      await cliente.query("rollback to savepoint inedita");
+
+      // E a inedita que existe, em rascunho, tambem nao mede nada.
       await inserirQuestao(cliente, {
         prova_id: prova,
         numero: 9,
         topico_id: topicos[0],
         origem: "gerada_ia",
         fonte_citacao: null,
-        status: "publicada",
       });
 
       expect(await itensEfetivos(cliente, prova)).toEqual([]);
@@ -398,10 +417,15 @@ descreveComBanco("AD-146 — prova propria no recalculo", () => {
         etiquetas: etiquetasEmRodizio(10, materia.topicos),
       });
 
-      // Sem vinculo, a prova entra so pela banca: degrau 3, lastro emprestado.
+      // Sem vinculo, a prova entra so pela banca, e o degrau 3 empresta apenas
+      // a distribuicao de dentro da materia — o PESO continua exigindo
+      // documento do proprio concurso (SPEC 39). Sem edital e sem prova
+      // propria, a linha cai para o degrau 4, com peso zero: e exatamente o
+      // que a tela do BB mostrava.
       await recalcular(cliente);
       const antes = await lerMaterias(cliente, perfil[0].id);
-      expect(antes[0].degrau).toBe(3);
+      expect(antes[0].degrau).toBe(4);
+      expect(Number(antes[0].peso)).toBe(0);
 
       await cliente.query("select public.vincular_prova_ao_concurso($1, $2, $3, $4)", [
         concurso[0].id,

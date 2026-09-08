@@ -6,7 +6,6 @@ import { comTransacaoRevertida, comTransacaoSemPerfilConcurso } from "./conexao"
 import { criarUsuario } from "./conta";
 import {
   criarMateria,
-  criarPerfil,
   criarProvaMedida,
   etiquetasEmRodizio,
   lerMaterias,

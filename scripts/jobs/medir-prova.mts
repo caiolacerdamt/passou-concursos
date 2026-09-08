@@ -286,6 +286,10 @@ export async function acaoSeparar(
 // ── Acao `etiquetar` ────────────────────────────────────────────────────────
 
 export type ResumoDaEtiquetagem = {
+  /** Itens separados que **ja** tinham medicao efetiva e nao foram enviados. */
+  jaMedidos: number;
+  /** Itens efetivamente enviados ao modelo. E o que gerou custo. */
+  enviados: number;
   pedidos: number;
   casadas: number;
   naoCasadas: number;
@@ -293,13 +297,84 @@ export type ResumoDaEtiquetagem = {
   preservadas: number;
   alinhadas: number;
   custoUsd: number;
+  /** Cobertura depois da gravacao, lida da view. `null` = grade nao lida. */
+  cobertura: number | null;
+  itensMedidos: number;
 };
 
+/**
+ * Os numeros de item que a prova **ja** tem medidos, por qualquer via.
+ *
+ * Le a fronteira do AD-146, e nao `etiquetas_de_item`: item que ja e questao
+ * publicada com assunto conferido conta aqui sem ter etiqueta nenhuma. E essa a
+ * diferenca entre pagar por 1.375 classificacoes e pagar por zero.
+ */
+export async function numerosJaMedidos(
+  cliente: ClienteSql,
+  provaId: string,
+): Promise<Set<number>> {
+  const { rows } = await cliente.query(
+    "select numero from public.itens_medidos_efetivos where prova_id = $1",
+    [provaId],
+  );
+  return new Set(rows.map((linha) => Number(linha.numero)));
+}
+
+/** A cobertura como o Raio-X a le, depois da gravacao. */
+async function coberturaEfetiva(
+  cliente: ClienteSql,
+  provaId: string,
+): Promise<{ cobertura: number | null; itensMedidos: number }> {
+  const { rows } = await cliente.query(
+    "select itens_ingeridos, cobertura from public.cobertura_da_prova where prova_id = $1",
+    [provaId],
+  );
+  return {
+    cobertura:
+      rows[0]?.cobertura === null || rows[0]?.cobertura === undefined
+        ? null
+        : Number(rows[0].cobertura),
+    itensMedidos: Number(rows[0]?.itens_ingeridos ?? 0),
+  };
+}
+
+const NADA_ENVIADO = {
+  pedidos: 0,
+  casadas: 0,
+  naoCasadas: 0,
+  gravadas: 0,
+  preservadas: 0,
+  alinhadas: 0,
+  custoUsd: 0,
+} as const;
+
+/**
+ * Etiqueta **somente** os itens que ainda nao tem medicao efetiva.
+ *
+ * O acervo tem provas inteiras ja publicadas item a item, com assunto conferido
+ * por humano. Mandar essas ao etiquetador seria pagar para produzir uma
+ * classificacao pior que a que ja existe — e, pelo BANCO-14 AC3, a etiqueta
+ * resultante seria imediatamente sobrescrita pela questao. Prova inteiramente
+ * publicada custa **zero**: nem catalogo, nem matriz, nem uma chamada.
+ */
 export async function acaoEtiquetar(
   cliente: ClienteSql,
   provaId: string,
-  itens: readonly ItemSeparado[],
+  itensSeparados: readonly ItemSeparado[],
 ): Promise<ResumoDaEtiquetagem> {
+  const jaMedidos = await numerosJaMedidos(cliente, provaId);
+  const itens = itensSeparados.filter((item) => !jaMedidos.has(item.numero));
+  const jaCobertos = itensSeparados.length - itens.length;
+
+  if (itens.length === 0) {
+    return {
+      ...NADA_ENVIADO,
+      jaMedidos: jaCobertos,
+      enviados: 0,
+      ...(await coberturaEfetiva(cliente, provaId)),
+    };
+  }
+
   const catalogo: TopicoCanonico[] = await lerCatalogo(cliente);
   const porPedido = await getParam("param.m1.itens_por_pedido_de_etiqueta");
   const instrucao = instrucaoComCatalogo(catalogo);
@@ -347,6 +422,8 @@ export async function acaoEtiquetar(
   );
 
   return {
+    jaMedidos: jaCobertos,
+    enviados: itens.length,
     pedidos: lotes.length,
     casadas: casadas.length,
     naoCasadas,
@@ -354,7 +431,37 @@ export async function acaoEtiquetar(
     preservadas: Number(rows[0]?.preservadas ?? 0),
     alinhadas: Number(rows[0]?.alinhadas ?? 0),
     custoUsd,
+    ...(await coberturaEfetiva(cliente, provaId)),
   };
+}
+
+/**
+ * O que o agente le depois de etiquetar. Contagem e custo, nunca item.
+ *
+ * O custo declarado e o dos itens **enviados**: dizer "R$ 0,02 por prova" numa
+ * prova que nao mandou nada seria mentir sobre o preco do acervo.
+ */
+export function formatarEtiquetagem(resumo: ResumoDaEtiquetagem): string {
+  const cobertura =
+    resumo.cobertura === null
+      ? `${resumo.itensMedidos} itens medidos (grade nao lida: sem cobertura)`
+      : `cobertura ${(resumo.cobertura * 100).toFixed(1)}% (${resumo.itensMedidos} itens medidos)`;
+
+  if (resumo.enviados === 0) {
+    return (
+      `[medicao] nenhuma chamada a modelo: os ${resumo.jaMedidos} itens separados ja ` +
+      `tinham medicao efetiva. Custo 0.0000 USD. ${cobertura}.`
+    );
+  }
+
+  return (
+    `[medicao] ${resumo.jaMedidos} itens ja medidos foram poupados; ${resumo.enviados} ` +
+    `enviados em ${resumo.pedidos} pedidos; ${resumo.casadas} etiquetas casadas, ` +
+    `${resumo.naoCasadas} assuntos fora da taxonomia; ${resumo.gravadas} gravadas, ` +
+    `${resumo.preservadas} correcoes humanas preservadas, ` +
+    `${resumo.alinhadas} alinhadas com questao publicada. ` +
+    `Custo ${resumo.custoUsd.toFixed(4)} USD. ${cobertura}.`
+  );
 }
 
 // ── Acao `relatorio` ────────────────────────────────────────────────────────
@@ -555,13 +662,7 @@ export async function executar(
     } else if (argumentos.acao === "etiquetar") {
       const separacao = await acaoSeparar(cliente, argumentos.provaId, bruto);
       const resumo = await acaoEtiquetar(cliente, argumentos.provaId, separacao.itensSeparados);
-      console.log(
-        `[medicao] ${resumo.pedidos} pedidos; ${resumo.casadas} etiquetas casadas, ` +
-          `${resumo.naoCasadas} assuntos fora da taxonomia; ${resumo.gravadas} gravadas, ` +
-          `${resumo.preservadas} correcoes humanas preservadas, ` +
-          `${resumo.alinhadas} alinhadas com questao publicada. ` +
-          `Custo ${resumo.custoUsd.toFixed(4)} USD.`,
-      );
+      console.log(formatarEtiquetagem(resumo));
     } else {
       const linha = await lerRelatorio(cliente, argumentos.provaId);
       if (linha === null) {

@@ -12,6 +12,7 @@
  * As acoes, na ordem em que a skill as usa:
  *
  *   `dominios`            imprime a allowlist para o agente pesquisar dentro dela
+ *   `inventario-legado`   mostra o acervo de um concurso ja existente, SEM ESCREVER
  *   `iniciar`             abre (ou reencontra) a execucao do concurso
  *   `registrar-achados`   recebe o manifesto do agente, tria e grava candidatos
  *   `decidir-documentos`  1a CONFIRMACAO: aprova/rejeita e baixa so o aprovado
@@ -27,7 +28,7 @@
  * trecho do programa, cortado localmente e com teto; o caderno de prova segue
  * direto para `medir-prova` e nunca passa pela conversa (AD-140).
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -59,6 +60,7 @@ import { encerrar, iniciarSentry, reportar } from "./sentry-node.mjs";
 
 export type Acao =
   | "dominios"
+  | "inventario-legado"
   | "iniciar"
   | "registrar-achados"
   | "decidir-documentos"
@@ -72,6 +74,7 @@ export type Acao =
 
 const ACOES: readonly Acao[] = [
   "dominios",
+  "inventario-legado",
   "iniciar",
   "registrar-achados",
   "decidir-documentos",
@@ -87,6 +90,7 @@ const ACOES: readonly Acao[] = [
 export const USO =
   "uso: abrir-concurso --acao <acao>\n" +
   "  dominios           (nada mais)\n" +
+  "  inventario-legado  --concurso <uuid> [--destino <pasta>]   (SOMENTE LEITURA)\n" +
   "  iniciar            --concurso <uuid> --operador <uuid>\n" +
   "  registrar-achados  --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
   "  decidir-documentos --abertura <uuid> --operador <uuid> --entrada <arquivo.json>\n" +
@@ -149,7 +153,12 @@ export function lerArgumentos(argv: readonly string[]): Argumentos {
     exigirUuid("concurso");
     exigirUuid("operador");
   }
-  if (acao !== "dominios" && acao !== "iniciar") {
+  // `inventario-legado` nao escreve nada e por isso nao tem operador: exigir um
+  // sugeriria que ha decisao aqui, e nao ha — ele so mostra o acervo como ele e.
+  if (acao === "inventario-legado") {
+    exigirUuid("concurso");
+  }
+  if (acao !== "dominios" && acao !== "iniciar" && acao !== "inventario-legado") {
     exigirUuid("abertura");
     // `relatorio` so LE: ele e o comando da retomada, e exigir operador para
     // perguntar "onde isto parou" so atrapalharia quem chegou agora.
@@ -184,6 +193,281 @@ export function formatarDominios(dominios: readonly string[]): string {
     ...dominios.map((host) => `  ${host}  (host exato ou subdominio)`),
     "resultado de agregador e descartado sem exibicao (AD-003).",
   ].join("\n");
+}
+
+// ── Acao `inventario-legado` ────────────────────────────────────────────────
+
+/**
+ * Uma fachada que **recusa** qualquer SQL que nao seja leitura.
+ *
+ * O inventario existe para ser rodado contra o banco de producao antes de
+ * qualquer decisao, e por isso a promessa "somente leitura" nao pode depender de
+ * ninguem se lembrar dela: ela e verificada a cada chamada, e o teste injeta um
+ * cliente que explode se receber escrita.
+ */
+export function somenteLeitura(cliente: ClienteSql): ClienteSql {
+  return {
+    async query(texto: string, valores?: unknown[]) {
+      const inicio = texto.trimStart().slice(0, 6).toLowerCase();
+      if (inicio !== "select" && inicio.slice(0, 4) !== "with") {
+        throw new Error(`inventario-legado e somente leitura; recusei: ${inicio}...`);
+      }
+      return cliente.query(texto, valores);
+    },
+  };
+}
+
+/** Uma prova do catalogo, com tudo o que decide se ela pode medir. */
+export type ProvaDoInventario = {
+  provaId: string;
+  banca: string;
+  ano: number;
+  orgao: string;
+  cargo: string;
+  caderno: string | null;
+  status: string;
+  gradeStatus: string;
+  blocos: number;
+  itensDeclarados: number | null;
+  questoesVigentes: number;
+  questoesPublicadas: number;
+  etiquetas: number;
+  itensMedidos: number;
+  cobertura: number | null;
+  cadernoIrmaoDe: string | null;
+  conferenciaMotivo: string | null;
+  urlOrigem: string | null;
+  vinculada: boolean;
+  /** O mesmo orgao do concurso, ignorando caixa e acento. Sugestao, nao prova. */
+  orgaoParecido: boolean;
+};
+
+export type InventarioLegado = {
+  concursoId: string;
+  orgao: string;
+  cargo: string;
+  visibilidade: string;
+  perfilId: string;
+  perfilOrgao: string;
+  banca: string;
+  perfilAtivo: boolean;
+  assuntosNoPrograma: number;
+  piso: number;
+  provas: ProvaDoInventario[];
+  /** Chaves `(ano, orgao, caderno)` com mais de uma prova. Nao normalizadas. */
+  duplicidades: { chave: string; provas: string[] }[];
+  arquivosLocais: { pasta: string; arquivos: string[] };
+};
+
+/** Caixa e acento fora, para a **sugestao** de parentesco de orgao. */
+function achatar(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * O acervo do concurso legado como ele e, sem tocar em nada.
+ *
+ * O que ele **nao** faz e tao importante quanto o que faz: nao funde as linhas
+ * duplicadas de banca, nao decide qual caderno e o principal, nao afirma que um
+ * PDF do disco e a origem oficial de uma prova, e nao imprime uma linha de
+ * questao. Tudo isso e decisao do operador, e o inventario existe para ele ter
+ * com o que decidir.
+ */
+export async function acaoInventarioLegado(
+  clienteBruto: ClienteSql,
+  concursoId: string,
+  opcoes: { pasta?: string; listarPasta?: (pasta: string) => string[] } = {},
+): Promise<InventarioLegado> {
+  const cliente = somenteLeitura(clienteBruto);
+
+  const { rows: cabeca } = await cliente.query(
+    `select c.id::text as concurso_id, c.orgao, c.cargo, c.visibilidade::text,
+            p.id::text as perfil_id, p.orgao as perfil_orgao, p.banca, p.ativo,
+            jsonb_array_length(p.programa_edital) as assuntos
+       from public.concursos c
+       join public.perfil_concurso p on p.id = c.perfil_concurso_id
+      where c.id = $1`,
+    [concursoId],
+  );
+  if (cabeca.length === 0) throw new Error("concurso_inexistente");
+  const linha = cabeca[0];
+
+  const { rows } = await cliente.query(
+    `select p.id::text as prova_id, p.banca, p.ano, p.orgao, p.cargo, p.caderno,
+            p.status::text, p.grade_status::text, p.itens_declarados,
+            p.caderno_irmao_de::text, p.conferencia_motivo, p.url_origem,
+            (select count(*) from public.prova_blocos b where b.prova_id = p.id) as blocos,
+            (select count(*) from public.questoes q
+              where q.prova_id = p.id and q.vigente) as vigentes,
+            (select count(*) from public.questoes q
+              where q.prova_id = p.id and q.vigente and q.status = 'publicada') as publicadas,
+            (select count(*) from public.etiquetas_de_item e where e.prova_id = p.id) as etiquetas,
+            (select count(*) from public.itens_medidos_efetivos i
+              where i.prova_id = p.id) as medidos,
+            cp.cobertura,
+            exists (select 1 from public.concurso_provas v
+                     where v.concurso_id = $1 and v.prova_id = p.id) as vinculada
+       from public.provas p
+       join public.cobertura_da_prova cp on cp.prova_id = p.id
+      order by p.orgao, p.cargo, p.banca, p.ano desc, coalesce(p.caderno, '')`,
+    [concursoId],
+  );
+
+  const orgaoDoConcurso = achatar(String(linha.orgao));
+  const provas: ProvaDoInventario[] = rows.map((r) => {
+    const orgaoDaProva = achatar(String(r.orgao));
+    return {
+      provaId: String(r.prova_id),
+      banca: String(r.banca),
+      ano: Number(r.ano),
+      orgao: String(r.orgao),
+      cargo: String(r.cargo),
+      caderno: r.caderno === null ? null : String(r.caderno),
+      status: String(r.status),
+      gradeStatus: String(r.grade_status),
+      blocos: Number(r.blocos),
+      itensDeclarados: r.itens_declarados === null ? null : Number(r.itens_declarados),
+      questoesVigentes: Number(r.vigentes),
+      questoesPublicadas: Number(r.publicadas),
+      etiquetas: Number(r.etiquetas),
+      itensMedidos: Number(r.medidos),
+      cobertura: r.cobertura === null ? null : Number(r.cobertura),
+      cadernoIrmaoDe: r.caderno_irmao_de === null ? null : String(r.caderno_irmao_de),
+      conferenciaMotivo: r.conferencia_motivo === null ? null : String(r.conferencia_motivo),
+      urlOrigem: r.url_origem === null ? null : String(r.url_origem),
+      vinculada: Boolean(r.vinculada),
+      orgaoParecido:
+        orgaoDaProva === orgaoDoConcurso ||
+        orgaoDoConcurso.startsWith(`${orgaoDaProva} `) ||
+        orgaoDoConcurso.startsWith(`${orgaoDaProva}—`),
+    };
+  });
+
+  // Duplicidade de chave: o mesmo ano, orgao e caderno com mais de uma linha —
+  // tipicamente a mesma edicao catalogada com duas grafias de banca. Aparece
+  // como aviso, e **nada** e fundido: fundir por semelhanca e o erro que este
+  // trabalho inteiro existe para nao repetir.
+  const porChave = new Map<string, string[]>();
+  for (const prova of provas) {
+    const chave = `${prova.ano} · ${prova.orgao} · ${prova.caderno ?? "(sem caderno)"}`;
+    porChave.set(chave, [...(porChave.get(chave) ?? []), prova.provaId]);
+  }
+  const duplicidades = [...porChave.entries()]
+    .filter(([, ids]) => ids.length > 1)
+    .map(([chave, ids]) => ({ chave, provas: ids }));
+
+  const pasta = opcoes.pasta ?? path.join("fontes", "entrada");
+  const listar =
+    opcoes.listarPasta ??
+    ((alvo: string) => (existsSync(alvo) ? readdirSync(alvo).filter((n) => /\.pdf$/i.test(n)) : []));
+
+  return {
+    concursoId: String(linha.concurso_id),
+    orgao: String(linha.orgao),
+    cargo: String(linha.cargo),
+    visibilidade: String(linha.visibilidade),
+    perfilId: String(linha.perfil_id),
+    perfilOrgao: String(linha.perfil_orgao),
+    banca: String(linha.banca),
+    perfilAtivo: Boolean(linha.ativo),
+    assuntosNoPrograma: Number(linha.assuntos),
+    piso: await getParam("param.m1.cobertura_minima"),
+    provas,
+    duplicidades,
+    arquivosLocais: { pasta, arquivos: listar(pasta).sort() },
+  };
+}
+
+/** O que falta para aquela prova poder entrar no Raio-X. Lista, nao veredito. */
+export function faltaParaMedir(prova: ProvaDoInventario, piso: number): string[] {
+  const falta: string[] = [];
+  if (!prova.vinculada) falta.push("vincular ao concurso (lastro proprio)");
+  if (prova.gradeStatus !== "lida") {
+    falta.push(`grade ${prova.gradeStatus}: rodar \`medir-prova --acao grade\` com o PDF oficial`);
+  }
+  if (prova.cadernoIrmaoDe !== null) falta.push("e caderno irmao: nao soma peso ao ano");
+  if (prova.conferenciaMotivo !== null) falta.push("conferencia humana pendente");
+  if (prova.itensDeclarados !== null) {
+    const faltam = prova.itensDeclarados - prova.itensMedidos;
+    if (faltam > 0) falta.push(`${faltam} item(ns) sem medicao efetiva`);
+    if (prova.cobertura !== null && prova.cobertura < piso) {
+      falta.push(
+        `cobertura ${(prova.cobertura * 100).toFixed(1)}% abaixo do piso de ${(piso * 100).toFixed(0)}%`,
+      );
+    }
+  }
+  if (falta.length === 0) falta.push("nada: esta prova ja pode entrar no Raio-X");
+  return falta;
+}
+
+/**
+ * O inventario impresso.
+ *
+ * Contagem, estado e ID. **Nenhum enunciado, alternativa ou trecho de prova** —
+ * a mesma fronteira do AD-140 que vale para o resto do comando.
+ */
+export function formatarInventarioLegado(inventario: InventarioLegado): string {
+  const partes = [
+    `concurso ${inventario.concursoId} · ${inventario.orgao} · cargo ${inventario.cargo} · ${inventario.visibilidade}`,
+    `perfil ${inventario.perfilId} · orgao "${inventario.perfilOrgao}" · banca ${inventario.banca}` +
+      ` · ${inventario.perfilAtivo ? "ativo" : "inativo"} · ${inventario.assuntosNoPrograma} assunto(s) no programa`,
+    "",
+    `${inventario.provas.length} prova(s) no catalogo. SOMENTE LEITURA: nada abaixo foi alterado.`,
+  ];
+
+  let grupo = "";
+  for (const prova of inventario.provas) {
+    const cabecalho = `${prova.orgao} · ${prova.cargo}`;
+    if (cabecalho !== grupo) {
+      grupo = cabecalho;
+      partes.push("");
+      partes.push(`${cabecalho}${prova.orgaoParecido ? "   [orgao parecido — SUGESTAO, nao confirmado]" : ""}`);
+    }
+    partes.push(
+      `  ${prova.banca} ${prova.ano}${prova.caderno === null ? "" : ` · ${prova.caderno}`}`,
+    );
+    partes.push(`      ${prova.provaId} · ${prova.status} · ${prova.vinculada ? "VINCULADA" : "sem vinculo"}`);
+    partes.push(
+      `      questoes: ${prova.questoesVigentes} vigente(s), ${prova.questoesPublicadas} publicada(s)` +
+        ` · etiquetas: ${prova.etiquetas} · itens medidos: ${prova.itensMedidos}`,
+    );
+    partes.push(
+      `      grade ${prova.gradeStatus} · ${prova.blocos} bloco(s) · ` +
+        `${prova.itensDeclarados ?? "?"} declarado(s) · cobertura ` +
+        (prova.cobertura === null ? "?" : `${(prova.cobertura * 100).toFixed(1)}%`),
+    );
+    partes.push(`      origem oficial: ${prova.urlOrigem ?? "NAO registrada"}`);
+    for (const falta of faltaParaMedir(prova, inventario.piso)) {
+      partes.push(`      falta: ${falta}`);
+    }
+  }
+
+  if (inventario.duplicidades.length > 0) {
+    partes.push("");
+    partes.push("duplicidades de chave — NADA foi fundido; a escolha e do operador:");
+    for (const dupla of inventario.duplicidades) {
+      partes.push(`  ${dupla.chave}`);
+      for (const id of dupla.provas) partes.push(`      ${id}`);
+    }
+  }
+
+  partes.push("");
+  partes.push(
+    `arquivos locais em ${inventario.arquivosLocais.pasta} (${inventario.arquivosLocais.arquivos.length}) — ` +
+      "candidatos pelo NOME, NAO CONFIRMADOS como origem oficial de nenhuma prova:",
+  );
+  for (const arquivo of inventario.arquivosLocais.arquivos) partes.push(`  ${arquivo}`);
+
+  partes.push("");
+  partes.push(
+    "Este comando nao escreve. Para dar lastro a uma prova, aprove-a numa abertura " +
+      "(`iniciar` -> `registrar-achados` -> `decidir-documentos`), que e onde o vinculo nasce.",
+  );
+  return partes.join("\n");
 }
 
 // ── Acao `registrar-achados` ────────────────────────────────────────────────
@@ -1261,6 +1545,14 @@ export async function executar(
 
     if (argumentos.acao === "dominios") {
       console.log(formatarDominios(dominios));
+    } else if (argumentos.acao === "inventario-legado") {
+      console.log(
+        formatarInventarioLegado(
+          await acaoInventarioLegado(cliente, argumentos.concurso, {
+            pasta: argumentos.destino === "provas" ? undefined : argumentos.destino,
+          }),
+        ),
+      );
     } else if (argumentos.acao === "iniciar") {
       const { rows } = await cliente.query("select public.iniciar_abertura($1, $2) as id", [
         argumentos.concurso,

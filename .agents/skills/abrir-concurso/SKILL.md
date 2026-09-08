@@ -221,6 +221,38 @@ Só com o "pode publicar" dele:
 Concurso que não atingiu o piso de prontidão é recusado pelo banco. Isso não é
 erro seu — é o relatório dizendo que falta acervo.
 
+## Concurso que já existe no acervo
+
+Antes de abrir uma execução para um concurso **que já está no banco** — provas
+catalogadas em outra época, questões publicadas, Raio-X mostrando `0%` —, olhe o
+que existe:
+
+```
+--acao inventario-legado --concurso <uuid>
+```
+
+**Somente leitura.** Ele não escreve nada, não funde linha nenhuma e não decide
+qual prova pertence a qual concurso. O que ele mostra, prova por prova: quantas
+questões vigentes e publicadas ela tem, quantas etiquetas, quantos itens já
+medidos, o estado da grade, a cobertura, se ela já está vinculada ao concurso e
+o que falta para ela entrar no Raio-X.
+
+Três leituras que o relatório pede cuidado:
+
+- **"órgão parecido"** é sugestão, não conclusão. Nome de cargo não prova
+  equivalência — leve a lista ao operador e deixe **ele** dizer quais provas são
+  daquele concurso.
+- **duplicidades de chave** (a mesma edição catalogada com duas grafias de
+  banca, por exemplo) aparecem como aviso. Não funda, não apague, não escolha
+  sozinho: em geral a linha certa é a que **tem** questões.
+- **arquivos locais** são listados só pelo nome, marcados como não confirmados.
+  Nome de arquivo não é procedência: a origem oficial continua sendo a URL da
+  banca, do órgão ou do diário oficial.
+
+O vínculo entre prova e concurso nasce quando o operador aprova aquele documento
+dentro de uma abertura (`decidir-documentos`). Não há outro caminho, e não há
+comando de vincular à mão.
+
 ## Se você se perder
 
 ```

@@ -1399,102 +1399,89 @@
 - **Date**: 2026-09-08
 - **Status**: active
 
+### AD-147
+- **Decision**: A tela `/app/conta` é a **única** página sob `/app` dispensada de
+  `exigirMatriculaAtiva()`, e a dispensa é nominal — uma lista com motivo escrito na varredura do
+  PAG-01, não um afrouxamento da varredura. As ações do titular que moram nela (esquecimento,
+  exportação, troca de senha) também não exigem matrícula. A autorização continua sendo **uma só, a
+  sessão**: nenhuma RLS muda, nenhum segundo mecanismo de liberação nasce, e sem matrícula a tela
+  mostra a data do fim do acesso e o convite — nunca uma linha do acervo. Junto disso, a exportação
+  de dados do art. 18 **itera `TABELAS_GRUPO_1`** em vez de enumerar tabelas, e lê pelo **cliente de
+  serviço** filtrando pelo `user_id` do cookie, nunca pela RLS.
+- **Reason**: Os direitos do titular não vencem com a matrícula, e quem mais os exerce é justamente
+  quem saiu — com a guarda no caminho, esse aluno batia em `/assinar` e só conseguia apagar os
+  próprios dados comprando de novo. Sobre a leitura: parte das tabelas do grupo 1 tem
+  `revoke all ... from authenticated` (`solicitacoes_esquecimento` é uma), e uma exportação por RLS
+  devolveria essas tabelas **vazias sem erro nenhum** — o titular receberia um JSON que parece
+  completo e não é. Sobre a lista: o teste de banco do contrato nº 9 já obriga `TABELAS_GRUPO_1` a
+  estar completa, então amarrar a exportação a ela faz a tabela nova entrar de graça no dia em que
+  alguém for obrigado a registrá-la; enumerada à mão, a exportação envelheceria em silêncio, que é o
+  modo de falha que ninguém detecta.
+- **Trade-off**: O filtro por titular deixa de ser garantido pelo banco e passa a ser
+  responsabilidade da aplicação — em troca, o `user_id` só pode vir do cookie, e nenhuma rota aceita
+  identificador de formulário, query ou cabeçalho. A exportação é síncrona, com teto de 2.000 linhas
+  por tabela e truncamento sinalizado dentro do próprio arquivo; se o acervo por aluno crescer muito
+  ela vira job (invariante nº7). A dispensa do PAG-01 exige que quem criar a segunda exceção a
+  defenda por escrito na lista.
+- **Scope**: M8 conta e paywall · M7 LGPD · PAG-01/PAG-07 · DADOS-04/DADOS-05 · AD-133.
+- **Date**: 2026-09-08
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: **Backfill do Raio-X legado do Banco do Brasil** (`docs/planos/BACKFILL-RAIOX-BB-POS-SPEC40.md`),
-  **AD-146**. Não é spec numerada: é correção de um defeito achado depois da SPEC 40. Branch
-  `fix/m5-backfill-raiox-bb`, 7 commits atômicos, sem push. **T1–T8 concluídas; T9 parcial.**
-- **O defeito, em duas metades**: o Raio-X do BB saía inteiro em `0%`/`sem dado` porque (1) a medição
-  só lia `etiquetas_de_item`, e o acervo tem **1.375 questões publicadas classificadas e zero
-  etiquetas** — a verdade mais forte que existe estava fora da conta; e (2) "prova própria" era
-  comparação textual de `orgao`/`cargo`, e o concurso legado é `Banco do Brasil — Escriturário,
-  Agente Comercial` com `cargo='indefinido'` enquanto as provas são `orgao='Banco do Brasil'` +
-  `cargo='Escriturário - Agente Comercial'`. Nenhuma prova do próprio banco casava.
-- **A decisão de forma (AD-146)**: `itens_medidos_efetivos` é a fonte única — uma linha por
-  `(prova_id, numero)`, com questão publicada > etiqueta humana > etiqueta de IA — e a questão **não
-  é copiada** para `etiquetas_de_item`; a view é a fronteira, e `fonte` deixa a precedência
-  auditável. `concurso_provas` responde "esta prova dá lastro a este concurso" por decisão humana com
-  autor, motivo e abertura de origem; a igualdade textual sobrevive só enquanto o concurso não tiver
-  nenhum vínculo, e é removível. A fórmula de dois níveis da SPEC 39 **não mudou**.
-- **Completed**: 3 migrations (`20260910120000`, `20260910121000`, `20260910122000`) —
-  `itens_medidos_efetivos`, `concurso_provas`, `vincular_prova_ao_concurso` (idempotente),
-  `provas_proprias_do_concurso`, `cobertura_da_prova` e `prova_bloco_materia` lendo a view efetiva,
-  `recalcula_raiox` com as duas trocas, e `registrar_documento_baixado` gravando o vínculo na mesma
-  transação do download · `medir-prova --acao etiquetar` só envia ao modelo os itens **sem** medição
-  efetiva (prova inteiramente publicada custa **zero**: nem catálogo, nem matriz, nem chamada) ·
-  `abrir-concurso --acao inventario-legado`, somente leitura de verdade (o cliente recusa qualquer SQL
-  que não comece por `select`/`with`) · seção nova na skill canônica.
-- **Gate**: `npm run test:unit` **1358/0** · `npm run test:db` **547/0** · `tsc --noEmit` limpo ·
-  `eslint` 0 erros · `npm run build` OK. As 3 migrations foram aplicadas por `npm run db:push` no
-  Supabase de desenvolvimento — **que é o mesmo banco de produção** enquanto a SPEC 25 não separar
-  ambientes. Snapshot antes/depois **idêntico** em `questoes`, `provas`, `tentativas`,
-  `raiox_projecoes`, `raiox_projecoes_materia` e `concursos`: o DDL foi neutro porque, sem vínculo
-  gravado, `provas_proprias_do_concurso` cai no caminho textual antigo, e como as 28 provas estão
-  todas com `grade_status='ausente'` a `provas_medidas` continua vazia.
-- **Três correções que só apareceram contra o banco real** (viraram teste): versão de questão a partir
-  da v2 exige `mudanca_tipo`/`mudanca_motivo` (BANCO-13); `gerada_ia` **não pode** virar `publicada` —
-  a trava da SPEC 10 recusa antes de a view opinar, e o filtro `origem='real'` é a segunda tranca; e
-  sem vínculo e sem edital a matéria cai no degrau **4**, não no 3, porque o degrau 3 empresta só a
-  distribuição de dentro da matéria e o peso continua exigindo documento do próprio concurso.
-- **T7 entregue**: `docs/planos/MANIFESTO-BACKFILL-BB.md`, produzido pelo dry-run somente leitura.
-  Achado que muda a execução: **2023 e 2021 atingem a cobertura mínima com zero chamada de modelo** —
-  as questões publicadas já medem 70/70 nos cadernos principais (2023 Prova B, 2021 Prova A). 2018,
-  2012 e 2010 têm acervo incompleto (35, 25 e 25 itens) e só entram se o etiquetador classificar o
-  resto: ~125 itens, ~8 pedidos, menos de R$ 0,10 no total. Custo não é o gargalo.
-- **T8 AUTORIZADO E APLICADO** (as seis respostas do §10 vieram do operador). Escrito no banco
-  compartilhado, tudo com `operador_acoes`: 6 vínculos em `concurso_provas` (2023 A/B/C e 2021 A/B/C,
-  banca `Fundação Cesgranrio`) por **RPC direta**, sem `url_origem` e sem `abertura_id` ·
-  `concursos.orgao`→`Banco do Brasil`, `concursos.cargo`→`Escriturário - Agente Comercial`,
-  `perfil_concurso.orgao`→`Banco do Brasil` · `caderno_irmao_de` em 4 provas (principais: 2023 Prova
-  B, 2021 Prova A) · grade de 2021 Prova A lida do PDF local: **8 blocos, 70 itens contra 70
-  declarados**, cobertura `1,0000` · `recalcula_raiox(current_date)`.
-- **Resultado**: o Raio-X do BB saiu de 8 matérias em degrau 4 com peso 0 para **8 matérias em degrau
-  1**, base `pontos`, somando 1,0 — Informática 22,5% · Vendas e Negociação 22,5% · Português 15% ·
-  Bancários 15% · Matemática Financeira 7,5% · Matemática 7,5% · Inglês 5% · Atualidades 5%. Os 85
-  tópicos saíram do degrau 4 para o **degrau 1**, somando 1,0. Acervo intacto e conferido: `questoes`
-  1.601/1.396 vigentes/1.375 publicadas, `tentativas` **106**, `etiquetas_de_item` **0** — nenhuma
-  questão foi copiada, que é o ponto da AD-146. `flag.m5.raiox` ficou **ligada** (decisão do
-  operador); `flag.m5.multi_concurso` não foi tocada.
-- **DÍVIDA declarada**: as 6 provas legadas estão vinculadas **sem proveniência** — `url_origem` e
-  `abertura_id` nulos, porque o operador optou por vincular sem esperar as URLs oficiais. Preencher
-  quando os links da Cesgranrio/BB chegarem; o fluxo normal da SPEC 40 faz isso sem refazer vínculo.
-- **2023 NÃO entrou, e o motivo mudou duas vezes durante a rodada** — registrar para não repetir a
-  investigação. Não é caderno errado nem arquivo incompleto: a página 1 dos três PDFs de 2023 **é** a
-  folha de instruções com a tabela da grade (conferido pelo operador no arquivo). O que falha é o
-  extrator, em dois pontos ainda abertos: (a) o layout de 2023 separa faixa e pontuação por quebra de
-  linha (`1 a 10`⏎`1,5 ponto cada`) e as duas regex de `grade.ts` exigem ou colado — como 2021 — ou
-  espaço com pontuação **inteira**; falta um terceiro padrão; (b) parte do texto da página 1 é
-  truncada no meio da palavra (`um CARTÃO-RESPOSTA destinad`), e por isso a frase do total
-  (`70 questões objetivas`) não sai — sem total, `lerGradeDeclarada` devolve `ausente` por AC4, que
-  proíbe deduzir o total somando os blocos. A página tem várias streams de conteúdo e a primeira delas
-  é só vetor, sem nenhum `Tj`. **Descartadas por medição**: não é Form XObject (2023 tem 7, 2021 zero,
-  mas ler os formulários rendeu +867 caracteres em outras páginas e **não** mexeu na página 1) e não é
-  a limpeza de texto nova (2021 sai com 66.244 caracteres antes e depois, idêntico).
-- **`separar` não se aplica a prova inteiramente publicada — cuidado no próximo backfill.** Rodar
-  `medir-prova --acao separar` na 2021 Prova A gravou `conferencia_motivo` (separou 27 de 70) e isso
-  **tirou a prova de `provas_medidas`**, que exige o campo nulo. O passo era inútil ali: os 70 itens
-  já são questões publicadas, não havia nada a enviar ao etiquetador, e a separação não alimenta
-  nenhum dos dois níveis do Raio-X. Desfeito com ação de operador registrada. A divergência é
-  legítima e vai voltar: a prova numera as **linhas** do texto de Português na lateral, e um extrator
-  que descarta posição não distingue número de linha de número de questão. Custou US$ 0,0248.
-- **Correção nova no leitor de PDF** (commit `fix(m1): le PDF 1.5+ com objetos comprimidos`):
-  `indexarObjetos` abre `/Type /ObjStm` (só preenche buraco — objeto solto vence), `ordemDasPaginas`
-  acha o `/Root` no stream de xref quando não há `trailer`, e `textoDoConteudo` descarta string que é
-  operando de operador que não exibe (`/Span <</Lang (pt-BR)>> BDC` grudava `pt-BR` em cada linha) e
-  decodifica UTF-16BE. Os **seis** cadernos do BB agora abrem; antes, cinco.
-- **Gate**: `npm run test:unit` **1364/0** · `tsc --noEmit` limpo · `eslint` limpo. Sensor de mutação
-  nos 6 testes novos: 5 falham contra o código antigo, e o sexto passa nas duas versões de propósito
-  (é o teste de não-regressão). `npm run test:db` e `npm run build` **não foram reexecutados** depois
-  do commit do leitor.
-- **In-progress / pendente**: T9 parcial — verificado 1, 2, 3, 5, 6, 7, 8, 9, 10 e 13(unit); **falta**
-  o item 4 (só **1** edição vinculada com grade lida, contra a meta de 4 — `param.m1.meta_provas_por_concurso`
-  não trava publicação), o item 11 (plano diário) e o item 12 (`/app/raio-x` na tela). Continuam sem
-  calibração `param.m1.cobertura_minima` (0,9), `param.m1.meta_provas_por_concurso` (4) e
-  `param.m5.peso_degrau_3` (0,5); o `param.m1.limiar_quase_duplicata` (0,78) segue medido como estrito
-  demais desde a SPEC 40. Segue tudo aberto do TRIAL-2 e da SPEC 37.
-- **Next step**: fechar 2023 pelos dois pontos do extrator descritos acima (é o que leva o concurso de
-  1 para 2 edições), abrir `/app/raio-x` para conferir a tela, e rodar `test:db` + `build`. Depois, a
-  SPEC 41 do `ROADMAP.md`.
+- **Feature**: **Conta — direitos do titular, senha e trial**
+  (`docs/planos/CONTA-direitos-do-titular.md`), **AD-147**. Plano fora do fluxo de specs, por decisão
+  do sócio: não abre spec numerada e não mexe no `ROADMAP.md`. Branch
+  `feat/conta-direitos-do-titular`, **5 commits atômicos, um por item, sem push**. Os 5 itens do
+  plano estão concluídos.
+- **Item 0 — canal**: `CANAL_PRIVACIDADE_PADRAO` passou a `passouconcurso@gmail.com`; a política
+  apontava um endereço que não existe.
+- **Item 1 — a conta abre sem matrícula**: `/app/conta` usa `matriculaAtiva()` e exige só **sessão**;
+  `solicitarEsquecimento` deixou de chamar `exigirMatriculaAtiva()`. Sem matrícula a aba de assinatura
+  mostra "seu acesso terminou em <data>" (lida da nova `ultimaMatricula()`, que devolve `null` em vez
+  de inventar data) mais o `ConviteDeMatricula`; a aba de privacidade fica inteira. A varredura do
+  PAG-01 em `matricula.test.ts` ganhou uma lista `EXCECOES` nominal com motivo, e um segundo teste que
+  falha se a exceção apontar para página inexistente — o escopo do sensor foi recortado, não afrouxado.
+  A **garantia continua renderizando sem matrícula quando há pagamento**: é o caminho de retry do
+  reembolso que o comentário de `pedirReembolso` descreve, e escondê-la o deixaria sem porta.
+- **Item 4 — exportação**: `src/modules/lgpd/exportacao.ts` + rota **POST** `/app/conta/exportar`
+  (POST porque o pedido grava auditoria, e um GET que escreve é disparado por `<img src>` de
+  terceiro). Itera `TABELAS_GRUPO_1` + indiretas + `pagamentos`; teto de **2.000 linhas por tabela**,
+  com `truncada`/`linhas_omitidas` e falha por tabela marcados **dentro** do JSON. Colunas de gateway
+  saem por **prefixo** (`asaas_`, `resultado_`), então a coluna nova nasce fora do arquivo. Migration
+  `20260911120000_exportacao_do_titular.sql`: `solicitacoes_exportacao` (RLS ligada, `revoke` de
+  `authenticated`, sem `unique` no `user_id` porque o direito é repetível).
+- **Armadilha achada e registrada** — o gate de banco pegou: a primeira versão da migration recriou
+  `apagar_dados_do_usuario` a partir da migration **original da SPEC 14**, e o `create or replace`
+  apagou em silêncio os DELETEs da gamificação e da fila do trial (`gamificacao.test.ts` e
+  `trial-emails.test.ts` ficaram vermelhos). Refeita a partir da versão **vigente**
+  (`20260905140000`). **Quem re-declarar essa função de novo tem de partir da última, nunca da
+  original.**
+- **Item 3 — senha**: seção "Senha e acesso" na aba de privacidade, **acima** do bloco de apagar (o
+  plano sugeria no fim; senha é tarefa corriqueira e apagar é irreversível — embaixo, o aluno passaria
+  pelo botão vermelho toda vez). Exige a senha atual, que `updateUser` não pede, conferida num
+  **cliente descartável** (`persistSession: false`) — no cliente da sessão, `signInWithPassword`
+  rotacionaria o cookie do próprio aluno. Conta só-Google não vê formulário. Recusas usam **uma frase
+  só**.
+- **Item 2 — trial**: a aba de assinatura tem três estados (pago · trial · sem matrícula). Os números
+  vêm de `contextoDaMatricula()`, nunca recalculados na tela. **Sem bloco de garantia no trial**, por
+  condição explícita em `tipo` e não por efeito colateral de `garantia === null`.
+- **Gate**: `npm run test:unit` **1439/0** · `npm run test:db` **551/0** (71 arquivos) ·
+  `tsc --noEmit` limpo · `eslint` limpo nos diretórios tocados · `npm run build` OK, com
+  `/app/conta/exportar` registrada. A migration foi aplicada por `npm run db:push` no Supabase de
+  desenvolvimento — **que é o mesmo banco de produção** enquanto a SPEC 25 não separar ambientes; as
+  duas funções corrigidas foram reaplicadas por conexão direta depois do conserto acima.
+- **Pendências que este plano não resolve** (do próprio plano): **nome e função do encarregado (DPO)**
+  na política — `DADOS-10 AC1`, dado do sócio, não código; comprovante/nota fiscal na conta e troca de
+  e-mail cadastral, fora por decisão. Ficaram **declaradas fora da exportação**, com motivo escrito em
+  `FORA_DA_EXPORTACAO`, as 5 tabelas financeiras alcançadas por `pagamento_id`
+  (`pagamento_aceites`, `pagamento_eventos`, `pagamento_transicoes`, `faturas`,
+  `pagamento_pendencias`): a rota do `pagamento_id` não está declarada em inventário nenhum, e
+  escrevê-la à mão seria o `select` literal que o item 4 existe para evitar.
+- **Não feito**: **teste manual em 375px** (conta paga, conta sem matrícula, download do JSON, troca
+  de senha e conta só-Google) — o plano pede, e depende de navegador. **Sem push e sem PR.**
+- **Next step**: conferir as cinco telas à mão em 375px, abrir o PR com `--no-ff`, e voltar ao
+  backfill do BB — 2023 no extrator, `/app/raio-x` na tela e a SPEC 41 do `ROADMAP.md`.
 
 ### Handoff anterior — SPEC 40
 

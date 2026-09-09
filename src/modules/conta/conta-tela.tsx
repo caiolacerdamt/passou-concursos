@@ -1,8 +1,12 @@
 import Link from "next/link";
 
 import { Estado } from "@/modules/ui/estado";
+import { MINIMO_DE_CARACTERES } from "@/modules/conta/senha";
 import type { DadosDaTelaDaGarantia } from "@/modules/pagamentos/garantia-tela";
 import { fraseDaGarantia } from "@/modules/pagamentos/garantia-tela";
+
+import { ConviteDeMatricula } from "./convite-de-matricula";
+import type { TipoDaMatricula } from "./matricula";
 
 /**
  * A tela de conta do aluno — identidade, assinatura, garantia e apagamento.
@@ -38,10 +42,35 @@ export type AssinaturaDaConta = {
 
 export type DadosDaConta = {
   email: string;
-  /** Fim da matrícula ativa, em ISO. */
-  fimDoAcesso: string;
+  /**
+   * O tipo da matrícula **ativa**, ou `null` quando não há nenhuma.
+   *
+   * É o que separa os estados da aba de assinatura. Não dá para deduzir de
+   * `fimDoAcesso`: quem venceu também tem data, só que no passado — e uma tela
+   * que compara data com relógio faria a mesma conta que `matriculaAtiva()` já
+   * fez no banco, com chance de discordar dela.
+   */
+  tipo: TipoDaMatricula | null;
+  /**
+   * Fim do acesso, em ISO. Com matrícula ativa é o fim dela; sem matrícula é o
+   * fim da última. `null` quando a leitura falhou — a tela cala a data.
+   */
+  fimDoAcesso: string | null;
   assinatura: AssinaturaDaConta | null;
   garantia: { tela: DadosDaTelaDaGarantia; dias: number } | null;
+  /**
+   * A conta tem senha própria? `false` para quem entra só pelo Google — e aí a
+   * seção de senha explica em vez de mostrar um formulário que só sabe falhar.
+   */
+  temSenha: boolean;
+  /**
+   * Dias inteiros até o fim do trial, ou `null` fora do trial / leitura falha.
+   * Vem de `contextoDaMatricula` — a tela **não** recalcula: doze superfícies
+   * arredondando por conta própria mostram "2 dias" numa e "1 dia" na outra.
+   */
+  diasRestantes: number | null;
+  /** Questões que ainda cabem hoje no teto do trial. `null` sem teto ou sem leitura. */
+  questoesRestantesHoje: number | null;
 };
 
 type AcaoSemEntrada = () => Promise<void>;
@@ -80,7 +109,32 @@ function diasAte(iso: string, agora: Date): number | null {
 
 /* ═══════════════════════════════════════════════════════ cabeçalho e abas ══ */
 
-function Identidade({ email }: { email: string }) {
+/**
+ * O selo do topo diz o estado real, e não um "ativa" decorativo.
+ *
+ * Quem venceu abre esta tela justamente para resolver conta — dizer "Matrícula
+ * ativa" para ele seria a tela mentindo na primeira linha. Sem matrícula o selo
+ * é **neutro**, não vermelho: acesso encerrado é um fato, não um erro dele.
+ */
+function SeloDoAcesso({ tipo }: { tipo: TipoDaMatricula | null }) {
+  if (tipo === null) {
+    return (
+      <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-fundo-suave px-3 py-1.5 text-xs font-medium text-suave">
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-suave" />
+        Acesso encerrado
+      </span>
+    );
+  }
+
+  return (
+    <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-marca-suave px-3 py-1.5 text-xs font-medium text-marca">
+      <span aria-hidden="true" className="size-1.5 rounded-full bg-ok" />
+      {tipo === "trial" ? "Teste grátis" : "Matrícula ativa"}
+    </span>
+  );
+}
+
+function Identidade({ email, tipo }: { email: string; tipo: TipoDaMatricula | null }) {
   return (
     <div className="mt-7 flex items-center gap-3.5 border-b border-linha pb-5">
       <span
@@ -95,10 +149,7 @@ function Identidade({ email }: { email: string }) {
           É para este e-mail que vão os avisos da sua conta.
         </p>
       </div>
-      <span className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-pill bg-marca-suave px-3 py-1.5 text-xs font-medium text-marca">
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-ok" />
-        Matrícula ativa
-      </span>
+      <SeloDoAcesso tipo={tipo} />
     </div>
   );
 }
@@ -144,8 +195,8 @@ function Assinatura({
   dados: DadosDaConta;
   agora: Date;
 }) {
-  const fim = dataPorExtenso(dados.fimDoAcesso);
-  const restam = diasAte(dados.fimDoAcesso, agora);
+  const fim = dados.fimDoAcesso ? dataPorExtenso(dados.fimDoAcesso) : null;
+  const restam = dados.fimDoAcesso ? diasAte(dados.fimDoAcesso, agora) : null;
   const assinatura = dados.assinatura;
   const preenchidos =
     assinatura?.progresso === null || assinatura?.progresso === undefined
@@ -232,6 +283,143 @@ function Assinatura({
         </dl>
       ) : null}
     </section>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════ trial ══ */
+
+/**
+ * A aba de assinatura de quem está no **trial** (AD-133).
+ *
+ * Antes disso a tela caía no card de pagamento sem preço, sem data e sem saída:
+ * o aluno de trial via um plano vazio e concluía que a conta estava quebrada.
+ *
+ * Os números saem de `contextoDaMatricula`, não de conta feita aqui. É o mesmo
+ * helper da faixa do topo — se esta tela recalculasse "faltam N dias" por
+ * conta própria, as duas se contradiriam no mesmo minuto por arredondar
+ * diferente.
+ *
+ * **Sem bloco de garantia**: não houve pagamento, não há o que devolver. E sem
+ * contagem em segundos, sem vermelho e sem "última chance" — invariante nº14.
+ */
+function Trial({
+  dados,
+}: {
+  dados: DadosDaConta;
+}) {
+  const dias = dados.diasRestantes;
+  const restantes = dados.questoesRestantesHoje;
+  const fim = dados.fimDoAcesso ? dataPorExtenso(dados.fimDoAcesso) : null;
+
+  return (
+    <div className="mt-8">
+      <section
+        aria-labelledby="titulo-trial"
+        className="rounded-2xl bg-breu px-7 pb-6 pt-6 text-breu-tinta sm:px-8"
+      >
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-breu-verde">
+          Teste grátis
+        </p>
+        <h2
+          id="titulo-trial"
+          className="mt-3 text-[1.5rem] font-semibold leading-tight tracking-[-0.022em] sm:text-[1.75rem]"
+        >
+          {/* `null` é leitura falha, não zero: sem número, a frase encurta. */}
+          {dias === null
+            ? "Seu teste grátis está em andamento"
+            : dias === 0
+              ? "Último dia do seu teste grátis"
+              : dias === 1
+                ? "Falta 1 dia do seu teste grátis"
+                : `Faltam ${dias} dias do seu teste grátis`}
+        </h2>
+        <p className="mt-2 text-sm text-breu-suave">
+          {fim
+            ? `O acesso do teste vai até ${fim}. Você não pagou nada e nada é cobrado sem você pedir.`
+            : "Você não pagou nada e nada é cobrado sem você pedir."}
+        </p>
+
+        {restantes === null ? null : (
+          <dl className="mt-5 border-t border-breu-linha pt-5">
+            <dt className="font-utilitaria text-[0.65625rem] uppercase tracking-[0.14em] text-breu-suave">
+              Questões ainda hoje
+            </dt>
+            <dd className="mt-1.5 text-sm">
+              {restantes === 0
+                ? "As questões de hoje acabaram. Amanhã o teto reabre."
+                : `${restantes} ${restantes === 1 ? "questão" : "questões"} dentro do teto diário do teste.`}
+            </dd>
+          </dl>
+        )}
+      </section>
+
+      <div className="mt-6">
+        <ConviteDeMatricula titulo="A matrícula tira o teto diário e abre o acervo inteiro.">
+          <p>
+            São 12 meses de acesso, e o que você já respondeu no teste continua no
+            seu histórico.
+          </p>
+        </ConviteDeMatricula>
+      </div>
+    </div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════ acesso encerrado ══ */
+
+/**
+ * A aba de assinatura de quem **não tem matrícula ativa**.
+ *
+ * Não é conteúdo parcial (m8 §P1 AC6): aqui não há uma linha do acervo — há a
+ * data em que o acesso terminou e o caminho de volta. O conteúdo pago continua
+ * inteiramente fora, e as telas de estudo continuam caindo em `/assinar`.
+ *
+ * Sem data legível a frase encurta em vez de inventar um dia.
+ */
+function AcessoEncerrado({ fimDoAcesso }: { fimDoAcesso: string | null }) {
+  const fim = fimDoAcesso ? dataPorExtenso(fimDoAcesso) : null;
+
+  return (
+    <div className="mt-8">
+      <section
+        aria-labelledby="titulo-encerrado"
+        className="rounded-2xl border border-linha bg-painel px-7 pb-6 pt-6 sm:px-8"
+      >
+        <p className="font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] text-suave">
+          Seu plano
+        </p>
+        <h2
+          id="titulo-encerrado"
+          className="mt-3 text-[1.5rem] font-semibold leading-tight tracking-[-0.022em] sm:text-[1.75rem]"
+        >
+          {fim ? `Seu acesso terminou em ${fim}` : "Seu acesso terminou"}
+        </h2>
+        <p className="mt-2 max-w-[54ch] text-sm leading-6 text-suave">
+          Seus dados continuam aqui e continuam seus: a aba{" "}
+          <Link href="/app/conta?aba=privacidade" className="font-medium underline">
+            Privacidade e dados
+          </Link>{" "}
+          exporta e apaga tudo, com ou sem matrícula.
+        </p>
+      </section>
+
+      <div className="mt-6">
+        {/*
+          A tarja é "Voltar a estudar" e não a padrão: esta tela atende tanto
+          quem veio de um trial quanto quem veio de um plano pago, e ela precisa
+          ser verdadeira para os dois passados.
+        */}
+        <ConviteDeMatricula
+          etiqueta="Voltar a estudar"
+          titulo="Quando quiser voltar, seu histórico está aqui esperando."
+        >
+          <p>
+            A matrícula reabre o acervo, o plano do dia e as revisões de onde você
+            parou.
+          </p>
+        </ConviteDeMatricula>
+      </div>
+    </div>
   );
 }
 
@@ -407,13 +595,103 @@ function Destinos() {
   );
 }
 
-function Privacidade({
-  solicitarEsquecimento,
+/**
+ * Trocar a senha logado (PAG-07).
+ *
+ * Fica **acima** do bloco de apagar, e não no fim da aba: senha é uma tarefa
+ * corriqueira e apagar a conta é irreversível. Embaixo, o aluno passaria o
+ * botão vermelho toda vez que fosse fazer a coisa banal — e a rotina de
+ * conviver com um botão perigoso é o que faz alguém clicar nele sem querer.
+ *
+ * O mínimo aparece no `minLength` do campo **e** é conferido na action: o
+ * atributo do HTML é conveniência, nunca a trava.
+ */
+function Senha({
+  temSenha,
+  trocarSenha,
 }: {
+  temSenha: boolean;
+  trocarSenha: AcaoDeFormulario;
+}) {
+  return (
+    <section aria-labelledby="titulo-senha" className="mt-9">
+      <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
+        <h2 id="titulo-senha" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
+          Senha e acesso
+        </h2>
+        <p className="text-[0.8125rem] text-suave">Como você entra na sua conta</p>
+      </div>
+
+      {temSenha ? (
+        <form action={trocarSenha} className="mt-5 max-w-[21rem]">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="senha_atual" className="text-[0.84375rem] font-medium">
+              Senha atual
+            </label>
+            <input
+              id="senha_atual"
+              name="senha_atual"
+              type="password"
+              autoComplete="current-password"
+              required
+              className="min-h-11 w-full rounded-[0.625rem] border border-linha bg-painel px-3.5 text-[0.9375rem] text-texto"
+            />
+          </div>
+
+          <div className="mt-4 flex flex-col gap-1">
+            <label htmlFor="senha_nova" className="text-[0.84375rem] font-medium">
+              Nova senha
+            </label>
+            <input
+              id="senha_nova"
+              name="senha"
+              type="password"
+              autoComplete="new-password"
+              minLength={MINIMO_DE_CARACTERES}
+              required
+              aria-describedby="regra-da-nova-senha"
+              className="min-h-11 w-full rounded-[0.625rem] border border-linha bg-painel px-3.5 text-[0.9375rem] text-texto"
+            />
+            <p id="regra-da-nova-senha" className="mt-1 text-[0.8125rem] text-suave">
+              Ao menos {MINIMO_DE_CARACTERES} caracteres.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-marca px-6 font-semibold text-white transition hover:bg-marca-apoio"
+          >
+            Trocar senha
+          </button>
+        </form>
+      ) : (
+        /*
+         * Conta que entra só pelo Google não tem senha. Mostrar o formulário
+         * para ela daria "senha atual incorreta" sobre uma senha que nunca
+         * existiu — erro sem saída para o aluno.
+         */
+        <p className="mt-5 max-w-[58ch] text-sm leading-6 text-suave">
+          Você entra pelo Google, então não há senha nossa para trocar. Sua senha
+          e a verificação em duas etapas ficam na sua conta Google.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Privacidade({
+  temSenha,
+  solicitarEsquecimento,
+  trocarSenha,
+}: {
+  temSenha: boolean;
   solicitarEsquecimento: AcaoDeFormulario;
+  trocarSenha: AcaoDeFormulario;
 }) {
   return (
     <>
+      <Senha temSenha={temSenha} trocarSenha={trocarSenha} />
+
       <section aria-labelledby="titulo-destinos" className="mt-9">
         <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
           <h2 id="titulo-destinos" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
@@ -479,19 +757,42 @@ function Privacidade({
       <section aria-labelledby="titulo-direitos" className="mt-11">
         <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-linha pb-3.5">
           <h2 id="titulo-direitos" className="text-[1.3125rem] font-semibold tracking-[-0.015em]">
-            Seus dados
+            Levar seus dados
           </h2>
-          <p className="text-[0.8125rem] text-suave">Outros direitos previstos na LGPD</p>
+          <p className="text-[0.8125rem] text-suave">Direito de acesso — LGPD, art. 18</p>
         </div>
-        <p className="mt-5 max-w-[58ch] text-sm leading-6 text-suave">
-          Precisa exercer outro direito, como acesso ou correção? No lançamento,
-          esse atendimento é feito manualmente pelo canal de privacidade informado
-          na{" "}
-          <Link href="/privacidade" className="font-medium underline">
-            política de privacidade
-          </Link>
-          .
-        </p>
+
+        <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <p className="max-w-[58ch] text-[0.9375rem] leading-6">
+              Baixe um arquivo com tudo o que guardamos sobre você: respostas,
+              planos, revisões, caderno de erros, matrícula e pagamentos.
+            </p>
+            <p className="mt-2 max-w-[58ch] text-[0.84375rem] leading-6 text-suave">
+              É um JSON, gerado na hora. Baixar não apaga nada e não muda seu
+              acesso. Precisa exercer outro direito, como correção? O canal está
+              na{" "}
+              <Link href="/privacidade" className="font-medium underline">
+                política de privacidade
+              </Link>
+              .
+            </p>
+          </div>
+
+          {/*
+            POST, não link: o pedido grava um registro de auditoria, e um GET
+            que escreve é disparado por qualquer página de terceiro embutindo a
+            URL. Como formulário, o cookie SameSite já barra isso.
+          */}
+          <form method="post" action="/app/conta/exportar" className="sm:w-[14.5rem] sm:shrink-0">
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center justify-center rounded-pill border border-linha bg-painel px-4 text-[0.90625rem] font-medium text-texto transition-colors hover:border-marca hover:text-marca"
+            >
+              Baixar meus dados
+            </button>
+          </form>
+        </div>
       </section>
     </>
   );
@@ -505,6 +806,7 @@ export function ContaTela({
   resultado,
   agora,
   solicitarEsquecimento,
+  trocarSenha,
   pedirReembolso,
 }: {
   aba: AbaDaConta;
@@ -512,6 +814,7 @@ export function ContaTela({
   resultado?: string;
   agora: Date;
   solicitarEsquecimento: AcaoDeFormulario;
+  trocarSenha: AcaoDeFormulario;
   pedirReembolso: AcaoSemEntrada;
 }) {
   return (
@@ -528,17 +831,35 @@ export function ContaTela({
         </p>
       </header>
 
-      <Identidade email={dados.email} />
+      <Identidade email={dados.email} tipo={dados.tipo} />
       <Abas atual={aba} />
 
       <Avisos resultado={resultado} />
 
       {aba === "assinatura" ? (
         <>
-          <Assinatura dados={dados} agora={agora} />
+          {dados.tipo === null ? (
+            <AcessoEncerrado fimDoAcesso={dados.fimDoAcesso} />
+          ) : dados.tipo === "trial" ? (
+            <Trial dados={dados} />
+          ) : (
+            <Assinatura dados={dados} agora={agora} />
+          )}
+          {/*
+            A garantia continua aparecendo **mesmo sem matrícula ativa** quando
+            há pagamento. É deliberado, e o comentário de `pedirReembolso` em
+            `acoes.ts` explica: quem teve o estorno confirmado pelo gateway e
+            travou no fechamento local precisa repetir o pedido, e nesse estado
+            a matrícula já caiu. Esconder o bloco aqui deixaria esse caminho sem
+            porta na interface.
+
+            O placeholder "não há pagamento para consultar", esse sim, só
+            aparece no plano pago. No trial não houve pagamento — não há o que
+            devolver, e um cabeçalho "Garantia" ali seria uma promessa falsa.
+          */}
           {dados.garantia ? (
             <Garantia garantia={dados.garantia} pedirReembolso={pedirReembolso} />
-          ) : (
+          ) : dados.tipo !== "pago" ? null : (
             <section aria-labelledby="titulo-sem-garantia" className="mt-11">
               <div className="border-b border-linha pb-3.5">
                 <h2
@@ -555,7 +876,11 @@ export function ContaTela({
           )}
         </>
       ) : (
-        <Privacidade solicitarEsquecimento={solicitarEsquecimento} />
+        <Privacidade
+          temSenha={dados.temSenha}
+          solicitarEsquecimento={solicitarEsquecimento}
+          trocarSenha={trocarSenha}
+        />
       )}
     </div>
   );
@@ -576,6 +901,51 @@ function Avisos({ resultado }: { resultado?: string }) {
       <div className="mt-6">
         <Estado tipo="degradado" oQueCaiu="A confirmação não foi reconhecida" />
       </div>
+    );
+  }
+
+  if (resultado === "senha_trocada") {
+    return (
+      <p
+        role="status"
+        className="mt-6 rounded-card border border-marca/30 bg-marca-suave px-4 py-3 text-sm leading-6 text-marca"
+      >
+        Senha trocada. Use a nova da próxima vez que entrar.
+      </p>
+    );
+  }
+
+  /*
+   * Uma frase só para senha curta, senha atual errada e falha do provedor.
+   * Separar os casos diria a quem pegou uma sessão aberta se acertou a senha
+   * atual — transformaria o formulário num verificador de senha, que é
+   * exatamente contra quem a conferência existe.
+   */
+  if (
+    resultado === "senha_recusada" ||
+    resultado === "senha_curta" ||
+    resultado === "senha_sem_formulario"
+  ) {
+    return (
+      <p
+        role="alert"
+        className="mt-6 rounded-card border border-erro/40 bg-erro-fundo px-4 py-3 text-sm leading-6 text-erro"
+      >
+        Não foi possível trocar a senha. Confira a senha atual e use uma nova com
+        ao menos {MINIMO_DE_CARACTERES} caracteres.
+      </p>
+    );
+  }
+
+  if (resultado === "exportacao_falhou") {
+    return (
+      <p
+        role="alert"
+        className="mt-6 rounded-card border border-erro/40 bg-erro-fundo px-4 py-3 text-sm leading-6 text-erro"
+      >
+        Não conseguimos montar seu arquivo agora, e por isso nada foi baixado —
+        entregar metade sem avisar seria pior. Tente de novo em alguns minutos.
+      </p>
     );
   }
 

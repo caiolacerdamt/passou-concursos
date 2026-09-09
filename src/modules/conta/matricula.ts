@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
+import { reportarErro } from "@/modules/observabilidade/reporte";
 
 /**
  * A guarda de matricula do lado da aplicacao (PAG-01, PAG-06 AC2).
@@ -70,6 +71,57 @@ export async function matriculaAtiva(
     .maybeSingle();
 
   return data ?? null;
+}
+
+type LeitorDaUltima = {
+  from: (tabela: string) => {
+    select: (colunas: string) => {
+      order: (
+        coluna: string,
+        opcoes: { ascending: boolean },
+      ) => {
+        limit: (n: number) => {
+          maybeSingle: () => Promise<{ data: Matricula | null; error?: unknown }>;
+        };
+      };
+    };
+  };
+};
+
+/**
+ * A **ultima** matricula do aluno da sessao, ativa ou nao.
+ *
+ * Existe para uma pergunta so, e vale registrar qual: `matriculaAtiva()` filtra
+ * por `estado='ativa'` **e** `fim_em > now()`, entao quem venceu recebe `null` e
+ * a tela nao teria como dizer *quando* o acesso terminou. Esta leitura tem a
+ * data — e nada mais. **Nao e chave de liberacao**: quem libera continua sendo
+ * `matriculaAtiva()`, e nenhuma tela decide o que mostrar a partir daqui.
+ *
+ * Sem filtro de `user_id` pelo mesmo motivo de `matriculaAtiva`: quem separa
+ * aluno de aluno e a RLS.
+ *
+ * Falha de leitura devolve `null` e a tela cala a data. Inventar data e pior
+ * que nao ter data.
+ */
+export async function ultimaMatricula(
+  cliente?: LeitorDaUltima,
+): Promise<Matricula | null> {
+  const supabase = (cliente ?? (await clienteDaSessao())) as LeitorDaUltima;
+
+  try {
+    const { data, error } = await supabase
+      .from("matriculas")
+      .select("id, estado, fim_em, tipo")
+      .order("fim_em", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data ?? null;
+  } catch (erro) {
+    reportarErro(erro, { modulo: "conta", operacao: "ultima_matricula" });
+    return null;
+  }
 }
 
 /**

@@ -30,6 +30,10 @@ export const TABELAS_GRUPO_1 = [
   "revisao_agenda",
   "revisao_evento",
   "solicitacoes_esquecimento",
+  // Registro de que o titular pediu a exportacao (LGPD art. 18, II). Guarda
+  // `user_id` e diz que aquela pessoa existiu e exerceu um direito — e dado
+  // identificado como qualquer outro, e o esquecimento tem de alcanca-lo.
+  "solicitacoes_exportacao",
   "sequencia_dia",
   "sessoes",
   "tentativa_causa_simulado",
@@ -49,7 +53,15 @@ export const TABELAS_GRUPO_1 = [
  * deixaria as duas para trás.
  */
 export const TABELAS_GRUPO_1_INDIRETAS = [
-  { tabela: "plano_bloco", alcancada_por: "plano_dia.id" },
+  {
+    tabela: "plano_bloco",
+    alcancada_por: "plano_dia.id",
+    // A coluna do lado de ca, escrita e nao deduzida. Derivar
+    // `plano_dia.id` -> `plano_dia_id` funcionaria hoje e quebraria calado no
+    // dia em que uma tabela indireta nova nao seguir a convencao: a exportacao
+    // consultaria uma coluna inexistente e o titular receberia a tabela vazia.
+    coluna_local: "plano_dia_id",
+  },
 ] as const;
 
 /**

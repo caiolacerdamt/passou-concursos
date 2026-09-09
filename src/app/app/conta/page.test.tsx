@@ -2,12 +2,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const dependencias = vi.hoisted(() => ({
-  matricula: vi.fn(),
+  contexto: vi.fn(),
+  ultima: vi.fn(),
   cliente: vi.fn(),
   servico: vi.fn(),
   sair: vi.fn(),
   solicitar: vi.fn(),
   reembolso: vi.fn(),
+  trocar: vi.fn(),
   precos: vi.fn(),
   repositorio: vi.fn(),
   reportar: vi.fn(),
@@ -15,7 +17,8 @@ const dependencias = vi.hoisted(() => ({
 
 vi.mock("@/lib/db/sessao", () => ({ clienteDaSessao: dependencias.cliente }));
 vi.mock("@/lib/db/servidor", () => ({ clienteDeServico: dependencias.servico }));
-vi.mock("@/modules/conta/matricula", () => ({ exigirMatriculaAtiva: dependencias.matricula }));
+vi.mock("@/modules/conta/matricula", () => ({ ultimaMatricula: dependencias.ultima }));
+vi.mock("@/modules/conta/contexto", () => ({ contextoDaMatricula: dependencias.contexto }));
 vi.mock("@/modules/observabilidade/reporte", () => ({ reportarErro: dependencias.reportar }));
 vi.mock("@/modules/pagamentos/repositorio", () => ({
   criarRepositorioDePagamentos: dependencias.repositorio,
@@ -23,6 +26,7 @@ vi.mock("@/modules/pagamentos/repositorio", () => ({
 vi.mock("./acoes", () => ({
   solicitarEsquecimento: dependencias.solicitar,
   pedirReembolso: dependencias.reembolso,
+  trocarSenha: dependencias.trocar,
 }));
 
 vi.mock("@/modules/pagamentos/preco", async () => {
@@ -52,15 +56,29 @@ describe("/app/conta", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(new Date("2026-09-01T12:00:00.000Z"));
-    dependencias.matricula.mockResolvedValue({
-      id: "matricula-1",
-      estado: "ativa",
-      fim_em: "2027-08-28T12:00:00.000Z",
+    dependencias.contexto.mockResolvedValue({
+      matricula: {
+        id: "matricula-1",
+        estado: "ativa",
+        fim_em: "2027-08-28T12:00:00.000Z",
+        tipo: "pago",
+      },
+      tipo: "pago",
+      ehTrial: false,
+      diasRestantes: null,
+      questoesRestantesHoje: null,
     });
+    dependencias.ultima.mockResolvedValue(null);
     dependencias.cliente.mockResolvedValue({
       auth: {
         getUser: vi.fn(async () => ({
-          data: { user: { id: "aluno-1", email: "aluno@exemplo.com" } },
+          data: {
+            user: {
+              id: "aluno-1",
+              email: "aluno@exemplo.com",
+              identities: [{ provider: "email" }],
+            },
+          },
         })),
       },
     });
@@ -123,6 +141,100 @@ describe("/app/conta", () => {
     expect(html).toContain('name="confirmacao"');
   });
 
+  /*
+   * Exportar é POST, não link: o pedido grava um registro de auditoria, e um
+   * GET que escreve é disparado por qualquer página de terceiro que embuta a
+   * URL na sessão do aluno.
+   */
+  it("oferece o download dos dados por POST na aba de privacidade", async () => {
+    const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+    expect(html).toContain('action="/app/conta/exportar"');
+    expect(html).toContain('method="post"');
+    expect(html).toContain("Baixar meus dados");
+  });
+
+  it("avisa que nada foi baixado quando a exportação falha", async () => {
+    const html = renderToStaticMarkup(
+      await renderConta({ aba: "privacidade", resultado: "exportacao_falhou" }),
+    );
+
+    expect(html).toContain("nada foi baixado");
+    expect(html).toContain("Baixar meus dados");
+  });
+
+  describe("troca de senha", () => {
+    it("mostra o formulário de senha na aba de privacidade", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Senha e acesso");
+      expect(html).toContain('name="senha_atual"');
+      expect(html).toContain('name="senha"');
+      expect(html).toContain("Trocar senha");
+    });
+
+    /*
+     * Senha é tarefa corriqueira; apagar a conta é irreversível. Embaixo, o
+     * aluno passaria pelo botão vermelho toda vez que fosse fazer a coisa banal.
+     */
+    it("a seção de senha vem antes do bloco de apagar", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html.indexOf("Senha e acesso")).toBeLessThan(html.indexOf("Apagar minha conta"));
+    });
+
+    /*
+     * Quem entra pelo Google não tem senha nossa. Mostrar o formulário daria
+     * "senha atual incorreta" sobre uma senha que nunca existiu.
+     */
+    it("conta só-Google não renderiza formulário de senha", async () => {
+      dependencias.cliente.mockResolvedValue({
+        auth: {
+          getUser: vi.fn(async () => ({
+            data: {
+              user: {
+                id: "aluno-g",
+                email: "g@exemplo.com",
+                identities: [{ provider: "google" }],
+              },
+            },
+          })),
+        },
+      });
+
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Você entra pelo Google");
+      expect(html).not.toContain('name="senha_atual"');
+    });
+
+    it("confirma a troca sem esconder o formulário", async () => {
+      const html = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_trocada" }),
+      );
+
+      expect(html).toContain("Senha trocada");
+      expect(html).toContain('name="senha_atual"');
+    });
+
+    /*
+     * Uma frase só para os três motivos de recusa: separar diria a quem pegou
+     * uma sessão aberta se acertou a senha atual.
+     */
+    it("recusa senha curta e senha atual errada com a mesma frase", async () => {
+      const curta = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_curta" }),
+      );
+      const recusada = renderToStaticMarkup(
+        await renderConta({ aba: "privacidade", resultado: "senha_recusada" }),
+      );
+
+      expect(curta).toContain("Não foi possível trocar a senha");
+      expect(recusada).toContain("Não foi possível trocar a senha");
+      expect(recusada).not.toContain("senha atual está errada");
+    });
+  });
+
   it("cai na assinatura quando a aba da URL não existe", async () => {
     const html = renderToStaticMarkup(await renderConta({ aba: "../../etc/passwd" }));
 
@@ -160,6 +272,196 @@ describe("/app/conta", () => {
 
     expect(html).toContain("nada foi enviado ao banco");
     expect(html).not.toContain("ficou em análise");
+  });
+
+  /*
+   * Os direitos do titular (LGPD art. 18) não vencem com a matrícula. Quem mais
+   * pede apagamento é quem já saiu — e antes desta mudança ele batia em
+   * `/assinar`, ou seja, precisava comprar de novo para conseguir apagar os
+   * próprios dados.
+   */
+  describe("sem matrícula ativa", () => {
+    beforeEach(() => {
+      dependencias.contexto.mockResolvedValue({
+        matricula: null,
+        tipo: null,
+        ehTrial: false,
+        diasRestantes: null,
+        questoesRestantesHoje: null,
+      });
+      dependencias.ultima.mockResolvedValue({
+        id: "matricula-1",
+        estado: "expirada",
+        fim_em: "2026-08-20T12:00:00.000Z",
+        tipo: "pago",
+      });
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => null),
+      });
+    });
+
+    it("abre a conta e diz quando o acesso terminou, sem selo de ativa", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Seu acesso terminou em");
+      expect(html).toContain("20 de agosto de 2026");
+      expect(html).toContain("Acesso encerrado");
+      expect(html).not.toContain("Matrícula ativa");
+    });
+
+    it("convida de volta sem chamar de teste grátis quem tinha plano pago", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain('href="/checkout"');
+      expect(html).toContain("Voltar a estudar");
+      expect(html).not.toContain("Teste grátis");
+    });
+
+    /*
+     * O m8 §P1 AC6 proíbe conteúdo parcial. A tela sem matrícula mostra data,
+     * convite e os direitos do titular — nunca uma linha do acervo.
+     */
+    it("não renderiza card de plano nem valor pago", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Seu acesso vai até");
+      expect(html).not.toContain("Pagamento confirmado");
+    });
+
+    it("a aba de privacidade continua inteira: é o que ele veio fazer", async () => {
+      const html = renderToStaticMarkup(await renderConta({ aba: "privacidade" }));
+
+      expect(html).toContain("Apagar minha conta");
+      expect(html).toContain('name="confirmacao"');
+      expect(html).toContain("Some para sempre");
+    });
+
+    /*
+     * A data sai da ÚLTIMA matrícula, não da ativa — que não existe. Leitura
+     * que falha cala a data em vez de inventar um dia.
+     */
+    it("sem conseguir ler a última matrícula, cala a data em vez de inventar", async () => {
+      dependencias.ultima.mockResolvedValue(null);
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Seu acesso terminou");
+      expect(html).not.toContain("Seu acesso terminou em");
+    });
+
+    /*
+     * Quem teve o estorno confirmado pelo gateway e travou no fechamento local
+     * fica sem matrícula e precisa repetir o pedido. Esconder a garantia aqui
+     * deixaria esse caminho sem porta na interface.
+     */
+    it("mantém o pedido de reembolso quando ainda há pagamento na janela", async () => {
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => PAGAMENTO),
+      });
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Quero meu dinheiro de volta");
+    });
+  });
+
+  /*
+   * Antes disso o aluno de trial caía no card de pagamento: sem preço, sem data
+   * e sem saída — um plano vazio que parecia produto quebrado.
+   */
+  describe("no trial", () => {
+    beforeEach(() => {
+      dependencias.contexto.mockResolvedValue({
+        matricula: {
+          id: "matricula-t",
+          estado: "ativa",
+          fim_em: "2026-09-05T12:00:00.000Z",
+          tipo: "trial",
+        },
+        tipo: "trial",
+        ehTrial: true,
+        diasRestantes: 4,
+        questoesRestantesHoje: 6,
+      });
+      dependencias.repositorio.mockReturnValue({
+        buscarUltimoPagamentoDoUsuario: vi.fn(async () => null),
+      });
+    });
+
+    it("diz os dias que faltam e o teto do dia, com o convite", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).toContain("Faltam 4 dias do seu teste grátis");
+      expect(html).toContain("6 questões");
+      expect(html).toContain('href="/checkout"');
+    });
+
+    /*
+     * Sem pagamento não há o que devolver. Um cabeçalho "Garantia" no trial
+     * seria promessa falsa.
+     */
+    it("não renderiza a palavra Garantia", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Garantia");
+    });
+
+    it("não mostra o card de plano pago nem valor nenhum", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Seu acesso vai até");
+      expect(html).not.toContain("Pagamento confirmado");
+    });
+
+    /*
+     * Invariante nº14: nada de contagem em segundos, vermelho ou "última
+     * chance". A urgência aqui é verdadeira e não precisa de teatro.
+     */
+    it("não inventa urgência", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("última chance");
+      expect(html).not.toContain("Últimas horas");
+      expect(html).not.toContain("text-erro");
+    });
+
+    /* `null` é leitura falha, e não zero: a tela cala a linha em vez de mentir. */
+    it("teto ilegível cala a linha em vez de dizer zero", async () => {
+      dependencias.contexto.mockResolvedValue({
+        matricula: {
+          id: "matricula-t",
+          estado: "ativa",
+          fim_em: "2026-09-05T12:00:00.000Z",
+          tipo: "trial",
+        },
+        tipo: "trial",
+        ehTrial: true,
+        diasRestantes: 4,
+        questoesRestantesHoje: null,
+      });
+
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Questões ainda hoje");
+      expect(html).toContain("Faltam 4 dias");
+    });
+
+    it("o selo do topo diz teste grátis, e não matrícula ativa", async () => {
+      const html = renderToStaticMarkup(await renderConta());
+
+      expect(html).not.toContain("Matrícula ativa");
+      expect(html).toContain("Teste grátis");
+    });
+  });
+
+  it("sem sessão continua indo para o login, e não para a conta", async () => {
+    dependencias.cliente.mockResolvedValue({
+      auth: { getUser: vi.fn(async () => ({ data: { user: null } })) },
+    });
+
+    await expect(renderConta()).rejects.toMatchObject({
+      digest: expect.stringContaining("/entrar?proximo=%2Fapp%2Fconta"),
+    });
   });
 
   it("nunca ecoa o texto do parâmetro resultado na tela", async () => {

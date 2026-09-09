@@ -4,7 +4,12 @@ import { redirect } from "next/navigation";
 
 import { clienteDaSessao } from "@/lib/db/sessao";
 import { clienteDeServico } from "@/lib/db/servidor";
-import { exigirMatriculaAtiva } from "@/modules/conta/matricula";
+import { problemaDaSenha } from "@/modules/conta/senha";
+import {
+  conferirSenhaAtual,
+  provedoresDoUsuario,
+  temSenhaPropria,
+} from "@/modules/conta/troca-de-senha";
 import { executarEsquecimento } from "@/modules/lgpd/esquecimento";
 import { reportarErro } from "@/modules/observabilidade/reporte";
 import { gatewayAsaasDoAmbiente } from "@/modules/pagamentos/asaas";
@@ -22,10 +27,17 @@ function confirmou(formulario: FormData): boolean {
  * A action ignora qualquer `user_id` do formulário. O titular vem do cookie
  * de sessão, e a confirmação textual existe para tornar um clique acidental
  * incapaz de iniciar a rotina irreversível.
+ *
+ * De propósito **não** exige matrícula ativa, pelo mesmo motivo de
+ * `pedirReembolso` logo abaixo: o direito ao esquecimento (LGPD art. 18) não
+ * vence junto com o acesso, e quem mais pede apagamento é exatamente quem já
+ * saiu. Exigir matrícula aqui mandava esse aluno para `/assinar` — ou seja,
+ * cobrava uma matrícula nova para ele conseguir apagar os dados.
+ *
+ * A dona da autorização continua sendo a sessão, e ela é única: o apagamento
+ * roda sobre o `user.id` do cookie, nunca sobre identificador de formulário.
  */
 export async function solicitarEsquecimento(formulario: FormData): Promise<never> {
-  await exigirMatriculaAtiva();
-
   if (!confirmou(formulario)) {
     redirect("/app/conta?aba=privacidade&resultado=confirmacao");
   }
@@ -47,6 +59,60 @@ export async function solicitarEsquecimento(formulario: FormData): Promise<never
   }
 
   redirect("/entrar?resultado=esquecimento");
+}
+
+/**
+ * Trocar a senha sem sair da conta (PAG-07).
+ *
+ * Também **não** exige matrícula: quem venceu continua tendo uma conta, e uma
+ * conta que não dá para proteger é um problema de segurança, não de plano.
+ *
+ * A regra da senha nova é a única do produto, `problemaDaSenha`. A senha atual
+ * é conferida num cliente descartável — `updateUser` não a pede, e sem isso uma
+ * sessão esquecida aberta troca a senha e tranca o dono fora.
+ *
+ * Todas as recusas usam a **mesma** mensagem genérica. Dizer "a senha atual
+ * está errada" transformaria o formulário num verificador de senha para quem
+ * pegou a sessão aberta — que é exatamente contra quem a conferência existe.
+ */
+export async function trocarSenha(formulario: FormData): Promise<never> {
+  const atual = String(formulario.get("senha_atual") ?? "");
+  const nova = String(formulario.get("senha") ?? "");
+
+  const sessao = await clienteDaSessao();
+  const {
+    data: { user },
+  } = await sessao.auth.getUser();
+
+  if (!user?.email) {
+    redirect(DE_VOLTA_AO_LOGIN);
+  }
+
+  if (!temSenhaPropria(provedoresDoUsuario(user))) {
+    /*
+     * Conta só-Google não tem senha para trocar, e a tela nem mostra o
+     * formulário. Chegar aqui é pedido forjado: recusa, sem criar senha nova
+     * para uma conta que entra por outro caminho.
+     */
+    redirect("/app/conta?aba=privacidade&resultado=senha_sem_formulario");
+  }
+
+  // O comprimento antes da rede: senha curta não merece uma ida ao Auth.
+  if (problemaDaSenha(nova)) {
+    redirect("/app/conta?aba=privacidade&resultado=senha_curta");
+  }
+
+  if (!(await conferirSenhaAtual(user.email, atual))) {
+    redirect("/app/conta?aba=privacidade&resultado=senha_recusada");
+  }
+
+  const { error } = await sessao.auth.updateUser({ password: nova });
+  if (error) {
+    reportarErro(error, { modulo: "conta", operacao: "trocar_senha" });
+    redirect("/app/conta?aba=privacidade&resultado=senha_recusada");
+  }
+
+  redirect("/app/conta?aba=privacidade&resultado=senha_trocada");
 }
 
 /**

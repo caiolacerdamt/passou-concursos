@@ -8,7 +8,7 @@ export const VERSAO_ATUAL_DOS_TERMOS = "inicial-2026-08";
 
 /** Identificação provisória, explícita até a revisão jurídica e cadastral. */
 export const IDENTIFICACAO_PUBLICA_PADRAO = "Passou Concursos";
-export const CANAL_PRIVACIDADE_PADRAO = "privacidade@passouconcursos.com";
+export const CANAL_PRIVACIDADE_PADRAO = "passouconcurso@gmail.com";
 
 export const ESTADOS_DE_PAGAMENTO = [
   "pendente",

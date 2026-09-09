@@ -1432,8 +1432,8 @@
 - **Feature**: **Conta — direitos do titular, senha e trial**
   (`docs/planos/CONTA-direitos-do-titular.md`), **AD-147**. Plano fora do fluxo de specs, por decisão
   do sócio: não abre spec numerada e não mexe no `ROADMAP.md`. Branch
-  `feat/conta-direitos-do-titular`, **5 commits atômicos, um por item, sem push**. Os 5 itens do
-  plano estão concluídos.
+  `feat/conta-direitos-do-titular`, **5 commits atômicos, um por item**. Os 5 itens do plano estão
+  concluídos e mergeados na `main`.
 - **Item 0 — canal**: `CANAL_PRIVACIDADE_PADRAO` passou a `passouconcurso@gmail.com`; a política
   apontava um endereço que não existe.
 - **Item 1 — a conta abre sem matrícula**: `/app/conta` usa `matriculaAtiva()` e exige só **sessão**;
@@ -1478,10 +1478,11 @@
   (`pagamento_aceites`, `pagamento_eventos`, `pagamento_transicoes`, `faturas`,
   `pagamento_pendencias`): a rota do `pagamento_id` não está declarada em inventário nenhum, e
   escrevê-la à mão seria o `select` literal que o item 4 existe para evitar.
-- **Não feito**: **teste manual em 375px** (conta paga, conta sem matrícula, download do JSON, troca
-  de senha e conta só-Google) — o plano pede, e depende de navegador. **Sem push e sem PR.**
-- **Next step**: conferir as cinco telas à mão em 375px, abrir o PR com `--no-ff`, e voltar ao
-  backfill do BB — 2023 no extrator, `/app/raio-x` na tela e a SPEC 41 do `ROADMAP.md`.
+- **Teste manual conferido pelo sócio** — as cinco situações do plano (conta paga, conta sem
+  matrícula, download do JSON, troca de senha e conta só-Google) foram exercitadas no navegador e
+  passaram. Mergeado na `main` por PR `--no-ff`; branch removida.
+- **Next step**: voltar ao backfill do BB — 2023 no extrator (os dois pontos descritos no handoff da
+  SPEC 40), `/app/raio-x` na tela, e a SPEC 41 do `ROADMAP.md`.
 
 ### Handoff anterior — SPEC 40
 

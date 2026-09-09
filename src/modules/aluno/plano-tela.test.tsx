@@ -53,15 +53,17 @@ describe("PlanoTela", () => {
     expect(html).toContain("Revisar");
     expect(html).toContain('data-tipo="revisar"');
     expect(html).toContain('data-tipo="avancar"');
-    expect(html).toContain('aria-label="Tipo de estudo: Em foco · Revisar"');
+    expect(html).toContain('aria-label="Tipo de estudo: Revisar · em foco"');
     expect(html).toContain('aria-label="Tipo de estudo: Aprender"');
-    expect(html).toContain("bg-conquista-fundo text-conquista");
-    expect(html).toContain("bg-marca-suave text-marca");
+    expect(html).toContain("text-conquista");
+    expect(html).toContain("text-marca-apoio");
     expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
     expect(html).not.toContain("A revisão vence hoje.");
     expect(html).not.toContain("TEXTO CRU DO BANCO");
-    expect(html).toContain("Matemática · Matemática Financeira");
-    expect(html).toContain("20 min · 10 questões");
+    expect(html).toContain("Matemática Financeira");
+    expect(html).toContain(">Matemática</p>");
+    expect(html).toContain("20 min · 10 q");
+    expect(html).not.toContain("Continuar");
     expect(html).not.toContain("topico-1");
   });
 
@@ -155,7 +157,8 @@ describe("PlanoTela", () => {
     expect(html).toContain("O mínimo para contar sua ofensiva de hoje");
     expect(html).toContain("META");
     expect(html).toContain("Estudo completo do dia");
-    expect(html).toContain("lg:items-stretch");
+    expect(html).toContain("sm:grid-cols-2 lg:grid-cols-3");
+    expect(html).toContain("border-b border-linha");
     expect(html).toContain('id="nivel-minimo"');
     expect(html).toContain("scroll-mt-24");
     expect(html).not.toContain("Piso");
@@ -190,9 +193,12 @@ describe("PlanoTela", () => {
       />,
     );
 
-    expect(html).toContain("Ver resumo");
-    expect(html).toContain("5 questões · 4 acertos");
+    expect(html).toContain('href="/app/sessao/sessao-1/resumo"');
+    expect(html).toContain('aria-label="Status do bloco: Feito"');
+    expect(html).toContain("Feito");
+    expect(html).toContain("15 min · 4 de 5 certas");
     expect(html).not.toContain("/app/estudo?bloco=bloco-piso");
+    expect(html).not.toContain("Ver resumo");
   });
 
   it("usa o piso apenas como fallback quando a meta cheia está vazia", () => {
@@ -217,5 +223,25 @@ describe("PlanoTela", () => {
 
     expect(html).toContain("Língua Portuguesa");
     expect(html).not.toContain("Língua Portuguesa · Geral");
+  });
+
+  it("dimensiona a régua pela duração mais longa do dia", () => {
+    const html = renderToStaticMarkup(
+      <PlanoTela
+        plano={{
+          ...planoBase,
+          frase: null,
+          piso: [],
+          metaCheia: [
+            { ...blocoBase, id: "bloco-longo", minutosEstimados: 30 },
+            { ...blocoBase, id: "bloco-curto", minutosEstimados: 15 },
+          ],
+        }}
+        rotulosDosTopicos={rotulos}
+      />,
+    );
+
+    expect(html).toContain('style="width:100%"');
+    expect(html).toContain('style="width:50%"');
   });
 });

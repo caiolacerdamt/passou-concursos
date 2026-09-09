@@ -306,7 +306,11 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
   it("aluno de 8h recebe no máximo 6 blocos na meta cheia", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
-      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      for (let i = 0; i < 8; i += 1) {
+        const materia = await criarMateria(cliente);
+        await topicoComQuestao(cliente, { materiaId: materia });
+        await topicoComQuestao(cliente, { materiaId: materia });
+      }
       await criarPerfil(cliente, aluno, 480);
 
       await gerar(cliente, aluno);
@@ -322,7 +326,9 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
       for (let i = 0; i < 8; i += 1) {
-        await topicoComQuestao(cliente);
+        const materia = await criarMateria(cliente);
+        await topicoComQuestao(cliente, { materiaId: materia });
+        await topicoComQuestao(cliente, { materiaId: materia });
       }
       await criarPerfil(cliente, aluno, 480);
 
@@ -337,9 +343,8 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
   it("preenche as matérias escolhidas sem deixar uma monopolizar os 6 blocos", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
-      const materias = await Promise.all(
-        [0, 1, 2].map(() => criarMateria(cliente)),
-      );
+      const materias: string[] = [];
+      for (let i = 0; i < 3; i += 1) materias.push(await criarMateria(cliente));
       for (const materiaId of materias) {
         for (let i = 0; i < 2; i += 1) {
           await topicoComQuestao(cliente, { materiaId });
@@ -358,15 +363,11 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
   it("preserva a mistura de tipos quando o teto está aplicado", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
-      const materias = await Promise.all(
-        [0, 1, 2, 3, 4, 5].map(() => criarMateria(cliente)),
-      );
+      const materias: string[] = [];
+      for (let i = 0; i < 3; i += 1) materias.push(await criarMateria(cliente));
       const conhecidos: string[] = [];
-      for (let i = 0; i < materias.length; i += 1) {
-        const topico = await topicoComQuestao(cliente, { materiaId: materias[i] });
-        if (i < 3) conhecidos.push(topico);
-      }
-      for (const materiaId of materias.slice(3)) {
+      for (const materiaId of materias) {
+        conhecidos.push(await topicoComQuestao(cliente, { materiaId }));
         await topicoComQuestao(cliente, { materiaId });
       }
       await criarPerfil(cliente, aluno, 480);
@@ -408,7 +409,11 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
   it("mantém 20 minutos em todos os blocos quando o mapa está vazio", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
-      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      for (let i = 0; i < 8; i += 1) {
+        const materia = await criarMateria(cliente);
+        await topicoComQuestao(cliente, { materiaId: materia });
+        await topicoComQuestao(cliente, { materiaId: materia });
+      }
       await criarPerfil(cliente, aluno, 480);
       await configurar(cliente, "param.m4.minutos_por_questao_por_materia", {});
 
@@ -463,7 +468,11 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
   it("regenerar não ultrapassa o teto e preserva bloco ajustado", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const aluno = novoAluno();
-      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      for (let i = 0; i < 8; i += 1) {
+        const materia = await criarMateria(cliente);
+        await topicoComQuestao(cliente, { materiaId: materia });
+        await topicoComQuestao(cliente, { materiaId: materia });
+      }
       await criarPerfil(cliente, aluno, 480);
 
       await gerar(cliente, aluno);

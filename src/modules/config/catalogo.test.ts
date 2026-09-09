@@ -84,6 +84,8 @@ describe("catalogo de chaves", () => {
       "param.m4.fsrs_passos_curtos",
       "param.m4.regua_fixa_dias",
       "param.m4.questoes_por_bloco",
+      "param.m4.teto_blocos_dia",
+      "param.m4.teto_materias_dia",
       "param.m4.fraqueza_por_nivel",
       "param.m4.retencao_historico_cron_dias",
       "param.m5.bancas",

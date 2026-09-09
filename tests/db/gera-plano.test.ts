@@ -104,12 +104,32 @@ async function blocosDe(cliente: Client, aluno: string): Promise<Bloco[]> {
   return rows;
 }
 
-async function criarMateria(cliente: Client): Promise<string> {
+async function criarMateria(
+  cliente: Client,
+  nome = `Materia ${sufixo()}`,
+): Promise<string> {
   const { rows } = await cliente.query<{ id: string }>(
     "insert into public.materias (nome) values ($1) returning id",
-    [`Materia ${sufixo()}`],
+    [nome],
   );
   return rows[0].id;
+}
+
+async function configurar(
+  cliente: Client,
+  chave: string,
+  valor: unknown,
+): Promise<void> {
+  const { rows: autores } = await cliente.query<{ id: string }>(
+    "insert into auth.users (id) values (gen_random_uuid()) returning id",
+  );
+  const serializado = JSON.stringify(valor);
+  if (serializado === undefined) throw new Error("fixture de configuração inválida");
+  await cliente.query(
+    `insert into public.configuracoes (chave, valor, modulo_dono, alterado_por, motivo)
+     values ($1, $2::jsonb, 'm4', $3, 'teste do plano')`,
+    [chave, serializado, autores[0].id],
+  );
 }
 
 async function distribuicaoDeMaterias(
@@ -361,6 +381,115 @@ descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", ()
       );
       expect(tipos.has("avancar")).toBe(true);
       expect(tipos.has("treinar")).toBe(true);
+    });
+  });
+
+  it("calcula duração por matéria e cai no default quando a matéria não está no mapa", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      const nomeCara = `Materia cara ${sufixo()}`;
+      const materiaCara = await criarMateria(cliente, nomeCara);
+      const materiaPadrao = await criarMateria(cliente);
+      const topicoCaro = await topicoComQuestao(cliente, { materiaId: materiaCara });
+      const topicoPadrao = await topicoComQuestao(cliente, { materiaId: materiaPadrao });
+      await criarPerfil(cliente, aluno, 120);
+      await configurar(cliente, "param.m4.minutos_por_questao_por_materia", {
+        [nomeCara]: 3,
+      });
+
+      await gerar(cliente, aluno);
+
+      const blocos = await blocosDe(cliente, aluno);
+      expect(blocos.find((bloco) => bloco.topico_id === topicoCaro)?.minutos_estimados).toBe(30);
+      expect(blocos.find((bloco) => bloco.topico_id === topicoPadrao)?.minutos_estimados).toBe(20);
+    });
+  });
+
+  it("mantém 20 minutos em todos os blocos quando o mapa está vazio", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      await criarPerfil(cliente, aluno, 480);
+      await configurar(cliente, "param.m4.minutos_por_questao_por_materia", {});
+
+      await gerar(cliente, aluno);
+
+      const meta = (await blocosDe(cliente, aluno)).filter(
+        (bloco) => bloco.nivel === "meta_cheia",
+      );
+      expect(meta).toHaveLength(6);
+      expect(new Set(meta.map((bloco) => bloco.minutos_estimados)).size).toBe(1);
+      expect(meta[0].minutos_estimados).toBe(20);
+    });
+  });
+
+  it("entrega o primeiro bloco mesmo quando ele é maior que o tempo declarado", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      await topicoComQuestao(cliente);
+      await criarPerfil(cliente, aluno, 10);
+
+      await gerar(cliente, aluno);
+
+      const meta = (await blocosDe(cliente, aluno)).filter(
+        (bloco) => bloco.nivel === "meta_cheia",
+      );
+      expect(meta).toHaveLength(1);
+      expect(meta[0].minutos_estimados).toBe(20);
+    });
+  });
+
+  it("ignora entradas inválidas do mapa e usa o default global", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      const nome = `Materia validacao ${sufixo()}`;
+      const materia = await criarMateria(cliente, nome);
+      const topico = await topicoComQuestao(cliente, { materiaId: materia });
+      await criarPerfil(cliente, aluno, 60);
+
+      for (const valor of ["abc", 0, -1]) {
+        await configurar(cliente, "param.m4.minutos_por_questao_por_materia", {
+          [nome]: valor,
+        });
+        await gerar(cliente, aluno);
+        const bloco = (await blocosDe(cliente, aluno)).find(
+          (item) => item.topico_id === topico && item.nivel === "meta_cheia",
+        );
+        expect(bloco?.minutos_estimados).toBe(20);
+      }
+    });
+  });
+
+  it("regenerar não ultrapassa o teto e preserva bloco ajustado", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      await criarPerfil(cliente, aluno, 480);
+
+      await gerar(cliente, aluno);
+      const { rows: antes } = await cliente.query<{ id: string }>(
+        `select b.id
+           from public.plano_bloco b
+           join public.plano_dia p on p.id = b.plano_dia_id
+          where p.user_id = $1 and p.data = $2 and b.nivel = 'meta_cheia'
+          order by b.ordem
+          limit 1`,
+        [aluno, HOJE],
+      );
+      await cliente.query("update public.plano_bloco set ajuste_usuario = true where id = $1", [antes[0].id]);
+
+      await gerar(cliente, aluno);
+
+      const { rows: depois } = await cliente.query<{ n: string; preservado: string }>(
+        `select count(*)::text as n,
+                count(*) filter (where b.id = $3)::text as preservado
+           from public.plano_bloco b
+           join public.plano_dia p on p.id = b.plano_dia_id
+          where p.user_id = $1 and p.data = $2 and b.nivel = 'meta_cheia'`,
+        [aluno, HOJE, antes[0].id],
+      );
+      expect(depois[0].n).toBe("6");
+      expect(depois[0].preservado).toBe("1");
     });
   });
 });

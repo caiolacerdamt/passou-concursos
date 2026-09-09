@@ -68,6 +68,7 @@ describe("catalogo de chaves", () => {
       "param.m4.algoritmo_revisao",
       "param.m4.fsrs_faixas_nota",
       "param.m4.minutos_por_questao",
+      "param.m4.minutos_por_questao_por_materia",
       "param.m4.diagnostico_n_questoes",
       "param.m4.dias_sem_repetir_questao",
       "param.m4.percentual_avancar",

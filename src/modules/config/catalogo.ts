@@ -301,6 +301,13 @@ export const CATALOGO = {
     descricao:
       "Converte o tempo que o aluno declara em tamanho de bloco do plano do dia.",
   }),
+  "param.m4.minutos_por_questao_por_materia": chave({
+    tipo: z.record(z.string().min(1), z.number().min(0.5).max(10)),
+    padrao: {},
+    moduloDono: "m4",
+    descricao:
+      "Minutos por questao POR MATERIA, indexado pelo nome da materia. Materia ausente cai em `param.m4.minutos_por_questao`. Mapa vazio = todo bloco com o mesmo tamanho, como antes.",
+  }),
   "param.m4.diagnostico_n_questoes": chave({
     tipo: z.number().int().positive(),
     padrao: 20,

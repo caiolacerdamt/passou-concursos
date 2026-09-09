@@ -1427,102 +1427,57 @@
 - **Date**: 2026-09-08
 - **Status**: active
 
+### AD-148
+- **Decision**: O plano diário passa a ter um teto cognitivo configurável no nível `meta_cheia`:
+  `param.m4.teto_blocos_dia` nasce em **6** e `param.m4.teto_materias_dia` nasce em **3**. O tempo
+  declarado continua sendo um teto — o plano nunca o estoura, mas também não precisa ocupá-lo
+  inteiro. O tamanho real de cada bloco pode ser configurado por nome de matéria em
+  `param.m4.minutos_por_questao_por_materia`; o mapa nasce vazio, e entrada ausente ou inválida cai
+  no parâmetro global. A seleção continua sendo regra/SQL: a mudança limita e dimensiona o que já
+  seria selecionado, sem a IA escolher conteúdo.
+- **Reason**: Um aluno que declara 8h não deve receber 24 blocos espalhados pelo edital. Concentrar
+  até seis blocos em até três matérias torna o dia executável, mantém o tempo declarado como limite
+  de segurança e faz o tempo exibido no cartão ser verdadeiro para cada matéria.
+- **Trade-off**: Os valores 6 e 3 são escolhas de produto, não calibrações medidas, e deixam tempo
+  sobrando para quem declara muitas horas; podem ser alterados na configuração sem deploy. Nenhum
+  minuto por matéria é semeado antes de haver base para isso. Renomear uma matéria desliga a entrada
+  correspondente do mapa e volta ao default global.
+- **Scope**: M4 · ALUNO-07/08 · `docs/planos/BLOCOS-DO-PLANO-DIARIO.md` · plano diário e cartão da
+  tela `/app`.
+- **Date**: 2026-09-09
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: **Conta — direitos do titular, senha e trial**
-  (`docs/planos/CONTA-direitos-do-titular.md`), **AD-147**. Plano fora do fluxo de specs, por decisão
-  do sócio: não abre spec numerada e não mexe no `ROADMAP.md`. Branch
-  `feat/conta-direitos-do-titular`, **5 commits atômicos, um por item**. Os 5 itens do plano estão
-  concluídos e mergeados na `main`.
-- **Item 0 — canal**: `CANAL_PRIVACIDADE_PADRAO` passou a `passouconcurso@gmail.com`; a política
-  apontava um endereço que não existe.
-- **Item 1 — a conta abre sem matrícula**: `/app/conta` usa `matriculaAtiva()` e exige só **sessão**;
-  `solicitarEsquecimento` deixou de chamar `exigirMatriculaAtiva()`. Sem matrícula a aba de assinatura
-  mostra "seu acesso terminou em <data>" (lida da nova `ultimaMatricula()`, que devolve `null` em vez
-  de inventar data) mais o `ConviteDeMatricula`; a aba de privacidade fica inteira. A varredura do
-  PAG-01 em `matricula.test.ts` ganhou uma lista `EXCECOES` nominal com motivo, e um segundo teste que
-  falha se a exceção apontar para página inexistente — o escopo do sensor foi recortado, não afrouxado.
-  A **garantia continua renderizando sem matrícula quando há pagamento**: é o caminho de retry do
-  reembolso que o comentário de `pedirReembolso` descreve, e escondê-la o deixaria sem porta.
-- **Item 4 — exportação**: `src/modules/lgpd/exportacao.ts` + rota **POST** `/app/conta/exportar`
-  (POST porque o pedido grava auditoria, e um GET que escreve é disparado por `<img src>` de
-  terceiro). Itera `TABELAS_GRUPO_1` + indiretas + `pagamentos`; teto de **2.000 linhas por tabela**,
-  com `truncada`/`linhas_omitidas` e falha por tabela marcados **dentro** do JSON. Colunas de gateway
-  saem por **prefixo** (`asaas_`, `resultado_`), então a coluna nova nasce fora do arquivo. Migration
-  `20260911120000_exportacao_do_titular.sql`: `solicitacoes_exportacao` (RLS ligada, `revoke` de
-  `authenticated`, sem `unique` no `user_id` porque o direito é repetível).
-- **Armadilha achada e registrada** — o gate de banco pegou: a primeira versão da migration recriou
-  `apagar_dados_do_usuario` a partir da migration **original da SPEC 14**, e o `create or replace`
-  apagou em silêncio os DELETEs da gamificação e da fila do trial (`gamificacao.test.ts` e
-  `trial-emails.test.ts` ficaram vermelhos). Refeita a partir da versão **vigente**
-  (`20260905140000`). **Quem re-declarar essa função de novo tem de partir da última, nunca da
-  original.**
-- **Item 3 — senha**: seção "Senha e acesso" na aba de privacidade, **acima** do bloco de apagar (o
-  plano sugeria no fim; senha é tarefa corriqueira e apagar é irreversível — embaixo, o aluno passaria
-  pelo botão vermelho toda vez). Exige a senha atual, que `updateUser` não pede, conferida num
-  **cliente descartável** (`persistSession: false`) — no cliente da sessão, `signInWithPassword`
-  rotacionaria o cookie do próprio aluno. Conta só-Google não vê formulário. Recusas usam **uma frase
-  só**.
-- **Item 2 — trial**: a aba de assinatura tem três estados (pago · trial · sem matrícula). Os números
-  vêm de `contextoDaMatricula()`, nunca recalculados na tela. **Sem bloco de garantia no trial**, por
-  condição explícita em `tipo` e não por efeito colateral de `garantia === null`.
-- **Gate**: `npm run test:unit` **1439/0** · `npm run test:db` **551/0** (71 arquivos) ·
-  `tsc --noEmit` limpo · `eslint` limpo nos diretórios tocados · `npm run build` OK, com
-  `/app/conta/exportar` registrada. A migration foi aplicada por `npm run db:push` no Supabase de
-  desenvolvimento — **que é o mesmo banco de produção** enquanto a SPEC 25 não separar ambientes; as
-  duas funções corrigidas foram reaplicadas por conexão direta depois do conserto acima.
-- **Pendências que este plano não resolve** (do próprio plano): **nome e função do encarregado (DPO)**
-  na política — `DADOS-10 AC1`, dado do sócio, não código; comprovante/nota fiscal na conta e troca de
-  e-mail cadastral, fora por decisão. Ficaram **declaradas fora da exportação**, com motivo escrito em
-  `FORA_DA_EXPORTACAO`, as 5 tabelas financeiras alcançadas por `pagamento_id`
-  (`pagamento_aceites`, `pagamento_eventos`, `pagamento_transicoes`, `faturas`,
-  `pagamento_pendencias`): a rota do `pagamento_id` não está declarada em inventário nenhum, e
-  escrevê-la à mão seria o `select` literal que o item 4 existe para evitar.
-- **Teste manual conferido pelo sócio** — as cinco situações do plano (conta paga, conta sem
-  matrícula, download do JSON, troca de senha e conta só-Google) foram exercitadas no navegador e
-  passaram. Mergeado na `main` por PR `--no-ff`; branch removida.
-- **Next step**: voltar ao backfill do BB — 2023 no extrator (os dois pontos descritos no handoff da
-  SPEC 40), `/app/raio-x` na tela, e a SPEC 41 do `ROADMAP.md`.
-
-### Handoff anterior — SPEC 40
-
-- **Feature**: **SPEC 40 — fluxo de abertura de concurso** (BANCO-01/02, RAIOX-07/20), Ritual B.
-  **Execute concluída, T1–T8.** Branch `feat/spec40-abertura-concurso`, 8 commits atômicos, sem push.
-- **Completed**: migration `20260909120000_spec40_abertura_concurso.sql` — `aberturas_concurso`,
-  `concurso_documentos`, `abertura_assuntos`, `provas.url_origem`, 9 RPCs transacionais e a view
-  `abertura_em_curso` · 4 chaves `param.m1.*` (`dominios_oficiais`, `meta_provas_por_concurso`,
-  `tamanho_maximo_pdf_mib`, `limiar_quase_duplicata`) · `src/modules/acervo/documentos-oficiais.ts`
-  (triagem, allowlist, download com revalidação de redirect) · `src/modules/acervo/programa-edital.ts`
-  (corte do programa + similaridade de Dice) · `scripts/jobs/abrir-concurso.mts` com **11 ações** ·
-  skill canônica em `.agents/skills/abrir-concurso/` + adaptador em `.claude/skills/` · três sensores
-  (`sem-busca-do-produto.test.ts`, `skills-de-abertura.test.ts`, e o anti-`fetch` do próprio CLI).
-- **A decisão de forma**: o agente conduz, o comando é a verdade. A pesquisa consome a sessão do
-  Codex/Claude; o produto **não ganhou** provedor de busca, segredo nem tarefa de IA (AD-145). A
-  medição delega ao `medir-prova` da SPEC 38 **por processo**, e é isso que mantém gateway e chave de
-  provedor fora do `abrir-concurso`. Três portas humanas: documentos, assuntos, publicação — nenhuma
-  com default, nenhuma com fusão automática. Não nasceu tela web.
-- **Gate**: `npm run test:unit` **1339 testes / 0 falhas** · `npm run test:db` **530 / 0** ·
-  `tsc --noEmit` limpo · `eslint src scripts tests` sem erro novo · `npm run build` OK. A migration
-  foi aplicada por `npm run db:push` no Supabase de desenvolvimento — **que é o mesmo banco de
-  produção** enquanto a SPEC 25 não separar ambientes.
-- **Verificação**: `validation.md`, veredito **APROVADO COM RESSALVAS**, 7/7 Success Criteria com
-  evidência `file:line`. Duas ressalvas `Minor` abertas, nenhuma bloqueante:
-  1. a proveniência grava a URL **aprovada**, não a URL final do redirect (as duas são oficiais; o
-     que se perde é auditoria fina);
-  2. `processar-provas` avança o estado mesmo quando toda prova falha — sai com código 1 e mostra
-     `FALHOU`, mas quem ignorar o vermelho segue para o edital sem lastro.
-- **Calibração medida — decisão de produto pendente**: `param.m1.limiar_quase_duplicata` = 0,78 é
-  **estrito demais**. Medido em `programa-edital.test.ts`: pega `Politica Monetaria` ×
-  `Politicas Monetarias` (0,800) e **cala** em `Produtos Bancarios` × `Produtos e Servicos Bancarios`
-  (0,776) e `Regencia Verbal` × `Regencia Verbal e Nominal` (0,762) — os dois casos que mais
-  interessam ao operador. Faixa de 0,70–0,75 pegaria os três sem alcançar assuntos irmãos (0,606). É
-  linha na tabela `configuracoes`, sem deploy (AD-078). **Não mexi: o número é da spec.**
-- **Desvio registrado**: `/.claude/skills/` é ignorado pelo git; foi preciso abrir exceção em
-  `.gitignore:49` para o adaptador chegar a quem clona — sem ela o teste de contrato passaria
-  mentindo.
-- **Continuam sem calibração**: `param.m1.meta_provas_por_concurso` (4), `tamanho_maximo_pdf_mib`
-  (25), `param.m5.peso_degrau_3` (0,5), `param.m1.cobertura_minima` (0,9).
-- **Next step**: o roteiro **nunca rodou contra concurso real** — todo o `test:db` usa fixtures em
-  transação revertida. O primeiro uso de verdade depende de PDF oficial na mão (pendência externa do
-  `ROADMAP.md`). Quando houver, rodar `$abrir-concurso` / `/abrir-concurso` para CAIXA · técnico
-  bancário é o teste que falta, e é ele que calibra o limiar e a meta de provas.
+- **Feature**: **Blocos do plano diário — teto cognitivo, duração por matéria e cartão**
+  (`docs/planos/BLOCOS-DO-PLANO-DIARIO.md`), **AD-148**. Plano fora do fluxo de specs numeradas:
+  não cria spec nova nem altera o `ROADMAP.md`. A implementação foi feita na branch curta
+  `feat/m4-p1-blocos-plano-diario`.
+- **Motor e configuração**: a migração
+  `supabase/migrations/20260911123000_teto_do_dia_e_duracao_do_bloco.sql` é o novo corpo de verdade
+  de `public.gera_plano_do_dia` e também cria o helper imutável `public.minutos_do_bloco`. Os
+  parâmetros `param.m4.teto_blocos_dia` (6) e `param.m4.teto_materias_dia` (3) limitam apenas
+  `meta_cheia`; `piso` continua sendo a revisão vencida. O tempo declarado segue como limite superior.
+- **Duração**: `param.m4.minutos_por_questao_por_materia` nasce `{}` e usa `materias.nome`; uma
+  matéria sem entrada ou com valor ilegível volta ao default global de 2 minutos por questão. O
+  bloco grava a duração real em `minutos_estimados` e `minutos_estimados_cheios`, sem alterar a
+  quantidade padrão de questões.
+- **Tela**: `/app` agora exibe MÍNIMO e META em faixas empilhadas, com grades de até três colunas.
+  Cada cartão tem rótulo, assunto, matéria e rodapé; o clique ocupa o cartão inteiro, a régua mostra
+  a proporção da duração e o estado concluído leva ao resumo. A legenda concentra a explicação dos
+  tipos, e o cartão em foco não repete um segundo botão "Continuar".
+- **Evidência direcionada**: 27 testes de banco cobrem teto de blocos, teto de matérias,
+  concentração, mistura, orçamento, duração variável, mapa vazio, entradas inválidas, primeiro
+  bloco e regeneração. Os testes de unidade da tela cobrem durações diferentes, régua, layout,
+  foco sem CTA duplicado e destino do concluído.
+- **Gate**: `npm run test:unit` **1440/0** · `npm run test:db` **560/0** (71 arquivos) ·
+  `npx tsc --noEmit` limpo · `npm run lint` **0 erros** (316 avisos preexistentes em ferramentas e
+  artefatos auxiliares) · `npm run build` OK, com `/app` e as rotas existentes registradas. A
+  migração foi aplicada por `npm run db:push` no Supabase de desenvolvimento.
+- **Migração**: aplicada no Supabase de desenvolvimento com `npm run db:push`; não há SQL manual para
+  o operador executar. Os dois tetos entram ativos por decisão de produto; o mapa de duração fica
+  inerte até calibração. Os números 6 e 3 ainda não são medidos, e o tempo excedente de um aluno de
+  muitas horas fica sem uso nesta tela por decisão fora do escopo.
+- **Próximo passo**: depois do merge, fazer um smoke test autenticado em `/app` (dia de 8h, clique em
+  pendente/em foco e resumo de concluído). Quando houver base suficiente, calibrar o mapa por matéria
+  em degraus de 0,5; não semear valores antes disso.

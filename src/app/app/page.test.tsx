@@ -112,7 +112,7 @@ describe("/app", () => {
     expect(html).toContain("O diagnóstico adaptativo é opcional");
   });
 
-  it("mostra mínimo, meta, descrição do tipo e frase quando o plano existe", async () => {
+  it("mostra mínimo, meta e legenda dos tipos quando o plano existe", async () => {
     dependencias.perfil.mockResolvedValue({ onboardingConcluido: true });
     dependencias.plano.mockResolvedValue(plano);
 
@@ -123,7 +123,7 @@ describe("/app", () => {
     expect(html).toContain("META");
     expect(html).toContain("lg:items-end");
     expect(html).toContain("Assunto que já está na sua memória e venceu a data de revisão.");
-    expect(html).toContain("Assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem.");
+    expect(html).toContain("Aprender: assunto novo, escolhido pelo seu ponto mais fraco entre os que mais caem");
     expect(html).not.toContain("A revisão vence hoje.");
     expect(html).not.toContain("Este tema tem peso alto na prova.");
     expect(html).toContain("Hoje, consistência antes de velocidade.");
@@ -174,10 +174,11 @@ describe("/app", () => {
 
     const html = renderToStaticMarkup(await renderApp());
 
-    expect(html).toContain("Concluído");
-    expect(html).toContain("10 questões · 3 acertos");
+    expect(html).toContain("Feito");
+    expect(html).toContain("25 min · 3 de 10 certas");
     expect(html).toContain("/app/sessao/sessao-concluida/resumo");
-    expect(html).toContain("Ver resumo");
+    expect(html).not.toContain("Ver resumo");
+    expect(html).not.toContain("10 questões · 3 acertos");
     expect(html).not.toContain("/app/sessao?bloco=bloco-meta");
   });
 

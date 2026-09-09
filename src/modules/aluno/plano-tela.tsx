@@ -17,11 +17,11 @@ const DESCRICOES: Record<BlocoDoPlano["tipo"], string> = {
   simulado: "Uma prova curta para medir seu ritmo.",
 };
 
-const ESTILO_DO_TIPO: Record<BlocoDoPlano["tipo"], string> = {
-  revisar: "border-conquista/30 bg-conquista-fundo text-conquista",
-  avancar: "border-marca/25 bg-marca-suave text-marca",
-  treinar: "border-evolucao/30 bg-fundo-suave text-evolucao",
-  simulado: "border-linha bg-fundo-suave text-suave",
+const COR_DO_TIPO: Record<BlocoDoPlano["tipo"], string> = {
+  revisar: "text-conquista",
+  avancar: "text-marca-apoio",
+  treinar: "text-suave",
+  simulado: "text-marca-apoio",
 };
 
 export type SuperficieDoPlano = "hoje" | "plano";
@@ -55,6 +55,10 @@ export function PlanoTela({
   const totalConcluidos = blocosDaMeta.filter((bloco) => bloco.conclusao !== null).length;
   const rotaDaTela = superficie === "plano" ? "/app/plano" : "/app";
   const fracaoFeita = blocosDaMeta.length === 0 ? 0 : totalConcluidos / blocosDaMeta.length;
+  const maiorMinutosDoDia = Math.max(
+    1,
+    ...blocos.map((bloco) => numero(bloco.minutosEstimados)),
+  );
 
   return (
     <div className="grid gap-5">
@@ -120,7 +124,7 @@ export function PlanoTela({
       />
 
       <section
-        className="grid gap-5 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-stretch"
+        className="grid gap-5"
         aria-label="Níveis do plano"
       >
         <NivelDoPlano
@@ -128,9 +132,9 @@ export function PlanoTela({
           titulo="MÍNIMO"
           subtitulo="O mínimo para contar sua ofensiva de hoje"
           blocos={plano.piso}
-          compacto
           rotulosDosTopicos={rotulosDosTopicos}
           idEmFoco={proximoBloco?.id ?? null}
+          maiorMinutosDoDia={maiorMinutosDoDia}
         />
         <NivelDoPlano
           nivel="meta_cheia"
@@ -139,6 +143,7 @@ export function PlanoTela({
           blocos={plano.metaCheia}
           rotulosDosTopicos={rotulosDosTopicos}
           idEmFoco={proximoBloco?.id ?? null}
+          maiorMinutosDoDia={maiorMinutosDoDia}
         />
       </section>
     </div>
@@ -245,17 +250,17 @@ function NivelDoPlano({
   titulo,
   subtitulo,
   blocos,
-  compacto = false,
   rotulosDosTopicos,
   idEmFoco,
+  maiorMinutosDoDia,
 }: {
   nivel: NivelDoPlano;
   titulo: string;
   subtitulo: string;
   blocos: BlocoDoPlano[];
-  compacto?: boolean;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   idEmFoco: string | null;
+  maiorMinutosDoDia: number;
 }) {
   const pendentes = blocos.filter((bloco) => bloco.conclusao === null);
   const minutos = blocos.reduce((total, bloco) => total + numero(bloco.minutosEstimados), 0);
@@ -263,11 +268,11 @@ function NivelDoPlano({
   return (
     <div
       id={nivel === "piso" ? "nivel-minimo" : undefined}
-      className={`flex min-w-0 flex-col rounded-2xl border border-linha bg-painel px-6 pb-6 pt-5 ${
+      className={`min-w-0 rounded-[var(--radius-card)] border border-linha bg-painel ${
         nivel === "piso" ? "scroll-mt-24" : ""
       }`}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-linha px-6 pb-4 pt-5">
         <div className="min-w-0 flex-1">
           <p
             className={`font-utilitaria text-[0.6875rem] uppercase tracking-[0.16em] ${
@@ -284,19 +289,19 @@ function NivelDoPlano({
         </p>
       </div>
 
-      <div className="mt-5">
+      <div className="px-6 pb-6 pt-5">
         {blocos.length > 0 ? (
           <ul
-            className={compacto ? "grid gap-2.5" : "grid gap-2.5 sm:grid-cols-2"}
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
             aria-label={`Blocos do ${titulo.toLowerCase()}`}
           >
             {blocos.map((bloco) => (
               <li key={bloco.id} className="min-w-0">
                 <BlocoCard
                   bloco={bloco}
-                  compacto={compacto}
                   rotulosDosTopicos={rotulosDosTopicos}
                   emFoco={bloco.id === idEmFoco}
+                  maiorMinutosDoDia={maiorMinutosDoDia}
                 />
               </li>
             ))}
@@ -306,75 +311,72 @@ function NivelDoPlano({
             {nivel === "piso" ? "Nenhuma revisão vencida hoje." : "O acervo ainda está preparando seu primeiro bloco."}
           </p>
         )}
+        {nivel === "meta_cheia" ? <LegendaDosTipos /> : null}
       </div>
     </div>
   );
 }
 
-/**
- * A matéria do cartão diz o estado antes de qualquer texto: papel é pendente,
- * verde tênue é feito, e a borda verde dupla marca o bloco que está aberto no
- * cartão de cima. São três estados, não quatro — "adiado" some da lista do dia
- * por definição, então não tem cartão aqui.
- */
-function materiaDoBloco(feito: boolean, emFoco: boolean): string {
-  if (feito) return "border-marca/30 bg-marca-suave";
-  if (emFoco) return "border-marca/40 ring-1 ring-inset ring-marca/20 bg-painel";
-  return "border-linha bg-painel";
+function LegendaDosTipos() {
+  const semPonto = (texto: string) => texto.replace(/[.]$/, "");
+
+  return (
+    <p className="mt-4 max-w-[92ch] text-[0.8125rem] leading-5 text-suave">
+      Revisar: {semPonto(DESCRICOES.revisar).toLocaleLowerCase("pt-BR")}; Aprender: {semPonto(DESCRICOES.avancar).toLocaleLowerCase("pt-BR")}; Praticar: {semPonto(DESCRICOES.treinar).toLocaleLowerCase("pt-BR")}.
+    </p>
+  );
+}
+
+function estiloDoBloco(feito: boolean, emFoco: boolean): string {
+  if (feito) return "border-marca/20 bg-fundo-suave hover:border-marca-viva hover:bg-painel";
+  if (emFoco) return "border-marca bg-painel hover:border-marca-viva";
+  return "border-linha bg-painel hover:border-marca-viva";
 }
 
 function BlocoCard({
   bloco,
-  compacto = false,
   rotulosDosTopicos,
   emFoco,
+  maiorMinutosDoDia,
 }: {
   bloco: BlocoDoPlano;
-  compacto?: boolean;
   rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>;
   emFoco: boolean;
+  maiorMinutosDoDia: number;
 }) {
   const conclusao = bloco.conclusao;
-  const nome = nomeDoBloco(bloco, rotulosDosTopicos);
+  const linhas = linhasDoBloco(bloco, rotulosDosTopicos);
+  const minutos = numero(bloco.minutosEstimados);
   const nQuestoes = numero(bloco.nQuestoes);
-  const estiloDoTipo = ESTILO_DO_TIPO[bloco.tipo];
-  const rotuloDoTipo = emFoco && conclusao === null ? `Em foco · ${TITULOS[bloco.tipo]}` : TITULOS[bloco.tipo];
+  const rotuloDoTipo = conclusao
+    ? "Feito"
+    : emFoco
+      ? `${TITULOS[bloco.tipo]} · em foco`
+      : TITULOS[bloco.tipo];
+  const larguraDaRegua = Math.min(
+    100,
+    Math.max(0, (minutos / maiorMinutosDoDia) * 100),
+  );
+  const href = conclusao
+    ? `/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`
+    : hrefDoBloco(bloco.id);
 
   return (
-    <article
+    <Link
+      href={href}
       data-tipo={bloco.tipo}
-      className={`flex h-full min-w-0 flex-col rounded-xl border ${materiaDoBloco(conclusao !== null, emFoco)} ${
-        compacto ? "px-4 py-3.5" : "p-4"
-      }`}
+      className={`group flex h-full min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] border text-texto transition-colors duration-150 ${
+        conclusao ? "text-suave" : ""
+      } ${estiloDoBloco(conclusao !== null, emFoco)} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+      <div className="flex h-full min-w-0 flex-col p-4">
         <span
-          aria-label={`Tipo de estudo: ${rotuloDoTipo}`}
-          className={`inline-flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[0.6875rem] font-semibold ${estiloDoTipo}`}
+          aria-label={conclusao ? "Status do bloco: Feito" : `Tipo de estudo: ${rotuloDoTipo}`}
+          className={`inline-flex min-w-0 items-center gap-1.5 self-start font-utilitaria text-[0.625rem] uppercase tracking-[0.12em] ${
+            conclusao ? "text-suave" : COR_DO_TIPO[bloco.tipo]
+          }`}
         >
-          <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-painel/70" aria-hidden="true">
-            <IconeDoTipo tipo={bloco.tipo} />
-          </span>
-          <span className="truncate">{rotuloDoTipo}</span>
-        </span>
-        <span className="shrink-0 font-utilitaria text-xs text-suave">
-          {numero(bloco.minutosEstimados)} min
-        </span>
-      </div>
-
-      <h4 className="mt-2.5 font-semibold tracking-[-0.015em]">
-        {nome}
-      </h4>
-      <p className="mt-2 text-sm leading-6 text-suave">
-        {DESCRICOES[bloco.tipo]}
-      </p>
-      <p className="mt-1.5 font-utilitaria text-xs text-suave">
-        {numero(bloco.minutosEstimados)} min · {nQuestoes} {nQuestoes === 1 ? "questão" : "questões"}
-      </p>
-
-      {conclusao ? (
-        <>
-          <p className="mt-3.5 inline-flex items-center gap-1.5 font-utilitaria text-[0.8125rem] font-semibold text-ok">
+          {conclusao ? (
             <svg
               viewBox="0 0 24 24"
               className="size-3.5"
@@ -387,69 +389,59 @@ function BlocoCard({
             >
               <path d="m5 12.5 4.5 4.5L19 7" />
             </svg>
-            <span className="sr-only">Status: </span>
-            <span>Concluído</span>
-            <span aria-hidden="true">·</span>
-            {conclusao.nQuestoes} questões · {conclusao.nAcertos} acertos
-          </p>
-          <Link
-            href={`/app/sessao/${encodeURIComponent(conclusao.sessaoId)}/resumo`}
-            className="mt-auto inline-flex min-h-10 items-center self-start rounded-full border border-marca/30 px-4 py-2.5 text-[0.8125rem] font-semibold text-marca transition-colors duration-150 hover:bg-painel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca"
-          >
-            Ver resumo
-          </Link>
-        </>
-      ) : (
-        <Link
-          href={hrefDoBloco(bloco.id)}
-          className={`mt-auto inline-flex min-h-10 items-center self-start rounded-full px-4 py-2.5 text-[0.8125rem] font-semibold transition-colors duration-150 ${
-            emFoco
-              ? "bg-marca text-painel hover:bg-marca-apoio"
-              : "border border-linha text-texto hover:border-marca/50 hover:text-marca"
-          } focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca`}
-        >
-          {emFoco ? "Continuar" : "Começar"}
-        </Link>
-      )}
-    </article>
+          ) : null}
+          <span className="truncate">{rotuloDoTipo}</span>
+        </span>
+
+        <h4 className="mt-3 text-[1.125rem] font-semibold leading-[1.25] tracking-[-0.02em]">
+          {linhas.assunto}
+        </h4>
+        {linhas.materia ? (
+          <p className="mt-1 text-[0.8125rem] leading-5 text-suave">{linhas.materia}</p>
+        ) : null}
+
+        <p className="mt-auto pt-4 font-utilitaria text-xs text-suave">
+          {conclusao
+            ? `${minutos} min · ${conclusao.nAcertos} de ${conclusao.nQuestoes} certas`
+            : `${minutos} min · ${nQuestoes} q`}
+        </p>
+        <div className="-mx-4 -mb-4 mt-4 h-[3px] shrink-0 rounded-b-[var(--radius-card)] bg-linha" aria-hidden="true">
+          <div
+            className={`h-full ${conclusao ? "bg-marca-viva/40" : "bg-marca-viva"}`}
+            style={{ width: `${larguraDaRegua}%` }}
+          />
+        </div>
+      </div>
+    </Link>
   );
 }
 
-function IconeDoTipo({ tipo }: { tipo: BlocoDoPlano["tipo"] }) {
-  if (tipo === "revisar") {
-    return (
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 11a8 8 0 1 0-2.35 5.65" />
-        <path d="M20 4v7h-7" />
-      </svg>
-    );
+function linhasDoBloco(
+  bloco: BlocoDoPlano,
+  rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>,
+): { assunto: string; materia: string | null } {
+  if (bloco.topicoId === null) {
+    return { assunto: "Assuntos misturados", materia: null };
   }
 
-  if (tipo === "avancar") {
-    return (
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
-        <path d="M4 5.5v15M8 7h8M8 11h6" />
-      </svg>
-    );
-  }
+  const rotulo = rotulosDosTopicos.get(bloco.topicoId);
+  const materia = textoDoRotulo(rotulo?.materia);
+  const topico = textoDoRotulo(rotulo?.topico);
 
-  if (tipo === "treinar") {
-    return (
-      <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="8" />
-        <circle cx="12" cy="12" r="2.5" />
-        <path d="M12 4V2.5M12 21.5V20M4 12H2.5M21.5 12H20" />
-      </svg>
-    );
+  if (materia === null && topico === null) {
+    return { assunto: "Tópico do ciclo", materia: null };
   }
+  if (materia === null) {
+    return { assunto: topico ?? "Tópico do ciclo", materia: null };
+  }
+  if (topico === null || topico === "Geral") {
+    return { assunto: materia, materia: null };
+  }
+  return { assunto: topico, materia };
+}
 
-  return (
-    <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="4" width="14" height="17" rx="2" />
-      <path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h3" />
-    </svg>
-  );
+function textoDoRotulo(valor: unknown): string | null {
+  return typeof valor === "string" && valor.trim().length > 0 ? valor.trim() : null;
 }
 
 function nomeDoBloco(bloco: BlocoDoPlano, rotulosDosTopicos: ReadonlyMap<string, RotuloDoTopico>): string {

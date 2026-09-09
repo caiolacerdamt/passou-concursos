@@ -262,6 +262,20 @@ export const CATALOGO = {
     descricao:
       "Quantas questoes tem um bloco do plano do dia. Multiplicado por `minutos_por_questao` da o tempo estimado do bloco.",
   }),
+  "param.m4.teto_blocos_dia": chave({
+    tipo: z.number().int().min(1).max(50),
+    padrao: 6,
+    moduloDono: "m4",
+    descricao:
+      "Teto de blocos no nivel meta_cheia, independente do tempo declarado. O limite de quanto se aprende num dia e cognitivo, nao de relogio: 8h nao rendem 4x o que rendem 2h. Numero alto (ex.: 50) devolve o comportamento antigo, sem deploy.",
+  }),
+  "param.m4.teto_materias_dia": chave({
+    tipo: z.number().int().min(1).max(20),
+    padrao: 3,
+    moduloDono: "m4",
+    descricao:
+      "Quantas materias distintas cabem num dia. Faz os blocos se concentrarem em poucas materias em vez de pincelar o edital inteiro (ALUNO-08 AC3, 'bloco concentrado').",
+  }),
   "param.m4.fraqueza_por_nivel": chave({
     tipo: z.object({
       iniciante: z.number().min(0).max(1),
@@ -286,6 +300,13 @@ export const CATALOGO = {
     moduloDono: "m4",
     descricao:
       "Converte o tempo que o aluno declara em tamanho de bloco do plano do dia.",
+  }),
+  "param.m4.minutos_por_questao_por_materia": chave({
+    tipo: z.record(z.string().min(1), z.number().min(0.5).max(10)),
+    padrao: {},
+    moduloDono: "m4",
+    descricao:
+      "Minutos por questao POR MATERIA, indexado pelo nome da materia. Materia ausente cai em `param.m4.minutos_por_questao`. Mapa vazio = todo bloco com o mesmo tamanho, como antes.",
   }),
   "param.m4.diagnostico_n_questoes": chave({
     tipo: z.number().int().positive(),

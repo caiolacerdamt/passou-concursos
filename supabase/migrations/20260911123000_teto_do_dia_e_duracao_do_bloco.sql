@@ -1,12 +1,37 @@
--- PLANO DO DIA — teto de blocos e materias (ALUNO-07, ALUNO-08, AD-148)
+-- PLANO DO DIA — teto cognitivo e duracao por materia (ALUNO-07, ALUNO-08, AD-148)
 --
 -- O dia tem um teto cognitivo de blocos e concentra o estudo em poucas materias,
 -- sem alterar a prioridade ou a selecao dos topicos. O tempo declarado continua
 -- sendo um teto: ele corta o plano quando nao cabe, mas nao gera blocos sem fim.
+-- O tamanho do bloco pode variar por materia, com fallback seguro para o default.
 --
--- O corpo abaixo e copia do de 20260906122000, com as trocas do teto aplicadas.
--- A partir daqui, **este** arquivo e o corpo de verdade da funcao: a proxima
--- alteracao copia daqui, nao de antes.
+-- O corpo abaixo e copia do de 20260906122000, com o teto e a duracao por
+-- materia aplicados. A partir daqui, **este** arquivo e o corpo de verdade da
+-- funcao: a proxima alteracao copia daqui, nao de antes.
+
+create or replace function public.minutos_do_bloco(
+  p_materia_nome        text,
+  p_minutos_por_materia jsonb,
+  p_questoes            integer,
+  p_minutos_padrao      numeric
+) returns integer
+language sql
+immutable
+set search_path = ''
+as $$
+  select greatest(
+    ceil(p_questoes * coalesce(
+      case when p_materia_nome is not null
+            and jsonb_typeof(p_minutos_por_materia -> p_materia_nome) = 'number'
+            and (p_minutos_por_materia ->> p_materia_nome) ~ '^[0-9]+([.][0-9]+)?$'
+            and (p_minutos_por_materia ->> p_materia_nome)::numeric between 0.5 and 10
+           then (p_minutos_por_materia ->> p_materia_nome)::numeric
+      end,
+      p_minutos_padrao
+    ))::integer,
+    1
+  );
+$$;
 
 create or replace function public.gera_plano_do_dia(
   p_user_id uuid default null,
@@ -22,9 +47,11 @@ declare
   v_peso_revisao            numeric;
   v_questoes_bloco          integer;
   v_minutos_questao         numeric;
+  v_minutos_por_materia     jsonb;
   v_teto_blocos             integer;
   v_teto_materias           integer;
-  v_minutos_bloco           integer;
+  v_minutos_bloco_ref       integer;
+  v_minutos_do_bloco        integer;
   v_pct_avancar             numeric;
   v_pct_praticar            numeric;
   v_pct_revisar             numeric;
@@ -100,6 +127,11 @@ begin
                           then (valor #>> '{}')::numeric end
                 from public.configuracoes_vigentes
                where chave = 'param.m4.minutos_por_questao'), 2),
+    coalesce((select valor
+                from public.configuracoes_vigentes
+               where chave = 'param.m4.minutos_por_questao_por_materia'
+                 and jsonb_typeof(valor) = 'object'),
+             '{}'::jsonb),
     coalesce((select case when jsonb_typeof(valor) = 'number'
                            and (valor #>> '{}') ~ '^0([.][0-9]+)?$|^1([.]0+)?$'
                           then (valor #>> '{}')::numeric end
@@ -145,7 +177,7 @@ begin
                 from public.configuracoes_vigentes
                where chave = 'flag.m4.simulado_semanal'), false)
     into v_peso_revisao, v_questoes_bloco, v_teto_blocos, v_teto_materias,
-         v_minutos_questao,
+         v_minutos_questao, v_minutos_por_materia,
          v_pct_avancar, v_pct_praticar, v_pct_revisar,
          v_teto_revisoes, v_cooldown_dias, v_teto_semanal,
          v_janela_maxima, v_fraqueza_nivel, v_simulado_ligado;
@@ -156,7 +188,7 @@ begin
     v_pct_revisar := 0;
   end if;
 
-  v_minutos_bloco := greatest(ceil(v_questoes_bloco * v_minutos_questao)::integer, 1);
+  v_minutos_bloco_ref := greatest(ceil(v_questoes_bloco * v_minutos_questao)::integer, 1);
 
   for v_aluno in
     select p.user_id, p.minutos_por_dia, p.nivel_declarado, p.dias_estudo,
@@ -241,12 +273,21 @@ begin
     v_minutos_disponiveis := greatest(v_aluno.minutos_por_dia - v_minutos_gastos, 0);
     v_total_slots := least(
       greatest(
-        floor(v_minutos_disponiveis / v_minutos_bloco)::integer
+        floor(v_minutos_disponiveis / v_minutos_bloco_ref)::integer
           - case when v_simulado_ligado then 1 else 0 end,
         0
       ),
       greatest(v_teto_blocos - v_blocos_existentes, 0)
     );
+    -- Mesmo quando o dia declarado e menor que um bloco, o primeiro bloco
+    -- entra para o aluno nao abrir a tela sem nada para fazer. A guarda de
+    -- orcamento abaixo permite esse primeiro bloco estourar o teto uma vez.
+    if v_total_slots = 0
+       and v_minutos_disponiveis > 0
+       and not v_simulado_ligado
+       and v_blocos_existentes < v_teto_blocos then
+      v_total_slots := 1;
+    end if;
     v_slots_restantes := v_total_slots;
 
     select exists (
@@ -341,8 +382,9 @@ begin
     for v_pass in 0..1 loop
       exit when v_selecionados_revisao >= v_review_slots;
       for v_topico in
-        select t.id as topico_id, t.materia_id
+        select t.id as topico_id, t.materia_id, mat.nome as materia_nome
         from public.topicos t
+        join public.materias mat on mat.id = t.materia_id
         join public.raiox_peso_do_aluno(v_aluno.user_id) rx on rx.topico_id = t.id
         join public.revisao_agenda r
           on r.user_id = v_aluno.user_id and r.topico_id = t.id
@@ -377,13 +419,23 @@ begin
           continue;
         end if;
 
+      v_minutos_do_bloco := public.minutos_do_bloco(
+        v_topico.materia_nome, v_minutos_por_materia,
+        v_questoes_bloco, v_minutos_questao);
+
+      -- O primeiro bloco do dia entra mesmo estourando o teto de tempo.
+      if v_minutos_gastos > 0
+         and v_minutos_gastos + v_minutos_do_bloco > v_aluno.minutos_por_dia then
+        continue;
+      end if;
+
       v_ordem_piso := v_ordem_piso + 1;
       insert into public.plano_bloco
         (plano_dia_id, tipo, nivel, ordem, topico_id, n_questoes,
          n_questoes_cheias, minutos_estimados, minutos_estimados_cheios, motivo)
       values
         (v_plano_id, 'revisar', 'piso', v_ordem_piso, v_topico.topico_id,
-         v_questoes_bloco, v_questoes_bloco, v_minutos_bloco, v_minutos_bloco,
+         v_questoes_bloco, v_questoes_bloco, v_minutos_do_bloco, v_minutos_do_bloco,
          'revisar hoje = não perder o que você já conquistou');
 
       v_ordem_meta := v_ordem_meta + 1;
@@ -392,14 +444,14 @@ begin
          n_questoes_cheias, minutos_estimados, minutos_estimados_cheios, motivo)
       values
         (v_plano_id, 'revisar', 'meta_cheia', v_ordem_meta, v_topico.topico_id,
-         v_questoes_bloco, v_questoes_bloco, v_minutos_bloco, v_minutos_bloco,
+         v_questoes_bloco, v_questoes_bloco, v_minutos_do_bloco, v_minutos_do_bloco,
          'revisar hoje = não perder o que você já conquistou');
 
         v_usados_topicos := array_append(v_usados_topicos, v_topico.topico_id);
         v_usados_materias := array_append(v_usados_materias, v_topico.materia_id);
         v_selecionados_revisao := v_selecionados_revisao + 1;
-        v_minutos_revisao := v_minutos_revisao + v_minutos_bloco;
-        v_minutos_gastos := v_minutos_gastos + v_minutos_bloco;
+        v_minutos_revisao := v_minutos_revisao + v_minutos_do_bloco;
+        v_minutos_gastos := v_minutos_gastos + v_minutos_do_bloco;
       end loop;
     end loop;
 
@@ -414,6 +466,7 @@ begin
         select
           t.id as topico_id,
           t.materia_id,
+          mat.nome as materia_nome,
           rx.peso,
           d.score,
           coalesce(d.n_respostas, 0)::integer as n_respostas,
@@ -423,6 +476,7 @@ begin
           (ultima.ultima_data is not null
              and v_data - ultima.ultima_data <= v_cooldown_dias) as em_cooldown
         from public.topicos t
+        join public.materias mat on mat.id = t.materia_id
         join public.raiox_peso_do_aluno(v_aluno.user_id) rx on rx.topico_id = t.id
         left join public.dominio_topico d
           on d.user_id = v_aluno.user_id and d.topico_id = t.id
@@ -535,6 +589,16 @@ begin
           v_motivo := 'rotação do edital';
         end if;
 
+        v_minutos_do_bloco := public.minutos_do_bloco(
+          v_topico.materia_nome, v_minutos_por_materia,
+          v_questoes_bloco, v_minutos_questao);
+
+        -- O primeiro bloco do dia entra mesmo estourando o teto de tempo.
+        if v_minutos_gastos > 0
+           and v_minutos_gastos + v_minutos_do_bloco > v_aluno.minutos_por_dia then
+          continue;
+        end if;
+
         v_ordem_meta := v_ordem_meta + 1;
         insert into public.plano_bloco
           (plano_dia_id, tipo, nivel, ordem, topico_id, n_questoes,
@@ -542,11 +606,11 @@ begin
         values
           (v_plano_id, 'avancar', 'meta_cheia', v_ordem_meta,
            v_topico.topico_id, v_questoes_bloco, v_questoes_bloco,
-           v_minutos_bloco, v_minutos_bloco, v_motivo);
+           v_minutos_do_bloco, v_minutos_do_bloco, v_motivo);
         v_usados_topicos := array_append(v_usados_topicos, v_topico.topico_id);
         v_usados_materias := array_append(v_usados_materias, v_topico.materia_id);
         v_selecionados_avanco := v_selecionados_avanco + 1;
-        v_minutos_gastos := v_minutos_gastos + v_minutos_bloco;
+        v_minutos_gastos := v_minutos_gastos + v_minutos_do_bloco;
       end loop;
     end loop;
 
@@ -557,6 +621,7 @@ begin
         select
           t.id as topico_id,
           t.materia_id,
+          mat.nome as materia_nome,
           rx.peso,
           d.score,
           coalesce(d.n_respostas, 0)::integer as n_respostas,
@@ -566,6 +631,7 @@ begin
           (ultima.ultima_data is not null
              and v_data - ultima.ultima_data <= v_cooldown_dias) as em_cooldown
         from public.topicos t
+        join public.materias mat on mat.id = t.materia_id
         join public.raiox_peso_do_aluno(v_aluno.user_id) rx on rx.topico_id = t.id
         left join public.dominio_topico d
           on d.user_id = v_aluno.user_id and d.topico_id = t.id
@@ -645,6 +711,16 @@ begin
           v_motivo := 'prática distribuída no ciclo';
         end if;
 
+        v_minutos_do_bloco := public.minutos_do_bloco(
+          v_topico.materia_nome, v_minutos_por_materia,
+          v_questoes_bloco, v_minutos_questao);
+
+        -- O primeiro bloco do dia entra mesmo estourando o teto de tempo.
+        if v_minutos_gastos > 0
+           and v_minutos_gastos + v_minutos_do_bloco > v_aluno.minutos_por_dia then
+          continue;
+        end if;
+
         v_ordem_meta := v_ordem_meta + 1;
         insert into public.plano_bloco
           (plano_dia_id, tipo, nivel, ordem, topico_id, n_questoes,
@@ -652,11 +728,11 @@ begin
         values
           (v_plano_id, 'treinar', 'meta_cheia', v_ordem_meta,
            v_topico.topico_id, v_questoes_bloco, v_questoes_bloco,
-           v_minutos_bloco, v_minutos_bloco, v_motivo);
+           v_minutos_do_bloco, v_minutos_do_bloco, v_motivo);
         v_usados_topicos := array_append(v_usados_topicos, v_topico.topico_id);
         v_usados_materias := array_append(v_usados_materias, v_topico.materia_id);
         v_selecionados_pratica := v_selecionados_pratica + 1;
-        v_minutos_gastos := v_minutos_gastos + v_minutos_bloco;
+        v_minutos_gastos := v_minutos_gastos + v_minutos_do_bloco;
       end loop;
     end loop;
 
@@ -674,6 +750,7 @@ begin
         select
           t.id as topico_id,
           t.materia_id,
+          mat.nome as materia_nome,
           rx.peso,
           d.score,
           coalesce(d.n_respostas, 0)::integer as n_respostas,
@@ -683,6 +760,7 @@ begin
           (ultima.ultima_data is not null
              and v_data - ultima.ultima_data <= v_cooldown_dias) as em_cooldown
         from public.topicos t
+        join public.materias mat on mat.id = t.materia_id
         join public.raiox_peso_do_aluno(v_aluno.user_id) rx on rx.topico_id = t.id
         left join public.dominio_topico d
           on d.user_id = v_aluno.user_id and d.topico_id = t.id
@@ -767,6 +845,16 @@ begin
           v_motivo := 'janela máxima sem tocar matéria relevante';
         end if;
 
+        v_minutos_do_bloco := public.minutos_do_bloco(
+          v_topico.materia_nome, v_minutos_por_materia,
+          v_questoes_bloco, v_minutos_questao);
+
+        -- O primeiro bloco do dia entra mesmo estourando o teto de tempo.
+        if v_minutos_gastos > 0
+           and v_minutos_gastos + v_minutos_do_bloco > v_aluno.minutos_por_dia then
+          continue;
+        end if;
+
         v_ordem_meta := v_ordem_meta + 1;
         insert into public.plano_bloco
           (plano_dia_id, tipo, nivel, ordem, topico_id, n_questoes,
@@ -774,23 +862,29 @@ begin
         values
           (v_plano_id, v_tipo_extra::public.bloco_tipo, 'meta_cheia', v_ordem_meta,
            v_topico.topico_id, v_questoes_bloco, v_questoes_bloco,
-           v_minutos_bloco, v_minutos_bloco, v_motivo);
+           v_minutos_do_bloco, v_minutos_do_bloco, v_motivo);
         v_usados_topicos := array_append(v_usados_topicos, v_topico.topico_id);
         v_usados_materias := array_append(v_usados_materias, v_topico.materia_id);
         v_extra_slots := v_extra_slots - 1;
-        v_minutos_gastos := v_minutos_gastos + v_minutos_bloco;
+        v_minutos_gastos := v_minutos_gastos + v_minutos_do_bloco;
       end loop;
     end loop;
 
+    v_minutos_do_bloco := public.minutos_do_bloco(
+      p_materia_nome => null,
+      p_minutos_por_materia => v_minutos_por_materia,
+      p_questoes => v_questoes_bloco,
+      p_minutos_padrao => v_minutos_questao);
+
     if v_simulado_ligado
-       and v_minutos_gastos + v_minutos_bloco <= v_aluno.minutos_por_dia then
+       and v_minutos_gastos + v_minutos_do_bloco <= v_aluno.minutos_por_dia then
       v_ordem_meta := v_ordem_meta + 1;
       insert into public.plano_bloco
         (plano_dia_id, tipo, nivel, ordem, n_questoes,
          n_questoes_cheias, minutos_estimados, minutos_estimados_cheios, motivo)
       values
         (v_plano_id, 'simulado', 'meta_cheia', v_ordem_meta, v_questoes_bloco,
-         v_questoes_bloco, v_minutos_bloco, v_minutos_bloco,
+         v_questoes_bloco, v_minutos_do_bloco, v_minutos_do_bloco,
          'simulado da semana');
     end if;
 
@@ -827,5 +921,3 @@ begin
   return v_planos;
 end;
 $$;
-
-

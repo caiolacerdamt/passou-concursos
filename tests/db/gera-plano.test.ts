@@ -32,15 +32,19 @@ type Bloco = {
 /** Topico com pelo menos uma questao publicada — o motor exige isso. */
 async function topicoComQuestao(
   cliente: Client,
-  opcoes: { publicada?: boolean } = {},
+  opcoes: { publicada?: boolean; materiaId?: string } = {},
 ): Promise<string> {
-  const { rows: materia } = await cliente.query<{ id: string }>(
-    "insert into public.materias (nome) values ($1) returning id",
-    [`Materia ${sufixo()}`],
-  );
+  const materiaId =
+    opcoes.materiaId ??
+    (
+      await cliente.query<{ id: string }>(
+        "insert into public.materias (nome) values ($1) returning id",
+        [`Materia ${sufixo()}`],
+      )
+    ).rows[0].id;
   const { rows: topico } = await cliente.query<{ id: string }>(
     "insert into public.topicos (materia_id, nome) values ($1, $2) returning id",
-    [materia[0].id, `Topico ${sufixo()}`],
+    [materiaId, `Topico ${sufixo()}`],
   );
 
   await inserirQuestao(cliente, {
@@ -98,6 +102,31 @@ async function blocosDe(cliente: Client, aluno: string): Promise<Bloco[]> {
     [aluno, HOJE],
   );
   return rows;
+}
+
+async function criarMateria(cliente: Client): Promise<string> {
+  const { rows } = await cliente.query<{ id: string }>(
+    "insert into public.materias (nome) values ($1) returning id",
+    [`Materia ${sufixo()}`],
+  );
+  return rows[0].id;
+}
+
+async function distribuicaoDeMaterias(
+  cliente: Client,
+  aluno: string,
+): Promise<number[]> {
+  const { rows } = await cliente.query<{ n: string }>(
+    `select count(*)::text as n
+       from public.plano_bloco b
+       join public.plano_dia p on p.id = b.plano_dia_id
+       join public.topicos t on t.id = b.topico_id
+      where p.user_id = $1 and p.data = $2 and b.nivel = 'meta_cheia'
+      group by t.materia_id
+      order by t.materia_id`,
+    [aluno, HOJE],
+  );
+  return rows.map((row) => Number(row.n));
 }
 
 /** Marca o topico como vencido para hoje. */
@@ -249,6 +278,89 @@ descreveComBanco("gera_plano_do_dia — o corte por tempo (ALUNO-07 AC2)", () =>
       expect(meta.reduce((total, bloco) => total + bloco.minutos_estimados, 0)).toBeLessThanOrEqual(20);
       expect(meta).toHaveLength(1);
       expect(meta[0].tipo).toBe("avancar");
+    });
+  });
+});
+
+descreveComBanco("gera_plano_do_dia — teto cognitivo do dia (ALUNO-07/08)", () => {
+  it("aluno de 8h recebe no máximo 6 blocos na meta cheia", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      for (let i = 0; i < 8; i += 1) await topicoComQuestao(cliente);
+      await criarPerfil(cliente, aluno, 480);
+
+      await gerar(cliente, aluno);
+
+      const meta = (await blocosDe(cliente, aluno)).filter(
+        (bloco) => bloco.nivel === "meta_cheia",
+      );
+      expect(meta).toHaveLength(6);
+    });
+  });
+
+  it("concentra a meta cheia em no máximo 3 matérias", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      for (let i = 0; i < 8; i += 1) {
+        await topicoComQuestao(cliente);
+      }
+      await criarPerfil(cliente, aluno, 480);
+
+      await gerar(cliente, aluno);
+
+      const distribuicao = await distribuicaoDeMaterias(cliente, aluno);
+      expect(distribuicao.length).toBeLessThanOrEqual(3);
+      expect(distribuicao.reduce((total, quantidade) => total + quantidade, 0)).toBe(6);
+    });
+  });
+
+  it("preenche as matérias escolhidas sem deixar uma monopolizar os 6 blocos", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      const materias = await Promise.all(
+        [0, 1, 2].map(() => criarMateria(cliente)),
+      );
+      for (const materiaId of materias) {
+        for (let i = 0; i < 2; i += 1) {
+          await topicoComQuestao(cliente, { materiaId });
+        }
+      }
+      await criarPerfil(cliente, aluno, 480);
+
+      await gerar(cliente, aluno);
+
+      const distribuicao = await distribuicaoDeMaterias(cliente, aluno);
+      expect(distribuicao).toHaveLength(3);
+      expect(distribuicao).toEqual([2, 2, 2]);
+    });
+  });
+
+  it("preserva a mistura de tipos quando o teto está aplicado", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      const materias = await Promise.all(
+        [0, 1, 2, 3, 4, 5].map(() => criarMateria(cliente)),
+      );
+      const conhecidos: string[] = [];
+      for (let i = 0; i < materias.length; i += 1) {
+        const topico = await topicoComQuestao(cliente, { materiaId: materias[i] });
+        if (i < 3) conhecidos.push(topico);
+      }
+      for (const materiaId of materias.slice(3)) {
+        await topicoComQuestao(cliente, { materiaId });
+      }
+      await criarPerfil(cliente, aluno, 480);
+      for (const topico of conhecidos) await dominio(cliente, aluno, topico, 0.5);
+
+      await gerar(cliente, aluno);
+
+      const tipos = new Set(
+        (await blocosDe(cliente, aluno))
+          .filter((bloco) => bloco.nivel === "meta_cheia")
+          .map((bloco) => bloco.tipo),
+      );
+      expect(tipos.has("avancar")).toBe(true);
+      expect(tipos.has("treinar")).toBe(true);
     });
   });
 });

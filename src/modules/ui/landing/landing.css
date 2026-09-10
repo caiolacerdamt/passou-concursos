@@ -135,19 +135,33 @@ html.sc-falhou .lp .publicacao {
   background: var(--color-papel);
   transition:
     box-shadow 220ms ease,
-    transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    visibility 320ms;
-}
-/* Escondida sobre o herói: recolhe para cima e sai do caminho do foco e do
-   leitor de tela enquanto está fora. `visibility` junto do `transform` porque
-   um elemento só deslocado continua tabulável, e um link invisível que rouba
-   o foco é defeito de acessibilidade, não de estilo. */
-.lp .barra--oculta {
-  transform: translate3d(0, -100%, 0);
-  visibility: hidden;
+    background 320ms ease;
 }
 .lp .barra--flutua {
   box-shadow: 0 1px 0 var(--color-risco), 0 8px 28px -20px rgb(27 29 26 / 0.5);
+}
+/* Sobre o herói a barra não some — ela perde a chapa. A sangria continua
+   inteira e o link de entrar fica alcançável no primeiro quadro, que é o
+   caminho de quem já tem conta.
+
+   O estado anterior era `visibility: hidden` + `translate3d`, para tirar um
+   link invisível do caminho do foco. Sem esconder, o problema deixa de
+   existir: a barra está sempre visível e sempre tabulável.
+
+   Depois de `--flutua` de propósito: as duas classes convivem enquanto o
+   herói rola, e é esta que tem de vencer o `box-shadow`. */
+.lp .barra--sobre-heroi {
+  background: transparent;
+  box-shadow: none;
+}
+.lp .barra--sobre-heroi .barra__progresso {
+  opacity: 0;
+}
+/* A parede do corredor é bege claro e a barra é escura sobre claro, o mesmo
+   par da headline. Mas os quadros do meio do travelling escurecem: auréola de
+   papel, igual à da copy do herói. */
+.lp .barra--sobre-heroi :is(.barra__marca, .barra__nav a, .barra__entrar) {
+  text-shadow: 0 1px 2px rgb(255 253 248 / 0.6);
 }
 .lp .barra__marca {
   display: inline-flex;

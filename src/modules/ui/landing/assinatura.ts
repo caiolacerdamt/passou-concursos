@@ -245,11 +245,13 @@ export function ligarComportamento(): () => void {
     );
     barra?.classList.toggle("barra--flutua", window.scrollY > 8);
 
-    /* A barra nao existe sobre o heroi. O gatilho e a altura do proprio ato,
-       nao um numero escrito a mao: mudar o span nao desalinha o chrome. */
+    /* Sobre o heroi a barra perde a chapa, nao some: quem ja tem conta precisa
+       alcancar "Entrar" no primeiro quadro, e a sangria continua inteira.
+       O gatilho e a altura do proprio ato, nao um numero escrito a mao: mudar
+       o span nao desalinha o chrome. */
     const heroi = document.querySelector<HTMLElement>(".secao--heroi");
     const fimDoHeroi = heroi ? heroi.offsetTop + heroi.offsetHeight * 0.72 : 0;
-    barra?.classList.toggle("barra--oculta", window.scrollY < fimDoHeroi);
+    barra?.classList.toggle("barra--sobre-heroi", window.scrollY < fimDoHeroi);
   }
 
   /* ======================================================== 2 · ASSINATURA == */

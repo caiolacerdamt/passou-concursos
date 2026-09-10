@@ -659,7 +659,7 @@ function Senha({
 
           <button
             type="submit"
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-marca px-6 font-semibold text-white transition hover:bg-marca-apoio"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-marca px-6 font-semibold text-fundo transition hover:bg-marca-apoio"
           >
             Trocar senha
           </button>
@@ -747,7 +747,7 @@ function Privacidade({
           />
           <button
             type="submit"
-            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-erro px-6 font-semibold text-white transition hover:brightness-95"
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-erro px-6 font-semibold text-fundo transition hover:brightness-95"
           >
             Apagar dados e conta
           </button>

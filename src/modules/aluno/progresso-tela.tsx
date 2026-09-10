@@ -514,7 +514,7 @@ function FiltrosDoCaderno({ dados }: { dados: DadosProgresso }) {
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="submit"
-          className="min-h-11 rounded-full bg-marca px-5 text-sm font-semibold text-white transition hover:bg-marca-apoio"
+          className="min-h-11 rounded-full bg-marca px-5 text-sm font-semibold text-fundo transition hover:bg-marca-apoio"
         >
           Filtrar
         </button>
@@ -590,7 +590,7 @@ function AssuntoComErros({
           ) : (
             <Link
               href={refazer("todas")}
-              className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 text-sm font-semibold text-white transition hover:bg-marca-apoio"
+              className="inline-flex min-h-11 items-center rounded-full bg-marca px-5 text-sm font-semibold text-fundo transition hover:bg-marca-apoio"
             >
               {assunto.nErros === 1 ? "Refazer o erro" : `Refazer os ${assunto.nErros}`}
             </Link>

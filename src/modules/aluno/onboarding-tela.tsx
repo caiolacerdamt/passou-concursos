@@ -143,7 +143,7 @@ export function OnboardingTela({
 
         <button
           type="submit"
-          className="min-h-11 w-full rounded-full bg-marca px-4 py-3 font-semibold text-white transition hover:bg-marca-apoio"
+          className="min-h-11 w-full rounded-full bg-marca px-4 py-3 font-semibold text-fundo transition hover:bg-marca-apoio"
         >
           Montar meu plano de hoje
         </button>

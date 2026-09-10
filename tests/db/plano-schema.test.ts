@@ -78,6 +78,40 @@ descreveComBanco("perfil_estudo — o caminho de quem pula o diagnostico (ALUNO-
       );
     });
   });
+
+  // Tema da interface (AD-149). O default `sistema` e o que faz a coluna nova
+  // nao mudar nada para quem ja tem perfil: sem ele, o backfill escolheria um
+  // tema para todo mundo.
+  it("`tema` nasce em `sistema` e recusa valor fora dos tres", async () => {
+    await comTransacaoSemPerfilConcurso(async (cliente) => {
+      const aluno = novoAluno();
+      await cliente.query(
+        `insert into public.perfil_estudo (user_id, minutos_por_dia) values ($1, 45)`,
+        [aluno],
+      );
+
+      const { rows } = await cliente.query<{ tema: string }>(
+        "select tema from public.perfil_estudo where user_id = $1",
+        [aluno],
+      );
+      expect(rows[0].tema).toBe("sistema");
+
+      await cliente.query(
+        "update public.perfil_estudo set tema = 'escuro' where user_id = $1",
+        [aluno],
+      );
+
+      await recusa(
+        cliente,
+        () =>
+          cliente.query(
+            "update public.perfil_estudo set tema = 'dark' where user_id = $1",
+            [aluno],
+          ),
+        /perfil_tema_conhecido/,
+      );
+    });
+  });
 });
 
 descreveComBanco("plano_dia e plano_bloco (ALUNO-11, ALUNO-12)", () => {

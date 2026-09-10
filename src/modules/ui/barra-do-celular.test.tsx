@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/app/entrar/acoes", () => ({ sair: vi.fn() }));
+vi.mock("@/app/app/acoes-do-tema", () => ({ alternarTema: vi.fn() }));
 
 const rota = vi.hoisted(() => ({ caminho: "/app" }));
 vi.mock("next/navigation", () => ({ usePathname: () => rota.caminho }));
@@ -14,7 +15,7 @@ const { BarraDoCelular } = await import("./barra-do-celular");
 
 function renderizar(caminho = "/app"): string {
   rota.caminho = caminho;
-  return renderToStaticMarkup(<BarraDoCelular />);
+  return renderToStaticMarkup(<BarraDoCelular tema="sistema" />);
 }
 
 describe("BarraDoCelular", () => {

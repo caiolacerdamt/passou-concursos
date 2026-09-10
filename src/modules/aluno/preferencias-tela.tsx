@@ -380,7 +380,7 @@ export function PreferenciasTela({
           </p>
           <button
             type="submit"
-            className="ml-auto flex min-h-11 items-center justify-center rounded-pill bg-marca px-7 font-semibold text-white transition hover:bg-marca-apoio"
+            className="ml-auto flex min-h-11 items-center justify-center rounded-pill bg-marca px-7 font-semibold text-fundo transition hover:bg-marca-apoio"
           >
             Salvar preferências
           </button>

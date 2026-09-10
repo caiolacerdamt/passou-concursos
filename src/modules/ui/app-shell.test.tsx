@@ -17,8 +17,8 @@ vi.mock("next/headers", () => ({
 
 const { AppShell } = await import("./app-shell");
 
-async function renderizar(): Promise<string> {
-  return renderToStaticMarkup(await AppShell({ children: "conteúdo da tela" }));
+async function renderizar(tema?: Parameters<typeof AppShell>[0]["tema"]): Promise<string> {
+  return renderToStaticMarkup(await AppShell({ children: "conteúdo da tela", tema }));
 }
 
 describe("AppShell", () => {
@@ -64,6 +64,33 @@ describe("AppShell", () => {
     expect(expandida).toContain("Fechar a barra de navegação");
     expect(fechada).toContain("Expandir a barra de navegação");
     expect(fechada).not.toContain("Fechar a barra de navegação");
+  });
+
+  it("emite o tema no HTML do servidor nos três estados (AD-149)", async () => {
+    cookieDaBarra.valor = undefined;
+
+    expect(await renderizar("claro")).toContain('data-tema="claro"');
+    expect(await renderizar("escuro")).toContain('data-tema="escuro"');
+    expect(await renderizar("sistema")).toContain('data-tema="sistema"');
+  });
+
+  it("cai em `sistema` quando o tema não é informado", async () => {
+    cookieDaBarra.valor = undefined;
+
+    // O default não é conveniência: é o que faz o shell continuar renderizando
+    // com o comportamento de hoje se a resolução do tema falhar lá em cima.
+    expect(await renderizar()).toContain('data-tema="sistema"');
+  });
+
+  it("o atributo do tema fica no mesmo elemento que `data-surface`", async () => {
+    cookieDaBarra.valor = undefined;
+    const html = await renderizar("escuro");
+
+    // As regras escuras do `globals.css` são `[data-tema="escuro"]` e cascateiam
+    // por herança de variável. Se o atributo saísse num elemento interno, tudo
+    // acima dele — inclusive a barra lateral e a faixa do trial — continuaria
+    // claro, e a tela sairia metade e metade.
+    expect(html).toMatch(/<div class="app-ui[^"]*"[^>]*data-surface="app"[^>]*data-tema="escuro"/);
   });
 
   it("mantém conta, preferências e saída alcançáveis com a barra fechada", async () => {

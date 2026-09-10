@@ -177,6 +177,169 @@
 }
 
 /*
+ * ---------------------------------------------------------------------------
+ * TEMA ESCURO DA SUPERFICIE LOGADA (`/app/*`) — AD-149.
+ * ---------------------------------------------------------------------------
+ *
+ * Escopo: so o que esta dentro do shell do app. A landing, `/assinar`,
+ * `/checkout`, as telas de acesso e `/operador/*` continuam claras — a landing
+ * tem ritmo claro→breu→claro dirigido por GSAP (AD-106) e num tema escuro esse
+ * ritmo deixa de existir. `DESIGN.md` separa as duas superficies em modo
+ * Persuade (landing) e Operate (app); tema escuro serve ao Operate.
+ *
+ * **Por que fora de `@theme`.** `@theme` nao pode ser aninhado em seletor nem
+ * em `@media` — e regra do Tailwind v4, conferida na doc oficial. Mas as
+ * utilidades que ele gera emitem `var(--color-*)`, entao redefinir o proprio
+ * token num seletor comum cascateia para tudo que ja foi escrito. E por isso
+ * que esta rodada e troca de valor de token e nao reescrita de componente.
+ *
+ * **Nada de `@theme inline`.** Ele serve para quando o token do Tailwind aponta
+ * para *outra* variavel; aqui redefinimos o token em si, sem indireção, e a
+ * indireção so criaria um lugar a mais para a resolucao escapar.
+ *
+ * **As duas listas abaixo sao gemeas de proposito** — `[data-tema="escuro"]` e
+ * a escolha explicita do aluno, `[data-tema="sistema"]` em `prefers-color-
+ * scheme: dark` e a delegacao ao aparelho. Uma nao pode existir dentro da
+ * outra (a segunda vive num `@media`), e por isso o valor aparece duas vezes.
+ * A divergencia entre elas nao depende de ninguem lembrar: `globals-tema.test.ts`
+ * le este arquivo e falha se um unico par sair de sincronia.
+ *
+ * Contraste medido pela formula WCAG 2.1 nesta rodada, nao estimado. Fundo de
+ * referencia `#14150F`:
+ *   texto 15.86:1 · suave 7.57:1 · marca 9.23:1 · marca-apoio s/ painel 8.28:1
+ *   ok 9.35:1 · conquista 8.85:1 · aviso 9.28:1 · erro 8.56:1
+ *   linha 1.59:1 — divisor, nunca carrega texto
+ * `#F3EEE2` e `#ACA697` nao sao inventados: sao `--color-breu-tinta` e
+ * `--color-breu-suave`, que ja rodam em producao sobre breu. Uma materia so.
+ *
+ * **Inversao obrigatoria do botao primario.** No claro e verde escuro com texto
+ * branco; no escuro e verde claro com texto do fundo. Como `--color-marca` vira
+ * `#8CC4A6` e o texto do botao ja e `text-fundo` (`#14150F`), a inversao sai da
+ * troca de token: 9.23:1. Verde escuro com texto branco sobre fundo escuro
+ * seria invisivel — e o erro classico.
+ *
+ * **`breu` vira um degrau de elevacao** (Variante B). No claro, breu e a
+ * superficie escura contra papel claro; no escuro ele deixa de poder ser isso e
+ * passa a ser um degrau acima do fundo: nada na interface brilha. O cartao
+ * contra o fundo fica em 1.18:1 — separacao de superficie, nao de leitura.
+ * A inversao de papel (barra e cartao-heroi virando a superficie *clara*) foi
+ * medida, passava com folga e foi descartada: uma barra lateral clara na altura
+ * inteira da tela e justamente a luz que quem liga o modo escuro quer evitar.
+ *
+ * **Sombra.** Preto com alfa sobre fundo escuro nao aparece; a elevacao passa a
+ * ser a pilha de superficie (`#14150F` → `#1E2019`), que e o que
+ * `DESIGN.md` §Forma e elevacao ja manda. As sombras caem para um resto de
+ * assentamento. Halo colorido nao entra: e adesivo, nao luz.
+ *
+ * O que **nao** muda: `--color-arte-*`, `--color-pilha-*`, fontes, raios,
+ * escalas tipograficas e `--container-*`. Nenhum deles participa da leitura.
+ */
+[data-tema="escuro"] {
+  /* Neutros */
+  --color-fundo: #14150f;
+  --color-papel: #14150f;
+  --color-painel: #1e2019;
+  --color-papel-alto: #1e2019;
+  --color-fundo-suave: #0e0f0a;
+  --color-papel-recuo: #0e0f0a;
+  --color-texto: #f3eee2;
+  --color-tinta: #f3eee2;
+  --color-suave: #aca697;
+  --color-tinta-suave: #aca697;
+  --color-linha: #383a2f;
+  --color-risco: #383a2f;
+
+  /* Verde — a intencao */
+  --color-marca: #8cc4a6;
+  --color-verde: #8cc4a6;
+  --color-marca-apoio: #8cc4a6;
+  --color-verde-texto: #8cc4a6;
+  --color-evolucao: #8cc4a6;
+  --color-marca-viva: #6fae8e;
+  --color-verde-vivo: #6fae8e;
+  --color-marca-suave: #22332b;
+  --color-verde-tenue: #22332b;
+
+  /* Estados — um valor que pinta, um que le */
+  --color-ok: #7fc8a4;
+  --color-conquista: #d8ae5c;
+  --color-conquista-fundo: #2c2618;
+  --color-ouro: #d8ae5c;
+  --color-ouro-texto: #d8ae5c;
+  --color-ouro-fundo: #2c2618;
+  --color-aviso: #e0b15c;
+  --color-erro: #f09a9a;
+  --color-erro-fundo: #2e1a1a;
+
+  /* Breu — Variante B: degrau de elevacao, nao superficie invertida */
+  --color-breu: #23251d;
+  --color-breu-alto: #2c2e25;
+  --color-breu-tinta: #f3eee2;
+  --color-breu-suave: #aca697;
+  --color-breu-verde: #8cc4a6;
+  --color-breu-linha: #3e4034;
+
+  /* Elevacao: a pilha de superficie faz o trabalho, a sombra so assenta */
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-lp: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-lp-alta: 0 2px 6px rgb(0 0 0 / 0.5);
+}
+
+/* Gemea da lista acima. Ver o comentario: `globals-tema.test.ts` guarda o par. */
+@media (prefers-color-scheme: dark) {
+  [data-tema="sistema"] {
+    /* Neutros */
+    --color-fundo: #14150f;
+    --color-papel: #14150f;
+    --color-painel: #1e2019;
+    --color-papel-alto: #1e2019;
+    --color-fundo-suave: #0e0f0a;
+    --color-papel-recuo: #0e0f0a;
+    --color-texto: #f3eee2;
+    --color-tinta: #f3eee2;
+    --color-suave: #aca697;
+    --color-tinta-suave: #aca697;
+    --color-linha: #383a2f;
+    --color-risco: #383a2f;
+
+    /* Verde — a intencao */
+    --color-marca: #8cc4a6;
+    --color-verde: #8cc4a6;
+    --color-marca-apoio: #8cc4a6;
+    --color-verde-texto: #8cc4a6;
+    --color-evolucao: #8cc4a6;
+    --color-marca-viva: #6fae8e;
+    --color-verde-vivo: #6fae8e;
+    --color-marca-suave: #22332b;
+    --color-verde-tenue: #22332b;
+
+    /* Estados — um valor que pinta, um que le */
+    --color-ok: #7fc8a4;
+    --color-conquista: #d8ae5c;
+    --color-conquista-fundo: #2c2618;
+    --color-ouro: #d8ae5c;
+    --color-ouro-texto: #d8ae5c;
+    --color-ouro-fundo: #2c2618;
+    --color-aviso: #e0b15c;
+    --color-erro: #f09a9a;
+    --color-erro-fundo: #2e1a1a;
+
+    /* Breu — Variante B: degrau de elevacao, nao superficie invertida */
+    --color-breu: #23251d;
+    --color-breu-alto: #2c2e25;
+    --color-breu-tinta: #f3eee2;
+    --color-breu-suave: #aca697;
+    --color-breu-verde: #8cc4a6;
+    --color-breu-linha: #3e4034;
+
+    /* Elevacao: a pilha de superficie faz o trabalho, a sombra so assenta */
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lp: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lp-alta: 0 2px 6px rgb(0 0 0 / 0.5);
+  }
+}
+
+/*
  * As superficies que o navegador desenha, e nao nos: sem isto a landing herda a
  * selecao azul do app e entrega que a pagina foi montada, nao desenhada.
  */
@@ -206,8 +369,43 @@
   outline-offset: 2px;
 }
 
+/*
+ * O canto que o `data-tema` do shell nao alcanca (AD-149).
+ *
+ * O atributo nasce no `<div>` do shell — nao no `<html>` — porque o layout raiz
+ * e compartilhado com a landing e com as telas de acesso, e ler cookie la
+ * arrastaria a arvore inteira para render dinamico. So que duas coisas ficam
+ * fora do alcance de um `<div>`: a area de *overscroll* no celular (a faixa que
+ * aparece ao puxar alem do fim) e o `color-scheme` do documento, que decide a
+ * cor da barra de rolagem e dos widgets nativos.
+ *
+ * `EspelhoDoTema` (`src/modules/ui/espelho-do-tema.tsx`) copia o valor para o
+ * `<html>` depois da hidratacao e limpa no cleanup. Chegar tarde e aceitavel
+ * **porque o conteudo ja veio pintado do servidor**: o que chega tarde e a
+ * moldura do navegador, nao a tela. E o cleanup e obrigatorio — sem ele a
+ * landing herda barra de rolagem escura ao sair do app.
+ *
+ * `light dark` no estado `sistema` e o que faz o navegador acompanhar o
+ * aparelho sozinho, sem JS medir media query nenhuma.
+ */
 html {
   color-scheme: light;
+}
+
+html[data-tema="claro"] {
+  color-scheme: light;
+}
+
+html[data-tema="sistema"] {
+  color-scheme: light dark;
+}
+
+html[data-tema="escuro"] {
+  color-scheme: dark;
+}
+
+html[data-tema] {
+  background-color: var(--color-fundo);
 }
 
 body {

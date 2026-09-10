@@ -20,6 +20,7 @@ O erro caro seria tratar tudo como um sistema só. Não é.
 | Raio | generoso (24–40px em cards, pill em botão) | contido (8–14px) |
 | Cor | verde vivo pode pintar superfície | verde **só** indica ação, seleção, progresso e estado |
 | Breu | duas das sete seções | barra de navegação + **um** cartão por tela (AD-111) |
+| Tema | claro sempre — o ritmo claro→breu→claro é a peça | claro / escuro / segue o sistema (AD-149) |
 
 **O que as duas compartilham:** a paleta de neutros, os tokens semânticos de estado, a família
 tipográfica (Geist) e a régua de acessibilidade. É isso que impede o produto de parecer dois
@@ -90,6 +91,65 @@ de prova e dado tabular.
 - **Elevação.** A pilha de superfície (`#F5F2E9` → `#FFFDF8`) faz o trabalho. Sombra existe **só**
   onde há camada real que flutua sobre conteúdo: nav sticky, dropdown, modal, toast. Card não tem
   sombra.
+
+### Tema escuro — só o `/app/*` (AD-149)
+
+Três estados de escolha: **claro**, **escuro** e **segue o sistema** (o padrão, e o comportamento
+de sempre). O controle é um botão no rodapé da navegação — barra lateral no desktop, folha da Conta
+no celular —, nunca dentro do formulário de preferências: preferências é o formulário do *estudo*,
+e tudo lá alimenta `gera_plano_do_dia`. A preferência mora em `perfil_estudo.tema`, com espelho em
+cookie para o shell pintar sem piscar.
+
+**O que fica de fora, e por quê.** A landing (`/`), `/assinar`, `/checkout`, as telas de acesso
+(`.acesso`) e `/operador/*` continuam claros. A landing tem ritmo claro→breu→claro dirigido por
+GSAP (AD-106): num tema escuro esse ritmo deixa de existir e a peça perde o pico. Tema escuro serve
+ao modo **Operate** — o aluno que estuda de noite. Não serve ao **Persuade**.
+
+Os tokens escuros ficam **fora de `@theme`**, em `[data-tema="escuro"]` e na gêmea
+`[data-tema="sistema"]` sob `prefers-color-scheme: dark`: `@theme` não pode ser aninhado em seletor
+nem em `@media`, mas as utilidades que ele gera emitem `var(--color-*)`, então redefinir o token num
+seletor comum cascateia. Sem `@theme inline` e sem `@custom-variant` — nenhum componente precisou de
+exceção pontual.
+
+Contraste medido pela fórmula WCAG 2.1, não estimado. Fundo `#14150F`, painel `#1E2019`:
+
+| Token | Claro | Escuro | Contraste | Papel |
+| --- | --- | --- | --- | --- |
+| `fundo` / `papel` | `#F5F2E9` | `#14150F` | — | canvas |
+| `painel` / `papel-alto` | `#FFFDF8` | `#1E2019` | 1.12:1 | superfície elevada |
+| `fundo-suave` / `papel-recuo` | `#F1F2EE` | `#0E0F0A` | 1.05:1 | seção recuada |
+| `texto` / `tinta` | `#1B1D1A` | `#F3EEE2` | **15.86:1** | texto primário |
+| `suave` / `tinta-suave` | `#63665E` | `#ACA697` | **7.57:1** | texto secundário |
+| `linha` / `risco` | `#DDD9CD` | `#383A2F` | 1.59:1 | divisor — nunca carrega texto |
+| `marca` / `verde` | `#245B46` | `#8CC4A6` | **9.23:1** | ação, link, seleção |
+| `marca-apoio` / `verde-texto` | `#357055` | `#8CC4A6` | 8.28:1 s/ painel | verde que se lê |
+| `marca-viva` / `verde-vivo` | `#4F8B72` | `#6FAE8E` | 7.10:1 | preenchimento e ilustração |
+| `marca-suave` / `verde-tenue` | `#E6EEE9` | `#22332B` | 1.38:1 | fundo de seleção |
+| `ok` | `#2C7A55` | `#7FC8A4` | **9.35:1** | sucesso |
+| `conquista` / `ouro-texto` | `#8A6318` | `#D8AE5C` | **8.85:1** | conquista |
+| `aviso` | `#8A6510` | `#E0B15C` | **9.28:1** | alerta |
+| `erro` | `#C03A3A` | `#F09A9A` | **8.56:1** | erro |
+
+`#F3EEE2` e `#ACA697` não são inventados: são `breu-tinta` e `breu-suave`, que já rodavam sobre
+breu. Uma matéria só.
+
+**Inversão obrigatória do botão primário.** No claro é verde escuro com texto claro. No escuro é
+verde claro com **texto do fundo** — `#14150F` sobre `#8CC4A6`, 9.23:1. Botão verde escuro com texto
+branco sobre fundo escuro seria invisível, e o inverso também: `text-white` sobre `bg-marca` no
+escuro dá ~1.7:1. Em botão preenchido use `text-fundo` ou `text-painel`, **nunca** `text-white`.
+
+**O `breu` vira um degrau de elevação.** No claro ele é a superfície escura contra papel claro; no
+escuro não pode ser isso, e passa a ser um degrau acima do fundo (`#23251D`, 1.18:1 contra o canvas)
+— nada na interface brilha. A régua do AD-111 ("um cartão-herói por tela") passa a se apoiar mais em
+escala tipográfica do que em matéria. Se um herói sumir, a compensação é **uma** destas, não as três:
+borda de 1px em `breu-verde`, subir `breu` para `#282A20`, ou peso tipográfico no título.
+Compensar com sombra não funciona: preto com alfa sobre fundo escuro não aparece, e é por isso que a
+elevação no escuro é a pilha de superfície, não a sombra.
+
+Foi medida e **descartada** a inversão de papel (herói e barra virando a superfície *clara* sobre
+fundo escuro). Passava com folga — 15.86:1 do cartão contra o fundo — e custava as mesmas zero
+linhas. Caiu porque uma barra lateral clara na altura inteira da tela é justamente a luz que quem
+liga o modo escuro está tentando evitar.
 
 ## Ilustração
 

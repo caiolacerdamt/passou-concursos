@@ -70,7 +70,7 @@ function Grupo({
     <section aria-labelledby={`grupo-${titulo.toLowerCase()}`}>
       <h2
         id={`grupo-${titulo.toLowerCase()}`}
-        className="mb-2 px-3.5 font-utilitaria text-[0.625rem] uppercase tracking-[0.18em] text-breu-suave/70"
+        className="mb-2 px-3.5 font-utilitaria text-[0.625rem] uppercase tracking-[0.18em] text-breu-suave"
       >
         {titulo}
       </h2>
@@ -235,7 +235,7 @@ export function BarraLateral({
         </div>
 
         <div className="px-3.5">
-          <p className="font-utilitaria text-[0.625rem] uppercase tracking-[0.18em] text-breu-suave/70">
+          <p className="font-utilitaria text-[0.625rem] uppercase tracking-[0.18em] text-breu-suave">
             Concurso
           </p>
           <p className="mt-1.5 text-sm leading-snug text-breu-tinta">Banco do Brasil</p>

@@ -73,7 +73,7 @@ export function ConviteDeMatricula({
           className={
             escuro
               ? "inline-flex min-h-12 items-center rounded-full bg-breu-tinta px-6 font-semibold text-breu transition hover:opacity-90"
-              : "inline-flex min-h-12 items-center rounded-full bg-marca px-6 font-semibold text-white transition hover:bg-marca-apoio"
+              : "inline-flex min-h-12 items-center rounded-full bg-marca px-6 font-semibold text-fundo transition hover:bg-marca-apoio"
           }
         >
           {chamada}

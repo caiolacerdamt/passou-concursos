@@ -1447,37 +1447,79 @@
 - **Date**: 2026-09-09
 - **Status**: active
 
+### AD-149
+- **Decision**: O `/app/*` ganha **tema escuro** com tres estados de escolha — `claro`, `escuro` e
+  `sistema` (padrao, delega ao `prefers-color-scheme`). Persistencia em `perfil_estudo.tema`, com
+  espelho no cookie `tema-do-app` para o shell pintar sem piscar; o banco e a verdade, o cookie e a
+  otimizacao. **Nao entra atras de flag**: e preferencia do aluno, nao corte de produto, e com o
+  padrao `sistema` o produto e identico ao de hoje para quem esta no claro. O controle e um botao no
+  **rodape da navegacao** (barra lateral no desktop, folha da Conta no celular), junto de "Conta" e
+  "Sair" — **nunca** dentro de `/app/preferencias`. Server Action propria (`alternarTema`), separada
+  de `salvarPreferencias`. Os tokens escuros ficam **fora de `@theme`**, num seletor comum, sem
+  `@theme inline` e sem `@custom-variant`. O **`breu` vira um degrau de elevacao** (`#23251D`,
+  1.18:1 contra o canvas), nao superficie invertida. Fora do escopo, e claros: landing, `/assinar`,
+  `/checkout`, telas de acesso e `/operador/*`.
+- **Reason**: Tema escuro serve ao modo **Operate** — o aluno que estuda de noite — e nao ao
+  **Persuade**. A landing tem ritmo claro→breu→claro dirigido por GSAP (AD-106); num tema escuro
+  esse ritmo deixa de existir e a peca perde o pico. A escolha por token e nao por componente e o
+  que tornou a rodada barata: as utilidades do Tailwind v4 emitem `var(--color-*)`, entao redefinir
+  o token cascateia para tudo que ja foi escrito. Acao separada porque `salvarPreferencias` dispara
+  `gera_plano_do_dia`, correto para minutos e dias de estudo e absurdo para cor — com acao propria
+  nao ha como disparar por engano.
+- **Trade-off**: A **inversao de papel** (heroi e barra virando a superficie *clara* sobre fundo
+  escuro) foi medida, passava com folga — 15.86:1 do cartao contra o fundo — e custava as mesmas
+  zero linhas. Foi **descartada**: uma barra lateral clara na altura inteira da tela e justamente a
+  luz que quem liga o modo escuro quer evitar. O preco da Variante B escolhida e que o cartao-heroi
+  tem menos soco no escuro (1.18:1 separa, mas nao grita) e a regua do AD-111 passa a se apoiar mais
+  em escala tipografica do que em materia; se um heroi sumir, a compensacao autorizada e **uma** de
+  tres — borda em `breu-verde`, subir `breu` para `#282A20`, ou peso no titulo —, nunca sombra, que
+  nao aparece em fundo escuro. O `data-tema` nasce no `<div>` do shell e nao no `<html>` (o layout
+  raiz e compartilhado com a landing), entao a moldura do navegador — barra de rolagem, overscroll,
+  `theme-color` — so acerta depois da hidratacao; o conteudo ja vem pintado do servidor, e o que
+  chega tarde nao e a tela. Enquanto o aluno nao tiver `perfil_estudo`, a preferencia vale so no
+  aparelho, porque a coluna nao existe para receber a gravacao.
+- **Scope**: UI-01 · UI-03 · `docs/planos/TEMA-ESCURO-do-app.md` · `globals.css`, shell do app,
+  barra lateral, barra do celular, `perfil_estudo.tema`.
+- **Date**: 2026-09-10
+- **Status**: active
+
 ## Handoff
 
-- **Feature**: **Blocos do plano diário — teto cognitivo, duração por matéria e cartão**
-  (`docs/planos/BLOCOS-DO-PLANO-DIARIO.md`), **AD-148**. Plano fora do fluxo de specs numeradas:
-  não cria spec nova nem altera o `ROADMAP.md`. A implementação foi feita na branch curta
-  `feat/m4-p1-blocos-plano-diario`.
-- **Motor e configuração**: a migração
-  `supabase/migrations/20260911123000_teto_do_dia_e_duracao_do_bloco.sql` é o novo corpo de verdade
-  de `public.gera_plano_do_dia` e também cria o helper imutável `public.minutos_do_bloco`. Os
-  parâmetros `param.m4.teto_blocos_dia` (6) e `param.m4.teto_materias_dia` (3) limitam apenas
-  `meta_cheia`; `piso` continua sendo a revisão vencida. O tempo declarado segue como limite superior.
-- **Duração**: `param.m4.minutos_por_questao_por_materia` nasce `{}` e usa `materias.nome`; uma
-  matéria sem entrada ou com valor ilegível volta ao default global de 2 minutos por questão. O
-  bloco grava a duração real em `minutos_estimados` e `minutos_estimados_cheios`, sem alterar a
-  quantidade padrão de questões.
-- **Tela**: `/app` agora exibe MÍNIMO e META em faixas empilhadas, com grades de até três colunas.
-  Cada cartão tem rótulo, assunto, matéria e rodapé; o clique ocupa o cartão inteiro, a régua mostra
-  a proporção da duração e o estado concluído leva ao resumo. A legenda concentra a explicação dos
-  tipos, e o cartão em foco não repete um segundo botão "Continuar".
-- **Evidência direcionada**: 27 testes de banco cobrem teto de blocos, teto de matérias,
-  concentração, mistura, orçamento, duração variável, mapa vazio, entradas inválidas, primeiro
-  bloco e regeneração. Os testes de unidade da tela cobrem durações diferentes, régua, layout,
-  foco sem CTA duplicado e destino do concluído.
-- **Gate**: `npm run test:unit` **1440/0** · `npm run test:db` **560/0** (71 arquivos) ·
-  `npx tsc --noEmit` limpo · `npm run lint` **0 erros** (316 avisos preexistentes em ferramentas e
-  artefatos auxiliares) · `npm run build` OK, com `/app` e as rotas existentes registradas. A
-  migração foi aplicada por `npm run db:push` no Supabase de desenvolvimento.
-- **Migração**: aplicada no Supabase de desenvolvimento com `npm run db:push`; não há SQL manual para
-  o operador executar. Os dois tetos entram ativos por decisão de produto; o mapa de duração fica
-  inerte até calibração. Os números 6 e 3 ainda não são medidos, e o tempo excedente de um aluno de
-  muitas horas fica sem uso nesta tela por decisão fora do escopo.
-- **Próximo passo**: depois do merge, fazer um smoke test autenticado em `/app` (dia de 8h, clique em
-  pendente/em foco e resumo de concluído). Quando houver base suficiente, calibrar o mapa por matéria
-  em degraus de 0,5; não semear valores antes disso.
+- **Feature**: **Tema escuro do `/app/*`** (`docs/planos/TEMA-ESCURO-do-app.md`), **AD-149**. Plano
+  fora do fluxo de specs numeradas: nao cria spec nova nem altera o `ROADMAP.md`. Implementado na
+  branch curta `feat/ui-tema-escuro-do-app`.
+- **Persistencia**: migracao `supabase/migrations/20260912120000_tema_da_interface.sql` adiciona
+  `perfil_estudo.tema` (`claro`/`escuro`/`sistema`, default `sistema`). A LGPD ja cobria a coluna
+  nova sem alteracao — foi **conferido**, nao presumido: o esquecimento apaga a linha inteira por
+  `user_id` e a exportacao varre a tabela inteira. O espelho e o cookie `tema-do-app`, escrito pela
+  Server Action `alternarTema`, separada de `salvarPreferencias` para nao poder disparar
+  `gera_plano_do_dia`.
+- **Pintura**: os tokens escuros vivem em `[data-tema="escuro"]` e na gemea
+  `[data-tema="sistema"]` sob `prefers-color-scheme: dark`, **fora de `@theme`** (que o Tailwind v4
+  nao deixa aninhar). `tokens-do-tema.test.ts` falha se as duas listas divergirem — nenhum teste de
+  componente pegaria isso, porque os dois caminhos renderizam o mesmo HTML. O `data-tema` sai do
+  `<div>` do shell no HTML do servidor; `EspelhoDoTema` copia para o `<html>` so o que um `<div>`
+  nao alcanca (overscroll, `color-scheme`, `theme-color`) e limpa no cleanup.
+- **Controle**: botao de tres estados no rodape da barra lateral e na folha da Conta do celular. O
+  icone diz o **estado atual** e nao o destino do clique — num ciclo de tres, "auto" nao tem sol nem
+  lua. Nada foi adicionado em `/app/preferencias`.
+- **A varredura das telas achou duas coisas e as duas foram corrigidas**: (1) o levantamento do
+  plano afirmava "zero classe de paleta padrao do Tailwind nos `.tsx`", mas havia sete `text-white`
+  sobre fundo preenchido dentro do `/app` — no escuro isso da ~1.7:1, invisivel; viraram
+  `text-fundo` (9.23:1 no verde, 8.56:1 no erro). (2) `text-breu-suave/70` nos rotulos de grupo da
+  barra dava 4.20:1 **ja no claro**; o `/70` saiu e os dois temas passam.
+- **Evidencia direcionada**: varredura no navegador com os tokens reais — 94 nos de texto medidos
+  pela formula WCAG 2.1, nenhum abaixo do minimo depois das duas correcoes; 34/34 focaveis com
+  indicador visivel (anel 8.66:1 a 10.56:1, UI-03 AC1); sem rolagem horizontal a 360px nem no
+  desktop (UI-01 AC1); cartao-heroi separando do fundo em 1.18:1, o numero previsto para a Variante
+  B, sem precisar de nenhuma das tres compensacoes autorizadas.
+- **Gate**: `npm run test:unit` · `npm run test:db` · `npx tsc --noEmit` · `npm run lint` ·
+  `npm run build` — numeros no PR. A migracao foi aplicada no Supabase de desenvolvimento com
+  `npm run db:push`.
+- **A landing nao mudou**: por construcao, nao por promessa. As regras escuras exigem `[data-tema]`,
+  o diff do `globals.css` e puramente aditivo (zero linha removida) e nenhum arquivo de `/`,
+  `/assinar`, `/checkout`, `.acesso` ou `/operador` foi tocado. Os tres `text-white` que sobraram
+  estao justamente nessas rotas, e ficaram de pe de proposito.
+- **Proximo passo**: smoke test autenticado no `/app` trocando o tema nos tres estados e conferindo
+  que ele acompanha o aluno num segundo aparelho (cookie ausente, leitura pelo perfil). Se o
+  cartao-heroi parecer apagado no uso real, aplicar **uma** das tres compensacoes do AD-149.

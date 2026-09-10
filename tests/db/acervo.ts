@@ -163,26 +163,48 @@ export async function inserirQuestao(
     COLUNAS.map((coluna) => valores[coluna]),
   );
 
+  /*
+   * O caminho de publicacao custava **seis** idas ao Postgres por questao:
+   * inserir, criar operador, enfileirar, decidir, explicar e publicar. Um teste
+   * que publica trinta questoes gastava cento e oitenta viagens, e na CI — que
+   * fica longe de `sa-east-1`, com dezenas de ms por viagem — isso estourava o
+   * timeout de 30s e derrubava a suite inteira em cascata, porque a conexao e
+   * uma so. Sao tres agora.
+   *
+   * A ordem continua garantida, e nao por sorte: `enfileirar` esta dentro do
+   * argumento de `registrar_decisao`, entao e avaliada antes; e o CTE que cria o
+   * operador termina antes de a linha dele chegar ao `select` de fora. Nada aqui
+   * depende de o Postgres executar CTEs irmas numa ordem particular, que e
+   * justamente o que ele nao promete.
+   */
   if (pediuPublicada && valores.origem === "real" && valores.fonte_citacao !== null && valores.resposta_correta !== null) {
-    const operador = await cliente.query<{ id: string }>(
-      "insert into auth.users (id) values (gen_random_uuid()) returning id",
-    );
-    const revisao = await cliente.query<{ id: string }>(
-      `select public.enfileirar_questao_revisao(
-         $1::uuid, $2::integer, 'fixture_publicacao'::text, 1::smallint, null::text
-       ) as id`,
+    await cliente.query(
+      `with operador as (
+         insert into auth.users (id) values (gen_random_uuid()) returning id
+       )
+       select public.registrar_decisao_questao_revisao(
+         public.enfileirar_questao_revisao(
+           $1::uuid, $2::integer, 'fixture_publicacao'::text, 1::smallint, null::text
+         ),
+         'aprovada',
+         operador.id,
+         'fixture'
+       )
+       from operador`,
       [rows[0].id, rows[0].questao_versao],
     );
+
     await cliente.query(
-      `select public.registrar_decisao_questao_revisao($1, 'aprovada', $2, 'fixture')`,
-      [revisao.rows[0].id, operador.rows[0].id],
-    );
-    await cliente.query(
-      `insert into public.explicacoes
-         (questao_id, questao_versao, status, texto, alternativa_correta,
-          fontes_citadas, chave_dedup)
-       values ($1, $2, 'aprovada', 'explicacao fixture', $3,
-               '[{"doc_id":"fixture","trecho":"fixture"}]'::jsonb, $4)`,
+      `with explicacao as (
+         insert into public.explicacoes
+           (questao_id, questao_versao, status, texto, alternativa_correta,
+            fontes_citadas, chave_dedup)
+         values ($1, $2, 'aprovada', 'explicacao fixture', $3,
+                 '[{"doc_id":"fixture","trecho":"fixture"}]'::jsonb, $4)
+       )
+       update public.questoes
+          set status = 'publicada'
+        where id = $1 and questao_versao = $2 and vigente`,
       [
         rows[0].id,
         rows[0].questao_versao,
@@ -190,9 +212,7 @@ export async function inserirQuestao(
         `fixture:explicacao:${rows[0].id}:${rows[0].questao_versao}`,
       ],
     );
-  }
-
-  if (pediuPublicada) {
+  } else if (pediuPublicada) {
     await cliente.query(
       "update public.questoes set status = 'publicada' where id = $1 and questao_versao = $2 and vigente",
       [rows[0].id, rows[0].questao_versao],

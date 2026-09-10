@@ -524,6 +524,16 @@ descreveComBanco("AD-146 — prova propria no recalculo", () => {
     });
   });
 
+  /*
+   * O tamanho do caderno e incidental: o que o teste prova e que os tres
+   * cadernos contam **uma** vez, e para isso basta `n_questoes` bater com UM
+   * caderno em vez de tres. Publicar dez questoes por caderno custava trinta
+   * publicacoes e fazia deste o teste mais lento da suite — o primeiro a
+   * estourar o timeout na CI e derrubar todos os outros em cascata, porque a
+   * conexao e compartilhada. Quatro provam o mesmo: 4 e diferente de 12.
+   */
+  const ITENS_POR_CADERNO = 4;
+
   it("cadernos A/B/C da mesma edicao contam uma vez", async () => {
     await comTransacaoSemPerfilConcurso(async (cliente) => {
       const materia = await criarMateria(cliente, 2);
@@ -552,18 +562,18 @@ descreveComBanco("AD-146 — prova propria no recalculo", () => {
         const prova = rows[0].id;
         await cliente.query("select public.registrar_grade_declarada($1, $2, $3::jsonb)", [
           prova,
-          10,
+          ITENS_POR_CADERNO,
           JSON.stringify([
             {
               ordem: 1,
               nome_impresso: "BLOCO",
               item_inicial: 1,
-              item_final: 10,
+              item_final: ITENS_POR_CADERNO,
               materia_id: materia.materiaId,
             },
           ]),
         ]);
-        for (let numero = 1; numero <= 10; numero += 1) {
+        for (let numero = 1; numero <= ITENS_POR_CADERNO; numero += 1) {
           await inserirQuestao(cliente, {
             prova_id: prova,
             numero,
@@ -599,8 +609,9 @@ descreveComBanco("AD-146 — prova propria no recalculo", () => {
       const materias = await lerMaterias(cliente, perfil[0].id);
       expect(materias[0].degrau).toBe(1);
       expect(materias[0].n_provas).toBe(1);
-      // 10 itens medidos, todos por questao publicada — nenhuma etiqueta existe.
-      expect(materias[0].n_questoes).toBe(10);
+      // Os itens de UM caderno, todos por questao publicada — nenhuma etiqueta
+      // existe. Se os tres contassem, seriam `3 * ITENS_POR_CADERNO`.
+      expect(materias[0].n_questoes).toBe(ITENS_POR_CADERNO);
       const { rows: etiquetas } = await cliente.query<{ n: string }>(
         "select count(*) as n from public.etiquetas_de_item where prova_id = any($1)",
         [cadernos],

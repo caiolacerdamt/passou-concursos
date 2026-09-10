@@ -158,10 +158,16 @@ html.sc-falhou .lp .publicacao {
   opacity: 0;
 }
 /* A parede do corredor é bege claro e a barra é escura sobre claro, o mesmo
-   par da headline. Mas os quadros do meio do travelling escurecem: auréola de
-   papel, igual à da copy do herói. */
+   par da headline. Mas o painel verde escuro sobe até a altura da barra no fim
+   do travelling: auréola de papel de duas camadas, a mesma da copy do herói, e
+   tinta cheia no lugar da suave — o mesmo argumento já registrado para o lede
+   e para o micro, porque cinza sobre o quadro escuro é o par que a régua
+   reprova. */
 .lp .barra--sobre-heroi :is(.barra__marca, .barra__nav a, .barra__entrar) {
-  text-shadow: 0 1px 2px rgb(255 253 248 / 0.6);
+  color: var(--color-tinta);
+  text-shadow:
+    0 1px 2px rgb(255 253 248 / 0.55),
+    0 2px 16px rgb(255 253 248 / 0.45);
 }
 .lp .barra__marca {
   display: inline-flex;
@@ -486,9 +492,23 @@ html.sc-falhou .lp .publicacao {
 .lp .heroi__copy {
   position: relative;
   z-index: 1;
-  width: min(62rem, 62vw);
+  /* Estreitada: com 62vw a coluna alcançava a faixa que `object-position: 62%`
+     traz para o quadro, e o painel verde escuro entrava por baixo das últimas
+     palavras da headline no meio do travelling. Esta é a correção estrutural;
+     a auréola abaixo é o cinto de segurança. */
+  width: min(52rem, 50vw);
   padding-left: clamp(1.25rem, 5vw, 5.5rem);
   padding-right: var(--gutter);
+}
+/* O clipe traz painel escuro para debaixo da coluna de texto no meio do
+   travelling. Auréola de papel, não sombra escura: o texto é tinta sobre
+   claro, então o que separa é o claro — sombra escura mancharia o glifo sem
+   separar nada. Sem véu de quadro inteiro: a regra do §ATO 1 continua
+   valendo. */
+.lp .heroi__copy :is(.display, .lede, .micro) {
+  text-shadow:
+    0 1px 2px rgb(255 253 248 / 0.55),
+    0 2px 16px rgb(255 253 248 / 0.45);
 }
 /* O lede do herói usa tinta cheia, não a suave. Cinza sobre a parede do
    corredor no meio do travelling, quando ela escurece, mediu abaixo de 3:1 na
@@ -512,9 +532,20 @@ html.sc-falhou .lp .publicacao {
 .lp .heroi__copy .display span + span {
   margin-top: 0.12em;
 }
+/* Tinta cheia, pelo mesmo motivo já registrado acima para o lede: a suave é
+   cinza sobre a parede texturizada, e no herói essa é a linha mais fraca da
+   tela. */
 .lp .heroi__copy .micro {
   max-width: 62ch;
   line-height: 1.5;
+  color: var(--color-tinta);
+}
+/* A borda de `--color-risco` some sobre o vídeo. Só no herói: chapa de papel
+   translúcida e borda em tinta suave, para o botão existir contra qualquer
+   quadro do clipe. */
+.lp .heroi__acoes .botao--vazado {
+  background: rgb(255 253 248 / 0.72);
+  box-shadow: inset 0 0 0 1px var(--color-tinta-suave);
 }
 
 /* ================================================================= ATO 2 ==

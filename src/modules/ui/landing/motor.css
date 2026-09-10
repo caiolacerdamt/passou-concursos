@@ -1,0 +1,6 @@
+/* `scrollcraft.css` é cópia literal da skill e é CSS global sem camada: o
+   `body { color }` e o `:where(a) { color: inherit }` dele venciam toda utilidade
+   do Tailwind, e a folha continua carregada depois de navegação client-side para
+   fora da landing. Importar dentro de `layer(motor)` — declarada em `globals.css`
+   abaixo de `utilities` — resolve sem tocar no arquivo do motor. */
+@import "./scrollcraft.css" layer(motor);

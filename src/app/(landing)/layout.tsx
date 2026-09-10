@@ -8,7 +8,7 @@ import { Geist, Geist_Mono } from "next/font/google";
  * `scrollcraft.css` é cópia literal da skill e não é editada — nem aqui, nem
  * em `landing.css`, que não reestiliza um seletor `[data-sc-*]` sequer.
  */
-import "@/modules/ui/landing/scrollcraft.css";
+import "@/modules/ui/landing/motor.css";
 import "@/modules/ui/landing/landing.css";
 
 /**

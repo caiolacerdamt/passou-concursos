@@ -6,13 +6,16 @@ import Link from "next/link";
  * O dono pediu "algo mais convencional"; barra fixa com marca, três links e
  * uma ação é o que isso significa para ele.
  *
- * Ela **não existe sobre o herói**: a v2 abre em sangria de tela cheia e
- * chrome por cima disso é a marca registrada de template. Ela se materializa
- * quando o ato 1 termina, e quem decide isso é `assinatura.ts`, pela altura do
- * próprio herói — não por um número escrito à mão.
+ * Sobre o herói ela **existe sem chapa**: a v2 abre em sangria de tela cheia e
+ * uma faixa de papel por cima disso é a marca registrada de template, mas
+ * esconder a barra inteira custava caro — quem já tem conta tinha de rolar
+ * quase duas telas e meia para achar "Entrar". Então o que sai é o fundo, não
+ * o elemento. A chapa entra quando o ato 1 termina, e quem decide isso é
+ * `assinatura.ts`, pela altura do próprio herói — não por um número escrito à
+ * mão.
  *
- * Ela é **opaca**, nunca de vidro: sobre as duas seções escuras uma barra
- * translúcida fica ilegível, e isso foi defeito pego na verificação.
+ * Com chapa ela é **opaca**, nunca de vidro: sobre as duas seções escuras uma
+ * barra translúcida fica ilegível, e isso foi defeito pego na verificação.
  */
 export function Barra() {
   return (

@@ -70,13 +70,14 @@ html:not(.sc-armado) .lp :is(.bloco, .alt, .marco, .anel__arco),
 html.sc-falhou .lp :is(.bloco, .alt, .marco, .anel__arco) {
   --entra: 1;
 }
-html:not(.sc-armado) .lp .publicacao,
-html.sc-falhou .lp .publicacao {
+html:not(.sc-armado) .lp .progresso__cartao,
+html.sc-falhou .lp .progresso__cartao {
   --cria: 1;
-  --foto: 1;
-  --legenda: 1;
-  --feed: 1;
-  --reacao: 1;
+  --b1: 1;
+  --b2: 1;
+  --b3: 1;
+  --b4: 1;
+  --pe: 1;
   opacity: 1;
   transform: none;
 }
@@ -258,7 +259,7 @@ html.sc-falhou .lp .publicacao {
   background: var(--color-papel);
   padding-block: var(--folga);
 }
-.lp .secao--comunidade {
+.lp .secao--progresso {
   background: var(--color-breu);
   color: var(--color-breu-tinta);
 }
@@ -1761,41 +1762,41 @@ html.sc-falhou .lp .publicacao {
   line-height: 1.55;
 }
 
-/* Comunidade: o post nasce, recebe a foto, escreve a legenda e só depois
-   mostra as reações. Todas as fases continuam no DOM para leitura e no-JS. */
-.lp .palco--comunidade {
+/* Progresso: o cartão nasce, as quatro barras preenchem em cascata e a frase
+   do rodapé entra por último. Todas as fases continuam no DOM para leitura e
+   no-JS — as regras de `sc-armado`/`sc-falhou` no topo do arquivo forçam cada
+   rampa a 1 quando o motor não monta.
+
+   O mecanismo é o mesmo do cartão anterior deste ato: rampas lidas de
+   `--sc-p`, em CSS. Nenhum JavaScript novo entra na página por causa dele. */
+.lp .palco--progresso {
   padding-block: clamp(3rem, 9vh, 6rem);
 }
-.lp .comunidade {
+.lp .progresso {
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr);
   gap: clamp(2rem, 7vw, 7rem);
   align-items: center;
 }
-.lp .comunidade__texto .titulo {
-  color: var(--color-breu-tinta);
-}
-.lp .comunidade__texto .lede {
-  color: var(--color-breu-suave);
-}
-.lp .comunidade__nota {
+.lp .progresso__nota {
   max-width: 44ch;
   margin: 1.25rem 0 0;
   color: var(--color-breu-verde);
   font-size: 0.8125rem;
   line-height: 1.5;
 }
-.lp .feed-comunidade {
+.lp .progresso__palco {
   display: grid;
   place-items: center;
   min-height: min(76vh, 44rem);
 }
-.lp .publicacao {
+.lp .progresso__cartao {
   --cria: clamp(0, calc((var(--sc-p, 0) - 0.02) * 9), 1);
-  --foto: clamp(0, calc((var(--sc-p, 0) - 0.2) * 9), 1);
-  --legenda: clamp(0, calc((var(--sc-p, 0) - 0.38) * 9), 1);
-  --feed: clamp(0, calc((var(--sc-p, 0) - 0.52) * 8), 1);
-  --reacao: clamp(0, calc((var(--sc-p, 0) - 0.7) * 10), 1);
+  --b1: clamp(0, calc((var(--sc-p, 0) - 0.18) * 9), 1);
+  --b2: clamp(0, calc((var(--sc-p, 0) - 0.32) * 9), 1);
+  --b3: clamp(0, calc((var(--sc-p, 0) - 0.46) * 9), 1);
+  --b4: clamp(0, calc((var(--sc-p, 0) - 0.6) * 9), 1);
+  --pe: clamp(0, calc((var(--sc-p, 0) - 0.74) * 10), 1);
   width: min(100%, 31rem);
   overflow: hidden;
   border-radius: 22px;
@@ -1803,102 +1804,115 @@ html.sc-falhou .lp .publicacao {
   color: var(--color-tinta);
   box-shadow: 0 2rem 5rem -2.6rem rgb(0 0 0 / 0.7);
   opacity: var(--cria);
-  transform: translate3d(
-      0,
-      calc((1 - var(--cria)) * 2rem + (1 - var(--feed)) * 0.8rem),
-      0
-    )
+  transform: translate3d(0, calc((1 - var(--cria)) * 2rem), 0)
     scale(calc(0.96 + var(--cria) * 0.04));
 }
-.lp .publicacao__topo {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  align-items: center;
-  padding: 1rem 1.1rem;
-}
-.lp .publicacao__avatar {
-  display: grid;
-  place-items: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 50%;
-  background: var(--color-verde);
-  color: var(--color-papel-alto);
-  font-weight: 600;
-}
-.lp .publicacao__topo > span:nth-child(2) {
-  display: grid;
-}
-.lp .publicacao__topo strong {
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-.lp .publicacao__topo small {
-  color: var(--color-tinta-suave);
-  font-size: 0.6875rem;
-}
-.lp .publicacao__sequencia {
-  color: var(--color-ouro-texto);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  opacity: var(--reacao);
-}
-.lp .publicacao__foto {
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  clip-path: inset(calc((1 - var(--foto)) * 10%) 0 calc((1 - var(--foto)) * 10%) 0);
-  opacity: var(--foto);
-}
-.lp .publicacao__foto img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 50% 57%;
-  transform: scale(calc(1.04 - var(--foto) * 0.04));
-}
-.lp .publicacao__legenda {
-  width: max-content;
-  max-width: calc(100% - 2.2rem);
-  margin: 1rem 1.1rem 0;
-  overflow: hidden;
-  color: var(--color-tinta);
-  font-size: 0.9375rem;
-  white-space: nowrap;
-  clip-path: inset(0 calc((1 - var(--legenda)) * 100%) 0 0);
-}
-.lp .publicacao__acoes {
+.lp .progresso__topo {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 1rem;
-  margin: 0.9rem 1.1rem 0;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-risco);
-  color: var(--color-tinta-suave);
-  font-size: 0.75rem;
-  opacity: var(--reacao);
+  padding: 1.6rem 1.9rem 1.25rem;
 }
-.lp .publicacao__comentario {
-  margin: 0.8rem 1.1rem 1rem;
-  padding: 0.7rem 0.85rem;
-  border-radius: 12px;
-  background: var(--color-papel);
-  opacity: var(--reacao);
-  transform: translate3d(0, calc((1 - var(--reacao)) * 0.7rem), 0);
-}
-.lp .publicacao__comentario p,
-.lp .publicacao__comentario small {
+.lp .progresso__titulo {
   margin: 0;
+  color: var(--color-tinta-suave);
+  font-family: var(--font-lp-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.lp .progresso__periodo {
+  margin: 0;
+  color: var(--color-tinta-suave);
   font-size: 0.8125rem;
 }
-.lp .publicacao__comentario strong {
-  font-weight: 600;
+.lp .progresso__barras {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0 1.9rem 1.6rem;
 }
-.lp .publicacao__comentario small {
-  display: block;
-  margin-top: 0.35rem;
-  color: var(--color-verde-texto);
-  font-size: 0.6875rem;
+/* Uma rampa por barra, na ordem em que elas aparecem. O alvo de cada uma vem
+   por `--alvo` no `style` do elemento: é dado da linha, não estilo. */
+.lp .progresso__barra:nth-child(1) {
+  --rampa: var(--b1);
+}
+.lp .progresso__barra:nth-child(2) {
+  --rampa: var(--b2);
+}
+.lp .progresso__barra:nth-child(3) {
+  --rampa: var(--b3);
+}
+.lp .progresso__barra:nth-child(4) {
+  --rampa: var(--b4);
+}
+.lp .progresso__rotulos {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  letter-spacing: -0.01em;
+}
+.lp .progresso__numeros {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+}
+.lp .progresso__pct {
+  font-weight: 500;
+  /* O número conta junto com a barra: sem isso ele já está no valor final
+     enquanto o trilho ainda enche, e o cartão lê como estático. */
+  opacity: var(--rampa, 1);
+}
+.lp .progresso__delta {
+  color: var(--color-ok);
+  font-size: 0.8125rem;
+  opacity: var(--rampa, 1);
+}
+.lp .progresso__delta--parado {
+  color: var(--color-tinta-suave);
+}
+.lp .progresso__trilho {
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-papel-recuo);
+}
+.lp .progresso__preenche {
+  width: var(--alvo, 0%);
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-verde);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--rampa, 1));
+}
+/* A maior lacuna é a barra que a frase do rodapé nomeia. Verde vivo é
+   preenchimento e ilustração, nunca texto — aqui ele só pinta o trilho. */
+.lp .progresso__preenche--lacuna {
+  background: var(--color-verde-vivo);
+}
+.lp .progresso__pe {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1.25rem 1.9rem 1.4rem;
+  background: var(--color-papel-recuo);
+  color: var(--color-verde);
+  opacity: var(--pe);
+  transform: translate3d(0, calc((1 - var(--pe)) * 0.7rem), 0);
+}
+.lp .progresso__pe svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+.lp .progresso__pe p {
+  margin: 0;
+  color: var(--color-tinta);
+  font-size: 0.875rem;
+  line-height: 1.45;
 }
 
 /* ================================================================= ATO 7 ==
@@ -2389,7 +2403,7 @@ html.sc-falhou .lp .publicacao {
   .lp .linha,
   .lp .volta__pe,
   .lp .evidencia--grande,
-  .lp .comunidade,
+  .lp .progresso,
   .lp .rodape__grade {
     grid-template-columns: 1fr;
   }
@@ -2518,20 +2532,48 @@ html.sc-falhou .lp .publicacao {
   .lp .evidencia--grande .evidencia__n {
     font-size: clamp(6rem, 30vw, 9rem);
   }
-  .lp .comunidade {
-    gap: 1.5rem;
+  /* Palco fixado numa tela de celular: o ato tem rótulo, título, lede, nota E
+     o cartão de quatro barras, e com o `padding-block` do palco o topo
+     escorregava para debaixo da barra fixa. A folga de cima passa a ser maior
+     que a altura da barra (`--barra-h`), e o que sobra vem do respiro entre as
+     peças — nenhuma delas sai. */
+  .lp .palco--progresso {
+    padding-block: calc(var(--barra-h) + 1rem) 1.5rem;
   }
-  .lp .comunidade__texto .titulo {
+  .lp .progresso {
+    gap: 1rem;
+  }
+  .lp .progresso__texto .rotulo {
+    margin-bottom: 0.75rem;
+  }
+  .lp .progresso__texto .lede {
+    margin-top: 1rem;
+  }
+  .lp .progresso__nota {
+    margin-top: 0.75rem;
+  }
+  .lp .progresso__texto .titulo {
     font-size: clamp(2.15rem, 1.5rem + 3vw, 3rem);
   }
-  .lp .feed-comunidade {
+  .lp .progresso__palco {
     min-height: 0;
   }
-  .lp .publicacao {
+  .lp .progresso__cartao {
     width: min(100%, 25rem);
   }
-  .lp .publicacao__foto {
-    aspect-ratio: 16 / 9;
+  /* Numa coluna so o cartao encolhe, e o nome da materia e o percentual
+     dividem a mesma linha: sem quebra eles se encostam. */
+  .lp .progresso__rotulos {
+    flex-wrap: wrap;
+    gap: 0.35rem 0.75rem;
+  }
+  .lp .progresso__topo,
+  .lp .progresso__barras,
+  .lp .progresso__pe {
+    padding-inline: 1.35rem;
+  }
+  .lp .progresso__barras {
+    gap: 1rem;
   }
   /* O ato 6 tambem e fixado no celular, e palco fixo corta o que passa de
      100svh. A pista e medida em svh, nao em rem: numa tela curta ela encolhe
@@ -2658,18 +2700,15 @@ html.sc-falhou .lp .publicacao {
     opacity: 1;
     transform: none;
   }
-  .lp .publicacao {
+  .lp .progresso__cartao {
     --cria: 1;
-    --foto: 1;
-    --legenda: 1;
-    --feed: 1;
-    --reacao: 1;
+    --b1: 1;
+    --b2: 1;
+    --b3: 1;
+    --b4: 1;
+    --pe: 1;
     opacity: 1;
     transform: none;
-  }
-  .lp .publicacao__foto,
-  .lp .publicacao__legenda {
-    clip-path: none;
   }
   /* Sob movimento reduzido a agenda chega pronta: o cartao ja esta na ultima
      parada e todos os marcos acesos. `--viaja: 1` faz as duas coisas de uma

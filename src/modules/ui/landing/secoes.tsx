@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { CSSProperties } from "react";
 
 import { type PrecosPublicos, formatarBRL } from "@/modules/pagamentos/preco";
@@ -14,9 +13,9 @@ import { MARCOS_DA_REVISAO } from "./plano-do-dia";
    produzem. O par `data-sc-act` + `data-sc-span` declara o ato; o resto dos
    `data-sc-*` são cues, revelações, trilhos e entradas.
 
-   Fora o clipe do herói e a fotografia do post da comunidade, os atos são
-   construídos em DOM e CSS. Os exemplos de plano e questão são demonstrações
-   da experiência; preço e garantia continuam vindo da configuração pública.
+   Fora o clipe do herói, os atos são construídos em DOM e CSS. Os exemplos de
+   plano, de questão e de progresso são demonstrações da experiência; preço e
+   garantia continuam vindo da configuração pública.
    ========================================================================== */
 
 /* ================================================================ ATO 1 ==
@@ -131,7 +130,6 @@ export function Heroi({ trial = false }: { trial?: boolean }) {
           </div>
           <p className="micro">
             Raio-X da prova · Plano diário personalizado · Acompanhamento do progresso
-            · Comunidade
           </p>
         </div>
 
@@ -541,67 +539,112 @@ export function EvidenciaDaRevisao() {
     </section>
   );
 }
-export function Comunidade() {
+/* ================================================================ ATO 8 ==
+   O progresso. Ato fixado, entre a evidência científica e o ciclo de estudo:
+   é o último beat racional antes do preço.
+
+   Ele mostra a quarta superfície ligada no lançamento (AD-076) que a landing
+   não mostrava em lugar nenhum, e é o único ato que fecha o argumento do ato
+   4 — o plano de amanhã sai do desempenho de hoje.
+
+   **Os números são demonstração da experiência, não dado real**, no mesmo
+   espírito do plano de exemplo do ato 4. Não puxar de lugar nenhum: não há
+   aluno para puxar de, e inventar uma origem seria pior do que assumir a
+   demonstração.
+
+   As matérias são as do Agente Comercial do BB, coerentes com o resto da
+   página. Matemática Financeira é a de menor acerto de propósito: é ela que a
+   frase do rodapé do cartão usa para explicar o plano de amanhã. */
+const ACERTO_POR_MATERIA = [
+  { materia: "Língua Portuguesa", pct: 74, delta: "+9", lacuna: false },
+  { materia: "Conhecimentos Bancários", pct: 61, delta: "+14", lacuna: false },
+  { materia: "Matemática Financeira", pct: 38, delta: "+3", lacuna: true },
+  { materia: "Atendimento e Vendas", pct: 82, delta: "estável", lacuna: false },
+] as const;
+
+export function Progresso() {
   return (
     <section
-      className="secao secao--comunidade"
+      className="secao secao--progresso"
       data-sc-act="pin"
       data-sc-span="1.8"
-      aria-labelledby="t-comunidade"
+      aria-labelledby="t-progresso"
     >
-      <div data-sc-stage className="palco palco--comunidade">
-        <div className="faixa comunidade">
-          <div className="comunidade__texto">
-            <h2 id="t-comunidade" className="titulo titulo--gigante">
-              Estudar fica melhor quando tem gente fazendo junto.
+      <div data-sc-stage className="palco palco--progresso">
+        <div className="faixa progresso">
+          <div className="progresso__texto">
+            <p className="rotulo rotulo--claro">Seu progresso</p>
+            <h2 id="t-progresso" className="titulo titulo--gigante titulo--claro">
+              Você enxerga o que melhorou, não só o que falta.
             </h2>
-            <p className="lede">
-              Compartilhe o que você estudou, acompanhe o progresso de outras pessoas
-              e mantenha o ritmo com quem também está correndo atrás da aprovação.
+            <p className="lede lede--clara">
+              Cada questão respondida move o seu mapa: acerto por matéria, por assunto
+              e por banca. E o plano de amanhã é montado exatamente a partir daí.
             </p>
-            <p className="comunidade__nota">
-              Sem ranking entre alunos. Aqui o progresso aproxima, não vira placar.
+            <p className="progresso__nota">
+              Sem ranking entre alunos. O número que aparece na tela é só o seu.
             </p>
           </div>
 
-          <div className="feed-comunidade" aria-label="Exemplo de publicação na comunidade">
-            <article className="publicacao">
-              <header className="publicacao__topo">
-                <span className="publicacao__avatar" aria-hidden="true">
-                  C
-                </span>
-                <span>
-                  <strong>Camila</strong>
-                  <small>agora</small>
-                </span>
-                <span className="publicacao__sequencia">7 dias de sequência</span>
+          <div className="progresso__palco">
+            {/* PLACEHOLDER — números de demonstração. Ver a nota acima. */}
+            <article className="progresso__cartao">
+              <header className="progresso__topo">
+                <p className="progresso__titulo">Acerto por matéria</p>
+                <p className="progresso__periodo">últimos 30 dias</p>
               </header>
 
-              <div className="publicacao__foto">
-                <Image
-                  src="/arte/comunidade-estudo.png"
-                  alt="Caderno aberto com anotações de português em uma mesa de estudos"
-                  width={1122}
-                  height={1402}
-                  sizes="(max-width: 899px) 82vw, 34vw"
-                />
+              <div className="progresso__barras">
+                {ACERTO_POR_MATERIA.map((linha) => (
+                  <div
+                    key={linha.materia}
+                    className="progresso__barra"
+                    style={{ "--alvo": `${linha.pct}%` } as CSSProperties}
+                  >
+                    <div className="progresso__rotulos">
+                      <span>{linha.materia}</span>
+                      <span className="progresso__numeros">
+                        <span className="progresso__pct">{linha.pct}%</span>
+                        <span
+                          className={`progresso__delta${
+                            linha.delta === "estável" ? " progresso__delta--parado" : ""
+                          }`}
+                        >
+                          {linha.delta}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="progresso__trilho">
+                      <div
+                        className={`progresso__preenche${
+                          linha.lacuna ? " progresso__preenche--lacuna" : ""
+                        }`}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              <p className="publicacao__legenda">
-                Revisão de português concluída <span aria-hidden="true">✅</span>
-              </p>
-
-              <div className="publicacao__acoes" aria-hidden="true">
-                <span>1 curtida</span>
-                <span>1 comentário</span>
-              </div>
-
-              <div className="publicacao__comentario">
+              <footer className="progresso__pe">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M4 15.5 9.5 10l3.5 3.5L20 7" />
+                  <path d="M15 7h5v5" />
+                </svg>
                 <p>
-                  <strong>Marina:</strong> Boa!! <span aria-hidden="true">👏</span>
+                  Matemática Financeira é a sua maior lacuna e cai muito na sua banca.
+                  Por isso ela abre o plano de amanhã.
                 </p>
-                <small>Curtido por Camila</small>
-              </div>
+              </footer>
             </article>
           </div>
         </div>
@@ -697,7 +740,7 @@ export function PorQueAguenta() {
   );
 }
 
-/* ================================================================ ATO 8 ==
+/* =============================================================== ATO 10 ==
    O preço. `flow`, e não anima nada além da entrada.
 
    Foi ato fixado numa rodada anterior e o palco de 100vh não comportava dois

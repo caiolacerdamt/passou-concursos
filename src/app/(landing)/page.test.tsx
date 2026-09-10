@@ -119,7 +119,7 @@ describe("pagina de vendas", () => {
     const html = renderToStaticMarkup(await Home());
 
     expect(html.match(/data-sc-act=/g)).toHaveLength(10);
-    expect(html).toContain("Estudar fica melhor quando tem gente fazendo junto.");
+    expect(html).toContain("Você enxerga o que melhorou");
     expect(html).not.toContain("3 blocos · 47 questões");
     expect(html).not.toContain("Amanhã tem outro.");
     expect(html).not.toContain("secao--amanha");

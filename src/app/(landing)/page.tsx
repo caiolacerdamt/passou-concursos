@@ -9,13 +9,13 @@ import { MotorDaLanding } from "@/modules/ui/landing/motor";
 import {
   AlguemContou,
   AQuestao,
-  Comunidade,
   EvidenciaDaRevisao,
   Heroi,
   Oferta,
   OQueVolta,
   PerguntaDeTerca,
   PorQueAguenta,
+  Progresso,
 } from "@/modules/ui/landing/secoes";
 
 export const dynamic = "force-dynamic";
@@ -73,7 +73,7 @@ export default async function Home() {
         <AQuestao />
         <OQueVolta />
         <EvidenciaDaRevisao />
-        <Comunidade />
+        <Progresso />
         <PorQueAguenta />
         <Oferta precos={precos} trial={trial} />
       </main>

@@ -51,7 +51,7 @@ export async function AppShell({
       </a>
 
       <div className="flex min-h-dvh">
-        <BarraLateral fechadaInicial={fechada} />
+        <BarraLateral fechadaInicial={fechada} tema={tema} />
 
         <div className="min-w-0 flex-1">
           {faixa}
@@ -64,7 +64,7 @@ export async function AppShell({
         </div>
       </div>
 
-      <BarraDoCelular />
+      <BarraDoCelular tema={tema} />
     </div>
   );
 }

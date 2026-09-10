@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 
 import { sair } from "@/app/entrar/acoes";
 
+import { BotaoDeTema } from "./botao-de-tema";
 import { PontoDeCarga } from "./ponto-de-carga";
+import type { Tema } from "./tema";
 
 import {
   ITENS_DE_ACOMPANHAMENTO,
@@ -111,7 +113,13 @@ function BotaoDoRail({ item, ativo }: { item: ItemDaNavegacao; ativo: boolean })
   );
 }
 
-export function BarraLateral({ fechadaInicial }: { fechadaInicial: boolean }) {
+export function BarraLateral({
+  fechadaInicial,
+  tema,
+}: {
+  fechadaInicial: boolean;
+  tema: Tema;
+}) {
   const [fechada, setFechada] = useState(fechadaInicial);
   const caminho = usePathname();
 
@@ -166,6 +174,8 @@ export function BarraLateral({ fechadaInicial }: { fechadaInicial: boolean }) {
             {ITENS_DE_CONTA.map((item) => (
               <BotaoDoRail key={item.href} item={item} ativo={estaAtivo(caminho, item.href)} />
             ))}
+
+            <BotaoDeTema temaInicial={tema} variante="rail" />
 
             <form action={sair}>
               <button
@@ -241,6 +251,7 @@ export function BarraLateral({ fechadaInicial }: { fechadaInicial: boolean }) {
           {ITENS_DE_CONTA.map((item) => (
             <Item key={item.href} item={item} ativo={estaAtivo(caminho, item.href)} />
           ))}
+          <BotaoDeTema temaInicial={tema} variante="barra" />
           <form action={sair} className="mt-1.5">
             <button
               type="submit"

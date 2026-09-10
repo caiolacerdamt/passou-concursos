@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 
 import { sair } from "@/app/entrar/acoes";
 
+import { BotaoDeTema } from "./botao-de-tema";
 import { PontoDeCarga } from "./ponto-de-carga";
+import type { Tema } from "./tema";
 import {
   ITENS_DE_ACOMPANHAMENTO,
   ITENS_DE_CONTA,
@@ -38,7 +40,7 @@ function estaAtivo(caminho: string, href: string): boolean {
  * Nenhuma das duas peças desenha status bar nem teclado falso: no aparelho o
  * sistema pinta isso por cima, e um desenho nosso apareceria dobrado.
  */
-export function BarraDoCelular() {
+export function BarraDoCelular({ tema }: { tema: Tema }) {
   const caminho = usePathname();
   const idDaFolha = useId();
   const botaoDaConta = useRef<HTMLButtonElement>(null);
@@ -139,7 +141,17 @@ export function BarraDoCelular() {
                 </Link>
               ))}
 
-              <form action={sair} className="mt-1 border-t border-linha pt-1">
+              {/*
+                O tema entra aqui e não na pílula de baixo: a barra lateral que
+                o carrega no desktop é `hidden lg:block`, então sem esta peça o
+                celular — que é onde se estuda de noite — ficaria sem controle
+                nenhum. É a mesma vizinhança do desktop: junto de Conta e Sair.
+              */}
+              <div className="mt-1 border-t border-linha pt-1">
+                <BotaoDeTema temaInicial={tema} variante="folha" />
+              </div>
+
+              <form action={sair}>
                 <button
                   type="submit"
                   className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[0.9375rem] text-suave"
